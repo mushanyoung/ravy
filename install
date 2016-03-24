@@ -1,0 +1,52 @@
+#!/usr/bin/env zsh
+
+RAVY="${0:A:h}"
+
+echo 'Linking dotfiles'
+ln -s -f $RAVY/tmux.conf ~/.tmux.conf
+ln -s -f $RAVY/gitconfig ~/.gitconfig
+ln -s -f $RAVY/ignores ~/.agignore
+ln -s -f $RAVY/ignores ~/.gitignores
+
+if ! grep "$RAVY/zshrc" ~/.zshrc 2>&1 >/dev/null; then
+  echo "[ -f $RAVY/zshrc ] && source $RAVY/zshrc" >> ~/.zshrc
+fi
+if ! grep "$RAVY/zprofile" ~/.zprofile 2>&1 >/dev/null; then
+  echo "[ -f $RAVY/zprofile ] && source $RAVY/zprofile" >> ~/.zprofile
+fi
+
+echo 'Linking custom files'
+mkdir -p $RAVY/custom $RAVY/custom/bin $RAVY/custom/zsh-functions
+touch $RAVY/custom/zshrc
+touch $RAVY/custom/vimrc
+touch $RAVY/custom/gitconfig
+ln -s -f $RAVY/custom/gitconfig ~/.gitconfig_custom
+
+if hash brew 2>/dev/null; then
+  echo 'Linking brew zsh completion file'
+  ln -s -f "$(brew --prefix)/Library/Contributions/brew_zsh_completion.zsh" $RAVY/custom/zsh-functions/_brew
+fi
+
+echo 'Installing / Upgrading Prezto'
+git -C ~/.zprezto pull --rebase && \
+  git -C ~/.zprezto submodule update --init --recursive || \
+  git clone --recursive https://github.com/sorin-ionescu/prezto.git ~/.zprezto
+
+echo 'Installing / Upgrading FZF'
+git -C ~/.fzf pull --rebase || \
+  git clone --depth=1 https://github.com/junegunn/fzf.git ~/.fzf
+~/.fzf/install --bin
+
+echo 'Configuring Vim/NeoVim'
+mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.config
+ln -s -f ~/.vim ~/.config/nvim
+ln -s -f $RAVY/vimrc ~/.vimrc
+ln -s -f $RAVY/vimrc ~/.config/nvim/init.vim
+
+curl -sfLo ~/.vim/autoload/plug.vim --create-dirs \
+  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+echo 'Installing custom settings'
+if command -v $RAVY/custom/install >/dev/null; then
+  $RAVY/custom/install
+fi

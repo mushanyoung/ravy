@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Recursively list all of the files in a directory
+
+command ls -R $* |
+  grep ":$" |
+  sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
+

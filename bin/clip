@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+# Copy input stream to the terminal which opens the tty client
+# From: https://github.com/skaji/remote-pbcopy-iterm2
+use strict;
+use warnings;
+use MIME::Base64 qw(encode_base64);
+
+my $input = do { local $/; <> } || "";
+$input =~ s/\n+\z//sm;
+$input or exit;
+
+my $b = "\\"; # 1 backslash, not 2
+# escape sequences taken from http://qiita.com/kefir_/items/515ed5264fce40dec522
+my %format = (
+    normal => "\e]52;;%s\e$b",
+    tmux   => "\ePtmux;\e\e]52;;%s\e\e$b$b\e$b",
+    screen => "\eP\e]52;;%s\x07\e$b",
+);
+
+my $format = sub {
+    if (my $tmux = $ENV{TMUX}) {
+        # check tmux -CC
+        (undef, my $pid) = split /,/, $tmux, 3;
+        if ($pid) {
+            my $ps = `ps -p $pid -o command= 2>/dev/null` || "";
+            chomp $ps;
+            (undef, my $option) = split /\s+/, $ps, 3;
+            if ($option && $option eq "-CC") {
+                return $format{normal};
+            }
+        }
+        $format{tmux};
+    } elsif ( ($ENV{TERM} || "") eq "screen" ) {
+        $format{screen};
+    } else {
+        $format{normal};
+    }
+}->();
+
+printf $format, encode_base64($input, "");
