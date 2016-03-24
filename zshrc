@@ -12,7 +12,6 @@ RAVY_LOADED=true
 if [[ -f ~/.zprezto/init.zsh ]]; then
   zstyle ':prezto:load' pmodule \
     'environment' \
-    'terminal' \
     'archive' \
     'completion' \
     'history' \
@@ -62,12 +61,6 @@ if [[ -f ~/.zprezto/init.zsh ]]; then
   zstyle ':prezto:module:history-substring-search' color 'yes'
   zstyle ':prezto:module:history-substring-search' globbing-flags ''
 
-  # terminal title:
-  # disable auto-title and manually invoke it later to make it work for tmux
-  zstyle ':prezto:module:terminal' auto-title 'no'
-  zstyle ':prezto:module:terminal:window-title' format '%s'
-  zstyle ':prezto:module:terminal:tab-title' format '%s'
-
   # completion settings must be loaded before prezto
   # custom completion
   if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
@@ -83,12 +76,6 @@ if [[ -f ~/.zprezto/init.zsh ]]; then
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+='backward-delete-char'
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
 
-  # auto set terminal title
-  if [[ "$TERM_PROGRAM" != 'Apple_Terminal' ]]; then
-    autoload -Uz add-zsh-hook
-    add-zsh-hook precmd _terminal-set-titles-with-path
-    add-zsh-hook preexec _terminal-set-titles-with-command
-  fi
 fi
 
 # }}
@@ -243,6 +230,74 @@ setopt HIST_IGNORE_SPACE
 
 # load zmv
 autoload -Uz zmv add-zsh-hook
+
+# }}
+
+# Terminal Title {{
+
+if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
+
+  # Sets the terminal or terminal multiplexer window title.
+  function set-window-title {
+    local title_format{,ted}
+    title_format="%s"
+    zformat -f title_formatted "$title_format" "s:$argv"
+
+    if [[ "$TERM" == screen* ]]; then
+      title_format="\ek%s\e\\"
+    else
+      title_format="\e]2;%s\a"
+    fi
+
+    printf "$title_format" "${(V%)title_formatted}"
+  }
+
+  # Sets the title with a given command.
+  function _terminal-set-titles-with-command {
+    emulate -L zsh
+    setopt EXTENDED_GLOB
+
+    # Get the command name that is under job control.
+    if [[ "${2[(w)1]}" == (fg|%*)(\;|) ]]; then
+      # Get the job name, and, if missing, set it to the default %+.
+      local job_name="${${2[(wr)%*(\;|)]}:-%+}"
+
+      # Make a local copy for use in the subshell.
+      local -A jobtexts_from_parent_shell
+      jobtexts_from_parent_shell=(${(kv)jobtexts})
+
+      jobs "$job_name" 2>/dev/null > >(
+      read index discarded
+      # The index is already surrounded by brackets: [1].
+      _terminal-set-titles-with-command "${(e):-\$jobtexts_from_parent_shell$index}"
+      )
+    else
+      # Set the command name, or in the case of sudo or ssh, the next command.
+      local cmd="${${2[(wr)^(*=*|sudo|ssh|-*)]}:t}"
+      local truncated_cmd="${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
+      unset MATCH
+
+      set-window-title "$truncated_cmd"
+    fi
+  }
+
+  # Sets the title with a given path.
+  function _terminal-set-titles-with-path {
+    emulate -L zsh
+    setopt EXTENDED_GLOB
+
+    local absolute_path="${${1:a}:-$PWD}"
+    local abbreviated_path="${absolute_path/#$HOME/~}"
+    local truncated_path="${abbreviated_path/(#m)?(#c16,)/..${MATCH[-14,-1]}}"
+    unset MATCH
+
+    set-window-title "$truncated_path"
+  }
+
+  # auto set terminal title
+  add-zsh-hook precmd _terminal-set-titles-with-path
+  add-zsh-hook preexec _terminal-set-titles-with-command
+fi
 
 # }}
 
