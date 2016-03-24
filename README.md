@@ -1,4 +1,6 @@
-# Installation
+# Ravy
+
+Decent continuous shell environment with zsh, vim, git and tmux.
 
 ## Prerequisites
 
