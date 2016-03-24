@@ -274,7 +274,7 @@ if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
     else
       # Set the command name, or in the case of sudo or ssh, the next command.
       local cmd="${${2[(wr)^(*=*|sudo|ssh|-*)]}:t}"
-      local truncated_cmd="${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
+      local truncated_cmd="!${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
       unset MATCH
 
       set-window-title "$truncated_cmd"
