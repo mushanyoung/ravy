@@ -1,13 +1,13 @@
-# Modeline & Load {{
-# vim: set foldmarker={{,}} foldlevel=0 foldmethod=marker filetype=zsh:
+# Modeline & Load {{{
+# vim: set foldlevel=0 foldmethod=marker filetype=zsh:
 
 # prevent from loading more than once
 [[ -n $RAVY_LOADED ]] && return 0
 RAVY_LOADED=true
 
-# }}
+# }}}
 
-# Prezto {{
+# Prezto {{{
 
 if [[ -f ~/.zprezto/init.zsh ]]; then
   zstyle ':prezto:load' pmodule \
@@ -78,9 +78,9 @@ if [[ -f ~/.zprezto/init.zsh ]]; then
 
 fi
 
-# }}
+# }}}
 
-# FZF {{
+# FZF {{{
 
 if [[ -d ~/.fzf ]]; then
 
@@ -168,9 +168,9 @@ if [[ -d ~/.fzf ]]; then
 
 fi
 
-# }}
+# }}}
 
-# Environment {{
+# Environment {{{
 
 # lang
 LANG=en_US.UTF-8
@@ -231,14 +231,14 @@ setopt HIST_IGNORE_SPACE
 # load zmv
 autoload -Uz zmv add-zsh-hook
 
-# }}
+# }}}
 
-# Terminal Title {{
+# Terminal Title {{{
 
 if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
 
-  # Sets the terminal or terminal multiplexer window title.
-  function set-window-title {
+  # Sets the terminal or terminal multiplexer title.
+  function _rv_termtitle_set {
     local title_format{,ted}
     title_format="%s"
     zformat -f title_formatted "$title_format" "s:$argv"
@@ -252,8 +252,8 @@ if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
     printf "$title_format" "${(V%)title_formatted}"
   }
 
-  # Sets the title with a given command.
-  function _terminal-set-titles-with-command {
+  # Sets the terminal title with a given command.
+  function _rv_termtitle_set_command {
     emulate -L zsh
     setopt EXTENDED_GLOB
 
@@ -269,7 +269,7 @@ if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
       jobs "$job_name" 2>/dev/null > >(
       read index discarded
       # The index is already surrounded by brackets: [1].
-      _terminal-set-titles-with-command "${(e):-\$jobtexts_from_parent_shell$index}"
+      _rv_termtitle_set_command "${(e):-\$jobtexts_from_parent_shell$index}"
       )
     else
       # Set the command name, or in the case of sudo or ssh, the next command.
@@ -277,31 +277,30 @@ if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
       local truncated_cmd="!${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
       unset MATCH
 
-      set-window-title "$truncated_cmd"
+      _rv_termtitle_set "$truncated_cmd"
     fi
   }
 
-  # Sets the title with a given path.
-  function _terminal-set-titles-with-path {
+  # Sets the terminal title with a given path.
+  function _rv_termtitle_set_path {
     emulate -L zsh
     setopt EXTENDED_GLOB
 
-    local absolute_path="${${1:a}:-$PWD}"
-    local abbreviated_path="${absolute_path/#$HOME/~}"
+    local abbreviated_path="${PWD/#$HOME/~}"
     local truncated_path="${abbreviated_path/(#m)?(#c16,)/..${MATCH[-14,-1]}}"
     unset MATCH
 
-    set-window-title "$truncated_path"
+    _rv_termtitle_set "$truncated_path"
   }
 
   # auto set terminal title
-  add-zsh-hook precmd _terminal-set-titles-with-path
-  add-zsh-hook preexec _terminal-set-titles-with-command
+  add-zsh-hook preexec _rv_termtitle_set_command
+  add-zsh-hook precmd _rv_termtitle_set_path
 fi
 
-# }}
+# }}}
 
-# Functions {{
+# Functions {{{
 
 # Go up x level of directories
 cd_up () {
@@ -345,9 +344,9 @@ gfd () {
   cdd $(git diff --name-only HEAD~5 | fzf) || cd -
 }
 
-# }}
+# }}}
 
-# Alias {{
+# Alias {{{
 
 # list files and change directory
 # ignore ls and cd command in shell history
@@ -407,9 +406,9 @@ alias grep='grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.s
 
 alias pg='ping google.com'
 
-# }}
+# }}}
 
-# Zle Key bindings {{
+# Zle Key bindings {{{
 
 # use emacs mode for command line
 bindkey -e
@@ -539,9 +538,9 @@ bindkey '^K' autosuggest-clear
 
 KEYTIMEOUT=1
 
-# }}
+# }}}
 
-# Prompt {{
+# Prompt {{{
 
 setopt PROMPT_SUBST
 
@@ -655,10 +654,10 @@ add-zsh-hook preexec _rv_prompt_timer_cmd_start
 add-zsh-hook precmd _rv_prompt_timer_cmd_stop
 add-zsh-hook precmd _rv_prompt_git
 
-# }}
+# }}}
 
-# Custom {{
+# Custom {{{
 
 [[ -f $RAVY_CUSTOM/zshrc ]] && source $RAVY_CUSTOM/zshrc
 
-# }}
+# }}}
