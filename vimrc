@@ -170,16 +170,11 @@ highlight clear SignColumn
 
 " Autocmds {{
 
-augroup window_editing
-  autocmd!
-
-  " cursorline switched while focus is switched to another split window
-  autocmd WinEnter * setlocal cursorline
-  autocmd WinLeave * setlocal nocursorline
-augroup END
-
 augroup buffer_editing
   autocmd!
+
+  " remove tailing whitespace before writing to buffer
+  autocmd BufWritePre * StripWhitespace
 
   " restore cursor position
   autocmd BufReadPost *
@@ -190,9 +185,6 @@ augroup buffer_editing
   " when editing a git commit message
   " set the cursor position to the beginning
   autocmd BufReadPost COMMIT_EDITMSG normal gg0
-
-  " remove tailing whitespace before writing to buffer
-  autocmd BufWritePre * StripWhitespace
 
   " restore <CR> key map in quickfix mode
   autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
