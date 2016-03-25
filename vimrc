@@ -70,6 +70,7 @@ filetype plugin indent on
 
 " Show matched brackets/parenthesis, enable extended % matching
 set showmatch
+set matchpairs+=<:>
 runtime macros/matchit.vim
 
 " set terminal window title
@@ -192,6 +193,9 @@ augroup buffer_editing
 
   " remove tailing whitespace before writing to buffer
   autocmd BufWritePre * StripWhitespace
+
+  " restore <CR> key map in quickfix mode
+  autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
 augroup END
 
 augroup filetypes
@@ -566,45 +570,97 @@ endif
 " setup plugins
 call plug#begin('~/.vim/bundle')
 
+" auto paste mode when pasting from terminal
 Plug 'ConradIrwin/vim-bracketed-paste'
-Plug 'PeterRincker/vim-argumentative'
-Plug 'Valloric/MatchTagAlways'
-Plug 'ap/vim-css-color'
-Plug 'vim-airline/vim-airline'
-Plug 'easymotion/vim-easymotion'
-Plug 'google/vim-searchindex'
-Plug 'jiangmiao/auto-pairs'
-Plug 'jpo/vim-railscasts-theme'
-Plug 'junegunn/fzf', { 'dir': '~/.fzf' }
-Plug 'junegunn/fzf.vim'
-Plug 'junegunn/vim-peekaboo'
-Plug 'junegunn/vim-easy-align'
-Plug 'junegunn/rainbow_parentheses.vim'
-Plug 'majutsushi/tagbar'
-Plug 'mhinz/vim-signify'
-Plug 'ntpeters/vim-better-whitespace'
-Plug 'rking/ag.vim'
-Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
-Plug 'scrooloose/syntastic'
-Plug 'sheerun/vim-polyglot'
-Plug 'terryma/vim-expand-region'
-Plug 'terryma/vim-multiple-cursors'
-Plug 'tpope/vim-commentary'
-Plug 'tpope/vim-fugitive'
-Plug 'tpope/vim-ragtag'
-Plug 'tpope/vim-repeat'
-Plug 'tpope/vim-surround'
-Plug 'tpope/vim-unimpaired'
-Plug 'xolox/vim-easytags'
-Plug 'xolox/vim-misc'
 
-if v:version >= 704
-  Plug 'SirVer/ultisnips'
-  Plug 'honza/vim-snippets'
+" argument: [, ], to jump & <, >, to shift & a, i, is text-object
+Plug 'PeterRincker/vim-argumentative'
+
+" always highlight matching markup language tags
+Plug 'Valloric/MatchTagAlways'
+
+" show css color in code
+Plug 'ap/vim-css-color'
+
+" status line with powerline fonts
+Plug 'vim-airline/vim-airline'
+
+" choose from positions which repeated motions would reach
+Plug 'easymotion/vim-easymotion'
+
+" search: show match index and total match count
+Plug 'google/vim-searchindex'
+
+" decent colorscheme
+Plug 'jpo/vim-railscasts-theme'
+
+" fzf integration
+Plug 'junegunn/fzf', { 'dir': '~/.fzf' }
+
+" provide utility commands to fzf in a list of certain targets
+Plug 'junegunn/fzf.vim'
+
+" extends ", @, i:<C-R> to list the contents registers
+Plug 'junegunn/vim-peekaboo'
+
+" ga to align a region of text on a key (<C-X> to use a regex)
+Plug 'junegunn/vim-easy-align'
+
+" vcs: make changed sections marked, text-objectified, targetable
+Plug 'mhinz/vim-signify'
+
+" launch search in working directory
+Plug 'rking/ag.vim'
+
+" highlight trailing blanks and provide StripWhitespace function
+Plug 'ntpeters/vim-better-whitespace'
+
+" file explorer
+Plug 'scrooloose/nerdtree', { 'on': [('NERDTreeToggle'), 'NERDTreeFind'] }
+
+" check code syntax
+Plug 'scrooloose/syntastic'
+
+" a set of filetype plugins
+Plug 'sheerun/vim-polyglot'
+
+" +, - to expand and shrink selection
+Plug 'terryma/vim-expand-region'
+
+" multiple cursors and multiple modifications
+Plug 'terryma/vim-multiple-cursors'
+
+" Insert or delete brackets, parens, quotes in pair
+Plug 'jiangmiao/auto-pairs'
+
+" gc to comment codes
+Plug 'tpope/vim-commentary'
+
+" `s`: manipulate surroundded symbols / texts
+Plug 'tpope/vim-surround'
+
+" `.` supports to repeat mapped key sequence
+Plug 'tpope/vim-repeat'
+
+" a bunch of useful [, ] key bindings
+Plug 'tpope/vim-unimpaired'
+
+" git integration
+Plug 'tpope/vim-fugitive'
+
+if executable('ctags')
+  " tag explorer
+  Plug 'majutsushi/tagbar'
+
+  " auto generate tags
+  Plug 'xolox/vim-easytags'
+  Plug 'xolox/vim-misc'
 endif
 
-if exists('g:rv_ycm_enable')
-  Plug 'Valloric/YouCompleteMe'
+if v:version >= 704
+  " snippets
+  Plug 'SirVer/ultisnips'
+  Plug 'honza/vim-snippets'
 endif
 
 call plug#end()
