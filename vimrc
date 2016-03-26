@@ -192,23 +192,12 @@ augroup END
 augroup filetypes
   autocmd!
 
-  autocmd BufRead,BufNewFile *.m         setlocal ft=objc
-  autocmd BufRead,BufNewFile *.as        setlocal ft=actionscript
-  autocmd BufRead,BufNewFile *.mxml      setlocal ft=mxml
-  autocmd BufRead,BufNewFile *.scss      setlocal ft=scss.css
-  autocmd BufRead,BufNewFile *.less      setlocal ft=less
-  autocmd BufRead,BufNewFile *.erb       setlocal ft=eruby.html
-  autocmd BufRead,BufNewFile *.json      setlocal ft=json syntax=javascript
-  autocmd BufRead,BufNewFile *.gitignore setlocal ft=gitignore
-  autocmd BufRead,BufNewFile *.zsh-theme setlocal ft=zsh
-  autocmd BufRead,BufNewFile *.fdoc      setlocal ft=yaml
-  autocmd BufRead,BufNewFile *.md,*.txt  setlocal ft=markdown
-
-  autocmd BufRead,BufNewFile *.js        setlocal makeprg=js\ %
-  autocmd BufRead,BufNewFile *.pl        setlocal makeprg=perl\ %
-  autocmd BufRead,BufNewFile *.php       setlocal makeprg=php\ %
-  autocmd BufRead,BufNewFile *.py        setlocal makeprg=python\ %
-  autocmd BufRead,BufNewFile *.rb        setlocal makeprg=ruby\ -w\ %
+  " set make program for scripting languages
+  autocmd BufRead,BufNewFile *.js  setlocal makeprg=js\ %
+  autocmd BufRead,BufNewFile *.pl  setlocal makeprg=perl\ %
+  autocmd BufRead,BufNewFile *.php setlocal makeprg=php\ %
+  autocmd BufRead,BufNewFile *.py  setlocal makeprg=python\ %
+  autocmd BufRead,BufNewFile *.rb  setlocal makeprg=ruby\ -w\ %
 augroup END
 
 " }}
