@@ -43,7 +43,7 @@ set hidden
 " does not move the cursor to start of line for some commands
 set nostartofline
 
-" no timeout for mapped key seqs, timeout for key code seqs
+" no timeout for mapped key sequence, timeout for key code sequence
 set notimeout timeoutlen=1000 ttimeout ttimeoutlen=100
 
 " allow backspacing over everything in insert mode
@@ -73,8 +73,7 @@ set showmatch
 set matchpairs+=<:>
 runtime macros/matchit.vim
 
-" set terminal window title
-" set window name instead if in tmux
+" set terminal title or terminal multiplexer window name
 set title titlestring=#%t%(\ %a%)%(\ %r%)%(\ %m%)
 if &term =~ "screen*"
   set t_ts=k t_fs=\
@@ -173,7 +172,7 @@ highlight clear SignColumn
 augroup buffer_editing
   autocmd!
 
-  " remove tailing whitespace before writing to buffer
+  " remove trailing whitespace before writing to buffer
   autocmd BufWritePre * StripWhitespace
 
   " restore cursor position
@@ -216,14 +215,32 @@ augroup END
 
 " Keys {{
 
+" imap / cmap {{
+
+" use `jk` to exit insert mode
+inoremap jk <ESC>
+
+" <cr>: close popup and save indent.
+inoremap <expr><cr> pumvisible() ? "\<c-y>" : "\<cr>"
+
+" tab / s-tab & c-j / c-k works just like c-n and c-p in completion
+inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
+inoremap <expr><s-tab> pumvisible() ? "\<c-p>" : "\<s-tab>"
+inoremap <expr><c-j> pumvisible() ? "\<c-n>" : "\<c-j>"
+inoremap <expr><c-k> pumvisible() ? "\<c-p>" : "\<c-k>"
+
+" insert current opened buffer's directory in command line
+cnoremap %% <C-R>=expand('%:p:h').'/'<CR>
+
+" }}
+
+" nmap {{
+
 " disable arrow keys
 noremap <UP> <NOP>
 noremap <DOWN> <NOP>
 noremap <LEFT> <NOP>
 noremap <RIGHT> <NOP>
-
-" use `jk` to exit insert mode
-inoremap jk <ESC>
 
 " scroll the view port faster
 nnoremap <C-E> 3<C-E>
@@ -242,9 +259,9 @@ nnoremap gk k
 nnoremap 0 ^
 nnoremap ^ 0
 
-" quick substitute
-vnoremap \s :s/
-nnoremap \s :%s/
+" cycle in buffers
+nnoremap gb :bprevious<CR>
+nnoremap gB :bnext<CR>
 
 " cancel hlsearch
 nnoremap <silent> <CR> :nohlsearch<CR>
@@ -258,6 +275,9 @@ vnoremap <S-TAB> <gv
 " similar to gf, open file path under cursor, but in a split window in right
 nnoremap gw :let mycurf=expand("<cfile>")<CR>:execute("vsplit ".mycurf)<CR>
 
+" invoke make with makeprg option
+nnoremap <F6> :make<CR>
+
 " execute current buffer in shell
 function! ExecuteBufferInShell()
   write
@@ -270,13 +290,9 @@ function! ExecuteBufferInShell()
 endfunction
 nnoremap <F5> :call ExecuteBufferInShell()<CR>
 
-" invoke make with makeprg option
-nnoremap <F6> :make<CR>
+" }}
 
-" highlight repeated lines
-nnoremap <silent> \tr :syn clear Repeat<CR>:g/^\(.*\)\n\ze\%(.*\n\)*\1$/exe 'syn match Repeat "^' . escape(getline('.'), '".\^$*[]') . '$"'<CR>:nohlsearch<BAR>echo 'Repeated lines highlighted.'<CR>
-
-" Windows {{
+" Window {{
 
 " Move to a window in the given direction, if can't move, create a new one
 function! WinMove(direction)
@@ -309,12 +325,58 @@ noremap <C-W>- :split<CR>
 
 " }}
 
+" \ or <SPACE> {{
+
 " map leader key to ,
 let g:mapleader = ','
 
 " use space and backslash as the actual leader key for my own key bindings
 map <SPACE> \
 map <SPACE><SPACE> \\
+
+" write
+nnoremap \w :write<CR>
+
+" close current window
+nnoremap <silent> \c :close<CR>
+
+" quick substitute
+vnoremap \s :s/
+nnoremap \s :%s/
+
+" go backaward and forward in jump list
+nnoremap \j <C-O>
+nnoremap \k <C-I>
+
+" key to black hole
+noremap \b "_
+
+" select ALL
+nnoremap \a ggVG
+
+" forward yanked text to clip
+nnoremap <silent> \y :call system('clip >/dev/tty', @0)<CR>:echo 'Yanked text sent.'<CR>
+
+" toggle foldenable
+nnoremap <silent> \u :set invfoldenable<CR>
+
+" change working directory to the newly opened buffer
+nnoremap \h :lcd %:p:h<CR>:pwd<CR>
+
+" reset current filetype
+nnoremap <silent> \r :let &filetype=&filetype<CR>
+
+" close current buffer
+nnoremap \fd :bdelete!<CR>
+
+" new buffer
+nnoremap \fn :enew<CR>
+
+" print full path of current buffer
+nnoremap \fp :echo expand('%:p')<CR>
+
+" toggle auto zz when scrolling
+nnoremap <silent> \zz :let &scrolloff=999-&scrolloff<CR>
 
 " insert an empty line without entering insert mode
 nmap \<CR> <PLUG>unimpairedBlankDown<CR>
@@ -323,8 +385,12 @@ nmap \\<CR> <PLUG>unimpairedBlankUp<CR>
 " copy current line
 nnoremap \<C-Y> "tyy"tp0
 
-" toggle foldenable
-nnoremap <silent> \u :set invfoldenable<CR>
+" open / reload vimrc
+nnoremap \ve :edit $MYVIMRC<CR>
+nnoremap \vs :source $MYVIMRC<CR>
+
+" highlight repeated lines
+nnoremap <silent> \tr :syn clear Repeat<CR>:g/^\(.*\)\n\ze\%(.*\n\)*\1$/exe 'syn match Repeat "^' . escape(getline('.'), '".\^$*[]') . '$"'<CR>:nohlsearch<BAR>echo 'Repeated lines highlighted.'<CR>
 
 " open quick fix window
 function! ToggleQuickFix()
@@ -338,19 +404,6 @@ function! ToggleQuickFix()
 endfunction
 nnoremap <silent>\q :call ToggleQuickFix()<CR>
 
-" go backaward and forward in jump list
-nnoremap \j <C-O>
-nnoremap \k <C-I>
-
-" key to black hole
-noremap \b "_
-
-" reset current filetype
-nnoremap <silent> \r :let &filetype=&filetype<CR>
-
-" toggle auto zz when scrolling
-nnoremap <silent> \zz :let &scrolloff=999-&scrolloff<CR>
-
 " diff current buffer to its original (saved) version
 function! DiffOrig()
   diffthis
@@ -362,16 +415,6 @@ function! DiffOrig()
 endfunction
 nnoremap \db :call DiffOrig()<CR>
 nnoremap <silent> \de :bdelete!<CR>:diffoff<CR>
-
-" forward yanked text to clip
-nnoremap <silent> \y :call system('clip >/dev/tty', @0)<CR>:echo 'Yanked text sent.'<CR>
-
-" select ALL
-nnoremap \a ggVG
-
-" open / reload vimrc
-nnoremap \ve :edit $MYVIMRC<CR>
-nnoremap \vs :source $MYVIMRC<CR>
 
 " print current key maps in a new buffer
 function! ListAllkeyMaps()
@@ -397,53 +440,11 @@ function! ToggleMouse()
 endfunction
 nnoremap <silent>\m :call ToggleMouse()<CR>
 
-" write
-nnoremap \w :write<CR>
-
-" close current window
-nnoremap <silent> \c :close<CR>
-
-" change working directory to the newly opened buffer
-nnoremap \h :lcd %:p:h<CR>:pwd<CR>
-
-" Buffer {{
-
-" cycle in buffers
-nnoremap gb :bprevious<CR>
-nnoremap \fp :bprevious<CR>
-nnoremap gB :bnext<CR>
-nnoremap \fn :bnext<CR>
-
-" close current buffer
-nnoremap \fd :bdelete!<CR>
-
-" new buffer
-nnoremap \fn :enew<CR>
-
-" print full path of current buffer
-nnoremap \fp :echo expand('%:p')<CR>
-
-" insert current opened buffer's directory in command line
-cnoremap %% <C-R>=expand('%:p:h').'/'<CR>
-
 " }}
 
 " }}
 
 " Plugin Settings {{
-
-" Completion {{
-
-" <CR>: close popup and save indent.
-inoremap <expr><CR> pumvisible() ? "\<C-Y>" : "\<CR>"
-
-" Tab / S-Tab & C-J / C-K works just like C-N and C-P in completion
-inoremap <expr><TAB> pumvisible() ? "\<C-N>" : "\<TAB>"
-inoremap <expr><S-TAB> pumvisible() ? "\<C-P>" : "\<S-TAB>"
-inoremap <expr><C-J> pumvisible() ? "\<C-N>" : "\<C-J>"
-inoremap <expr><C-K> pumvisible() ? "\<C-P>" : "\<C-K>"
-
-" }}
 
 " Tags {{
 
@@ -502,7 +503,7 @@ nmap ga <Plug>(EasyAlign)
 
 " vim-easymotion {{
 
-" Also use \\ as the prefix
+" use \\ as the prefix
 nmap \\ <PLUG>(easymotion-prefix)
 
 " Turn on case insensitive feature
@@ -628,7 +629,7 @@ Plug 'jiangmiao/auto-pairs'
 " gc to comment codes
 Plug 'tpope/vim-commentary'
 
-" `s`: manipulate surroundded symbols / texts
+" `s`: manipulate surrounded symbols / texts
 Plug 'tpope/vim-surround'
 
 " `.` supports to repeat mapped key sequence
@@ -657,7 +658,7 @@ endif
 
 call plug#end()
 
-" set colorscheme to railscasts if it is not specified
+" default colorscheme
 if !exists('g:colors_name')
   colorscheme railscasts
 endif
