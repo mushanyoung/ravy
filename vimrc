@@ -257,6 +257,7 @@ nnoremap gB :bnext<CR>
 
 " cancel hlsearch
 nnoremap <silent> <ESC> :nohlsearch<CR><ESC>
+nnoremap <ESC> <ESC>
 
 " tab and s-tab to indent / unindent
 nnoremap <TAB> v>
