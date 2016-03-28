@@ -184,9 +184,6 @@ augroup buffer_editing
   " when editing a git commit message
   " set the cursor position to the beginning
   autocmd BufReadPost COMMIT_EDITMSG normal gg0
-
-  " restore <CR> key map in quickfix mode
-  autocmd BufReadPost quickfix nnoremap <buffer> <CR> <CR>
 augroup END
 
 augroup filetypes
@@ -259,7 +256,7 @@ nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
 
 " cancel hlsearch
-nnoremap <silent> <CR> :nohlsearch<CR>
+nnoremap <silent> <ESC> :nohlsearch<CR><ESC>
 
 " tab and s-tab to indent / unindent
 nnoremap <TAB> v>
