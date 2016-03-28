@@ -398,7 +398,8 @@ alias bubc='brew upgrade && brew cleanup'
 alias bubu='bubo && bubc'
 
 # Ravy commands
-alias ravy="cd ${0:A:h}"
+alias ravy="cd $RAVY"
+alias ravycustom="cd $RAVY_CUSTOM"
 alias ravyedit="$EDITOR ${0:A}"
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
