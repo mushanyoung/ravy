@@ -206,7 +206,7 @@ augroup END
 
 " imap / cmap {{
 
-" use `jk` to exit insert mode
+" jk to exit insert mode
 inoremap jk <ESC>
 
 " <cr>: close popup and save indent.
@@ -220,6 +220,12 @@ inoremap <expr><c-k> pumvisible() ? "\<c-p>" : "\<c-k>"
 
 " insert current opened buffer's directory in command line
 cnoremap %% <C-R>=expand('%:p:h').'/'<CR>
+
+" C-P, C-N to prefix search in history
+cnoremap <C-P> <UP>
+cnoremap <C-N> <DOWN>
+cnoremap <UP> <C-P>
+cnoremap <DOWN> <C-N>
 
 " }}
 
@@ -238,13 +244,13 @@ nnoremap <C-Y> 3<C-Y>
 " make Y acts just like C and D
 nnoremap Y y$
 
-" swap the behavior of j/k and gj/gk
+" j, k travels visual line and gj, gk travels real line
 nnoremap j gj
 nnoremap k gk
 nnoremap gj j
 nnoremap gk k
 
-" remap VIM 0
+" 0 go to first non blank, ^ go to the very beginning
 nnoremap 0 ^
 nnoremap ^ 0
 
@@ -255,7 +261,7 @@ nnoremap gB :bnext<CR>
 " cancel hlsearch
 nnoremap <silent> <CR> :nohlsearch<CR>
 
-" use tab and s-tab to indent / unindent
+" tab and s-tab to indent / unindent
 nnoremap <TAB> v>
 nnoremap <S-TAB> v<
 vnoremap <TAB> >gv
