@@ -36,6 +36,8 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
     zgen load zsh-users/zsh-history-substring-search
     zgen load zsh-users/zsh-autosuggestions
     zgen load supercrabtree/k
+    zgen load djui/alias-tips
+    zgen load Vifon/deer
 
     zgen save
   fi
@@ -72,6 +74,9 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
   # zsh auto suggestions
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+='backward-delete-char'
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
+
+  # alias-tips
+  export ZSH_PLUGINS_ALIAS_TIPS_TEXT="Alias: "
 fi
 
 # }}}
@@ -224,7 +229,7 @@ unsetopt correct_all
 # executed commands with leading space do not go into history
 setopt HIST_IGNORE_SPACE
 
-# load zmv
+# load zsh modules
 autoload -Uz zmv add-zsh-hook
 
 # }}}
@@ -418,6 +423,12 @@ bindkey '^N' history-substring-search-down
 bindkey '^F' forward-word
 bindkey '^B' backward-word
 bindkey '^W' backward-kill-word
+
+# deer: ranger-like file navigation tool
+autoload -U deer
+DEER_KEYS=('chdir_selected' ';')
+zle -N deer
+bindkey '\ek' deer
 
 # M-B / M-F to move by word with only chars, M-W to kill
 forward-word-only-chars () {
