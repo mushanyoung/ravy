@@ -39,6 +39,7 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
     zgen load djui/alias-tips
     zgen load Vifon/deer
     zgen load unixorn/git-extra-commands
+    zgen load bric3/nice-exit-code
 
     zgen save
   fi
@@ -641,7 +642,7 @@ _rv_prompt_timer_cmd_stop () {
   fi
 }
 
-RV_PROMPT_LASTSTATUS=%F{240}\${_rv_cmd_timer_elapsed}%(?.. %F{160}=%?)
+RV_PROMPT_LASTSTATUS=%F{240}\${_rv_cmd_timer_elapsed}%(?.. %F{160}\$(nice_exit_code))
 RV_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}${LA}\ \ \ %F{28}%K{234}$LA$PD
 RV_PROMPT_PATH=%F{6}%~$PD
 RV_PROMPT_GIT=\${_rv_prompt_git_str:+\$_rv_prompt_git_str$PD}
