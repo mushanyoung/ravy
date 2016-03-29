@@ -7,20 +7,9 @@ RAVY_LOADED=true
 
 # }}}
 
-# Prezto {{{
+# Zgen {{{
 
-if [[ -f ~/.zprezto/init.zsh ]]; then
-  zstyle ':prezto:load' pmodule \
-    'environment' \
-    'archive' \
-    'completion' \
-    'history' \
-    'osx' \
-    'fasd' \
-    'rsync' \
-    'syntax-highlighting' \
-    'history-substring-search' \
-    'autosuggestions'
+if [[ -f ~/.zgen/zgen.zsh ]]; then
 
   # syntax highlighting
   zstyle ':prezto:module:syntax-highlighting' color 'yes'
@@ -61,21 +50,42 @@ if [[ -f ~/.zprezto/init.zsh ]]; then
   zstyle ':prezto:module:history-substring-search' color 'yes'
   zstyle ':prezto:module:history-substring-search' globbing-flags ''
 
-  # completion settings must be loaded before prezto
+  # completion for only current user or root
+  zstyle ':completion:*' users root $USER
+
   # custom completion
   if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
     fpath+=$RAVY_CUSTOM/zsh-functions
   fi
 
-  # completion for only current user or root
-  zstyle ':completion:*' users root $USER
+  # }}}
 
-  source ~/.zprezto/init.zsh
+  # load zgen
+  source ~/.zgen/zgen.zsh
 
-  # autosuggestion
+  ZGEN_PREZTO_LOAD_DEFAULT=0
+
+  if ! zgen saved; then
+    zgen prezto
+    zgen prezto environment
+    zgen prezto archive
+    zgen prezto completion
+    zgen prezto history
+    zgen prezto osx
+    zgen prezto fasd
+    zgen prezto rsync
+    zgen prezto syntax-highlighting
+    zgen prezto history-substring-search
+    zgen prezto autosuggestions
+
+    zgen load supercrabtree/k
+
+    zgen save
+  fi
+
+  # autosuggestions
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+='backward-delete-char'
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
-
 fi
 
 # }}}
