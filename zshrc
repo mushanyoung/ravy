@@ -11,59 +11,16 @@ RAVY_LOADED=true
 
 if [[ -f ~/.zgen/zgen.zsh ]]; then
 
-  # syntax highlighting
-  zstyle ':prezto:module:syntax-highlighting' color 'yes'
-
-  zstyle ':prezto:module:syntax-highlighting' highlighters \
-    'main' \
-    'brackets' \
-    'line' \
-    'cursor' \
-    'root'
-
-  zstyle ':prezto:module:syntax-highlighting' styles \
-    'unknown-token'            'fg=red,bold' \
-    'reserved-word'            'fg=yellow' \
-    'builtin'                  'fg=green,bold' \
-    'function'                 'fg=white,bold' \
-    'command'                  'fg=green' \
-    'alias'                    'fg=green' \
-    'suffix-alias'             'fg=green,underline' \
-    'hashed-command'           'fg=green' \
-    'precommand'               'fg=magenta' \
-    'path'                     'fg=cyan' \
-    'commandseparator'         'fg=white,bold' \
-    'globbing'                 'fg=blue' \
-    'single-hyphen-option'     'fg=yellow' \
-    'double-hyphen-option'     'fg=yellow' \
-    'single-quoted-argument'   'fg=yellow,bold' \
-    'dollar-quoted-argument'   'fg=yellow,bold' \
-    'double-quoted-argument'   'fg=yellow' \
-    'back-quoted-argument'     'fg=blue' \
-    'assign'                   'fg=magenta,bold' \
-    'redirection'              'fg=white,bold' \
-    'comment'                  'fg=black,bold' \
-    'default'                  'none' \
-    'cursor'                   'bg=red'
-
-  # history substring search
-  zstyle ':prezto:module:history-substring-search' color 'yes'
-  zstyle ':prezto:module:history-substring-search' globbing-flags ''
-
-  # completion for only current user or root
-  zstyle ':completion:*' users root $USER
-
-  # custom completion
+  # custom completion must set before zgen prezto
   if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
     fpath+=$RAVY_CUSTOM/zsh-functions
   fi
 
-  # }}}
+  # do not load default modules of prezto
+  ZGEN_PREZTO_LOAD_DEFAULT=0
 
   # load zgen
   source ~/.zgen/zgen.zsh
-
-  ZGEN_PREZTO_LOAD_DEFAULT=0
 
   if ! zgen saved; then
     zgen prezto
@@ -74,16 +31,45 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
     zgen prezto osx
     zgen prezto fasd
     zgen prezto rsync
-    zgen prezto syntax-highlighting
-    zgen prezto history-substring-search
-    zgen prezto autosuggestions
 
+    zgen load zsh-users/zsh-syntax-highlighting
+    zgen load zsh-users/zsh-history-substring-search
+    zgen load zsh-users/zsh-autosuggestions
     zgen load supercrabtree/k
 
     zgen save
   fi
 
-  # autosuggestions
+  # zsh syntax highlighting
+  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets line root)
+
+  typeset -A ZSH_HIGHLIGHT_STYLES
+  ZSH_HIGHLIGHT_STYLES=(
+    'unknown-token'            'fg=red,bold'
+    'reserved-word'            'fg=yellow'
+    'builtin'                  'fg=green,bold'
+    'function'                 'fg=white,bold'
+    'command'                  'fg=green'
+    'alias'                    'fg=green'
+    'suffix-alias'             'fg=green,underline'
+    'hashed-command'           'fg=green'
+    'precommand'               'fg=magenta'
+    'path'                     'fg=cyan'
+    'commandseparator'         'fg=white,bold'
+    'globbing'                 'fg=blue'
+    'single-hyphen-option'     'fg=yellow'
+    'double-hyphen-option'     'fg=yellow'
+    'single-quoted-argument'   'fg=yellow,bold'
+    'dollar-quoted-argument'   'fg=yellow,bold'
+    'double-quoted-argument'   'fg=yellow'
+    'back-quoted-argument'     'fg=blue'
+    'assign'                   'fg=magenta,bold'
+    'redirection'              'fg=white,bold'
+    'comment'                  'fg=black,bold'
+    'default'                  'none'
+  )
+
+  # zsh auto suggestions
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+='backward-delete-char'
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
 fi
