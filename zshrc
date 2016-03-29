@@ -38,6 +38,7 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
     zgen load supercrabtree/k
     zgen load djui/alias-tips
     zgen load Vifon/deer
+    zgen load unixorn/git-extra-commands
 
     zgen save
   fi
