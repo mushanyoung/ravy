@@ -627,13 +627,13 @@ _rv_prompt_timer_cmd_stop () {
     if [[ ms -lt 10000 ]]; then
       repre=${ms}ms
     else
-      repre=''
-      hour=$((ms / 3600000))
-      minute=$((ms % 3600000 / 60000))
-      second=$((ms % 60000 / 1000))
+      s=$((ms / 1000))
+      hour=$((s / 3600))
+      minute=$((s / 60 % 60))
+      second=$((s % 60))
       if [[ hour -gt 0 ]]; then repre+=${hour}h fi
       if [[ minute -gt 0 ]]; then repre+=${minute}m fi
-      if [[ second -gt 0 ]]; then repre+=${second}s fi
+      repre+=${second}s
     fi
     _rv_cmd_timer_elapsed=$repre
     unset _rv_cmd_timer
