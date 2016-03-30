@@ -46,7 +46,7 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
   fi
 
   # zsh syntax highlighting
-  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets line root)
+  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
 
   typeset -A ZSH_HIGHLIGHT_STYLES
   ZSH_HIGHLIGHT_STYLES=(
@@ -75,7 +75,9 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
   )
 
   # zsh auto suggestions
-  ZSH_AUTOSUGGEST_CLEAR_WIDGETS+='backward-delete-char'
+  ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
+    'backward-delete-char' 'complete-menu' 'fzf-completion'
+  )
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
 
   # alias-tips
@@ -304,32 +306,20 @@ fi
 
 # }}}
 
-# Functions {{{
+# Util Functions & Aliases {{{
 
-# Go up x level of directories
-cd_up () {
-  local level=$1
+# Change dir up x level
+cdup () {
+  local level=${1:-1}
   local tarpwd=$PWD
-  while [[ ${level:-1} -gt '0' ]]; do
-    level=$(($level - 1))
+  while [[ level -gt '0' ]]; do
+    level=$((level - 1))
     tarpwd=$(dirname $tarpwd)
   done
   cd $tarpwd
 }
 
-runc() { gcc -o/tmp/runc_tmp_exec $1 && /tmp/runc_tmp_exec; rm -f /tmp/runc_tmp_exec; }
-runcc() { g++ -o/tmp/runcc_tmp_exec $1 && /tmp/runcc_tmp_exec; rm -f /tmp/runcc_tmp_exec; }
-
-# ping handles the url with protocol
-ping () {
-  command ping $(echo $* | sed -E -e 's#https?://##' -e 's#/.*$##')
-}
-
-# launch Dash doc
-dash () {
-  open "dash://$1"
-}
-
+# Change dir to target folder or the parent folder of target file
 cdd () {
   local file=$1
   if [[ -e $file ]]; then
@@ -343,33 +333,38 @@ cdd () {
   fi
 }
 
-gfd () {
-  cd $(git rev-parse --show-toplevel)
-  cdd $(git diff --name-only HEAD~5 | fzf) || cd -
+# ping handles url
+ping () {
+  command ping $(echo $* | sed -E -e 's#https?://##' -e 's#/.*$##')
 }
 
-# }}}
+# interactive mv
+imv() {
+  local src dst
+  for src; do
+    [[ -e $src ]] || { print -u2 "$src does not exist"; continue }
+    dst=$src
+    vared dst
+    [[ $src != $dst ]] && mkdir -p $dst:h && mv -n $src $dst
+  done
+}
 
-# Alias {{{
-
-# list files and change directory
-# ignore ls and cd command in shell history
+# list files, do not record in history
+alias l=' ls-color'
 alias ls=' ls'
 alias ll=' ls -lFh'
-alias l=' ls-color'
 alias la=' l -A'
 
+# change directory, do not record in history
+alias d=' cdup'
 alias cd=' cd'
 alias fl=' cd -'
 alias ..=' cd ..'
 alias pu=' pushd'
 alias po=' popd'
-
-alias d=' cd_up'
 alias dd=' d'
-alias bd='. bd -s'
 
-# Abbreviations
+# abbreviations
 alias g='git'
 alias t='tmux'
 alias sw='subl -n -w'
@@ -396,6 +391,9 @@ alias serve='python -m SimpleHTTPServer'
 alias pa='ps-color'
 alias pc='HIGH_CPU_MEM_ONLY=1 pa'
 
+# grep with options
+alias grep='grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}'
+
 # brew commands
 alias bubo='brew update && brew outdated'
 alias bubc='brew upgrade && brew cleanup'
@@ -407,13 +405,9 @@ alias ravycustom="cd $RAVY_CUSTOM"
 alias ravyedit="$EDITOR ${0:A}"
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
-alias grep='grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}'
-
-alias pg='ping google.com'
-
 # }}}
 
-# Zle Key bindings {{{
+# Zle {{{
 
 # use emacs mode for command line
 bindkey -e
@@ -552,6 +546,23 @@ bindkey '^Z' fancy-ctrl-z
 
 # autosuggestion
 bindkey '\ek' autosuggest-clear
+
+# menu select for completion
+zmodload zsh/complist
+zle -C complete-menu menu-select _generic
+_complete_menu() {
+  setopt localoptions alwayslastprompt
+  zle complete-menu
+}
+zle -N _complete_menu
+bindkey '^F' _complete_menu
+bindkey -M menuselect '^F' forward-word
+bindkey -M menuselect '^B' backward-word
+bindkey -M menuselect '^J' forward-char
+bindkey -M menuselect '^K' backward-char
+bindkey -M menuselect '/' history-incremental-search-forward
+bindkey -M menuselect '^?' undo
+bindkey -M menuselect '^C' undo
 
 KEYTIMEOUT=1
 
