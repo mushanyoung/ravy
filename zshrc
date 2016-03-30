@@ -428,7 +428,7 @@ bindkey '^B' backward-word
 bindkey '^W' backward-kill-word
 
 # deer: ranger-like file navigation tool
-autoload -U deer
+autoload -Uz deer
 DEER_KEYS=('chdir_selected' ';')
 zle -N deer
 bindkey '^K' deer
@@ -456,6 +456,12 @@ bindkey '\ew' backward-kill-word-only-chars
 # undo and redo
 bindkey '^_' undo
 bindkey '\e-' redo
+
+# M-. and M-m to insert word in previous lines
+autoload -Uz copy-earlier-word
+zle -N copy-earlier-word
+bindkey '\em' copy-earlier-word
+bindkey '\e.' insert-last-word
 
 # ctrl-a and ctrl-e
 bindkey '^A' beginning-of-line
