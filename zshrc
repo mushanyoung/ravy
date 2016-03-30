@@ -430,19 +430,19 @@ bindkey '^K' deer
 # M-B / M-F to move by word with only chars, M-W to kill
 forward-word-only-chars () {
   local WORDCHARS=
-  zle .forward-word
+  zle forward-word
 }
 zle -N forward-word-only-chars
 bindkey '\ef' forward-word-only-chars
 backward-word-only-chars () {
   local WORDCHARS=
-  zle .backward-word
+  zle backward-word
 }
 zle -N backward-word-only-chars
 bindkey '\eb' backward-word-only-chars
 backward-kill-word-only-chars () {
   local WORDCHARS=
-  zle .backward-kill-word
+  zle backward-kill-word
 }
 zle -N backward-kill-word-only-chars
 bindkey '\ew' backward-kill-word-only-chars
@@ -555,7 +555,7 @@ _complete_menu() {
   zle complete-menu
 }
 zle -N _complete_menu
-bindkey '^F' _complete_menu
+bindkey '^J' _complete_menu
 bindkey -M menuselect '^F' forward-word
 bindkey -M menuselect '^B' backward-word
 bindkey -M menuselect '^J' forward-char
