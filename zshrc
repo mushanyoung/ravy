@@ -32,14 +32,16 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
     zgen prezto fasd
     zgen prezto rsync
 
-    zgen load zsh-users/zsh-syntax-highlighting
-    zgen load zsh-users/zsh-history-substring-search
-    zgen load zsh-users/zsh-autosuggestions
     zgen load supercrabtree/k
     zgen load djui/alias-tips
     zgen load Vifon/deer
     zgen load unixorn/git-extra-commands
     zgen load bric3/nice-exit-code
+    zgen load hchbaw/zce.zsh
+
+    zgen load zsh-users/zsh-syntax-highlighting
+    zgen load zsh-users/zsh-history-substring-search
+    zgen load zsh-users/zsh-autosuggestions
 
     zgen save
   fi
@@ -430,7 +432,10 @@ bindkey '^W' backward-kill-word
 autoload -U deer
 DEER_KEYS=('chdir_selected' ';')
 zle -N deer
-bindkey '\ek' deer
+bindkey '^K' deer
+
+# zce: easy-motion like position jump
+bindkey "^J" zce
 
 # M-B / M-F to move by word with only chars, M-W to kill
 forward-word-only-chars () {
@@ -544,7 +549,7 @@ zle -N fancy-ctrl-z
 bindkey '^Z' fancy-ctrl-z
 
 # autosuggestion
-bindkey '^K' autosuggest-clear
+bindkey '\ek' autosuggest-clear
 
 KEYTIMEOUT=1
 
@@ -608,38 +613,51 @@ _rv_prompt_git () {
   _rv_prompt_git_str="$color${ref#refs/heads/}${status_str:+ $status_str}"
 }
 
-# Current millseconds
+# current millseconds
 _rv_prompt_timer_now_ms () {
   perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)'
 }
 
-# Calculate elapsed time
+# get human readable representation of time
+_rv_prompt_pretty_time () {
+  local ms s repre hour minute second
+  ms=$1
+  if [[ ms -lt 10000 ]]; then
+    repre=${ms}ms
+  else
+    s=$((ms / 1000))
+    hour=$((s / 3600))
+    minute=$((s / 60 % 60))
+    second=$((s % 60))
+    if [[ hour -gt 0 ]]; then repre+=${hour}h fi
+    if [[ minute -gt 0 ]]; then repre+=${minute}m fi
+    repre+=${second}s
+  fi
+  echo $repre
+}
+
+# start timer
 _rv_prompt_timer_cmd_start () {
   if [[ ! -n $_rv_cmd_timer ]]; then
     _rv_cmd_timer=$(_rv_prompt_timer_now_ms)
   fi
 }
 
+# stop timer and get elapsed time
 _rv_prompt_timer_cmd_stop () {
-  local ms repre hour minute second
   if [[ -n $_rv_cmd_timer ]]; then
-    ms=$(($(_rv_prompt_timer_now_ms) - $_rv_cmd_timer))
-    if [[ ms -lt 10000 ]]; then
-      repre=${ms}ms
-    else
-      s=$((ms / 1000))
-      hour=$((s / 3600))
-      minute=$((s / 60 % 60))
-      second=$((s % 60))
-      if [[ hour -gt 0 ]]; then repre+=${hour}h fi
-      if [[ minute -gt 0 ]]; then repre+=${minute}m fi
-      repre+=${second}s
-    fi
-    _rv_cmd_timer_elapsed=$repre
+    local ms=$(($(_rv_prompt_timer_now_ms) - $_rv_cmd_timer))
+    _rv_cmd_timer_elapsed=$(_rv_prompt_pretty_time $ms)
     unset _rv_cmd_timer
   else
     unset _rv_cmd_timer_elapsed
   fi
+}
+
+# render prompt string
+_rv_prompt_precmd_render () {
+  print -P "${RV_PROMPT_LASTSTATUS}"
+  print -P "${RV_PROMPT_SYMBOL}${RV_PROMPT_USER}${RV_PROMPT_PATH}${RV_PROMPT_GIT}${RV_PROMPT_X}${RV_PROMPT_JOBS}${RV_PROMPT_CUSTOMIZE}"
 }
 
 RV_PROMPT_LASTSTATUS=%F{240}\${_rv_cmd_timer_elapsed}%(?.. %F{160}\$(nice_exit_code))
@@ -649,7 +667,6 @@ RV_PROMPT_GIT=\${_rv_prompt_git_str:+\$_rv_prompt_git_str$PD}
 RV_PROMPT_X=%F{166}\${DISPLAY:+X$PD}
 RV_PROMPT_JOBS=%F{163}%(1j.\&%j.$PD)
 RV_PROMPT_CUSTOMIZE=""
-RV_PROMPT_CMD=%F{240}%k❯%f$PD
 
 if [[ -n $SSH_TTY || -n $SSH_CONNECTION ]]; then
   RV_PROMPT_USER=%F{93}%n$PD
@@ -657,12 +674,13 @@ else
   unset RV_PROMPT_USER
 fi
 
-PS1=${RV_PROMPT_LASTSTATUS}\${NEWLINE}\${RV_PROMPT_SYMBOL}\${RV_PROMPT_USER}\${RV_PROMPT_PATH}${RV_PROMPT_GIT}${RV_PROMPT_X}\${RV_PROMPT_JOBS}\${RV_PROMPT_CUSTOMIZE}\${NEWLINE}\${RV_PROMPT_CMD}
+PS1="%F{240}%k❯%f "
 RPS1=
 
 add-zsh-hook preexec _rv_prompt_timer_cmd_start
 add-zsh-hook precmd _rv_prompt_timer_cmd_stop
 add-zsh-hook precmd _rv_prompt_git
+add-zsh-hook precmd _rv_prompt_precmd_render
 
 # }}}
 
