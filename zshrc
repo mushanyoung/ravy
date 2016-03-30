@@ -37,7 +37,6 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
     zgen load Vifon/deer
     zgen load unixorn/git-extra-commands
     zgen load bric3/nice-exit-code
-    zgen load hchbaw/zce.zsh
 
     zgen load zsh-users/zsh-syntax-highlighting
     zgen load zsh-users/zsh-history-substring-search
@@ -434,9 +433,6 @@ DEER_KEYS=('chdir_selected' ';')
 zle -N deer
 bindkey '^K' deer
 
-# zce: easy-motion like position jump
-bindkey "^J" zce
-
 # M-B / M-F to move by word with only chars, M-W to kill
 forward-word-only-chars () {
   local WORDCHARS=
@@ -657,7 +653,6 @@ _rv_prompt_timer_cmd_stop () {
 # render prompt string
 _rv_prompt_precmd_render () {
   print -P "${RV_PROMPT_LASTSTATUS}"
-  print -P "${RV_PROMPT_SYMBOL}${RV_PROMPT_USER}${RV_PROMPT_PATH}${RV_PROMPT_GIT}${RV_PROMPT_X}${RV_PROMPT_JOBS}${RV_PROMPT_CUSTOMIZE}"
 }
 
 RV_PROMPT_LASTSTATUS=%F{240}\${_rv_cmd_timer_elapsed}%(?.. %F{160}\$(nice_exit_code))
@@ -667,6 +662,7 @@ RV_PROMPT_GIT=\${_rv_prompt_git_str:+\$_rv_prompt_git_str$PD}
 RV_PROMPT_X=%F{166}\${DISPLAY:+X$PD}
 RV_PROMPT_JOBS=%F{163}%(1j.\&%j.$PD)
 RV_PROMPT_CUSTOMIZE=""
+RV_PROMPT_CMD="%F{240}%k❯%f "
 
 if [[ -n $SSH_TTY || -n $SSH_CONNECTION ]]; then
   RV_PROMPT_USER=%F{93}%n$PD
@@ -674,8 +670,8 @@ else
   unset RV_PROMPT_USER
 fi
 
-PS1="%F{240}%k❯%f "
-RPS1=
+ PROMPT=\${RV_PROMPT_SYMBOL}\${RV_PROMPT_USER}\${RV_PROMPT_PATH}${RV_PROMPT_GIT}${RV_PROMPT_X}\${RV_PROMPT_JOBS}\${RV_PROMPT_CUSTOMIZE}\${NEWLINE}\${RV_PROMPT_CMD}
+RPROMPT=
 
 add-zsh-hook preexec _rv_prompt_timer_cmd_start
 add-zsh-hook precmd _rv_prompt_timer_cmd_stop
