@@ -80,6 +80,7 @@ if &term =~ "screen*"
 endif
 
 " encodings
+set encoding=utf-8
 set fileencoding=utf-8
 set termencoding=utf-8
 set fileencodings=utf-8,big5,gbk,euc-jp,euc-kr,iso8859-1,utf-16le,latin1
@@ -143,7 +144,7 @@ set scrolloff=5 scrolljump=1
 set tabstop=8 softtabstop=2 shiftwidth=2 expandtab smarttab
 
 " show hideen characters
-set list listchars=tab:❯\ ,trail:•,extends:>,precedes:<,nbsp:+
+set list listchars=tab:›\ ,trail:•,extends:>,precedes:<,nbsp:.
 
 " Abbreviation of file messages: try <C-G>
 set shortmess+=filmnrxoOtT
