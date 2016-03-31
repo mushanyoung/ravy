@@ -225,6 +225,9 @@ cnoremap <C-N> <DOWN>
 cnoremap <UP> <C-P>
 cnoremap <DOWN> <C-N>
 
+" type w!! in command line mode to force write to a RO file
+cnoremap w!! w !sudo tee % >/dev/null
+
 " }}
 
 " nmap {{
@@ -323,6 +326,9 @@ noremap <C-W>- :split<CR>
 
 " map leader key to ,
 let g:mapleader = ','
+
+" ,, to play default , behaviour
+nnoremap ,, ,
 
 " use space and backslash as the actual leader key for my own key bindings
 map <SPACE> \
