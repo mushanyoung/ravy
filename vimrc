@@ -467,7 +467,7 @@ function! RangerFileExplorer()
     endfor
     redraw!
 endfunction
-nnoremap \fr :call RangerFileExplorer()<CR>
+nnoremap \ff :call RangerFileExplorer()<CR>
 
 " }}
 
