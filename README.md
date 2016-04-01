@@ -4,7 +4,7 @@ Decent continuous shell environment with zsh, vim, git and tmux.
 
 ## Prerequisites
 
-Latest **git**, **zsh**, **ag**, **gnu-coreutils**(osx), [**powerline fonts**](https://github.com/powerline/fonts)
+Latest **git**, **zsh**, **ag**, **ranger**, **gnu-coreutils**(osx), [**powerline fonts**](https://github.com/powerline/fonts)
 
 ## Install
 

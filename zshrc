@@ -34,7 +34,6 @@ if [[ -f ~/.zgen/zgen.zsh ]]; then
 
     zgen load supercrabtree/k
     zgen load djui/alias-tips
-    zgen load Vifon/deer
     zgen load unixorn/git-extra-commands
     zgen load bric3/nice-exit-code
 
@@ -421,11 +420,20 @@ bindkey '^F' forward-word
 bindkey '^B' backward-word
 bindkey '^W' backward-kill-word
 
-# deer: ranger-like file navigation tool
-autoload -Uz deer
-DEER_KEYS=('chdir_selected' ';')
-zle -N deer
-bindkey '^K' deer
+# ranger file explorer
+ranger-cd() {
+  tempfile=$(mktemp)
+  ranger --choosedir="$tempfile" "${@:-$(pwd)}" < $TTY
+  if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(echo -n `pwd`)" ]]; then
+    cd -- "$(cat "$tempfile")"
+  fi
+  rm -f -- "$tempfile"
+
+  zle redisplay
+  zle -M ""
+}
+zle -N ranger-cd
+bindkey '^K' ranger-cd
 
 # M-B / M-F to move by word with only chars, M-W to kill
 forward-word-only-chars () {

@@ -440,6 +440,35 @@ function! ToggleMouse()
 endfunction
 nnoremap <silent>\m :call ToggleMouse()<CR>
 
+" file explorer by ranger
+function! RangerFileExplorer()
+    let temp = tempname()
+    if has("gui_running")
+        exec 'silent !xterm -e ranger --choosefiles=' . shellescape(temp)
+    else
+        exec 'silent !ranger --choosefiles=' . shellescape(temp)
+    endif
+    if !filereadable(temp)
+        redraw!
+        " Nothing to read.
+        return
+    endif
+    let names = readfile(temp)
+    if empty(names)
+        redraw!
+        " Nothing to open.
+        return
+    endif
+    " Edit the first item.
+    exec 'edit ' . fnameescape(names[0])
+    " Add any remaning items to the arg list/buffer list.
+    for name in names[1:]
+        exec 'argadd ' . fnameescape(name)
+    endfor
+    redraw!
+endfunction
+nnoremap \fr :call RangerFileExplorer()<CR>
+
 " }}
 
 " }}
@@ -468,23 +497,11 @@ nnoremap FF :Ag<SPACE>
 
 " fzf {{
 
+nnoremap <silent> <C-P> :Files<CR>
 nnoremap <silent> \fo :Files<CR>
 nnoremap <silent> \fs :Buffers<CR>
 nnoremap <silent> \ft :BTags<CR>
 nnoremap <silent> \fm :Marks<CR>
-nmap <C-P> \fo
-
-" }}
-
-" nerdtree {{
-
-nnoremap <silent> <F2> :NERDTreeToggle<CR>
-nnoremap \ff :NERDTreeFind<CR>
-
-let g:NERDTreeShowBookmarks=0
-let g:NERDTreeMinimalUI=1
-let g:NERDTreeDirArrows=1
-let g:NERDTreeWinSize=30
 
 " }}
 
