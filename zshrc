@@ -386,6 +386,9 @@ alias pip3u=$'pip3 list --outdated | awk \'!/Could not|ignored/ { print $1}\' | 
 # http serve current working dir in a given port (8000 in default)
 alias serve='python -m SimpleHTTPServer'
 
+# print abosolute path for given file
+alias realpath='perl -MCwd -e "print Cwd::abs_path shift"'
+
 # ps-color
 alias pa='ps-color'
 alias pc='HIGH_CPU_MEM_ONLY=1 pa'
