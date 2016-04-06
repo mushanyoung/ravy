@@ -407,6 +407,12 @@ alias ravycustom="cd $RAVY_CUSTOM"
 alias ravyedit="$EDITOR ${0:A}"
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
+# Open command through cbmonitor
+alias open_remote
+open_remote () {
+  echo 'open:['"$1"']' | clip
+}
+
 # }}}
 
 # Zle {{{
