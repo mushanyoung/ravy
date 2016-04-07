@@ -16,11 +16,11 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
   zstyle ':prezto:load' pmodule \
     'environment' \
     'archive' \
-    'completion' \
     'history' \
     'osx' \
     'fasd' \
-    'rsync'
+    'rsync' \
+    'completion'
 
   # custom completion must set before prezto
   if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
@@ -42,9 +42,9 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
   zplug "bric3/nice-exit-code"
   zplug "micha/resty"
 
-  zplug "zsh-users/zsh-autosuggestions", nice:11
-  zplug "zsh-users/zsh-syntax-highlighting", nice:12
-  zplug "zsh-users/zsh-history-substring-search", nice:13
+  zplug "zsh-users/zsh-syntax-highlighting", at:0.4.0, nice:17
+  zplug "zsh-users/zsh-history-substring-search", nice:18
+  zplug "zsh-users/zsh-autosuggestions", nice:19
 
   # Install plugins if there are plugins that have not been installed
   if ! zplug check --verbose; then
