@@ -605,7 +605,7 @@ Plug 'google/vim-searchindex'
 Plug 'jpo/vim-railscasts-theme'
 
 " fzf integration
-Plug 'junegunn/fzf', { 'dir': '~/.fzf' }
+Plug 'junegunn/fzf'
 
 " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/fzf.vim'

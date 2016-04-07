@@ -7,42 +7,55 @@ RAVY_LOADED=true
 
 # }}}
 
-# Zgen {{{
+# Zplug {{{
 
-if [[ -f ~/.zgen/zgen.zsh ]]; then
+if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
+  source ~/.zplug/zplug
 
-  # custom completion must set before zgen prezto
+  # Prezto modules
+  zstyle ':prezto:load' pmodule \
+    'environment' \
+    'archive' \
+    'completion' \
+    'history' \
+    'osx' \
+    'fasd' \
+    'rsync'
+
+  # custom completion must set before prezto
   if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
     fpath+=$RAVY_CUSTOM/zsh-functions
   fi
 
-  # do not load default modules of prezto
-  ZGEN_PREZTO_LOAD_DEFAULT=0
+  zplug "sorin-ionescu/prezto", \
+    do:"ln -s ~/.zplug/repos/sorin-ionescu/prezto ${ZDOTDIR:-$HOME}/.zprezto", \
+    nice:-20
 
-  # load zgen
-  source ~/.zgen/zgen.zsh
+  # duplicate to get both binary included by zplug
+  zplug 'junegunn/fzf', as:command, of:"bin/fzf", \
+    do:'./install --bin --no-update-rc >/dev/null'
+  zplug 'junegunn/fzf', as:command, of:"bin/fzf-tmux"
 
-  if ! zgen saved; then
-    zgen prezto
-    zgen prezto environment
-    zgen prezto archive
-    zgen prezto completion
-    zgen prezto history
-    zgen prezto osx
-    zgen prezto fasd
-    zgen prezto rsync
+  zplug "supercrabtree/k"
+  zplug "djui/alias-tips"
+  zplug "unixorn/git-extra-commands"
+  zplug "bric3/nice-exit-code"
+  zplug "micha/resty"
 
-    zgen load supercrabtree/k
-    zgen load djui/alias-tips
-    zgen load unixorn/git-extra-commands
-    zgen load bric3/nice-exit-code
+  zplug "zsh-users/zsh-autosuggestions", nice:11
+  zplug "zsh-users/zsh-syntax-highlighting", nice:12
+  zplug "zsh-users/zsh-history-substring-search", nice:13
 
-    zgen load zsh-users/zsh-syntax-highlighting
-    zgen load zsh-users/zsh-history-substring-search
-    zgen load zsh-users/zsh-autosuggestions
-
-    zgen save
+  # Install plugins if there are plugins that have not been installed
+  if ! zplug check --verbose; then
+    printf "Install? [y/N]: "
+    if read -q; then
+        echo; zplug install
+    fi
   fi
+
+  # Then, source plugins and add commands to $PATH
+  zplug load --verbose
 
   # zsh syntax highlighting
   ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
@@ -87,13 +100,13 @@ fi
 
 # FZF {{{
 
-if [[ -d ~/.fzf ]]; then
+if [[ -d ~/.zplug/repos/junegunn/fzf ]]; then
 
   # Auto-completion
-  source ~/.fzf/shell/completion.zsh 2> /dev/null
+  source ~/.zplug/repos/junegunn/fzf/shell/completion.zsh 2> /dev/null
 
   # Key bindings
-  source ~/.fzf/shell/key-bindings.zsh
+  source ~/.zplug/repos/junegunn/fzf/shell/key-bindings.zsh
 
   FZF_DEFAULT_COMMAND='ag -g ""'
   FZF_CTRL_T_COMMAND='ag -g ""'

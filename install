@@ -27,14 +27,9 @@ if hash brew 2>/dev/null; then
   ln -s -f "$(brew --prefix)/Library/Contributions/brew_zsh_completion.zsh" $RAVY/custom/zsh-functions/_brew
 fi
 
-echo 'Installing / Upgrading Zgen'
-git -C ~/.zgen pull --rebase || \
-  git clone --depth=1 https://github.com/tarjoilija/zgen.git ~/.zgen
-
-echo 'Installing / Upgrading FZF'
-git -C ~/.fzf pull --rebase || \
-  git clone --depth=1 https://github.com/junegunn/fzf.git ~/.fzf
-~/.fzf/install --bin
+echo 'Installing / Upgrading Zplug'
+git -C ~/.zplug pull --rebase || \
+  git clone --depth=1 https://github.com/b4b4r07/zplug ~/.zplug
 
 echo 'Configuring Vim/NeoVim'
 mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.config
