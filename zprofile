@@ -19,5 +19,4 @@ rv_add_dir_to_path_end () {
 rv_add_dir_to_path_begin $HOME/.brew/bin
 rv_add_dir_to_path_begin $RAVY/bin
 rv_add_dir_to_path_begin $RAVY_CUSTOM/bin
-rv_add_dir_to_path_end $HOME/.fzf/bin
 
