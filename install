@@ -11,8 +11,8 @@ ln -s -f $RAVY/ignores ~/.gitignores
 if ! grep "$RAVY/zshrc" ~/.zshrc 2>&1 >/dev/null; then
   echo "[ -f $RAVY/zshrc ] && source $RAVY/zshrc" >> ~/.zshrc
 fi
-if ! grep "$RAVY/zprofile" ~/.zprofile 2>&1 >/dev/null; then
-  echo "[ -f $RAVY/zprofile ] && source $RAVY/zprofile" >> ~/.zprofile
+if ! grep "$RAVY/zshenv" ~/.zshenv 2>&1 >/dev/null; then
+  echo "[ -f $RAVY/zshenv ] && source $RAVY/zshenv" >> ~/.zshenv
 fi
 
 echo 'Linking custom files'
