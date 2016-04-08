@@ -178,10 +178,6 @@ fi
 LANG=en_US.UTF-8
 LANGUAGE=$LANG
 
-# Colors
-CLICOLOR="xterm-256color"
-LSCOLORS=
-
 # General
 setopt BRACE_CCL          # Allow brace character class list expansion.
 setopt COMBINING_CHARS    # Combine zero-length punctuation characters (accents)
@@ -218,6 +214,15 @@ setopt HIST_BEEP                 # Beep when accessing non-existent history.
 
 # disable auto correcting
 unsetopt CORRECT_ALL
+
+# Colors
+CLICOLOR=xterm-256color
+LSCOLORS=
+
+# enable 256color for xterm if connects to Display
+if [[ -n $DISPLAY && $TERM == "xterm" ]]; then
+  export TERM=xterm-256color
+fi
 
 # pager
 PAGER="less"
