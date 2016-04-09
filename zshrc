@@ -30,7 +30,7 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
   zplug "joshuarubin/zsh-archive"
   zplug "zsh-users/zsh-completions"
 
-  zplug "zsh-users/zsh-syntax-highlighting", at:0.4.0, nice:17
+  zplug "zsh-users/zsh-syntax-highlighting", nice:17
   zplug "zsh-users/zsh-history-substring-search", nice:18
   zplug "zsh-users/zsh-autosuggestions", nice:19
 
