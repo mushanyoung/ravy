@@ -10,6 +10,8 @@ RAVY_LOADED=true
 # Zplug START {{{
 
 if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
+  unset ZPLUG_LOADED
+
   # load zplug
   source ~/.zplug/zplug
 
@@ -80,7 +82,7 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
   # FZF managed by zplug
   if [[ -d ~/.zplug/repos/junegunn/fzf ]]; then
     # Auto-completion
-    source ~/.zplug/repos/junegunn/fzf/shell/completion.zsh 2> /dev/null
+    source ~/.zplug/repos/junegunn/fzf/shell/completion.zsh
 
     # Key bindings
     source ~/.zplug/repos/junegunn/fzf/shell/key-bindings.zsh
@@ -94,18 +96,35 @@ fi
 # use emacs mode for command line
 bindkey -e
 
-# zsh-history-substring-search: bind ^P and ^N to it
-bindkey '^P' history-substring-search-up
-bindkey '^N' history-substring-search-down
+# ctrl-a and ctrl-e
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+
+# undo and redo
+bindkey '^_' undo
+bindkey '\e-' redo
 
 # C-B / C-F to move by word, C-W to kill
 bindkey '^F' forward-word
 bindkey '^B' backward-word
 bindkey '^W' backward-kill-word
 
+# zsh-history-substring-search: bind ^P and ^N to it
+bindkey '^P' history-substring-search-up
+bindkey '^N' history-substring-search-down
+
+# autosuggestion
+bindkey '\ek' autosuggest-clear
+
 # Smart URLs
 autoload -Uz url-quote-magic
 zle -N self-insert url-quote-magic
+
+# M-. and M-m to insert word in previous lines
+autoload -Uz copy-earlier-word
+zle -N copy-earlier-word
+bindkey '\em' copy-earlier-word
+bindkey '\e.' insert-last-word
 
 # ranger file explorer
 ranger-cd() {
@@ -127,66 +146,20 @@ forward-word-only-chars () {
   local WORDCHARS=
   zle forward-word
 }
-zle -N forward-word-only-chars
-bindkey '\ef' forward-word-only-chars
 backward-word-only-chars () {
   local WORDCHARS=
   zle backward-word
 }
-zle -N backward-word-only-chars
-bindkey '\eb' backward-word-only-chars
 backward-kill-word-only-chars () {
   local WORDCHARS=
   zle backward-kill-word
 }
+zle -N forward-word-only-chars
+zle -N backward-word-only-chars
 zle -N backward-kill-word-only-chars
+bindkey '\ef' forward-word-only-chars
+bindkey '\eb' backward-word-only-chars
 bindkey '\ew' backward-kill-word-only-chars
-
-# undo and redo
-bindkey '^_' undo
-bindkey '\e-' redo
-
-# M-. and M-m to insert word in previous lines
-autoload -Uz copy-earlier-word
-zle -N copy-earlier-word
-bindkey '\em' copy-earlier-word
-bindkey '\e.' insert-last-word
-
-# ctrl-a and ctrl-e
-bindkey '^A' beginning-of-line
-bindkey '^E' end-of-line
-
-# fzf default completion
-bindkey '^I' fzf-completion
-bindkey '^R' fzf-history-widget
-bindkey '^T' fzf-file-widget
-bindkey '\ec' fzf-cd-widget
-
-# Use FZF to modify the current word with git files
-fzf-git-files-widget() {
-  local prefix tokens word
-
-  # Extract the last word, or empty string when starting a new word.
-  if [[ ! -n $LBUFFER || ${LBUFFER[-1]} == ' ' ]]; then
-    word=""
-    prefix=$LBUFFER
-  else
-    tokens=(${(z)LBUFFER})
-    word=${tokens[-1]}
-    prefix=${LBUFFER:0:-$#word}
-  fi
-
-  # Complete the word with FZF, feed Git tracked or new files as input.
-  word=$( git rev-parse 2> /dev/null &&
-    (( git ls-files && git ls-files --other --exclude-standard) |
-  fzf -q "$word" ));
-  if [[ -n $word ]]; then
-    LBUFFER="$prefix$word"
-    zle redisplay
-  fi
-}
-zle -N fzf-git-files-widget
-bindkey '\eg' fzf-git-files-widget
 
 # Use FZF to modify the current word with tmux words
 fzf-tmux-words-widget() {
@@ -214,8 +187,26 @@ fzf-tmux-words-widget() {
 zle -N fzf-tmux-words-widget
 bindkey '\et' fzf-tmux-words-widget
 
+# fzf default completion
+bindkey '^I' fzf-completion
+bindkey '^R' fzf-history-widget
+bindkey '^T' fzf-file-widget
+bindkey '\ec' fzf-cd-widget
+
+# toggle glob for current command line
+glob-toggle () {
+  [[ -z $BUFFER ]] && zle up-history
+  if [[ $BUFFER == noglob\ * ]]; then
+    LBUFFER="${LBUFFER#noglob }"
+  else
+    LBUFFER="noglob $LBUFFER"
+  fi
+}
+zle -N glob-toggle
+bindkey '\eg' glob-toggle
+
 # toggle sudo for current command line
-sudo-command-line() {
+sudo-toggle() {
   [[ -z $BUFFER ]] && zle up-history
   if [[ $BUFFER == sudo\ * ]]; then
     LBUFFER="${LBUFFER#sudo }"
@@ -223,8 +214,8 @@ sudo-command-line() {
     LBUFFER="sudo $LBUFFER"
   fi
 }
-zle -N sudo-command-line
-bindkey '^S' sudo-command-line
+zle -N sudo-toggle
+bindkey '^S' sudo-toggle
 
 # fancy-ctrl-z
 fancy-ctrl-z () {
@@ -238,9 +229,6 @@ fancy-ctrl-z () {
 }
 zle -N fancy-ctrl-z
 bindkey '^Z' fancy-ctrl-z
-
-# autosuggestion
-bindkey '\ek' autosuggest-clear
 
 # menu select for completion
 zmodload zsh/complist
@@ -265,15 +253,19 @@ KEYTIMEOUT=1
 
 # Zplug END {{{
 
-# load plugins managed by zplug
-zplug load --verbose
+if [[ -f ~/.zplug/zplug && -z $ZPLUG_LOADED ]]; then
+  ZPLUG_LOADED=true
 
-# Post zplug settings
-# zsh auto suggestions
-ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
-  'backward-delete-char' 'complete-menu' 'fzf-completion'
-)
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
+  # load plugins managed by zplug
+  zplug load --verbose
+
+  # Post zplug settings
+  # zsh auto suggestions
+  ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
+    'backward-delete-char' 'complete-menu' 'fzf-completion'
+  )
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
+fi
 
 # }}}
 
@@ -354,9 +346,9 @@ export EDITOR=vim
 export GIT_EDITOR=vim
 
 # ls color evaluations
-if hash dircolors 2>/dev/null; then
+if hash dircolors &>/dev/null; then
   eval $(dircolors -b $RAVY/LS_COLORS)
-elif hash gdircolors 2>/dev/null; then
+elif hash gdircolors &>/dev/null; then
   # coreutils from brew
   eval $(gdircolors -b $RAVY/LS_COLORS)
 fi
@@ -398,16 +390,6 @@ autoload -Uz zmv add-zsh-hook
     fi
   }
 
-  # fuzzy open with editor from anywhere
-  fog() {
-    local files opt
-    files=(${(f)"$(locate -i -0 ${@:-/} | grep -z -vE '~$' | fzf --read0 -0 -1 -m)"})
-    if [[ -n $files ]]; then
-      print -l $files[1]
-      ${EDITOR:-vim} $files
-    fi
-  }
-
   # open recent files of vim
   fv() {
     local files
@@ -417,34 +399,6 @@ autoload -Uz zmv add-zsh-hook
     done | fzf -d -m -1 -q "$*") && vim -- ${files//\~/$HOME}
   }
 
-  # fd - cd to selected directory
-  fd() {
-    local dir
-    dir=$(find ${1:-*} -path '*/\.*' -prune \
-      -o -type d -print 2> /dev/null | fzf +m) &&
-      cd "$dir"
-  }
-
-  # fda - including hidden directories
-  fda() {
-    local dir
-    dir=$(find ${1:-.} -type d 2> /dev/null | fzf +m) && cd "$dir"
-  }
-
-  # fdg - fuzzy cd from anywhere
-  fdg () {
-    local file opt
-    file="$(locate -i -0 ${@:-/} | grep -z -vE '~$' | fzf --read0 -0 -1)"
-    if [[ -e $file ]]; then
-      if [[ -f $file ]]; then
-        cd -- ${file:h}
-      else
-        cd -- $file
-      fi
-    else
-      false
-    fi
-  }
 # }}}
 
 # Completions {{{
@@ -513,13 +467,6 @@ zstyle ':completion:*:history-words' menu yes
 # Environmental Variables
 zstyle ':completion::*:(-command-|export):*' fake-parameters ${${${_comps[(I)-value-*]#*,}%%,*}:#-*-}
 
-# Populate hostname completion.
-zstyle -e ':completion:*:hosts' hosts 'reply=(
-  ${=${=${=${${(f)"$(cat {/etc/ssh_,~/.ssh/known_}hosts(|2)(N) 2>/dev/null)"}%%[#| ]*}//\]:[0-9]*/ }//,/ }//\[/ }
-  ${=${(f)"$(cat /etc/hosts(|)(N) <<(ypcat hosts 2>/dev/null))"}%%\#*}
-  ${=${${${${(@M)${(f)"$(cat ~/.ssh/config 2>/dev/null)"}:#Host *}#Host }:#*\**}:#*\?*}}
-)'
-
 # Don't complete uninteresting users...
 zstyle ':completion:*:*:*:users' ignored-patterns \
   adm amanda apache avahi beaglidx bin cacti canna clamav daemon \
@@ -547,15 +494,6 @@ zstyle ':completion:*:*:kill:*' insert-ids single
 # Man
 zstyle ':completion:*:manuals' separate-sections true
 zstyle ':completion:*:manuals.(^1*)' insert-sections true
-
-# SSH/SCP/RSYNC
-zstyle ':completion:*:(scp|rsync):*' tag-order 'hosts:-host:host hosts:-domain:domain hosts:-ipaddr:ip\ address *'
-zstyle ':completion:*:(scp|rsync):*' group-order users files all-files hosts-domain hosts-host hosts-ipaddr
-zstyle ':completion:*:ssh:*' tag-order 'hosts:-host:host hosts:-domain:domain hosts:-ipaddr:ip\ address *'
-zstyle ':completion:*:ssh:*' group-order users hosts-domain hosts-host users hosts-ipaddr
-zstyle ':completion:*:(ssh|scp|rsync):*:hosts-host' ignored-patterns '*(.|:)*' loopback ip6-loopback localhost ip6-localhost broadcasthost
-zstyle ':completion:*:(ssh|scp|rsync):*:hosts-domain' ignored-patterns '<->.<->.<->.<->' '^[-[:alnum:]]##(.[-[:alnum:]]##)##' '*@*'
-zstyle ':completion:*:(ssh|scp|rsync):*:hosts-ipaddr' ignored-patterns '^(<->.<->.<->.<->|(|::)([[:xdigit:].]##:(#c,2))##(|%*))' '127.0.0.<->' '255.255.255.255' '::1' 'fe80::*'
 
 # }}}
 
