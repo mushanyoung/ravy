@@ -7,15 +7,11 @@ RAVY_LOADED=true
 
 # }}}
 
-# Zplug {{{
+# Zplug START {{{
 
 if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
+  # load zplug
   source ~/.zplug/zplug
-
-  # custom completion must set before zplug load
-  if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
-    fpath+=$RAVY_CUSTOM/zsh-functions
-  fi
 
   # duplicate to get both binary included by zplug
   zplug 'junegunn/fzf', as:command, of:"bin/fzf", \
@@ -42,8 +38,15 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
     fi
   fi
 
-  # Then, source plugins and add commands to $PATH
-  zplug load --verbose
+  # Pre zplug settings
+
+  # custom completion path
+  if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
+    fpath+=$RAVY_CUSTOM/zsh-functions
+  fi
+
+  # alias-tips
+  export ZSH_PLUGINS_ALIAS_TIPS_TEXT="Alias: "
 
   # zsh syntax highlighting
   ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
@@ -74,101 +77,203 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
     'default'                  'none'
   )
 
-  # zsh auto suggestions
-  ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
-    'backward-delete-char' 'complete-menu' 'fzf-completion'
-  )
-  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
+  # FZF managed by zplug
+  if [[ -d ~/.zplug/repos/junegunn/fzf ]]; then
+    # Auto-completion
+    source ~/.zplug/repos/junegunn/fzf/shell/completion.zsh 2> /dev/null
 
-  # alias-tips
-  export ZSH_PLUGINS_ALIAS_TIPS_TEXT="Alias: "
+    # Key bindings
+    source ~/.zplug/repos/junegunn/fzf/shell/key-bindings.zsh
+  fi
 fi
 
-# FZF managed by zplug
-if [[ -d ~/.zplug/repos/junegunn/fzf ]]; then
-  # Auto-completion
-  source ~/.zplug/repos/junegunn/fzf/shell/completion.zsh 2> /dev/null
+# }}}
 
-  # Key bindings
-  source ~/.zplug/repos/junegunn/fzf/shell/key-bindings.zsh
+# Zle {{{
 
-  FZF_DEFAULT_COMMAND='ag -g ""'
-  FZF_CTRL_T_COMMAND='ag -g ""'
-  FZF_DEFAULT_OPTS='--select-1 --exit-0'
-  FZF_COMPLETION_TRIGGER='**'
+# use emacs mode for command line
+bindkey -e
 
-  alias fzf='fzf-tmux'
+# zsh-history-substring-search: bind ^P and ^N to it
+bindkey '^P' history-substring-search-up
+bindkey '^N' history-substring-search-down
 
-  # Open the selected file
-  #   - CTRL-O to open with `open` command,
-  #   - CTRL-E or Enter key to open with the $EDITOR
-  #   - Bypass fuzzy finder if there's only one match (--select-1)
-  #   - Exit if there's no match (--exit-0)
-  fo() {
-    local out file key cmd
-    out=$(fzf --query="$1" --exit-0 --expect=ctrl-o,ctrl-e)
-    key=$(head -1 <<< "$out")
-    file=$(head -2 <<< "$out" | tail -1)
-    if [[ "$key" == 'ctrl-o' ]]; then
-      cmd='open'
-    else
-      cmd=${EDITOR:-vim}
-    fi
-    if [[ -n "$file" ]]; then
-      echo $file
-      $cmd "$file"
-    fi
-  }
+# C-B / C-F to move by word, C-W to kill
+bindkey '^F' forward-word
+bindkey '^B' backward-word
+bindkey '^W' backward-kill-word
 
-  # fuzzy open with editor from anywhere
-  fog() {
-    local files opt
-    files=(${(f)"$(locate -i -0 ${@:-/} | grep -z -vE '~$' | fzf --read0 -0 -1 -m)"})
-    if [[ -n $files ]]; then
-      print -l $files[1]
-      ${EDITOR:-vim} $files
-    fi
-  }
+# Smart URLs
+autoload -Uz url-quote-magic
+zle -N self-insert url-quote-magic
 
-  # open recent files of vim
-  fv() {
-    local files
-    files=$(grep '^>' ~/.viminfo | cut -c3- |
-    while read line; do
-      [[ -f "${line/\~/$HOME}" ]] && echo "$line"
-    done | fzf -d -m -1 -q "$*") && vim -- ${files//\~/$HOME}
-  }
+# ranger file explorer
+ranger-cd() {
+  tempfile=$(mktemp)
+  ranger --choosedir="$tempfile" "${@:-$(pwd)}" < $TTY
+  if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(echo -n `pwd`)" ]]; then
+    cd -- "$(cat "$tempfile")"
+  fi
+  rm -f -- "$tempfile"
 
-  # fd - cd to selected directory
-  fd() {
-    local dir
-    dir=$(find ${1:-*} -path '*/\.*' -prune \
-      -o -type d -print 2> /dev/null | fzf +m) &&
-      cd "$dir"
-  }
+  zle redisplay
+  zle -M ""
+}
+zle -N ranger-cd
+bindkey '^K' ranger-cd
 
-  # fda - including hidden directories
-  fda() {
-    local dir
-    dir=$(find ${1:-.} -type d 2> /dev/null | fzf +m) && cd "$dir"
-  }
+# M-B / M-F to move by word with only chars, M-W to kill
+forward-word-only-chars () {
+  local WORDCHARS=
+  zle forward-word
+}
+zle -N forward-word-only-chars
+bindkey '\ef' forward-word-only-chars
+backward-word-only-chars () {
+  local WORDCHARS=
+  zle backward-word
+}
+zle -N backward-word-only-chars
+bindkey '\eb' backward-word-only-chars
+backward-kill-word-only-chars () {
+  local WORDCHARS=
+  zle backward-kill-word
+}
+zle -N backward-kill-word-only-chars
+bindkey '\ew' backward-kill-word-only-chars
 
-  # fdg - fuzzy cd from anywhere
-  fdg () {
-    local file opt
-    file="$(locate -i -0 ${@:-/} | grep -z -vE '~$' | fzf --read0 -0 -1)"
-    if [[ -e $file ]]; then
-      if [[ -f $file ]]; then
-        cd -- ${file:h}
-      else
-        cd -- $file
-      fi
-    else
-      false
-    fi
-  }
+# undo and redo
+bindkey '^_' undo
+bindkey '\e-' redo
 
-fi
+# M-. and M-m to insert word in previous lines
+autoload -Uz copy-earlier-word
+zle -N copy-earlier-word
+bindkey '\em' copy-earlier-word
+bindkey '\e.' insert-last-word
+
+# ctrl-a and ctrl-e
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+
+# fzf default completion
+bindkey '^I' fzf-completion
+bindkey '^R' fzf-history-widget
+bindkey '^T' fzf-file-widget
+bindkey '\ec' fzf-cd-widget
+
+# Use FZF to modify the current word with git files
+fzf-git-files-widget() {
+  local prefix tokens word
+
+  # Extract the last word, or empty string when starting a new word.
+  if [[ ! -n $LBUFFER || ${LBUFFER[-1]} == ' ' ]]; then
+    word=""
+    prefix=$LBUFFER
+  else
+    tokens=(${(z)LBUFFER})
+    word=${tokens[-1]}
+    prefix=${LBUFFER:0:-$#word}
+  fi
+
+  # Complete the word with FZF, feed Git tracked or new files as input.
+  word=$( git rev-parse 2> /dev/null &&
+    (( git ls-files && git ls-files --other --exclude-standard) |
+  fzf -q "$word" ));
+  if [[ -n $word ]]; then
+    LBUFFER="$prefix$word"
+    zle redisplay
+  fi
+}
+zle -N fzf-git-files-widget
+bindkey '\eg' fzf-git-files-widget
+
+# Use FZF to modify the current word with tmux words
+fzf-tmux-words-widget() {
+  if [[ -z "$TMUX_PANE" ]]; then
+    return 1
+  fi
+  local prefix tokens word
+
+  # Extract the last word, or empty string when starting a new word.
+  if [[ ! -n $LBUFFER || ${LBUFFER[-1]} == ' ' ]]; then
+    word=""
+    prefix=$LBUFFER
+  else
+    tokens=(${(z)LBUFFER})
+    word=${tokens[-1]}
+    prefix=${LBUFFER:0:-$#word}
+  fi
+
+  word=$( tmuxwords | fzf -q "$1" );
+  if [[ -n $word ]]; then
+    LBUFFER="$prefix$word"
+    zle redisplay
+  fi
+}
+zle -N fzf-tmux-words-widget
+bindkey '\et' fzf-tmux-words-widget
+
+# toggle sudo for current command line
+sudo-command-line() {
+  [[ -z $BUFFER ]] && zle up-history
+  if [[ $BUFFER == sudo\ * ]]; then
+    LBUFFER="${LBUFFER#sudo }"
+  else
+    LBUFFER="sudo $LBUFFER"
+  fi
+}
+zle -N sudo-command-line
+bindkey '^S' sudo-command-line
+
+# fancy-ctrl-z
+fancy-ctrl-z () {
+  if [[ $#BUFFER -eq 0 ]]; then
+    BUFFER="fg"
+    zle accept-line
+  else
+    zle push-input
+    zle clear-screen
+  fi
+}
+zle -N fancy-ctrl-z
+bindkey '^Z' fancy-ctrl-z
+
+# autosuggestion
+bindkey '\ek' autosuggest-clear
+
+# menu select for completion
+zmodload zsh/complist
+zle -C complete-menu menu-select _generic
+_complete_menu() {
+  setopt localoptions alwayslastprompt
+  zle complete-menu
+}
+zle -N _complete_menu
+bindkey '^J' _complete_menu
+bindkey -M menuselect '^F' forward-word
+bindkey -M menuselect '^B' backward-word
+bindkey -M menuselect '^J' forward-char
+bindkey -M menuselect '^K' backward-char
+bindkey -M menuselect '/' history-incremental-search-forward
+bindkey -M menuselect '^?' undo
+bindkey -M menuselect '^C' undo
+
+KEYTIMEOUT=1
+
+# }}}
+
+# Zplug END {{{
+
+# load plugins managed by zplug
+zplug load --verbose
+
+# Post zplug settings
+# zsh auto suggestions
+ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
+  'backward-delete-char' 'complete-menu' 'fzf-completion'
+)
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
 
 # }}}
 
@@ -262,6 +367,84 @@ WORDCHARS='*?_-.[]~&;!#$%^(){}<>/\+:=@'
 # load zsh modules
 autoload -Uz zmv add-zsh-hook
 
+# }}}
+
+# FZF {{{
+  FZF_DEFAULT_COMMAND='ag -g ""'
+  FZF_CTRL_T_COMMAND='ag -g ""'
+  FZF_DEFAULT_OPTS='--select-1 --exit-0'
+  FZF_COMPLETION_TRIGGER='**'
+
+  alias fzf='fzf-tmux'
+
+  # Open the selected file
+  #   - CTRL-O to open with `open` command,
+  #   - CTRL-E or Enter key to open with the $EDITOR
+  #   - Bypass fuzzy finder if there's only one match (--select-1)
+  #   - Exit if there's no match (--exit-0)
+  fo() {
+    local out file key cmd
+    out=$(fzf --query="$1" --exit-0 --expect=ctrl-o,ctrl-e)
+    key=$(head -1 <<< "$out")
+    file=$(head -2 <<< "$out" | tail -1)
+    if [[ "$key" == 'ctrl-o' ]]; then
+      cmd='open'
+    else
+      cmd=${EDITOR:-vim}
+    fi
+    if [[ -n "$file" ]]; then
+      echo $file
+      $cmd "$file"
+    fi
+  }
+
+  # fuzzy open with editor from anywhere
+  fog() {
+    local files opt
+    files=(${(f)"$(locate -i -0 ${@:-/} | grep -z -vE '~$' | fzf --read0 -0 -1 -m)"})
+    if [[ -n $files ]]; then
+      print -l $files[1]
+      ${EDITOR:-vim} $files
+    fi
+  }
+
+  # open recent files of vim
+  fv() {
+    local files
+    files=$(grep '^>' ~/.viminfo | cut -c3- |
+    while read line; do
+      [[ -f "${line/\~/$HOME}" ]] && echo "$line"
+    done | fzf -d -m -1 -q "$*") && vim -- ${files//\~/$HOME}
+  }
+
+  # fd - cd to selected directory
+  fd() {
+    local dir
+    dir=$(find ${1:-*} -path '*/\.*' -prune \
+      -o -type d -print 2> /dev/null | fzf +m) &&
+      cd "$dir"
+  }
+
+  # fda - including hidden directories
+  fda() {
+    local dir
+    dir=$(find ${1:-.} -type d 2> /dev/null | fzf +m) && cd "$dir"
+  }
+
+  # fdg - fuzzy cd from anywhere
+  fdg () {
+    local file opt
+    file="$(locate -i -0 ${@:-/} | grep -z -vE '~$' | fzf --read0 -0 -1)"
+    if [[ -e $file ]]; then
+      if [[ -f $file ]]; then
+        cd -- ${file:h}
+      else
+        cd -- $file
+      fi
+    else
+      false
+    fi
+  }
 # }}}
 
 # Completions {{{
@@ -553,180 +736,6 @@ alias open_remote
 open_remote () {
   echo 'open:['"$1"']' | clip
 }
-
-# }}}
-
-# Zle {{{
-
-# use emacs mode for command line
-bindkey -e
-
-# zsh-history-substring-search: bind ^P and ^N to it
-bindkey '^P' history-substring-search-up
-bindkey '^N' history-substring-search-down
-
-# C-B / C-F to move by word, C-W to kill
-bindkey '^F' forward-word
-bindkey '^B' backward-word
-bindkey '^W' backward-kill-word
-
-# Smart URLs
-autoload -Uz url-quote-magic
-zle -N self-insert url-quote-magic
-
-# ranger file explorer
-ranger-cd() {
-  tempfile=$(mktemp)
-  ranger --choosedir="$tempfile" "${@:-$(pwd)}" < $TTY
-  if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(echo -n `pwd`)" ]]; then
-    cd -- "$(cat "$tempfile")"
-  fi
-  rm -f -- "$tempfile"
-
-  zle redisplay
-  zle -M ""
-}
-zle -N ranger-cd
-bindkey '^K' ranger-cd
-
-# M-B / M-F to move by word with only chars, M-W to kill
-forward-word-only-chars () {
-  local WORDCHARS=
-  zle forward-word
-}
-zle -N forward-word-only-chars
-bindkey '\ef' forward-word-only-chars
-backward-word-only-chars () {
-  local WORDCHARS=
-  zle backward-word
-}
-zle -N backward-word-only-chars
-bindkey '\eb' backward-word-only-chars
-backward-kill-word-only-chars () {
-  local WORDCHARS=
-  zle backward-kill-word
-}
-zle -N backward-kill-word-only-chars
-bindkey '\ew' backward-kill-word-only-chars
-
-# undo and redo
-bindkey '^_' undo
-bindkey '\e-' redo
-
-# M-. and M-m to insert word in previous lines
-autoload -Uz copy-earlier-word
-zle -N copy-earlier-word
-bindkey '\em' copy-earlier-word
-bindkey '\e.' insert-last-word
-
-# ctrl-a and ctrl-e
-bindkey '^A' beginning-of-line
-bindkey '^E' end-of-line
-
-# fzf default completion
-bindkey '^I' fzf-completion
-bindkey '^R' fzf-history-widget
-bindkey '^T' fzf-file-widget
-bindkey '\ec' fzf-cd-widget
-
-# Use FZF to modify the current word with git files
-fzf-git-files-widget() {
-  local prefix tokens word
-
-  # Extract the last word, or empty string when starting a new word.
-  if [[ ! -n $LBUFFER || ${LBUFFER[-1]} == ' ' ]]; then
-    word=""
-    prefix=$LBUFFER
-  else
-    tokens=(${(z)LBUFFER})
-    word=${tokens[-1]}
-    prefix=${LBUFFER:0:-$#word}
-  fi
-
-  # Complete the word with FZF, feed Git tracked or new files as input.
-  word=$( git rev-parse 2> /dev/null &&
-    (( git ls-files && git ls-files --other --exclude-standard) |
-  fzf -q "$word" ));
-  if [[ -n $word ]]; then
-    LBUFFER="$prefix$word"
-    zle redisplay
-  fi
-}
-zle -N fzf-git-files-widget
-bindkey '\eg' fzf-git-files-widget
-
-# Use FZF to modify the current word with tmux words
-fzf-tmux-words-widget() {
-  if [[ -z "$TMUX_PANE" ]]; then
-    return 1
-  fi
-  local prefix tokens word
-
-  # Extract the last word, or empty string when starting a new word.
-  if [[ ! -n $LBUFFER || ${LBUFFER[-1]} == ' ' ]]; then
-    word=""
-    prefix=$LBUFFER
-  else
-    tokens=(${(z)LBUFFER})
-    word=${tokens[-1]}
-    prefix=${LBUFFER:0:-$#word}
-  fi
-
-  word=$( tmuxwords | fzf -q "$1" );
-  if [[ -n $word ]]; then
-    LBUFFER="$prefix$word"
-    zle redisplay
-  fi
-}
-zle -N fzf-tmux-words-widget
-bindkey '\et' fzf-tmux-words-widget
-
-# toggle sudo for current command line
-sudo-command-line() {
-  [[ -z $BUFFER ]] && zle up-history
-  if [[ $BUFFER == sudo\ * ]]; then
-    LBUFFER="${LBUFFER#sudo }"
-  else
-    LBUFFER="sudo $LBUFFER"
-  fi
-}
-zle -N sudo-command-line
-bindkey '^S' sudo-command-line
-
-# fancy-ctrl-z
-fancy-ctrl-z () {
-  if [[ $#BUFFER -eq 0 ]]; then
-    BUFFER="fg"
-    zle accept-line
-  else
-    zle push-input
-    zle clear-screen
-  fi
-}
-zle -N fancy-ctrl-z
-bindkey '^Z' fancy-ctrl-z
-
-# autosuggestion
-bindkey '\ek' autosuggest-clear
-
-# menu select for completion
-zmodload zsh/complist
-zle -C complete-menu menu-select _generic
-_complete_menu() {
-  setopt localoptions alwayslastprompt
-  zle complete-menu
-}
-zle -N _complete_menu
-bindkey '^J' _complete_menu
-bindkey -M menuselect '^F' forward-word
-bindkey -M menuselect '^B' backward-word
-bindkey -M menuselect '^J' forward-char
-bindkey -M menuselect '^K' backward-char
-bindkey -M menuselect '/' history-incremental-search-forward
-bindkey -M menuselect '^?' undo
-bindkey -M menuselect '^C' undo
-
-KEYTIMEOUT=1
 
 # }}}
 
