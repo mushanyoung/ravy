@@ -348,9 +348,6 @@ nnoremap \s :%s/
 nnoremap \j <C-O>
 nnoremap \k <C-I>
 
-" key to black hole
-noremap \b "_
-
 " select ALL
 nnoremap \a ggVG
 
@@ -498,10 +495,11 @@ nnoremap FF :Ag<SPACE>
 " fzf {{
 
 nnoremap <silent> <C-P> :Files<CR>
-nnoremap <silent> \fo :Files<CR>
-nnoremap <silent> \fs :Buffers<CR>
-nnoremap <silent> \ft :BTags<CR>
-nnoremap <silent> \fm :Marks<CR>
+nnoremap <silent> \fo   :Files<CR>
+nnoremap <silent> \ft   :BTags<CR>
+nnoremap <silent> \fm   :Marks<CR>
+nnoremap <silent> \fs   :Buffers<CR>
+nnoremap <silent> \b    :Buffers<CR>
 
 " }}
 
@@ -657,6 +655,8 @@ Plug 'tpope/vim-unimpaired'
 
 " git integration
 Plug 'tpope/vim-fugitive'
+
+Plug 'vim-scripts/vim-scroll-position'
 
 if executable('ctags')
   " tag explorer
