@@ -22,11 +22,6 @@ touch $RAVY/custom/vimrc
 touch $RAVY/custom/gitconfig
 ln -s -f $RAVY/custom/gitconfig ~/.gitconfig_custom
 
-if hash brew 2>/dev/null; then
-  echo 'Linking brew zsh completion file'
-  ln -s -f "$(brew --prefix)/Library/Contributions/brew_zsh_completion.zsh" $RAVY/custom/zsh-functions/_brew
-fi
-
 echo 'Installing / Upgrading Zplug'
 git -C ~/.zplug pull --rebase || \
   git clone --depth=1 https://github.com/b4b4r07/zplug ~/.zplug
