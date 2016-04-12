@@ -188,7 +188,6 @@ zle -N fzf-tmux-words-widget
 bindkey '\et' fzf-tmux-words-widget
 
 # fzf default completion
-bindkey '^I' fzf-completion
 bindkey '^R' fzf-history-widget
 bindkey '^T' fzf-file-widget
 bindkey '\ec' fzf-cd-widget
@@ -230,7 +229,9 @@ fancy-ctrl-z () {
 zle -N fancy-ctrl-z
 bindkey '^Z' fancy-ctrl-z
 
-# menu select for completion
+# menu select and completion
+bindkey '^I' expand-or-complete
+
 zmodload zsh/complist
 zle -C complete-menu menu-select _generic
 _complete_menu() {
@@ -262,7 +263,7 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_LOADED ]]; then
   # Post zplug settings
   # zsh auto suggestions
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
-    'backward-delete-char' 'complete-menu' 'fzf-completion'
+    'backward-delete-char' 'complete-menu' 'expand-or-complete'
   )
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
 fi
