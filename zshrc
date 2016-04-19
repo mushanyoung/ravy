@@ -504,17 +504,18 @@ if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
 
   # Sets the terminal or terminal multiplexer title.
   function _rv_termtitle_set {
-    local title_format{,ted}
-    title_format="%s"
-    zformat -f title_formatted "$title_format" "s:$argv"
+    local window_title_format tab_title_format formatted
+    zformat -f formatted "%s" "s:$argv"
 
     if [[ "$TERM" == screen* ]]; then
-      title_format="\ek%s\e\\"
+      window_title_format="\ek%s\e\\"
     else
-      title_format="\e]2;%s\a"
+      window_title_format="\e]2;%s\a"
     fi
+    tab_title_format="\e]1;%s\a"
 
-    printf "$title_format" "${(V%)title_formatted}"
+    printf "$tab_title_format" "${(V%)formatted}"
+    printf "$window_title_format" "${(V%)formatted}"
   }
 
   # Sets the terminal title with a given command.
