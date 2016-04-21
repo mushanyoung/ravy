@@ -4,9 +4,7 @@ RAVY="${0:A:h}"
 
 echo 'Linking dotfiles'
 ln -s -f $RAVY/tmux.conf ~/.tmux.conf
-ln -s -f $RAVY/gitconfig ~/.gitconfig
 ln -s -f $RAVY/ignores ~/.agignore
-ln -s -f $RAVY/ignores ~/.gitignores
 
 if ! grep "$RAVY/zshrc" ~/.zshrc 2>&1 >/dev/null; then
   echo "[ -f $RAVY/zshrc ] && source $RAVY/zshrc" >> ~/.zshrc
@@ -14,13 +12,15 @@ fi
 if ! grep "$RAVY/zshenv" ~/.zshenv 2>&1 >/dev/null; then
   echo "[ -f $RAVY/zshenv ] && source $RAVY/zshenv" >> ~/.zshenv
 fi
+if ! grep "path=$RAVY/gitconfig" ~/.gitconfig 2>&1 >/dev/null; then
+  echo "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig" >> ~/.gitconfig
+fi
 
 echo 'Linking custom files'
 mkdir -p $RAVY/custom $RAVY/custom/bin $RAVY/custom/zsh-functions
 touch $RAVY/custom/zshrc
 touch $RAVY/custom/vimrc
 touch $RAVY/custom/gitconfig
-ln -s -f $RAVY/custom/gitconfig ~/.gitconfig_custom
 
 echo 'Installing / Upgrading Zplug'
 git -C ~/.zplug pull --rebase || \

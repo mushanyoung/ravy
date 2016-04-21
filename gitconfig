@@ -1,12 +1,10 @@
-[include]
-  path = ~/.gitconfig_custom
 [apply]
   whitespace = fix
 [core]
   autocrlf = input
   safecrlf = warn
   whitespace = trailing-space,space-before-tab
-  excludesfile = ~/.gitignores
+  excludesfile = ~/.agignore
   editor = ${GIT_EDITOR:-vim}
 [color]
   ui = auto
