@@ -3,37 +3,43 @@
 RAVY="${0:A:h}"
 
 echo 'Linking dotfiles'
-ln -s -f $RAVY/tmux.conf ~/.tmux.conf
-ln -s -f $RAVY/ignores ~/.agignore
+if [[ ! -f ~/.agignore ]]; then
+  cat $RAVY/ignores >> ~/.agignore
+fi
 
-if ! grep "$RAVY/zshrc" ~/.zshrc 2>&1 >/dev/null; then
-  echo "[ -f $RAVY/zshrc ] && source $RAVY/zshrc" >> ~/.zshrc
+if ! grep "source $RAVY/zshrc" ~/.zshrc &>/dev/null; then
+  echo "source $RAVY/zshrc" >> ~/.zshrc
 fi
-if ! grep "$RAVY/zshenv" ~/.zshenv 2>&1 >/dev/null; then
-  echo "[ -f $RAVY/zshenv ] && source $RAVY/zshenv" >> ~/.zshenv
+if ! grep "source $RAVY/zshenv" ~/.zshenv &>//dev/null; then
+  echo "source $RAVY/zshenv" >> ~/.zshenv
 fi
-if ! grep "path=$RAVY/gitconfig" ~/.gitconfig 2>&1 >/dev/null; then
+if ! grep "path=$RAVY/gitconfig" ~/.gitconfig &>/dev/null; then
   echo "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig" >> ~/.gitconfig
 fi
+if ! grep "source $RAVY/tmux.conf" ~/.tmux.conf &>/dev/null; then
+  echo "source $RAVY/tmux.conf" >> ~/.tmux.conf
+fi
 
-echo 'Linking custom files'
+echo 'Configuring Vim/NeoVim'
+if ! grep "source $RAVY/vimrc" ~/.vimrc &>/dev/null; then
+  echo "source $RAVY/vimrc" >> ~/.vimrc
+fi
+mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.config
+[[ ! -d ~/.config/nvim ]] && ln -s -f ~/.vim ~/.config/nvim
+ln -s -f ~/.vimrc ~/.config/nvim/init.vim
+
+curl -sfLo ~/.vim/autoload/plug.vim --create-dirs \
+  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+echo 'Touching custom files'
 mkdir -p $RAVY/custom $RAVY/custom/bin $RAVY/custom/zsh-functions
 touch $RAVY/custom/zshrc
 touch $RAVY/custom/vimrc
 touch $RAVY/custom/gitconfig
 
-echo 'Installing / Upgrading Zplug'
+echo 'Installing Zplug'
 git -C ~/.zplug pull --rebase || \
   git clone --depth=1 https://github.com/b4b4r07/zplug ~/.zplug
-
-echo 'Configuring Vim/NeoVim'
-mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.config
-[[ ! -d ~/.config/nvim ]] && ln -s -f ~/.vim ~/.config/nvim
-ln -s -f $RAVY/vimrc ~/.vimrc
-ln -s -f $RAVY/vimrc ~/.config/nvim/init.vim
-
-curl -sfLo ~/.vim/autoload/plug.vim --create-dirs \
-  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 echo 'Installing custom settings'
 if command -v $RAVY/custom/install >/dev/null; then
