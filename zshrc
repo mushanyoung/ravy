@@ -5,6 +5,9 @@
 [[ -n $RAVY_LOADED ]] && return 0
 RAVY_LOADED=true
 
+# load zshenv to make sure paths are set correctly
+source ${0:A:h}/zshenv
+
 # }}}
 
 # Zplug START {{{
