@@ -16,8 +16,7 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
   source ~/.zplug/zplug
 
   # duplicate to get both binary included by zplug
-  zplug 'junegunn/fzf', as:command, of:"bin/fzf", \
-    do:'./install --bin --no-update-rc >/dev/null'
+  zplug 'junegunn/fzf', as:command, of:"bin/fzf", do:'./install --bin >/dev/null'
   zplug 'junegunn/fzf', as:command, of:"bin/fzf-tmux"
 
   zplug "supercrabtree/k"
@@ -36,7 +35,7 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
   if ! zplug check --verbose; then
     printf "Install? [y/N]: "
     if read -q; then
-        echo; zplug install
+      echo; zplug install
     fi
   fi
 
@@ -55,28 +54,28 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
 
   typeset -A ZSH_HIGHLIGHT_STYLES
   ZSH_HIGHLIGHT_STYLES=(
-    'unknown-token'            'fg=red,bold'
-    'reserved-word'            'fg=yellow'
-    'builtin'                  'fg=green,bold'
-    'function'                 'fg=white,bold'
-    'command'                  'fg=green'
-    'alias'                    'fg=green'
-    'suffix-alias'             'fg=green,underline'
-    'hashed-command'           'fg=green'
-    'precommand'               'fg=magenta'
-    'path'                     'fg=cyan'
-    'commandseparator'         'fg=white,bold'
-    'globbing'                 'fg=blue'
-    'single-hyphen-option'     'fg=yellow'
-    'double-hyphen-option'     'fg=yellow'
-    'single-quoted-argument'   'fg=yellow,bold'
-    'dollar-quoted-argument'   'fg=yellow,bold'
-    'double-quoted-argument'   'fg=yellow'
-    'back-quoted-argument'     'fg=blue'
-    'assign'                   'fg=magenta,bold'
-    'redirection'              'fg=white,bold'
-    'comment'                  'fg=black,bold'
-    'default'                  'none'
+  'unknown-token'            'fg=red,bold'
+  'reserved-word'            'fg=yellow'
+  'builtin'                  'fg=green,bold'
+  'function'                 'fg=white,bold'
+  'command'                  'fg=green'
+  'alias'                    'fg=green'
+  'suffix-alias'             'fg=green,underline'
+  'hashed-command'           'fg=green'
+  'precommand'               'fg=magenta'
+  'path'                     'fg=cyan'
+  'commandseparator'         'fg=white,bold'
+  'globbing'                 'fg=blue'
+  'single-hyphen-option'     'fg=yellow'
+  'double-hyphen-option'     'fg=yellow'
+  'single-quoted-argument'   'fg=yellow,bold'
+  'dollar-quoted-argument'   'fg=yellow,bold'
+  'double-quoted-argument'   'fg=yellow'
+  'back-quoted-argument'     'fg=blue'
+  'assign'                   'fg=magenta,bold'
+  'redirection'              'fg=white,bold'
+  'comment'                  'fg=black,bold'
+  'default'                  'none'
   )
 
   # FZF managed by zplug
@@ -92,6 +91,8 @@ fi
 # }}}
 
 # Zle {{{
+
+KEYTIMEOUT=1
 
 # use emacs mode for command line
 bindkey -e
@@ -127,7 +128,7 @@ bindkey '\em' copy-earlier-word
 bindkey '\e.' insert-last-word
 
 # ranger file explorer
-ranger-cd() {
+ranger-cd () {
   tempfile=$(mktemp)
   ranger --choosedir="$tempfile" "${@:-$(pwd)}" < $TTY
   if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(echo -n `pwd`)" ]]; then
@@ -162,7 +163,7 @@ bindkey '\eb' backward-word-only-chars
 bindkey '\ew' backward-kill-word-only-chars
 
 # Use FZF to modify the current word with tmux words
-fzf-tmux-words-widget() {
+fzf-tmux-words-widget () {
   if [[ -z "$TMUX_PANE" ]]; then
     return 1
   fi
@@ -205,7 +206,7 @@ zle -N glob-toggle
 bindkey '\eg' glob-toggle
 
 # toggle sudo for current command line
-sudo-toggle() {
+sudo-toggle () {
   [[ -z $BUFFER ]] && zle up-history
   if [[ $BUFFER == sudo\ * ]]; then
     LBUFFER="${LBUFFER#sudo }"
@@ -234,7 +235,7 @@ bindkey '^I' expand-or-complete
 
 zmodload zsh/complist
 zle -C complete-menu menu-select _generic
-_complete_menu() {
+_complete_menu () {
   setopt localoptions alwayslastprompt
   zle complete-menu
 }
@@ -247,8 +248,6 @@ bindkey -M menuselect '^K' backward-char
 bindkey -M menuselect '/' history-incremental-search-forward
 bindkey -M menuselect '^?' undo
 bindkey -M menuselect '^C' undo
-
-KEYTIMEOUT=1
 
 # }}}
 
@@ -263,7 +262,7 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_LOADED ]]; then
   # Post zplug settings
   # zsh auto suggestions
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
-    'backward-delete-char' 'complete-menu' 'expand-or-complete'
+  'backward-delete-char' 'complete-menu' 'expand-or-complete'
   )
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
 fi
@@ -278,8 +277,7 @@ LANGUAGE=$LANG
 
 # General
 setopt BRACE_CCL          # Allow brace character class list expansion.
-setopt COMBINING_CHARS    # Combine zero-length punctuation characters (accents)
-                          # with the base character.
+setopt COMBINING_CHARS    # Combine zero-length punctuation characters (accents) with the base character.
 setopt RC_QUOTES          # Allow 'Henry''s Garage' instead of 'Henry'\''s Garage'.
 unsetopt MAIL_WARNING     # Don't print a warning message if a mail file has been accessed.
 
@@ -363,42 +361,43 @@ autoload -Uz zmv add-zsh-hook
 # }}}
 
 # FZF {{{
-  FZF_DEFAULT_COMMAND='ag -g ""'
-  FZF_CTRL_T_COMMAND='ag -g ""'
-  FZF_DEFAULT_OPTS='--select-1 --exit-0'
-  FZF_COMPLETION_TRIGGER='**'
 
-  alias fzf='fzf-tmux'
+FZF_DEFAULT_COMMAND='ag -g ""'
+FZF_CTRL_T_COMMAND='ag -g ""'
+FZF_DEFAULT_OPTS='--select-1 --exit-0'
+FZF_COMPLETION_TRIGGER='**'
 
-  # Open the selected file
-  #   - CTRL-O to open with `open` command,
-  #   - CTRL-E or Enter key to open with the $EDITOR
-  #   - Bypass fuzzy finder if there's only one match (--select-1)
-  #   - Exit if there's no match (--exit-0)
-  fo() {
-    local out file key cmd
-    out=$(fzf --query="$1" --exit-0 --expect=ctrl-o,ctrl-e)
-    key=$(head -1 <<< "$out")
-    file=$(head -2 <<< "$out" | tail -1)
-    if [[ "$key" == 'ctrl-o' ]]; then
-      cmd='open'
-    else
-      cmd=${EDITOR:-vim}
-    fi
-    if [[ -n "$file" ]]; then
-      echo $file
-      $cmd "$file"
-    fi
-  }
+alias fzf='fzf-tmux'
 
-  # open recent files of vim
-  fv() {
-    local files
-    files=$(grep '^>' ~/.viminfo | cut -c3- |
-    while read line; do
-      [[ -f "${line/\~/$HOME}" ]] && echo "$line"
-    done | fzf -d -m -1 -q "$*") && vim -- ${files//\~/$HOME}
-  }
+# Open the selected file
+#   - CTRL-O to open with `open` command,
+#   - CTRL-E or Enter key to open with the $EDITOR
+#   - Bypass fuzzy finder if there's only one match (--select-1)
+#   - Exit if there's no match (--exit-0)
+fo () {
+  local out file key cmd
+  out=$(fzf --query="$1" --exit-0 --expect=ctrl-o,ctrl-e)
+  key=$(head -1 <<< "$out")
+  file=$(head -2 <<< "$out" | tail -1)
+  if [[ "$key" == 'ctrl-o' ]]; then
+    cmd='open'
+  else
+    cmd=${EDITOR:-vim}
+  fi
+  if [[ -n "$file" ]]; then
+    echo $file
+    $cmd "$file"
+  fi
+}
+
+# open recent files of vim
+fv () {
+  local files
+  files=$(grep '^>' ~/.viminfo | cut -c3- |
+  while read line; do
+    [[ -f "${line/\~/$HOME}" ]] && echo "$line"
+  done | fzf -d -m -1 -q "$*") && vim -- ${files//\~/$HOME}
+}
 
 # }}}
 
@@ -465,9 +464,6 @@ zstyle ':completion:*:history-words' remove-all-dups yes
 zstyle ':completion:*:history-words' list false
 zstyle ':completion:*:history-words' menu yes
 
-# Environmental Variables
-zstyle ':completion::*:(-command-|export):*' fake-parameters ${${${_comps[(I)-value-*]#*,}%%,*}:#-*-}
-
 # Don't complete uninteresting users...
 zstyle ':completion:*:*:*:users' ignored-patterns \
   adm amanda apache avahi beaglidx bin cacti canna clamav daemon \
@@ -503,7 +499,7 @@ zstyle ':completion:*:manuals.(^1*)' insert-sections true
 if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
 
   # Sets the terminal or terminal multiplexer title.
-  function _rv_termtitle_set {
+  _rv_termtitle_set () {
     local window_title_format tab_title_format formatted
     zformat -f formatted "%s" "s:$argv"
 
@@ -519,7 +515,7 @@ if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
   }
 
   # Sets the terminal title with a given command.
-  function _rv_termtitle_set_command {
+  _rv_termtitle_set_command () {
     emulate -L zsh
     setopt EXTENDED_GLOB
 
@@ -548,7 +544,7 @@ if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
   }
 
   # Sets the terminal title with a given path.
-  function _rv_termtitle_set_path {
+  _rv_termtitle_set_path () {
     emulate -L zsh
     setopt EXTENDED_GLOB
 
@@ -599,7 +595,7 @@ ping () {
 }
 
 # interactive mv
-imv() {
+imv () {
   local src dst
   for src; do
     [[ -e $src ]] || { print -u2 "$src does not exist"; continue }
@@ -672,7 +668,6 @@ alias ravyedit="$EDITOR ${0:A}"
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
 # Open command through cbmonitor
-alias open_remote
 open_remote () {
   echo 'open:['"$1"']' | clip
 }
@@ -682,11 +677,6 @@ open_remote () {
 # Prompt {{{
 
 setopt PROMPT_SUBST
-
-LA=""
-RA=""
-PD=" "
-NEWLINE=$'\n'
 
 # git prompt option
 RV_PROMPT_GIT_DIRTY="%F{100}"
@@ -707,7 +697,7 @@ _rv_prompt_git () {
 
   # exit if current directory is not a git repo
   local ref k status_str_map status_str color git_status
-  ref=$(command git symbolic-ref HEAD 2> /dev/null) || ref=$(command git rev-parse --short HEAD 2>/dev/null) || return
+  ref=$(command git symbolic-ref HEAD 2> /dev/null || command git rev-parse --short HEAD 2>/dev/null) || return
   git_status=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
 
   typeset -A status_str_map
@@ -783,6 +773,10 @@ _rv_prompt_precmd_render () {
   print -P "${RV_PROMPT_LASTSTATUS}"
 }
 
+function {
+
+local LA="" PD=" "
+
 RV_PROMPT_LASTSTATUS=%F{240}\${_rv_cmd_timer_elapsed}%(?.. %F{160}\$(nice_exit_code))
 RV_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}${LA}\ \ \ %F{28}%K{234}$LA$PD
 RV_PROMPT_PATH=%F{6}%~$PD
@@ -798,7 +792,9 @@ else
   unset RV_PROMPT_USER
 fi
 
- PROMPT=\${RV_PROMPT_SYMBOL}\${RV_PROMPT_USER}\${RV_PROMPT_PATH}${RV_PROMPT_GIT}${RV_PROMPT_X}\${RV_PROMPT_JOBS}\${RV_PROMPT_CUSTOMIZE}\${NEWLINE}\${RV_PROMPT_CMD}
+}
+
+PROMPT=\${RV_PROMPT_SYMBOL}\${RV_PROMPT_USER}\${RV_PROMPT_PATH}${RV_PROMPT_GIT}${RV_PROMPT_X}\${RV_PROMPT_JOBS}\${RV_PROMPT_CUSTOMIZE}$'\n'\${RV_PROMPT_CMD}
 RPROMPT=
 
 add-zsh-hook preexec _rv_prompt_timer_cmd_start
