@@ -10,11 +10,12 @@ fi
 if ! grep "source $RAVY/zshrc" ~/.zshrc &>/dev/null; then
   echo "source $RAVY/zshrc" >> ~/.zshrc
 fi
-if ! grep "source $RAVY/zshenv" ~/.zshenv &>//dev/null; then
+if ! grep "source $RAVY/zshenv" ~/.zshenv &>/dev/null; then
   echo "source $RAVY/zshenv" >> ~/.zshenv
 fi
 if ! grep "path=$RAVY/gitconfig" ~/.gitconfig &>/dev/null; then
-  echo "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig" >> ~/.gitconfig
+  echo "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig" \
+    >> ~/.gitconfig
 fi
 if ! grep "source $RAVY/tmux.conf" ~/.tmux.conf &>/dev/null; then
   echo "source $RAVY/tmux.conf" >> ~/.tmux.conf
