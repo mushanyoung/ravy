@@ -313,6 +313,7 @@ setopt HIST_BEEP                 # Beep when accessing non-existent history.
 
 # disable auto correcting
 unsetopt CORRECT_ALL
+unsetopt CORRECT
 
 # Colors
 CLICOLOR=xterm-256color
