@@ -606,7 +606,8 @@ Plug 'jpo/vim-railscasts-theme'
 Plug 'junegunn/fzf'
 
 " provide utility commands to fzf in a list of certain targets
-Plug 'junegunn/fzf.vim'
+" install to a different name to work around plugin detection issue of maktaba
+Plug 'junegunn/fzf.vim', {'dir': '~/.vim/bundle/fzf-utils'}
 
 " extends ", @, i:<C-R> to list the contents registers
 Plug 'junegunn/vim-peekaboo'
