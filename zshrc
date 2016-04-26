@@ -24,7 +24,6 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
 
   zplug "supercrabtree/k"
   zplug "djui/alias-tips"
-  zplug "unixorn/git-extra-commands"
   zplug "bric3/nice-exit-code"
   zplug "micha/resty"
   zplug "joshuarubin/zsh-archive"
