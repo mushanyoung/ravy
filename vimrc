@@ -161,7 +161,6 @@ set nofoldenable foldmethod=indent foldlevel=0
 " highlight over width boundary
 set textwidth=80
 set colorcolumn=+1
-highlight ColorColumn ctermbg=236 guibg=236
 
 " Sign Column should match background
 highlight clear SignColumn
