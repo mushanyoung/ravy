@@ -2,13 +2,13 @@ export RAVY="${0:A:h}"
 export RAVY_CUSTOM="$RAVY/custom"
 
 # add various folders into path
-rv_add_dir_to_path_begin () {
+prepand_folder_to_path () {
   if [[ -d $1 ]]; then
-    PATH=$1:${PATH/$1:/}
+    PATH=$1:${${PATH//$1:/}//:$1/}
   fi
 }
 
-rv_add_dir_to_path_end () {
+append_folder_to_path () {
   if [[ -d $1 ]]; then
     if [[ $PATH != *${1}* ]]; then
       PATH=$PATH:$1
@@ -16,7 +16,7 @@ rv_add_dir_to_path_end () {
   fi
 }
 
-rv_add_dir_to_path_begin $HOME/.brew/bin
-rv_add_dir_to_path_begin $RAVY/bin
-rv_add_dir_to_path_begin $RAVY_CUSTOM/bin
+prepand_folder_to_path $HOME/.brew/bin
+prepand_folder_to_path $RAVY/bin
+prepand_folder_to_path $RAVY_CUSTOM/bin
 
