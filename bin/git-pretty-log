@@ -1,45 +1,10 @@
 #!/usr/bin/env bash
-# Log output:
-#
-# * 7aef6c3  (4 days)   <Mushan Yang>   amend gitconfig
-#
-# The time massaging regexes start with ^[^<]* because that ensures that they
-# only operate before the first "<". That "<" will be the beginning of the
-# author name, ensuring that we don't destroy anything in the commit message
-# that looks like time.
-#
-# The log format uses } characters between each field, and `column` is later
-# used to split on them. A } in the commit subject or any other field will
-# break this.
 
-if [ -n "$GIT_ABSOLUTE_TIME" ]; then
-    TIMES="%ai"
+command git log --pretty="tformat:%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s" $* |
+sed -Ee 's#(\([[:digit:]]+ [[:alpha:]]+)[^<)]*ago\)#\1)#' |
+column -s '|' -t |
+if [ -n "$GIT_NO_PAGER" ]; then
+  cat
 else
-    TIMES="%ar"
+  less --quit-if-one-screen --no-init --RAW-CONTROL-CHARS --chop-long-lines
 fi
-if [ -n "$GIT_NO_COLOR" ]; then
-    FORMAT="%h|($TIMES)|<%an>|%d %s"
-else
-    HASH="%C(green)%h%C(reset)"
-    RELATIVE_TIME="%C(magenta)($TIMES)%C(reset)"
-    AUTHOR="%C(cyan)<%an>%C(reset)"
-    REFS="%C(red)%d%C(reset)"
-    SUBJECT="%s"
-    FORMAT="$HASH|$RELATIVE_TIME|$AUTHOR|$REFS $SUBJECT"
-fi
-git log --pretty="tformat:${FORMAT}" $* |
-    # Replace (2 years ago) with (2 years)
-    sed -Ee 's/(^[^<]*) ago\)/\1)/' |
-    # Replace (2 years, 5 months) with (2 years)
-    sed -Ee 's/(^[^<]*), [[:digit:]]+ .*months?\)/\1)/' |
-    # Line columns up based on } delimiter
-    column -s '|' -t |
-    # Color merge commits specially
-    # sed -Ee "s/(Merge (branch|remote-tracking branch|pull request) .*$)/$(printf $ANSI_RED)\1$(printf $ANSI_RESET)/" |
-    # Page only if we're asked to.
-    if [ -n "$GIT_NO_PAGER" ]; then
-        cat
-    else
-        # Page only if needed.
-        less --quit-if-one-screen --no-init --RAW-CONTROL-CHARS --chop-long-lines
-    fi
