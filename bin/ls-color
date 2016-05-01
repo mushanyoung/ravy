@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-if hash gls 2>/dev/null; then
-    gls -lFh --color=always --time-style=long-iso $*
-else
-    ls -lFh --color=always --time-style=long-iso $*
-fi |
+if hash gls 2>/dev/null; then LS_COMMAND=${LS_COMMAND:-gls}; fi
+
+command ${LS_COMMAND:-ls} -lFh --color=always --time-style=long-iso $* |
 awk '
     NF>=8 {
         if ($3 == "'"$USER"'") $3 = ""
