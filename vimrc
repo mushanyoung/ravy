@@ -656,6 +656,10 @@ Plug 'tpope/vim-unimpaired'
 " git integration
 Plug 'tpope/vim-fugitive'
 
+" code or diff reviews
+Plug 'junkblocker/patchreview-vim'
+
+" simulated scroll bar using sign column
 Plug 'vim-scripts/vim-scroll-position'
 
 if executable('ctags')
