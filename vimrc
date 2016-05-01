@@ -259,8 +259,7 @@ nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
 
 " cancel hlsearch
-nnoremap <silent> <ESC> :nohlsearch<CR><ESC>
-nnoremap <ESC> <ESC>
+nnoremap <silent> <C-L> :noh<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
 
 " tab and s-tab to indent / unindent
 nnoremap <TAB> v>
