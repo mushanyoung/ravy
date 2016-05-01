@@ -50,8 +50,8 @@
   # logs
   l = pretty-log
   lg = !git l --graph
-  r = !git l -20
-  h = !git l -1
+  r = !GIT_PAGER=cat git l -20
+  h = !GIT_PAGER=cat git l -1
   ld = log --decorate
   ls = log --decorate --stat
 
