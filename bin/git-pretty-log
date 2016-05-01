@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-command git log --pretty="tformat:%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s" $* |
+FORMAT='%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s'
+
+command git log --pretty="tformat:$FORMAT" $* |
 sed -Ee 's#(\([[:digit:]]+ [[:alpha:]]+)[^<)]*ago\)#\1)#' |
 column -s '|' -t |
-if [ -n "$GIT_NO_PAGER" ]; then
-  cat
-else
-  less --quit-if-one-screen --no-init --RAW-CONTROL-CHARS --chop-long-lines
-fi
+less -FXRS
