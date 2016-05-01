@@ -623,9 +623,6 @@ Plug 'rking/ag.vim'
 " highlight trailing blanks and provide StripWhitespace function
 Plug 'ntpeters/vim-better-whitespace'
 
-" file explorer
-Plug 'scrooloose/nerdtree', { 'on': [('NERDTreeToggle'), 'NERDTreeFind'] }
-
 " check code syntax
 Plug 'scrooloose/syntastic'
 
