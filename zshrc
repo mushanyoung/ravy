@@ -8,6 +8,12 @@ RAVY_LOADED=true
 # load zshenv to make sure paths are set correctly
 source ${0:A:h}/zshenv
 
+# load lib
+source ${0:A:h}/lib.zsh
+
+# record time to initialize shell environment
+_rv_prompt_timer_start
+
 # }}}
 
 # Zplug START {{{
@@ -492,74 +498,6 @@ zstyle ':completion:*:manuals.(^1*)' insert-sections true
 
 # }}}
 
-# Terminal Title {{{
-
-if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
-
-  # Sets the terminal or terminal multiplexer title.
-  _rv_termtitle_set () {
-    local window_title_format tab_title_format formatted
-    zformat -f formatted "%s" "s:$argv"
-
-    if [[ "$TERM" == screen* ]]; then
-      window_title_format="\ek%s\e\\"
-    else
-      window_title_format="\e]2;%s\a"
-    fi
-    tab_title_format="\e]1;%s\a"
-
-    printf "$tab_title_format" "${(V%)formatted}"
-    printf "$window_title_format" "${(V%)formatted}"
-  }
-
-  # Sets the terminal title with a given command.
-  _rv_termtitle_set_command () {
-    emulate -L zsh
-    setopt EXTENDED_GLOB
-
-    # Get the command name that is under job control.
-    if [[ "${2[(w)1]}" == (fg|%*)(\;|) ]]; then
-      # Get the job name, and, if missing, set it to the default %+.
-      local job_name="${${2[(wr)%*(\;|)]}:-%+}"
-
-      # Make a local copy for use in the subshell.
-      local -A jobtexts_from_parent_shell
-      jobtexts_from_parent_shell=(${(kv)jobtexts})
-
-      jobs "$job_name" 2>/dev/null > >(
-      read index discarded
-      # The index is already surrounded by brackets: [1].
-      _rv_termtitle_set_command "${(e):-\$jobtexts_from_parent_shell$index}"
-      )
-    else
-      # Set the command name, or in the case of sudo or ssh, the next command.
-      local cmd="${${2[(wr)^(*=*|sudo|ssh|-*)]}:t}"
-      local truncated_cmd="!${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
-      unset MATCH
-
-      _rv_termtitle_set "$truncated_cmd"
-    fi
-  }
-
-  # Sets the terminal title with a given path.
-  _rv_termtitle_set_path () {
-    emulate -L zsh
-    setopt EXTENDED_GLOB
-
-    local abbreviated_path="${PWD/#$HOME/~}"
-    local truncated_path="${abbreviated_path/(#m)?(#c16,)/..${MATCH[-14,-1]}}"
-    unset MATCH
-
-    _rv_termtitle_set "$truncated_path"
-  }
-
-  # auto set terminal title
-  add-zsh-hook preexec _rv_termtitle_set_command
-  add-zsh-hook precmd _rv_termtitle_set_path
-fi
-
-# }}}
-
 # Util Functions & Aliases {{{
 
 # Change dir up x level
@@ -674,131 +612,43 @@ open_remote () {
 
 # Prompt {{{
 
+# Terminal title
+if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
+  add-zsh-hook preexec _rv_termtitle_command
+  add-zsh-hook precmd _rv_termtitle_path
+fi
+
+# Shell prompt
 setopt PROMPT_SUBST
-
-# git prompt option
-RV_PROMPT_GIT_DIRTY="%F{100}"
-RV_PROMPT_GIT_CLEAN="%F{71}"
-RV_PROMPT_GIT_UNTRACKED="%%"
-RV_PROMPT_GIT_AHEAD=">"
-RV_PROMPT_GIT_BEHIND="<"
-RV_PROMPT_GIT_DIVERGED="X"
-RV_PROMPT_GIT_ADDED="+"
-RV_PROMPT_GIT_MODIFIED="*"
-RV_PROMPT_GIT_DELETED="D"
-RV_PROMPT_GIT_RENAMED="~"
-RV_PROMPT_GIT_UNMERGED="^"
-
-# generate git prompt to _rv_prompt_git_str
-_rv_prompt_git () {
-  _rv_prompt_git_str=
-
-  # exit if current directory is not a git repo
-  local ref k status_str_map status_str color git_status
-  ref=$(command git symbolic-ref HEAD 2> /dev/null || command git rev-parse --short HEAD 2>/dev/null) || return
-  git_status=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
-
-  typeset -A status_str_map
-  status_str_map=(
-  '^\?\? '         $RV_PROMPT_GIT_UNTRACKED
-  '^M. |^A. '      $RV_PROMPT_GIT_ADDED
-  '^.M |^.T '      $RV_PROMPT_GIT_MODIFIED
-  '^R. '           $RV_PROMPT_GIT_RENAMED
-  '^.D |^D. '      $RV_PROMPT_GIT_DELETED
-  '^UU '           $RV_PROMPT_GIT_UNMERGED
-  '^## .*ahead'    $RV_PROMPT_GIT_AHEAD
-  '^## .*behind'   $RV_PROMPT_GIT_BEHIND
-  '^## .*diverged' $RV_PROMPT_GIT_DIVERGED
-  )
-  for k in ${(@k)status_str_map}; do
-    if $(echo "$git_status" | grep -E "$k" &> /dev/null); then
-      status_str+=$status_str_map[$k]
-    fi
-  done
-
-  if [[ -n "${status_str#>}" ]]; then
-    color="$RV_PROMPT_GIT_DIRTY"
-  else
-    color="$RV_PROMPT_GIT_CLEAN"
-  fi
-
-  _rv_prompt_git_str="$color${ref#refs/heads/}${status_str:+ $status_str}"
-}
-
-# current millseconds
-_rv_prompt_timer_now_ms () {
-  perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)'
-}
-
-# get human readable representation of time
-_rv_prompt_pretty_time () {
-  local ms s repre hour minute second
-  ms=$1
-  if [[ ms -lt 10000 ]]; then
-    repre=${ms}ms
-  else
-    s=$((ms / 1000))
-    hour=$((s / 3600))
-    minute=$((s / 60 % 60))
-    second=$((s % 60))
-    if [[ hour -gt 0 ]]; then repre+=${hour}h fi
-    if [[ minute -gt 0 ]]; then repre+=${minute}m fi
-    repre+=${second}s
-  fi
-  echo $repre
-}
-
-# start timer
-_rv_prompt_timer_cmd_start () {
-  if [[ ! -n $_rv_cmd_timer ]]; then
-    _rv_cmd_timer=$(_rv_prompt_timer_now_ms)
-  fi
-}
-
-# stop timer and get elapsed time
-_rv_prompt_timer_cmd_stop () {
-  if [[ -n $_rv_cmd_timer ]]; then
-    local ms=$(($(_rv_prompt_timer_now_ms) - $_rv_cmd_timer))
-    _rv_cmd_timer_elapsed=$(_rv_prompt_pretty_time $ms)
-    unset _rv_cmd_timer
-  else
-    unset _rv_cmd_timer_elapsed
-  fi
-}
-
-# render prompt string
-_rv_prompt_precmd_render () {
-  print -P "${RV_PROMPT_LASTSTATUS}"
-}
 
 function {
 
 local LA="" PD=" "
 
-RV_PROMPT_LASTSTATUS=%F{240}\${_rv_cmd_timer_elapsed}%(?.. %F{160}\$(nice_exit_code))
-RV_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}${LA}\ \ \ %F{28}%K{234}$LA$PD
+RV_PROMPT_LAST_CMD_STATUS=%F{240}\${_rv_prompt_timer_result:+\$_rv_prompt_timer_result$PD}%(?..%F{160}\$(nice_exit_code))
+RV_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}${LA}\ %F{28}%K{234}$LA$PD
+RV_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n$PD}
 RV_PROMPT_PATH=%F{6}%~$PD
-RV_PROMPT_GIT=\${_rv_prompt_git_str:+\$_rv_prompt_git_str$PD}
+RV_PROMPT_GIT=\${_rv_prompt_git_result:+\$_rv_prompt_git_result$PD}
 RV_PROMPT_X=%F{166}\${DISPLAY:+X$PD}
 RV_PROMPT_JOBS=%F{163}%(1j.\&%j.$PD)
 RV_PROMPT_CUSTOMIZE=""
 RV_PROMPT_CMD="%F{240}%k❯%f "
 
-if [[ -n $SSH_TTY || -n $SSH_CONNECTION ]]; then
-  RV_PROMPT_USER=%F{93}%n$PD
-else
-  unset RV_PROMPT_USER
-fi
+}
 
+# render status for last command
+_rv_prompt_last_command_status () {
+  print -P "${RV_PROMPT_LAST_CMD_STATUS}"
 }
 
 PROMPT=\${RV_PROMPT_SYMBOL}\${RV_PROMPT_USER}\${RV_PROMPT_PATH}${RV_PROMPT_GIT}${RV_PROMPT_X}\${RV_PROMPT_JOBS}\${RV_PROMPT_CUSTOMIZE}$'\n'\${RV_PROMPT_CMD}
 RPROMPT=
 
-add-zsh-hook preexec _rv_prompt_timer_cmd_start
-add-zsh-hook precmd _rv_prompt_timer_cmd_stop
+add-zsh-hook preexec _rv_prompt_timer_start
+add-zsh-hook precmd _rv_prompt_timer_stop
 add-zsh-hook precmd _rv_prompt_git
-add-zsh-hook precmd _rv_prompt_precmd_render
+add-zsh-hook precmd _rv_prompt_last_command_status
 
 # }}}
 
