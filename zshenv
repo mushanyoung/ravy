@@ -1,18 +1,14 @@
 export RAVY="${0:A:h}"
 export RAVY_CUSTOM="$RAVY/custom"
 
-# add various folders into path
+# make elements in path and fpath unique
+typeset -U path
+typeset -U fpath
+
+# generates path
 prepand_folder_to_path () {
   if [[ -d $1 ]]; then
-    PATH=$1:${${PATH//$1:/}//:$1/}
-  fi
-}
-
-append_folder_to_path () {
-  if [[ -d $1 ]]; then
-    if [[ $PATH != *${1}* ]]; then
-      PATH=$PATH:$1
-    fi
+    path[1,0]=$1
   fi
 }
 
@@ -20,3 +16,7 @@ prepand_folder_to_path $HOME/.brew/bin
 prepand_folder_to_path $RAVY/bin
 prepand_folder_to_path $RAVY_CUSTOM/bin
 
+# custom zsh functions
+if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
+  fpath+=$RAVY_CUSTOM/zsh-functions
+fi

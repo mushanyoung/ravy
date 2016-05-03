@@ -43,11 +43,6 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
 
   # Pre zplug settings
 
-  # custom completion path
-  if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
-    fpath+=$RAVY_CUSTOM/zsh-functions
-  fi
-
   # alias-tips
   export ZSH_PLUGINS_ALIAS_TIPS_TEXT="Alias: "
 
