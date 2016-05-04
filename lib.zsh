@@ -8,7 +8,7 @@ _rv_prompt_git () {
     return
   fi
 
-  git_st=$(command git status --ignore-submodules=dirty -unormal -z -b 2>/dev/null)
+  git_st=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
 
   st_parser=(
   '^## .*ahead'         "${RV_PROMPT_GIT_AHEAD->}"
@@ -25,7 +25,7 @@ _rv_prompt_git () {
   )
 
   for (( k = 1; k <= $#st_parser; k += 2 )) do
-    if st_count=$(echo "$git_st" | grep -E -z -c $st_parser[k] 2>/dev/null); then
+    if st_count=$(echo "$git_st" | grep -E -c $st_parser[k] 2>/dev/null); then
       if [[ $st_count == 1 ]]; then st_count= ; fi
       st_str+="$st_parser[k+1]$st_count"
     fi
