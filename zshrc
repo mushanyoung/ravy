@@ -357,7 +357,7 @@ elif hash gdircolors &>/dev/null; then
 fi
 
 # chars treated as a part of a word
-WORDCHARS='*?_-.[]~&;!#$%^(){}<>/\+:=@'
+WORDCHARS=$'\'\\/*?_-.,[]~&;!#$%^(){}<>+:=@'
 
 # load zsh modules
 autoload -Uz zmv add-zsh-hook
