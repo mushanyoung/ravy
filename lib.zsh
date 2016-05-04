@@ -1,51 +1,38 @@
 # generate git prompt to _rv_prompt_git_result
 _rv_prompt_git () {
-  _rv_prompt_git_result=
+  local ref k git_st st_str st_count
 
   # exit if current directory is not a git repo
-  local ref k status_str_map status_str color git_status
-  ref=$(command git symbolic-ref HEAD 2> /dev/null || command git rev-parse --short HEAD 2>/dev/null) || return
-  git_status=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
+  if ! ref=$(command git symbolic-ref HEAD 2>/dev/null || command git rev-parse --short HEAD 2>/dev/null); then
+    _rv_prompt_git_result=
+    return
+  fi
 
-  typeset -A status_str_map
-  status_str_map=(
-  '^\?\? '         $RV_PROMPT_GIT_UNTRACKED
-  '^M. |^A. '      $RV_PROMPT_GIT_ADDED
-  '^.M |^.T '      $RV_PROMPT_GIT_MODIFIED
-  '^R. '           $RV_PROMPT_GIT_RENAMED
-  '^.D |^D. '      $RV_PROMPT_GIT_DELETED
-  '^UU '           $RV_PROMPT_GIT_UNMERGED
-  '^## .*ahead'    $RV_PROMPT_GIT_AHEAD
-  '^## .*behind'   $RV_PROMPT_GIT_BEHIND
-  '^## .*diverged' $RV_PROMPT_GIT_DIVERGED
+  git_st=$(command git status --ignore-submodules=dirty -unormal -z -b 2>/dev/null)
+
+  st_parser=(
+  '^## .*ahead'         "${RV_PROMPT_GIT_AHEAD->}"
+  '^## .*behind'        "${RV_PROMPT_GIT_BEHIND-<}"
+  '^## .*diverged'      "${RV_PROMPT_GIT_DIVERGED-x}"
+  '^M. '                "${RV_PROMPT_GIT_MODIFIED-.}"
+  '^A. '                "${RV_PROMPT_GIT_ADDED-+}"
+  '^R. '                "${RV_PROMPT_GIT_RENAMED-~}"
+  '^C. '                "${RV_PROMPT_GIT_COPIED-c}"
+  '^.D |^D. '           "${RV_PROMPT_GIT_DELETED--}"
+  '^.M '                "${RV_PROMPT_GIT_TREE_CHANGED-*}"
+  '^U. |^.U |^AA |^DD ' "${RV_PROMPT_GIT_UNMERGED-^}"
+  '^\?\? '              "${RV_PROMPT_GIT_UNTRACKED-#}"
   )
-  for k in ${(@k)status_str_map}; do
-    if $(echo "$git_status" | grep -E "$k" &> /dev/null); then
-      status_str+=$status_str_map[$k]
+
+  for (( k = 1; k <= $#st_parser; k += 2 )) do
+    if st_count=$(echo "$git_st" | grep -E -z -c $st_parser[k] 2>/dev/null); then
+      if [[ $st_count == 1 ]]; then st_count= ; fi
+      st_str+="$st_parser[k+1]$st_count"
     fi
   done
 
-  if [[ -n "${status_str#>}" ]]; then
-    color="$RV_PROMPT_GIT_DIRTY"
-  else
-    color="$RV_PROMPT_GIT_CLEAN"
-  fi
-
-  _rv_prompt_git_result="$color${ref#refs/heads/}${status_str:+ $status_str}"
+  _rv_prompt_git_result="${ref#refs/heads/}${st_str:+ $st_str}"
 }
-
-# git prompt option
-RV_PROMPT_GIT_DIRTY="%F{100}"
-RV_PROMPT_GIT_CLEAN="%F{71}"
-RV_PROMPT_GIT_UNTRACKED="%%"
-RV_PROMPT_GIT_AHEAD=">"
-RV_PROMPT_GIT_BEHIND="<"
-RV_PROMPT_GIT_DIVERGED="X"
-RV_PROMPT_GIT_ADDED="+"
-RV_PROMPT_GIT_MODIFIED="*"
-RV_PROMPT_GIT_DELETED="D"
-RV_PROMPT_GIT_RENAMED="~"
-RV_PROMPT_GIT_UNMERGED="^"
 
 # current millseconds
 _rv_time_now_ms () {
