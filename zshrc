@@ -120,6 +120,11 @@ bindkey '^N' history-substring-search-down
 # autosuggestion
 bindkey '\ek' autosuggest-clear
 
+# Use C-x C-e to edit the current command line in editor
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '\C-x\C-e' edit-command-line
+
 # Smart URLs
 autoload -Uz url-quote-magic
 zle -N self-insert url-quote-magic
