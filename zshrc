@@ -639,6 +639,7 @@ RV_PROMPT_X=%F{166}\${DISPLAY:+X$PD}
 RV_PROMPT_JOBS=%F{163}%(1j.\&%j.$PD)
 RV_PROMPT_CUSTOMIZE=""
 RV_PROMPT_CMD="%F{240}%k❯%f "
+RV_RPROMPT2_CMD="%F{240}❮%^"
 
 }
 
@@ -648,7 +649,9 @@ _rv_prompt_last_command_status () {
 }
 
 PROMPT=\${RV_PROMPT_SYMBOL}\${RV_PROMPT_USER}\${RV_PROMPT_PATH}${RV_PROMPT_GIT}${RV_PROMPT_X}\${RV_PROMPT_JOBS}\${RV_PROMPT_CUSTOMIZE}$'\n'\${RV_PROMPT_CMD}
-RPROMPT=
+unset RPROMPT
+PROMPT2=\${RV_PROMPT_CMD}
+RPROMPT2=\${RV_RPROMPT2_CMD}
 
 add-zsh-hook preexec _rv_prompt_timer_start
 add-zsh-hook precmd _rv_prompt_timer_stop
