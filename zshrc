@@ -333,9 +333,6 @@ fi
 PAGER="less"
 LESS="FRSXMi"
 
-# grep options
-export GREP_OPTIONS='--ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}'
-
 # Termcap
 export LESS_TERMCAP_mb=$'\E[01;31m'       # begin blinking
 export LESS_TERMCAP_md=$'\E[01;38;5;74m'  # begin bold
@@ -592,6 +589,9 @@ alias realpath="perl -MCwd -e 'print Cwd::abs_path(shift), \"\\n\"'"
 
 # Lists the ten most used commands.
 alias history-stat="history 0 | awk '{print \$2}' | sort | uniq -c | sort -n -r | head"
+
+# grep with default options
+alias grep='grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}'
 
 # ps-color
 alias pa='ps-color'
