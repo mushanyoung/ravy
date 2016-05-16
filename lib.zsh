@@ -43,18 +43,15 @@ _rv_time_now_ms () {
 
 # get human readable representation of time
 _rv_prompt_pretty_time () {
-  local ms s repre hour minute second
+  local ms s repre=''
   ms=$1
-  if [[ ms -lt 10000 ]]; then
+  if ((ms < 10000)) then
     repre=${ms}ms
   else
     s=$((ms / 1000))
-    hour=$((s / 3600))
-    minute=$((s / 60 % 60))
-    second=$((s % 60))
-    if [[ hour -gt 0 ]]; then repre+=${hour}h fi
-    if [[ minute -gt 0 ]]; then repre+=${minute}m fi
-    repre+=${second}s
+    if ((s > 3600)) then repre+=$((s / 3600))h fi
+    if ((s > 60)) then repre+=$((s / 60 % 60))m fi
+    repre+=$((s % 60))s
   fi
   echo $repre
 }
