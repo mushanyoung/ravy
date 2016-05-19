@@ -45,7 +45,7 @@
   rv = remote -v
   gr = grep -n -I
 
-  cof = !git branch -vv | fzf +m | cut -c 3- | field 1 | xargs git checkout
+  cof = !git branch -vv | fzf +m | cut -c 3- | awk '{print $1}' | xargs git checkout
 
   # logs
   l = pretty-log
