@@ -29,7 +29,9 @@
   ci = commit --verbose
   cia = !git ci -a
   cim = !git ci --amend
+  cimn = !git ci --amend --no-edit
   ciam = !git cia --amend
+  ciamn = !git cia --amend --no-edit
   co = checkout
   cp = cherry-pick
   ft = fetch
