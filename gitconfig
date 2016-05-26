@@ -64,6 +64,10 @@
   ds = diff --stat
   dn = diff --name-only
 
+  # edit changed files, execute as an external command here because
+  # external commands are ran at the top level of current git repo
+  de = !git edit-changed-files
+
   dfc = !git df --cached
   df1 = !git df HEAD~ HEAD
   dic = !git di --cached
@@ -74,7 +78,5 @@
   ds1 = !git ds HEAD~ HEAD
   dnc = !git dn --cached
   dn1 = !git dn HEAD~ HEAD
-
-  de = !${GIT_EDITOR:-vim} $(git dn)
-  dec = !${GIT_EDITOR:-vim} $(git dnc)
-  de1 = !${GIT_EDITOR:-vim} $(git dn1)
+  dec = !git de --cached
+  de1 = !git de HEAD~ HEAD

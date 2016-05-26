@@ -1,0 +1,3 @@
+#!/usr/bin/env zsh
+
+${GIT_EDITOR:-vim} $(command git diff --name-only $*)
