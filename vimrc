@@ -356,7 +356,7 @@ nnoremap <silent> \y :call system('clip >/dev/tty', @0)<CR>:echo 'Yanked text se
 nnoremap <silent> \u :set invfoldenable<CR>
 
 " change working directory to the newly opened buffer
-nnoremap \h :lcd %:p:h<CR>:pwd<CR>
+nnoremap \fh :lcd %:p:h<CR>:pwd<CR>
 
 " reset current filetype
 nnoremap <silent> \r :let &filetype=&filetype<CR>
@@ -524,15 +524,21 @@ let g:EasyMotion_smartcase = 1
 
 " }}
 
-" vim-signify {{
+" vim-gitgutter {{
 
-nmap \n <PLUG>(signify-next-hunk)
-nmap \p <PLUG>(signify-prev-hunk)
+let g:gitgutter_map_keys = 0
 
-omap ic <PLUG>(signify-motion-inner-pending)
-xmap ic <PLUG>(signify-motion-inner-visual)
-omap ac <PLUG>(signify-motion-outer-pending)
-xmap ac <PLUG>(signify-motion-outer-visual)
+nmap \n <Plug>GitGutterNextHunk
+nmap \p <Plug>GitGutterPrevHunk
+
+nmap \ha <Plug>GitGutterStageHunk
+nmap \hr <Plug>GitGutterUndoHunk
+nmap \hv <Plug>GitGutterPreviewHunk
+
+omap ic <Plug>GitGutterTextObjectInnerPending
+omap ac <Plug>GitGutterTextObjectOuterPending
+xmap ic <Plug>GitGutterTextObjectInnerVisual
+xmap ac <Plug>GitGutterTextObjectOuterVisual
 
 " }}
 
@@ -613,8 +619,8 @@ Plug 'junegunn/vim-peekaboo'
 " ga to align a region of text on a key (<C-X> to use a regex)
 Plug 'junegunn/vim-easy-align'
 
-" vcs: make changed sections marked, text-objectified, targetable
-Plug 'mhinz/vim-signify'
+" git: hunks operation indicator
+Plug 'airblade/vim-gitgutter'
 
 " launch search in working directory
 Plug 'rking/ag.vim'
