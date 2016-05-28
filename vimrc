@@ -342,6 +342,9 @@ nnoremap <silent> \c :close<CR>
 vnoremap \s :s/
 nnoremap \s :%s/
 
+" put yanked text and keep it in the register
+vnoremap \p "_dP
+
 " go backaward and forward in jump list
 nnoremap \p <C-O>
 nnoremap \n <C-I>
