@@ -343,8 +343,8 @@ vnoremap \s :s/
 nnoremap \s :%s/
 
 " go backaward and forward in jump list
-nnoremap \j <C-O>
-nnoremap \k <C-I>
+nnoremap \p <C-O>
+nnoremap \n <C-I>
 
 " select ALL
 nnoremap \a ggVG
@@ -528,8 +528,8 @@ let g:EasyMotion_smartcase = 1
 
 let g:gitgutter_map_keys = 0
 
-nmap \n <Plug>GitGutterNextHunk
-nmap \p <Plug>GitGutterPrevHunk
+nmap \hn <Plug>GitGutterNextHunk
+nmap \hp <Plug>GitGutterPrevHunk
 
 nmap \ha <Plug>GitGutterStageHunk
 nmap \hr <Plug>GitGutterUndoHunk
