@@ -34,6 +34,7 @@ if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
   zplug "micha/resty"
   zplug "joshuarubin/zsh-archive"
   zplug "zsh-users/zsh-completions"
+  zplug "Tarrasch/zsh-bd"
 
   zplug "zsh-users/zsh-syntax-highlighting", nice:17
   zplug "zsh-users/zsh-history-substring-search", nice:18
@@ -505,17 +506,6 @@ zstyle ':completion:*:manuals.(^1*)' insert-sections true
 
 # Util Functions & Aliases {{{
 
-# Change dir up x level
-cdup () {
-  local level=${1:-1}
-  local tarpwd=$PWD
-  while [[ level -gt '0' ]]; do
-    level=$((level - 1))
-    tarpwd=$(dirname $tarpwd)
-  done
-  cd $tarpwd
-}
-
 # Change dir to target folder or the parent folder of target file
 cdd () {
   local file=$1
@@ -546,6 +536,16 @@ imv () {
   done
 }
 
+# wrapper of zsh-bd, cd up 1 level by default
+d () {
+  if (($#<1)); then
+    cd ..
+  else
+    bd $*
+  fi
+}
+compctl -V directories -K _bd d
+
 # list files, do not record in history
 alias l=' ls-color'
 alias ls=' ls'
@@ -553,7 +553,7 @@ alias ll=' ls -lFh'
 alias la=' l -A'
 
 # change directory, do not record in history
-alias d=' cdup'
+alias d=' d'
 alias cd=' cd'
 alias fl=' cd -'
 alias ..=' cd ..'
