@@ -40,7 +40,7 @@ touch $RAVY/custom/gitconfig
 
 echo 'Installing Zplug'
 git -C ~/.zplug pull --rebase || \
-  git clone --depth=1 https://github.com/b4b4r07/zplug ~/.zplug
+  git clone --depth=1 https://github.com/zplug/zplug ~/.zplug
 
 echo 'Installing custom settings'
 if command -v $RAVY/custom/install >/dev/null; then

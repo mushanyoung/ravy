@@ -18,15 +18,13 @@ _rv_prompt_timer_start
 
 # Zplug START {{{
 
-if [[ -f ~/.zplug/zplug && -z $ZPLUG_NAME ]]; then
-  unset ZPLUG_LOADED
-
+if [[ -f ~/.zplug/init.zsh ]]; then
   # load zplug
-  source ~/.zplug/zplug
+  source ~/.zplug/init.zsh
 
   # duplicate to get both binary included by zplug
-  zplug 'junegunn/fzf', as:command, of:"bin/fzf", do:'./install --bin >/dev/null'
-  zplug 'junegunn/fzf', as:command, of:"bin/fzf-tmux"
+  zplug 'junegunn/fzf', as:command, use:"bin", hook-build:'./install --bin >/dev/null'
+  zplug 'junegunn/fzf', as:command, use:"bin/fzf-tmux"
 
   zplug "supercrabtree/k"
   zplug "djui/alias-tips"
