@@ -19,12 +19,17 @@ _rv_prompt_timer_start
 # Zplug START {{{
 
 if [[ -f ~/.zplug/init.zsh ]]; then
+  # zplug env
+  unset ZPLUG_SHALLOW
+  ZPLUG_CLONE_DEPTH=1
+
   # load zplug
   source ~/.zplug/init.zsh
 
   # duplicate to get both binary included by zplug
   zplug 'junegunn/fzf', as:command, use:"bin", hook-build:'./install --bin >/dev/null'
   zplug 'junegunn/fzf', as:command, use:"bin/fzf-tmux"
+  zplug 'junegunn/fzf', use:"shell/key-bindings.zsh"
 
   zplug "supercrabtree/k"
   zplug "djui/alias-tips"
@@ -80,14 +85,6 @@ if [[ -f ~/.zplug/init.zsh ]]; then
   'default'                  'none'
   )
 
-  # FZF managed by zplug
-  if [[ -d ~/.zplug/repos/junegunn/fzf ]]; then
-    # Auto-completion
-    source ~/.zplug/repos/junegunn/fzf/shell/completion.zsh
-
-    # Key bindings
-    source ~/.zplug/repos/junegunn/fzf/shell/key-bindings.zsh
-  fi
 fi
 
 # }}}
@@ -260,7 +257,7 @@ bindkey -M menuselect '^C' undo
 
 # Zplug END {{{
 
-if [[ -f ~/.zplug/zplug && -z $ZPLUG_LOADED ]]; then
+if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
   ZPLUG_LOADED=true
 
   # load plugins managed by zplug
