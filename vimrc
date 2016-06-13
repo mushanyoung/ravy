@@ -201,6 +201,16 @@ augroup END
 
 " Keys {{
 
+" meta key binding {{
+
+" allow binding for meta key with alphabet
+for i in range(65,90) + range(97,122)
+  let c = nr2char(i)
+  exec "map \e".c." <M-".c.">"
+endfor
+
+" }}
+
 " imap / cmap {{
 
 " jk to exit insert mode
@@ -303,20 +313,25 @@ noremap <silent> <C-W>h :call WinMove('h')<CR>
 noremap <silent> <C-W>j :call WinMove('j')<CR>
 noremap <silent> <C-W>k :call WinMove('k')<CR>
 noremap <silent> <C-W>l :call WinMove('l')<CR>
-noremap <silent> <C-W><C-H> :call WinMove('h')<CR>
-noremap <silent> <C-W><C-J> :call WinMove('j')<CR>
-noremap <silent> <C-W><C-K> :call WinMove('k')<CR>
-noremap <silent> <C-W><C-L> :call WinMove('l')<CR>
 
 " window resize
 noremap <C-W>0 :resize +5<CR>
 noremap <C-W>9 :resize -5<CR>
-noremap <C-W>. :vertical resize +10<CR>
-noremap <C-W>, :vertical resize -10<CR>
+noremap <C-W>. :vertical resize +5<CR>
+noremap <C-W>, :vertical resize -5<CR>
 
 " split window
 noremap <C-W>\ :vsplit<CR>
 noremap <C-W>- :split<CR>
+
+" integrate tmux navigator
+let g:tmux_navigator_no_mappings = 1
+nnoremap <silent> <M-h> :TmuxNavigateLeft<CR>
+nnoremap <silent> <M-j> :TmuxNavigateDown<CR>
+nnoremap <silent> <M-k> :TmuxNavigateUp<CR>
+nnoremap <silent> <M-l> :TmuxNavigateRight<CR>
+nnoremap <silent> <M-p> :TmuxNavigatePrevious<CR>
+nnoremap <silent> <M-c> :close<CR>
 
 " }}
 
@@ -334,9 +349,6 @@ map <SPACE><SPACE> \\
 
 " write
 nnoremap \w :write<CR>
-
-" close current window
-nnoremap <silent> \c :close<CR>
 
 " quick substitute
 vnoremap \s :s/
@@ -490,6 +502,12 @@ if !executable("ag")
 endif
 
 nnoremap FF :Ag<SPACE>
+
+" }}
+
+" auto-pairs {{
+
+let g:AutoPairsShortcutToggle=''
 
 " }}
 
@@ -666,6 +684,9 @@ Plug 'junkblocker/patchreview-vim'
 
 " simulated scroll bar using sign column
 Plug 'vim-scripts/vim-scroll-position'
+
+" pane navigate integration with tmux
+Plug 'christoomey/vim-tmux-navigator'
 
 if executable('ctags')
   " tag explorer
