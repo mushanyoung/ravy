@@ -183,19 +183,18 @@ fzf-tmux-words-widget () {
     prefix=${LBUFFER:0:-$#word}
   fi
 
-  word=$( tmuxwords | fzf -q "$1" );
-  if [[ -n $word ]]; then
+  if word=$( tmuxwords | fzf -q "$word" ); then
     LBUFFER="$prefix$word"
     zle redisplay
   fi
 }
 zle -N fzf-tmux-words-widget
-bindkey '\et' fzf-tmux-words-widget
+bindkey '\eF' fzf-tmux-words-widget
 
 # fzf default completion
 bindkey '^R' fzf-history-widget
 bindkey '^T' fzf-file-widget
-bindkey '\ec' fzf-cd-widget
+bindkey '\et' fzf-cd-widget
 
 # toggle glob for current command line
 glob-toggle () {
