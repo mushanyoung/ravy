@@ -260,7 +260,7 @@ if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
   ZPLUG_LOADED=true
 
   # load plugins managed by zplug
-  zplug load --verbose
+  zplug load --verbose 2>/dev/null
 
   # Post zplug settings
   # zsh auto suggestions
