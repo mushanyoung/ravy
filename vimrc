@@ -204,10 +204,10 @@ augroup END
 " meta key binding {{
 
 " allow binding for meta key with alphabet
-for i in range(65,90) + range(97,122)
-  let c = nr2char(i)
-  exec "map \e".c." <M-".c.">"
-endfor
+" for i in range(65,90) + range(97,122)
+"   let c = nr2char(i)
+"   exec "nmap \e".c." <M-".c.">"
+" endfor
 
 " }}
 
@@ -326,12 +326,12 @@ noremap <C-W>- :split<CR>
 
 " integrate tmux navigator
 let g:tmux_navigator_no_mappings = 1
-nnoremap <silent> <M-h> :TmuxNavigateLeft<CR>
-nnoremap <silent> <M-j> :TmuxNavigateDown<CR>
-nnoremap <silent> <M-k> :TmuxNavigateUp<CR>
-nnoremap <silent> <M-l> :TmuxNavigateRight<CR>
-nnoremap <silent> <M-p> :TmuxNavigatePrevious<CR>
-nnoremap <silent> <M-c> :close<CR>
+nnoremap <silent> h :TmuxNavigateLeft<CR>
+nnoremap <silent> j :TmuxNavigateDown<CR>
+nnoremap <silent> k :TmuxNavigateUp<CR>
+nnoremap <silent> l :TmuxNavigateRight<CR>
+nnoremap <silent> p :TmuxNavigatePrevious<CR>
+nnoremap <silent> c :close<CR>
 
 " }}
 
