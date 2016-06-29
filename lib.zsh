@@ -3,7 +3,7 @@ _rv_prompt_git () {
   local ref k git_st st_str st_count
 
   # exit if current directory is not a git repo
-  if ! ref=$(command git symbolic-ref HEAD 2>/dev/null || command git rev-parse --short HEAD 2>/dev/null); then
+  if ! ref=$(command git symbolic-ref --short HEAD 2>/dev/null || command git rev-parse --short HEAD 2>/dev/null); then
     _rv_prompt_git_result=
     return
   fi
@@ -33,7 +33,7 @@ _rv_prompt_git () {
     fi
   done
 
-  _rv_prompt_git_result="${ref#refs/heads/}${st_str:+ $st_str}"
+  _rv_prompt_git_result="${ref}${st_str:+ $st_str}"
 }
 
 # current millseconds
