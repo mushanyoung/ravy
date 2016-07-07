@@ -530,6 +530,11 @@ imv () {
   done
 }
 
+# kill processes of current user containing a specific keyword
+kill_keyword () {
+  ps x | grep "$1" | awk '{print $1}' | xargs kill -9
+}
+
 # wrapper of zsh-bd, cd up 1 level by default
 d () {
   if (($#<1)); then
