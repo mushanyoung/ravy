@@ -104,11 +104,6 @@ bindkey '^E' end-of-line
 bindkey '^_' undo
 bindkey '\e-' redo
 
-# C-B / C-F to move by word, C-W to kill
-bindkey '^F' forward-word
-bindkey '^B' backward-word
-bindkey '^W' backward-kill-word
-
 # zsh-history-substring-search: bind ^P and ^N to it
 bindkey '^P' history-substring-search-up
 bindkey '^N' history-substring-search-down
@@ -131,6 +126,41 @@ zle -N copy-earlier-word
 bindkey '\em' copy-earlier-word
 bindkey '\e.' insert-last-word
 
+# chars treated as a part of a word
+WORDCHARS=$'\'\\/*?_-.,[]~&;!#$%^(){}<>+:=@'
+
+# C-B / C-F to move, C-W to kill by word
+# M-b / M-f to move, M-w to kill by word with bash style
+autoload -U select-word-style
+autoload -U backward-kill-word-match
+autoload -U forward-word-match
+autoload -U backward-word-match
+zle -N backward-kill-word-match
+zle -N forward-word-match
+zle -N backward-word-match
+
+forward-word-alter () {
+  select-word-style bash
+  zle forward-word-match
+}
+backward-word-alter () {
+  select-word-style bash
+  zle backward-word-match
+}
+backward-kill-word-alter () {
+  select-word-style bash
+  zle backward-kill-word-match
+}
+zle -N forward-word-alter
+zle -N backward-word-alter
+zle -N backward-kill-word-alter
+bindkey '\ef' forward-word-alter
+bindkey '\eb' backward-word-alter
+bindkey '\ew' backward-kill-word-alter
+bindkey '^F' forward-word
+bindkey '^B' backward-word
+bindkey '^W' backward-kill-word
+
 # ranger file explorer
 ranger-cd () {
   tempfile=$(mktemp)
@@ -139,32 +169,11 @@ ranger-cd () {
     cd -- "$(cat "$tempfile")"
   fi
   rm -f -- "$tempfile"
-
   zle redisplay
   zle -M ""
 }
 zle -N ranger-cd
 bindkey '^K' ranger-cd
-
-# M-B / M-F to move by word with only chars, M-W to kill
-forward-word-only-chars () {
-  local WORDCHARS=
-  zle forward-word
-}
-backward-word-only-chars () {
-  local WORDCHARS=
-  zle backward-word
-}
-backward-kill-word-only-chars () {
-  local WORDCHARS=
-  zle backward-kill-word
-}
-zle -N forward-word-only-chars
-zle -N backward-word-only-chars
-zle -N backward-kill-word-only-chars
-bindkey '\ef' forward-word-only-chars
-bindkey '\eb' backward-word-only-chars
-bindkey '\ew' backward-kill-word-only-chars
 
 # Use FZF to modify the current word with tmux words
 fzf-tmux-words-widget () {
@@ -355,9 +364,6 @@ elif hash gdircolors &>/dev/null; then
   # coreutils from brew
   eval $(gdircolors -b $RAVY/LS_COLORS)
 fi
-
-# chars treated as a part of a word
-WORDCHARS=$'\'\\/*?_-.,[]~&;!#$%^(){}<>+:=@'
 
 # load zsh modules
 autoload -Uz zmv add-zsh-hook
