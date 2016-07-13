@@ -668,7 +668,9 @@ add-zsh-hook precmd _rv_prompt_last_command_status
 # Background Singleton Process {{{
 
 # clipboard monitor
-(singleton-command cbmonitor &) &>/dev/null
+if [[ $(uname) == Darwin ]]; then
+  (singleton-command cbmonitor &) &>/dev/null
+fi
 
 # }}}
 
