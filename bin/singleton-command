@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Run given command if there is not already one running.
+
+if ! pgrep -f "(^| |/)$(basename "$1")( |\$)" > /dev/null; then
+  exec $*
+fi

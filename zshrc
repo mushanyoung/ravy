@@ -665,6 +665,13 @@ add-zsh-hook precmd _rv_prompt_last_command_status
 
 # }}}
 
+# Background Singleton Process {{{
+
+# clipboard monitor
+(singleton-command cbmonitor &) &>/dev/null
+
+# }}}
+
 # Custom {{{
 
 [[ -f $RAVY_CUSTOM/zshrc ]] && source $RAVY_CUSTOM/zshrc
