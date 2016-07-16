@@ -667,9 +667,21 @@ add-zsh-hook precmd _rv_prompt_last_command_status
 
 # Background Singleton Process {{{
 
+# Run given command only if there is not one running.
+singleton-command () {
+  if ! pgrep -f "(^| |/)$(basename "$1")( |\$)" > /dev/null; then
+    exec $*
+  fi
+}
+
+# Run singleton-command in background.
+singleton-command-background () {
+  (singleton-command "$1" &) &> /dev/null
+}
+
 # clipboard monitor
 if [[ $(uname) == Darwin ]]; then
-  (singleton-command cbmonitor &) &>/dev/null
+  singleton-command-background cbmonitor
 fi
 
 # }}}
