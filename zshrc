@@ -669,14 +669,14 @@ add-zsh-hook precmd _rv_prompt_last_command_status
 
 # Run given command only if there is not one running.
 singleton-command () {
-  if ! pgrep -f "(^| |/)$(basename "$1")( |\$)" > /dev/null; then
+  if ! pgrep -f "(^| |/)$*( |\$)" > /dev/null; then
     exec $*
   fi
 }
 
 # Run singleton-command in background.
 singleton-command-background () {
-  (singleton-command "$1" &) &> /dev/null
+  (singleton-command $* &) &> /dev/null
 }
 
 # clipboard monitor
