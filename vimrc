@@ -563,6 +563,12 @@ xmap ac <Plug>GitGutterTextObjectOuterVisual
 
 " }}
 
+" vim-peekaboo {{
+
+let g:peekaboo_window = 'vertical leftabove 30new'
+
+" }}
+
 " vim-surround {{
 
 let g:surround_113="#{\r}"     " v
