@@ -263,12 +263,6 @@ nnoremap gB :bnext<CR>
 " cancel hlsearch
 nnoremap <silent> <C-L> :noh<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
 
-" tab and s-tab to indent / unindent
-nnoremap <TAB> v>
-nnoremap <S-TAB> v<
-vnoremap <TAB> >gv
-vnoremap <S-TAB> <gv
-
 " similar to gf, open file path under cursor, but in a split window in right
 nnoremap gw :let mycurf=expand("<cfile>")<CR>:execute("vsplit ".mycurf)<CR>
 
@@ -346,12 +340,14 @@ nnoremap \w :write<CR>
 vnoremap \s :s/
 nnoremap \s :%s/
 
-" go backaward and forward in jump list
-nnoremap \p <C-O>
-nnoremap \n <C-I>
-
 " select ALL
 nnoremap \a ggVG
+
+" indent / unindent
+nnoremap \<TAB> v>
+nnoremap \<S-TAB> v<
+vnoremap \<TAB> >gv
+vnoremap \<S-TAB> <gv
 
 " forward yanked text to clip
 nnoremap <silent> \y :call system('clip >/dev/tty', @0)<CR>:echo 'Yanked text sent.'<CR>
