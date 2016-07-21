@@ -22,9 +22,6 @@ set synmaxcol=255
 " default shell
 set shell=bash
 
-" interact with system clipboard
-set clipboard+=unnamed
-
 " when switching to a buffer, jump to the window if there is one with it opened
 set switchbuf=useopen
 
@@ -251,9 +248,6 @@ noremap <RIGHT> <NOP>
 nnoremap <C-E> 3<C-E>
 nnoremap <C-Y> 3<C-Y>
 
-" make Y acts just like C and D
-nnoremap Y y$
-
 " j, k travels visual line and gj, gk travels real line
 nnoremap j gj
 nnoremap k gk
@@ -353,9 +347,6 @@ nnoremap \w :write<CR>
 " quick substitute
 vnoremap \s :s/
 nnoremap \s :%s/
-
-" put yanked text and keep it in the register
-vnoremap \p "_dP
 
 " go backaward and forward in jump list
 nnoremap \p <C-O>
@@ -535,6 +526,15 @@ nmap ga <Plug>(EasyAlign)
 
 " }}
 
+" vim-easyclip {{
+
+let g:EasyClipUsePasteToggleDefaults = 0
+
+nmap p <PLUG>EasyClipSwapPasteForward
+nmap n <PLUG>EasyClipSwapPasteBackwards
+
+" }}
+
 " vim-easymotion {{
 
 " use \\ as the prefix
@@ -642,6 +642,9 @@ Plug 'junegunn/fzf.vim', {'dir': '~/.vim/bundle/fzf-utils'}
 
 " extends ", @, i:<C-R> to list the contents registers
 Plug 'junegunn/vim-peekaboo'
+
+" better clipboard of vim
+Plug 'svermeulen/vim-easyclip'
 
 " ga to align a region of text on a key (<C-X> to use a regex)
 Plug 'junegunn/vim-easy-align'
