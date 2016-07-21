@@ -174,9 +174,9 @@ augroup buffer_editing
 
   " restore cursor position
   autocmd BufReadPost *
-    \ if line("'\"") >= 1 && line("'\"") <= line("$") |
-    \   execute "normal! g`\"" |
-    \ endif
+        \ if line("'\"") >= 1 && line("'\"") <= line("$") |
+        \   execute "normal! g`\"" |
+        \ endif
 
   " when editing a git commit message
   " set the cursor position to the beginning
@@ -198,13 +198,41 @@ augroup END
 
 " Keys {{
 
-" meta key binding {{
+" Window {{
 
-" allow binding for meta key with alphabet
-" for i in range(65,90) + range(97,122)
-"   let c = nr2char(i)
-"   exec "nmap \e".c." <M-".c.">"
-" endfor
+" Move to a window in the given direction, if can't move, create a new one
+function! WinMove(direction)
+  let t:curwin = winnr()
+  exec "wincmd ".a:direction
+  if (t:curwin == winnr())
+    exec "wincmd ".(match(a:direction,'[jk]') ? 'v' : 's')
+    exec "wincmd ".a:direction
+  endif
+endfunction
+
+noremap <silent> <C-W>h :call WinMove('h')<CR>
+noremap <silent> <C-W>j :call WinMove('j')<CR>
+noremap <silent> <C-W>k :call WinMove('k')<CR>
+noremap <silent> <C-W>l :call WinMove('l')<CR>
+
+" window resize
+noremap <C-W>0 :resize +5<CR>
+noremap <C-W>9 :resize -5<CR>
+noremap <C-W>. :vertical resize +5<CR>
+noremap <C-W>, :vertical resize -5<CR>
+
+" split window
+noremap <C-W>\ :vsplit<CR>
+noremap <C-W>- :split<CR>
+
+" integrate tmux navigator
+let g:tmux_navigator_no_mappings = 1
+nnoremap <silent> h :TmuxNavigateLeft<CR>
+nnoremap <silent> j :TmuxNavigateDown<CR>
+nnoremap <silent> k :TmuxNavigateUp<CR>
+nnoremap <silent> l :TmuxNavigateRight<CR>
+nnoremap <silent> p :TmuxNavigatePrevious<CR>
+nnoremap <silent> c :close<CR>
 
 " }}
 
@@ -234,7 +262,15 @@ cnoremap w!! w !sudo tee % >/dev/null
 
 " }}
 
-" nmap {{
+" nmap / vmap {{
+
+" map leader key to , & ,, to play default , behaviour
+let g:mapleader = ','
+nnoremap ,, ,
+
+" use space and backslash as the actual leader key for my own key bindings
+map <SPACE> \
+map <SPACE><SPACE> \\
 
 " disable arrow keys
 noremap <UP> <NOP>
@@ -280,58 +316,6 @@ function! ExecuteBufferInShell()
   redraw!
 endfunction
 nnoremap <F5> :call ExecuteBufferInShell()<CR>
-
-" }}
-
-" Window {{
-
-" Move to a window in the given direction, if can't move, create a new one
-function! WinMove(direction)
-  let t:curwin = winnr()
-  exec "wincmd ".a:direction
-  if (t:curwin == winnr())
-    exec "wincmd ".(match(a:direction,'[jk]') ? 'v' : 's')
-    exec "wincmd ".a:direction
-  endif
-endfunction
-
-noremap <silent> <C-W>h :call WinMove('h')<CR>
-noremap <silent> <C-W>j :call WinMove('j')<CR>
-noremap <silent> <C-W>k :call WinMove('k')<CR>
-noremap <silent> <C-W>l :call WinMove('l')<CR>
-
-" window resize
-noremap <C-W>0 :resize +5<CR>
-noremap <C-W>9 :resize -5<CR>
-noremap <C-W>. :vertical resize +5<CR>
-noremap <C-W>, :vertical resize -5<CR>
-
-" split window
-noremap <C-W>\ :vsplit<CR>
-noremap <C-W>- :split<CR>
-
-" integrate tmux navigator
-let g:tmux_navigator_no_mappings = 1
-nnoremap <silent> h :TmuxNavigateLeft<CR>
-nnoremap <silent> j :TmuxNavigateDown<CR>
-nnoremap <silent> k :TmuxNavigateUp<CR>
-nnoremap <silent> l :TmuxNavigateRight<CR>
-nnoremap <silent> p :TmuxNavigatePrevious<CR>
-nnoremap <silent> c :close<CR>
-
-" }}
-
-" \ or <SPACE> {{
-
-" map leader key to ,
-let g:mapleader = ','
-
-" ,, to play default , behaviour
-nnoremap ,, ,
-
-" use space and backslash as the actual leader key for my own key bindings
-map <SPACE> \
-map <SPACE><SPACE> \\
 
 " write
 nnoremap \w :write<CR>
@@ -437,30 +421,30 @@ nnoremap <silent>\m :call ToggleMouse()<CR>
 
 " file explorer by ranger
 function! RangerFileExplorer()
-    let temp = tempname()
-    if has("gui_running")
-        exec 'silent !xterm -e ranger --choosefiles=' . shellescape(temp)
-    else
-        exec 'silent !ranger --choosefiles=' . shellescape(temp)
-    endif
-    if !filereadable(temp)
-        redraw!
-        " Nothing to read.
-        return
-    endif
-    let names = readfile(temp)
-    if empty(names)
-        redraw!
-        " Nothing to open.
-        return
-    endif
-    " Edit the first item.
-    exec 'edit ' . fnameescape(names[0])
-    " Add any remaning items to the arg list/buffer list.
-    for name in names[1:]
-        exec 'argadd ' . fnameescape(name)
-    endfor
+  let temp = tempname()
+  if has("gui_running")
+    exec 'silent !xterm -e ranger --choosefiles=' . shellescape(temp)
+  else
+    exec 'silent !ranger --choosefiles=' . shellescape(temp)
+  endif
+  if !filereadable(temp)
     redraw!
+    " Nothing to read.
+    return
+  endif
+  let names = readfile(temp)
+  if empty(names)
+    redraw!
+    " Nothing to open.
+    return
+  endif
+  " Edit the first item.
+  exec 'edit ' . fnameescape(names[0])
+  " Add any remaning items to the arg list/buffer list.
+  for name in names[1:]
+    exec 'argadd ' . fnameescape(name)
+  endfor
+  redraw!
 endfunction
 nnoremap \ff :call RangerFileExplorer()<CR>
 
