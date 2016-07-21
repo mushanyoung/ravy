@@ -213,14 +213,12 @@ augroup END
 " jk to exit insert mode
 inoremap jk <ESC>
 
-" <cr>: close popup and save indent.
-inoremap <expr><cr> pumvisible() ? "\<c-y>" : "\<cr>"
+" <CR>: close popup and save indent.
+inoremap <expr><CR> pumvisible() ? "\<C-Y>" : "\<CR>"
 
-" tab / s-tab & c-j / c-k works just like c-n and c-p in completion
-inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
-inoremap <expr><s-tab> pumvisible() ? "\<c-p>" : "\<s-tab>"
-inoremap <expr><c-j> pumvisible() ? "\<c-n>" : "\<c-j>"
-inoremap <expr><c-k> pumvisible() ? "\<c-p>" : "\<c-k>"
+" c-j / c-k works just like c-n and c-p in completion
+inoremap <expr><C-J> pumvisible() ? "\<C-N>" : "\<C-J>"
+inoremap <expr><C-K> pumvisible() ? "\<C-P>" : "\<C-K>"
 
 " insert current opened buffer's directory in command line
 cnoremap %% <C-R>=expand('%:p:h').'/'<CR>
@@ -521,8 +519,8 @@ let g:airline_powerline_fonts=1
 
 " vim-easy-align {{
 
-xmap ga <Plug>(EasyAlign)
-nmap ga <Plug>(EasyAlign)
+xmap ga <PLUG>(EasyAlign)
+nmap ga <PLUG>(EasyAlign)
 
 " }}
 
@@ -549,17 +547,17 @@ let g:EasyMotion_smartcase = 1
 
 let g:gitgutter_map_keys = 0
 
-nmap \hn <Plug>GitGutterNextHunk
-nmap \hp <Plug>GitGutterPrevHunk
+nmap \hn <PLUG>GitGutterNextHunk
+nmap \hp <PLUG>GitGutterPrevHunk
 
-nmap \ha <Plug>GitGutterStageHunk
-nmap \hr <Plug>GitGutterUndoHunk
-nmap \hv <Plug>GitGutterPreviewHunk
+nmap \ha <PLUG>GitGutterStageHunk
+nmap \hr <PLUG>GitGutterUndoHunk
+nmap \hv <PLUG>GitGutterPreviewHunk
 
-omap ic <Plug>GitGutterTextObjectInnerPending
-omap ac <Plug>GitGutterTextObjectOuterPending
-xmap ic <Plug>GitGutterTextObjectInnerVisual
-xmap ac <Plug>GitGutterTextObjectOuterVisual
+omap ic <PLUG>GitGutterTextObjectInnerPending
+omap ac <PLUG>GitGutterTextObjectOuterPending
+xmap ic <PLUG>GitGutterTextObjectInnerVisual
+xmap ac <PLUG>GitGutterTextObjectOuterVisual
 
 " }}
 
