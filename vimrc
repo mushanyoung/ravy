@@ -546,9 +546,11 @@ let g:gitgutter_map_keys = 0
 nmap \hn <PLUG>GitGutterNextHunk
 nmap \hp <PLUG>GitGutterPrevHunk
 
-nmap \ha <PLUG>GitGutterStageHunk
-nmap \hr <PLUG>GitGutterUndoHunk
+nmap \hu <PLUG>GitGutterUndoHunk
+nmap \hs <PLUG>GitGutterStageHunk
 nmap \hv <PLUG>GitGutterPreviewHunk
+
+nmap \hb :let g:gitgutter_diff_base=''<LEFT>
 
 omap ic <PLUG>GitGutterTextObjectInnerPending
 omap ac <PLUG>GitGutterTextObjectOuterPending
