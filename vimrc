@@ -482,7 +482,7 @@ let g:AutoPairsShortcutToggle=''
 
 " fzf {{
 
-nnoremap <silent> <C-P> :Files<CR>
+nnoremap <silent> o   :Files<CR>
 nnoremap <silent> \fo   :Files<CR>
 nnoremap <silent> \ft   :BTags<CR>
 nnoremap <silent> \fm   :Marks<CR>

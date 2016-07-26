@@ -199,6 +199,8 @@ fzf-tmux-words-widget () {
 }
 zle -N fzf-tmux-words-widget
 bindkey '\eF' fzf-tmux-words-widget
+zle -N fzf-open-file-widget
+bindkey '\eo' fzf-open-file-widget
 
 # fzf default completion
 bindkey '^R' fzf-history-widget
@@ -377,37 +379,41 @@ FZF_CTRL_T_COMMAND='ag -g ""'
 FZF_DEFAULT_OPTS='--select-1 --exit-0'
 FZF_COMPLETION_TRIGGER='**'
 
-alias fzf='fzf-tmux'
-
-# Open the selected file
-#   - CTRL-O to open with `open` command,
-#   - CTRL-E or Enter key to open with the $EDITOR
-#   - Bypass fuzzy finder if there's only one match (--select-1)
-#   - Exit if there's no match (--exit-0)
-fo () {
-  local out file key cmd
-  out=$(fzf --query="$1" --exit-0 --expect=ctrl-o,ctrl-e)
+# Open the selected file by default editor, CTRL-O to open with `open` command
+fzf-open-file () {
+  local out file key
+  out=$(ag -g "" | fzf --exit-0 --expect=ctrl-o)
   key=$(head -1 <<< "$out")
   file=$(head -2 <<< "$out" | tail -1)
-  if [[ "$key" == 'ctrl-o' ]]; then
-    cmd='open'
-  else
-    cmd=${EDITOR:-vim}
-  fi
   if [[ -n "$file" ]]; then
-    echo $file
-    $cmd "$file"
+    [[ "$key" == 'ctrl-o' ]] && open "$file" || ${EDITOR:-vim} "$file"
   fi
 }
 
+fzf-open-file-widget () {
+  local out file key cmd
+  out=$(ag -g "" | fzf --exit-0 --expect=ctrl-o)
+  key=$(head -1 <<< "$out")
+  file=$(head -2 <<< "$out" | tail -1)
+  if [[ -n "$file" ]]; then
+    [[ "$key" == 'ctrl-o' ]] && cmd="open $file" || cmd="${EDITOR:-vim} $file"
+  fi
+  BUFFER="$cmd"
+  zle accept-line
+}
+
 # open recent files of vim
-fv () {
+fzf-open-file-vim () {
   local files
   files=$(grep '^>' ~/.viminfo | cut -c3- |
   while read line; do
     [[ -f "${line/\~/$HOME}" ]] && echo "$line"
   done | fzf -d -m -1 -q "$*") && vim -- ${files//\~/$HOME}
 }
+
+alias fzf='fzf-tmux'
+alias fo='fzf-open-file'
+alias fv='fzf-open-file-vim'
 
 # }}}
 
