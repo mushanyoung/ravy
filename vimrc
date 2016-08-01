@@ -296,8 +296,8 @@ nnoremap ^ 0
 nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
 
-" cancel hlsearch
-nnoremap <silent> <C-L> :noh<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
+" clear screen, cancel hlsearch & reload filetype
+nnoremap <silent> <C-L> :noh<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR>:let &filetype=&filetype<CR><C-L>
 
 " similar to gf, open file path under cursor, but in a split window in right
 nnoremap gw :let mycurf=expand("<cfile>")<CR>:execute("vsplit ".mycurf)<CR>
@@ -341,9 +341,6 @@ nnoremap <silent> \u :set invfoldenable<CR>
 
 " change working directory to the newly opened buffer
 nnoremap \fh :lcd %:p:h<CR>:pwd<CR>
-
-" reset current filetype
-nnoremap <silent> \r :let &filetype=&filetype<CR>
 
 " close current buffer
 nnoremap \fd :bdelete!<CR>
