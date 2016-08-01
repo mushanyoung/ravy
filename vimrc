@@ -264,9 +264,8 @@ cnoremap w!! w !sudo tee % >/dev/null
 
 " nmap / vmap {{
 
-" map leader key to , & ,, to play default , behaviour
-let g:mapleader = ','
-nnoremap ,, ,
+" map leader key to >
+let g:mapleader = '>'
 
 " use space and backslash as the actual leader key for my own key bindings
 map <SPACE> \
