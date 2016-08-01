@@ -487,6 +487,16 @@ nnoremap <silent> \b    :Buffers<CR>
 
 " }}
 
+" incsearch {{
+
+map /  <Plug>(incsearch-forward)
+map ?  <Plug>(incsearch-backward)
+map g/ <Plug>(incsearch-stay)
+
+let g:incsearch#auto_nohlsearch = 1
+
+" }}
+
 " vim-airline {{
 
 let g:airline_powerline_fonts=1
@@ -602,6 +612,12 @@ Plug 'vim-airline/vim-airline'
 
 " choose from positions which repeated motions would reach
 Plug 'easymotion/vim-easymotion'
+
+" s: motion to match 2 characters
+Plug 'justinmk/vim-sneak'
+
+" incrementally highlights ALL pattern matches.
+Plug 'haya14busa/incsearch.vim'
 
 " search: show match index and total match count
 Plug 'google/vim-searchindex'
