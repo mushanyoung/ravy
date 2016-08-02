@@ -25,7 +25,7 @@ _rv_prompt_git () {
   )
 
   for (( k = 1; k <= $#st_parser; k += 2 )) do
-    if st_count=$(print "$git_st" | grep -E -c $st_parser[k] 2>/dev/null); then
+    if st_count=$(grep -E -c $st_parser[k] <<<$git_st 2>/dev/null); then
       st_str+=$st_parser[k+1]
       if (( st_count > 1 )) then
         st_str+=$st_count
