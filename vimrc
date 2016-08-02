@@ -16,6 +16,9 @@ set history=10000
 " enable syntax
 syntax on
 
+" session options
+set sessionoptions=blank,buffers,curdir,folds,winsize
+
 " max column number to be parsed for syntax
 set synmaxcol=255
 
@@ -108,8 +111,6 @@ set showcmd
 set lazyredraw
 set cursorline
 set display=lastline
-set winheight=5
-set winminheight=5
 
 " auto formatting options
 set formatoptions=nmMcroql
@@ -320,8 +321,8 @@ nnoremap <F5> :call ExecuteBufferInShell()<CR>
 nnoremap \w :write<CR>
 
 " quick substitute
-vnoremap \s :s/
-nnoremap \s :%s/
+vnoremap \c :s/
+nnoremap \c :%s/
 
 " select ALL
 nnoremap \a ggVG
@@ -487,16 +488,6 @@ nnoremap <silent> \b    :Buffers<CR>
 
 " }}
 
-" incsearch {{
-
-map /  <Plug>(incsearch-forward)
-map ?  <Plug>(incsearch-backward)
-map g/ <Plug>(incsearch-stay)
-
-let g:incsearch#auto_nohlsearch = 1
-
-" }}
-
 " vim-airline {{
 
 let g:airline_powerline_fonts=1
@@ -552,6 +543,19 @@ xmap ac <PLUG>GitGutterTextObjectOuterVisual
 " vim-peekaboo {{
 
 let g:peekaboo_window = 'vertical leftabove 30new'
+
+" }}
+
+" vim-session {{
+
+let g:session_autosave = 'yes'
+let g:session_autoload = 'no'
+
+nnoremap \ss :SaveSession<SPACE>
+nnoremap \so :OpenSession<SPACE>
+nnoremap \sd :DeleteSession<SPACE>
+nnoremap \sc :CloseSession<CR>
+nnoremap \sv :ViewSession<CR>
 
 " }}
 
@@ -616,9 +620,6 @@ Plug 'easymotion/vim-easymotion'
 " s: motion to match 2 characters
 Plug 'justinmk/vim-sneak'
 
-" incrementally highlights ALL pattern matches.
-Plug 'haya14busa/incsearch.vim'
-
 " search: show match index and total match count
 Plug 'google/vim-searchindex'
 
@@ -679,6 +680,9 @@ Plug 'tpope/vim-unimpaired'
 
 " git integration
 Plug 'tpope/vim-fugitive'
+
+" session manager
+Plug 'xolox/vim-session'
 
 " code or diff reviews
 Plug 'junkblocker/patchreview-vim'
