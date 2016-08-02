@@ -17,7 +17,7 @@ set history=10000
 syntax on
 
 " session options
-set sessionoptions=blank,buffers,curdir,folds,winsize
+set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
 
 " max column number to be parsed for syntax
 set synmaxcol=255
