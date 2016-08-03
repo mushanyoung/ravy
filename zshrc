@@ -374,7 +374,7 @@ autoload -Uz zmv add-zsh-hook
 
 # FZF {{{
 
-export FZF_DEFAULT_OPTS='--select-1 --exit-0 --bind=ctrl-f:page-down,ctrl-b:page-up'
+export FZF_DEFAULT_OPTS='--bind=ctrl-f:page-down,ctrl-b:page-up'
 export FZF_DEFAULT_COMMAND='ag -g ""'
 export FZF_CTRL_T_COMMAND='ag -g ""'
 
