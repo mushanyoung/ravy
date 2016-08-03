@@ -374,10 +374,9 @@ autoload -Uz zmv add-zsh-hook
 
 # FZF {{{
 
-FZF_DEFAULT_COMMAND='ag -g ""'
-FZF_CTRL_T_COMMAND='ag -g ""'
-FZF_DEFAULT_OPTS='--select-1 --exit-0'
-FZF_COMPLETION_TRIGGER='**'
+export FZF_DEFAULT_OPTS='--select-1 --exit-0 --bind=ctrl-f:page-down,ctrl-b:page-up'
+export FZF_DEFAULT_COMMAND='ag -g ""'
+export FZF_CTRL_T_COMMAND='ag -g ""'
 
 # Open the selected file by default editor, CTRL-O to open with `open` command
 fzf-open-file () {
