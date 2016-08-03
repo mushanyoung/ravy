@@ -551,11 +551,26 @@ let g:peekaboo_window = 'vertical leftabove 30new'
 let g:session_autosave = 'yes'
 let g:session_autoload = 'no'
 
-nnoremap \ss :SaveSession<SPACE>
-nnoremap \so :OpenSession<SPACE>
+function! OpenSessionFZF()
+  function! SessionSink(line)
+    return xolox#session#open_cmd(a:line, '', 'OpenSession')
+  endfunction
+
+  return fzf#run({
+    \ 'source': xolox#session#get_names(0),
+    \ 'sink': function('SessionSink'),
+    \ 'options': '+m --prompt="Session> "',
+    \ 'down': '~40%'})
+endfunction
+nnoremap \so :call OpenSessionFZF()<CR>
+
+nnoremap \sn :SaveSession<SPACE>
 nnoremap \sd :DeleteSession<SPACE>
+nnoremap \ss :SaveSession<CR>
 nnoremap \sc :CloseSession<CR>
 nnoremap \sv :ViewSession<CR>
+
+nnoremap \sf :echo 'Current Session: ' . xolox#session#find_current_session()<CR>
 
 " }}
 
@@ -681,6 +696,9 @@ Plug 'tpope/vim-unimpaired'
 " git integration
 Plug 'tpope/vim-fugitive'
 
+" vim plugin util
+Plug 'xolox/vim-misc'
+
 " session manager
 Plug 'xolox/vim-session'
 
@@ -699,7 +717,6 @@ if executable('ctags')
 
   " auto generate tags
   Plug 'xolox/vim-easytags'
-  Plug 'xolox/vim-misc'
 endif
 
 if v:version >= 704
