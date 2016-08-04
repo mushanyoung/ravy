@@ -356,8 +356,20 @@ fi
 # editor
 alias vi=vim
 alias v=vim
+alias vs=vim_open_session
 export EDITOR=vim
 export GIT_EDITOR=vim
+
+# open session matched by query, create a new one if there isn't a match
+function vim_open_session () {
+  session=$(ls ~/.vim/sessions | sed 's/\.vim//' | fzf -q "$1" --select-1 --exit-0)
+  if [[ -n $session ]]; then
+    cd ${$(cat ~/.vim/sessions/$session.vim | grep '^cd' | head -1 | cut -d' ' -f2-)/#\~/$HOME}
+    vim "+OpenSession $session"
+  elif [[ -n $1 ]]; then
+    vim "+SaveSession $1"
+  fi
+}
 
 # ls color evaluations
 if hash dircolors &>/dev/null; then
