@@ -201,6 +201,8 @@ zle -N fzf-tmux-words-widget
 bindkey '\eF' fzf-tmux-words-widget
 zle -N fzf-open-file-widget
 bindkey '\eo' fzf-open-file-widget
+zle -N fzf-open-vim-session-widget
+bindkey '\es' fzf-open-vim-session-widget
 
 # fzf default completion
 bindkey '^R' fzf-history-widget
@@ -356,20 +358,9 @@ fi
 # editor
 alias vi=vim
 alias v=vim
-alias vs=vim_open_session
+alias vs=fzf-open-vim-session
 export EDITOR=vim
 export GIT_EDITOR=vim
-
-# open session matched by query, create a new one if there isn't a match
-function vim_open_session () {
-  session=$(ls ~/.vim/sessions | sed 's/\.vim//' | fzf -q "$1" --select-1 --exit-0)
-  if [[ -n $session ]]; then
-    cd ${$(cat ~/.vim/sessions/$session.vim | grep '^cd' | head -1 | cut -d' ' -f2-)/#\~/$HOME}
-    vim "+OpenSession $session"
-  elif [[ -n $1 ]]; then
-    vim "+SaveSession $1"
-  fi
-}
 
 # ls color evaluations
 if hash dircolors &>/dev/null; then
@@ -406,11 +397,33 @@ fzf-open-file-widget () {
   out=$(ag -g "" | fzf --exit-0 --expect=ctrl-o)
   key=$(head -1 <<< "$out")
   file=$(head -2 <<< "$out" | tail -1)
+  zle redisplay
   if [[ -n "$file" ]]; then
     [[ "$key" == 'ctrl-o' ]] && cmd="open $file" || cmd="${EDITOR:-vim} $file"
+    BUFFER="$cmd"
+    zle accept-line
   fi
-  BUFFER="$cmd"
-  zle accept-line
+}
+
+# open session matched by query, create a new one if there isn't a match
+fzf-open-vim-session () {
+  session=$(ls ~/.vim/sessions | sed 's/\.vim//' | fzf -q "$1" --select-1 --exit-0)
+  if [[ -n $session ]]; then
+    cd ${$(cat ~/.vim/sessions/$session.vim | grep '^cd' | head -1 | cut -d' ' -f2-)/#\~/$HOME}
+    vim "+OpenSession $session"
+  elif [[ -n $1 ]]; then
+    vim "+SaveSession $1"
+  fi
+}
+
+fzf-open-vim-session-widget () {
+  session=$(ls ~/.vim/sessions | sed 's/\.vim//' | fzf --exit-0)
+  zle redisplay
+  if [[ -n $session ]]; then
+    cd ${$(cat ~/.vim/sessions/$session.vim | grep '^cd' | head -1 | cut -d' ' -f2-)/#\~/$HOME}
+    BUFFER="vim '+OpenSession $session'"
+    zle accept-line
+  fi
 }
 
 # open recent files of vim
