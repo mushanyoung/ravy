@@ -13,9 +13,6 @@ set swapfile
 set undofile undolevels=1000 undoreload=10000
 set history=10000
 
-" enable syntax
-syntax on
-
 " session options
 set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
 
@@ -296,8 +293,8 @@ nnoremap ^ 0
 nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
 
-" clear screen, cancel hlsearch & reload filetype
-nnoremap <silent> <C-L> :noh<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR>:let &filetype=&filetype<CR><C-L>
+" clear screen and cancel hlsearch
+nnoremap <silent> <C-L> :noh<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
 
 " similar to gf, open file path under cursor, but in a split window in right
 nnoremap gw :let mycurf=expand("<cfile>")<CR>:execute("vsplit ".mycurf)<CR>
