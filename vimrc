@@ -560,6 +560,7 @@ function! OpenSessionFZF()
     \ 'down': '~40%'})
 endfunction
 nnoremap \so :call OpenSessionFZF()<CR>
+nmap s \so
 
 nnoremap \sn :SaveSession<SPACE>
 nnoremap \sd :DeleteSession<SPACE>
