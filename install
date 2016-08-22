@@ -46,3 +46,8 @@ echo 'Installing custom settings'
 if command -v $RAVY/custom/install >/dev/null; then
   $RAVY/custom/install
 fi
+
+if [[ -d ~/Library/Rime ]]; then
+  echo 'Installing rime custom settings'
+  cp $RAVY/rime/* ~/Library/Rime
+fi

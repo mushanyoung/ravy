@@ -1,0 +1,4 @@
+patch:
+  style/horizontal: true
+  app_options/com.runningwithcrayons.Alfred-3:
+    ascii_mode: true
