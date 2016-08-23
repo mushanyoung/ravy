@@ -3,3 +3,5 @@ patch:
   key_binder/bindings/@102: { when: has_menu, accept: bracketright, send: Page_Down }
   key_binder/bindings/@103: { when: paging, accept: Control+k, send: Page_Up }
   key_binder/bindings/@104: { when: has_menu, accept: Control+j, send: Page_Down }
+  schema_list:
+    - schema: luna_pinyin_simp
