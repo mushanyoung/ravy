@@ -552,7 +552,7 @@ cdd () {
 
 # ping handles url
 ping () {
-  command ping $(echo $* | sed -E -e 's#https?://##' -e 's#/.*$##')
+  command ping $(sed -E -e 's#https?://##' -e 's#/.*$##' <<< $*)
 }
 
 # interactive mv
@@ -645,7 +645,7 @@ alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
 # Open command through cbmonitor
 open_remote () {
-  echo 'open:['"$1"']' | clip
+  clip <<< 'open:['"$1"']'
 }
 
 # }}}

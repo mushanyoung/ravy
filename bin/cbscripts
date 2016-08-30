@@ -11,7 +11,7 @@ action='open \1'
 
 if [[ $content =~ $pattern ]]; then
   echo "match: '$BASH_REMATCH'"
-  real_action=$(printf "%s" $BASH_REMATCH | sed -E "s/$pattern/$action/")
+  real_action=$( sed -E "s/$pattern/$action/" <<< $BASH_REMATCH )
   echo "action: $real_action"
   $real_action
 fi
