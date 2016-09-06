@@ -479,7 +479,7 @@ let g:AutoPairsShortcutToggle=''
 nnoremap <silent> o   :Files<CR>
 nnoremap <silent> \fo   :Files<CR>
 nnoremap <silent> \ft   :BTags<CR>
-nnoremap <silent> \fm   :Marks<CR>
+nnoremap <silent> \fk   :Marks<CR>
 nnoremap <silent> \fs   :Buffers<CR>
 nnoremap <silent> \b    :Buffers<CR>
 
@@ -488,6 +488,12 @@ nnoremap <silent> \b    :Buffers<CR>
 " vim-airline {{
 
 let g:airline_powerline_fonts=1
+
+" }}
+
+" vim-autoformat {{
+
+nnoremap <silent>\fm :Autoformat<CR>
 
 " }}
 
@@ -708,6 +714,9 @@ Plug 'vim-scripts/vim-scroll-position'
 
 " pane navigate integration with tmux
 Plug 'christoomey/vim-tmux-navigator'
+
+" Auto format
+Plug 'Chiel92/vim-autoformat'
 
 if executable('ctags')
   " tag explorer
