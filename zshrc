@@ -380,6 +380,7 @@ autoload -Uz zmv add-zsh-hook
 export FZF_DEFAULT_OPTS='--bind=ctrl-f:page-down,ctrl-b:page-up'
 export FZF_DEFAULT_COMMAND='ag -g ""'
 export FZF_CTRL_T_COMMAND='ag -g ""'
+export FZF_ALT_C_COMMAND='find . -type d | sed 1d | cut -b3-'
 
 # Open the selected file by default editor, CTRL-O to open with `open` command
 fzf-open-file () {
@@ -394,7 +395,7 @@ fzf-open-file () {
 
 fzf-open-file-widget () {
   local out file key cmd
-  out=$(ag -g "" | fzf --exit-0 --expect=ctrl-o)
+  out=$(eval $FZF_CTRL_T_COMMAND | fzf --exit-0 --expect=ctrl-o)
   key=$(head -1 <<< "$out")
   file=$(head -2 <<< "$out" | tail -1)
   zle redisplay
