@@ -89,6 +89,8 @@ fi
 
 # }}}
 
+[[ -n $RV_DEBUG ]] && echo 'zplug init end:' $(_rv_prompt_timer_get)
+
 # Zle {{{
 
 KEYTIMEOUT=1
@@ -267,6 +269,8 @@ bindkey -M menuselect '^C' undo
 
 # }}}
 
+[[ -n $RV_DEBUG ]] && echo 'zle end:' $(_rv_prompt_timer_get)
+
 # Zplug END {{{
 
 if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
@@ -284,6 +288,8 @@ if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
 fi
 
 # }}}
+
+[[ -n $RV_DEBUG ]] && echo 'zplug load end:' $(_rv_prompt_timer_get)
 
 # Environment {{{
 
@@ -375,6 +381,8 @@ autoload -Uz zmv add-zsh-hook
 
 # }}}
 
+[[ -n $RV_DEBUG ]] && echo 'env end:' $(_rv_prompt_timer_get)
+
 # FZF {{{
 
 export FZF_DEFAULT_OPTS='--bind=ctrl-f:page-down,ctrl-b:page-up'
@@ -441,6 +449,8 @@ alias fo='fzf-open-file'
 alias fv='fzf-open-file-vim'
 
 # }}}
+
+[[ -n $RV_DEBUG ]] && echo 'fzf end:' $(_rv_prompt_timer_get)
 
 # Completions {{{
 
@@ -534,6 +544,8 @@ zstyle ':completion:*:manuals' separate-sections true
 zstyle ':completion:*:manuals.(^1*)' insert-sections true
 
 # }}}
+
+[[ -n $RV_DEBUG ]] && echo 'completion end:' $(_rv_prompt_timer_get)
 
 # Util Functions & Aliases {{{
 
@@ -671,6 +683,8 @@ open_remote () {
 
 # }}}
 
+[[ -n $RV_DEBUG ]] && echo 'utils end:' $(_rv_prompt_timer_get)
+
 # Prompt {{{
 
 # Terminal title
@@ -737,8 +751,12 @@ fi
 
 # }}}
 
+[[ -n $RV_DEBUG ]] && echo 'prompt end:' $(_rv_prompt_timer_get)
+
 # Custom {{{
 
 [[ -f $RAVY_CUSTOM/zshrc ]] && source $RAVY_CUSTOM/zshrc
 
 # }}}
+
+[[ -n $RV_DEBUG ]] && echo 'custom end:' $(_rv_prompt_timer_get)

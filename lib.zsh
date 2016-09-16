@@ -63,7 +63,15 @@ _rv_prompt_timer_start () {
   fi
 }
 
-# stop timer and get elapsed time
+# get elapsed time without stopping timer
+_rv_prompt_timer_get () {
+  if [[ -n $_rv_prompt_timer ]]; then
+    local ms=$(($(_rv_time_now_ms) - $_rv_prompt_timer))
+    echo $(_rv_prompt_pretty_time $ms)
+  fi
+}
+
+# get elapsed time and stop timer
 _rv_prompt_timer_stop () {
   if [[ -n $_rv_prompt_timer ]]; then
     local ms=$(($(_rv_time_now_ms) - $_rv_prompt_timer))
