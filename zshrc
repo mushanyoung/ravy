@@ -16,6 +16,8 @@ _rv_prompt_timer_start
 
 # }}}
 
+[[ -n $RV_DEBUG ]] && echo 'lib end:' $(_rv_prompt_timer_get)
+
 # Zplug START {{{
 
 if [[ -f ~/.zplug/init.zsh ]]; then
@@ -759,4 +761,4 @@ fi
 
 # }}}
 
-[[ -n $RV_DEBUG ]] && echo 'custom end:' $(_rv_prompt_timer_get)
+[[ -n $RV_DEBUG ]] && echo 'custom end:' $(_rv_prompt_timer_get) || true
