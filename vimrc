@@ -549,6 +549,13 @@ let g:peekaboo_window = 'vertical leftabove 30new'
 
 " }}
 
+" vim-polyglot {{
+
+" disable jsx syntax for .js file
+let g:jsx_ext_required = 1
+
+" }}
+
 " vim-session {{
 
 let g:session_autosave = 'yes'
