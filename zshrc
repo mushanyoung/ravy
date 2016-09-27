@@ -596,6 +596,19 @@ d () {
 }
 compctl -V directories -K _bd d
 
+# launch an interactive repl scratchpad within vim
+codi() {
+  local syntax="${1:-python}"
+  [[ $# > 0 ]] && shift
+  vim -c \
+    "let g:startify_disable_at_vimenter = 1 |\
+    set bt=nofile ls=0 noru nonu nornu |\
+    hi ColorColumn ctermbg=NONE |\
+    hi VertSplit ctermbg=NONE |\
+    hi NonText ctermfg=0 |\
+    Codi $syntax" "$@"
+}
+
 # list files, do not record in history
 alias l=' ls-color'
 alias ls=' ls'

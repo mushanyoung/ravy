@@ -725,6 +725,9 @@ Plug 'christoomey/vim-tmux-navigator'
 " Auto format
 Plug 'Chiel92/vim-autoformat'
 
+" Interactive scratchpad
+Plug 'metakirby5/codi.vim'
+
 if executable('ctags')
   " tag explorer
   Plug 'majutsushi/tagbar'
