@@ -609,6 +609,14 @@ codi() {
     Codi $syntax" "$@"
 }
 
+# git completion function for git aliases
+_git-co(){ _git-checkout }
+_git-l(){ _git-log }
+_git-lg(){ _git-log }
+_git-df(){ _git-diff }
+_git-di(){ _git-diff }
+_git-de(){ _git-diff }
+
 # list files, do not record in history
 alias l=' ls-color'
 alias ls=' ls'

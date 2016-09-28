@@ -21,7 +21,6 @@
   extendedRegexp = true
 [alias]
   aliases = !git config --get-regexp alias | cut -c7- | sed -E 's/([^ ]*) /'"$(tput setaf 5)"'\\1^'"$(tput sgr0)"'/' | column -t -s^
-  al = !git aliases
   aa = add --all :/
   ac = add --all .
   au = add -u
@@ -32,7 +31,6 @@
   cimn = !git ci --amend --no-edit
   ciam = !git cia --amend
   ciamn = !git cia --amend --no-edit
-  co = checkout
   cp = cherry-pick
   ft = fetch
   fta = fetch --all
@@ -47,10 +45,16 @@
   rv = remote -v
   gr = grep -n -I
 
-  cof = !git branch -vv | fzf +m | cut -c 3- | awk '{print $1}' | xargs git checkout
+  # checkout from the selection of a branch list, if no params given
+  co = "!gco(){ if [[ $# > 0 ]]; then git checkout $@; else git branch -vv | fzf-tmux +m | cut -c 3- | awk '{print $1}' | xargs git checkout; fi;}; gco"
 
   # logs
-  l = pretty-log
+  l = "!gpretty() { \
+    git log --pretty='tformat:%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s' $@ | \
+    perl -pe 's/(\\(\\d+ \\w+)[^<)]*ago\\)/\\1)/' | \
+    column -s '|' -t | \
+    ${GIT_PAGER:-less -FXRS}; }; gpretty"
+
   lg = !git l --graph
   r = !GIT_PAGER=cat git l -10
   h = !GIT_PAGER=cat git l -1
@@ -60,20 +64,16 @@
   # diffs
   df = !cdiff -c auto --
   di = !cdiff -c auto -s -w 0 --
-  dc = icdiff
   ds = diff --stat
   dn = diff --name-only
 
-  # edit changed files, execute as an external command here because
-  # external commands are ran at the top level of current git repo
-  de = !git edit-changed-files
+  # edit changed files, ran at the top level of current git repo
+  de = "!gde(){ files=$(git diff --name-only $@); [[ $? == 0 ]] && ${GIT_EDITOR:-vim} $files; }; gde"
 
   dfc = !git df --cached
   df1 = !git df HEAD~ HEAD
   dic = !git di --cached
   di1 = !git di HEAD~ HEAD
-  dcc = !git dc --cached
-  dc1 = !git dc HEAD~ HEAD
   dsc = !git ds --cached
   ds1 = !git ds HEAD~ HEAD
   dnc = !git dn --cached

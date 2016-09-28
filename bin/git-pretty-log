@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-FORMAT='%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s'
-
-command git log --pretty="tformat:$FORMAT" $* |
-sed -Ee 's#(\([[:digit:]]+ [[:alpha:]]+)[^<)]*ago\)#\1)#' |
-column -s '|' -t |
-${GIT_PAGER:-less -FXRS}
