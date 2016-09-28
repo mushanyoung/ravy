@@ -386,8 +386,11 @@ function! DiffOrig()
   0d_
   diffthis
 endfunction
-nnoremap \db :call DiffOrig()<CR>
+nnoremap \do :call DiffOrig()<CR>
 nnoremap <silent> \de :bdelete!<CR>:diffoff<CR>
+nnoremap <silent> \dgl :diffget 1<CR>:diffupdate<CR>
+nnoremap <silent> \dgb :diffget 2<CR>:diffupdate<CR>
+nnoremap <silent> \dgr :diffget 3<CR>:diffupdate<CR>
 
 " print current key maps in a new buffer
 function! ListAllkeyMaps()
