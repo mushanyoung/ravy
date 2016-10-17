@@ -76,11 +76,16 @@
 
   dfc = !git df --cached
   df1 = !git df HEAD~ HEAD
+  df2 = !git df HEAD~2 HEAD
   dic = !git di --cached
   di1 = !git di HEAD~ HEAD
+  di2 = !git di HEAD~2 HEAD
   dsc = !git ds --cached
   ds1 = !git ds HEAD~ HEAD
+  ds2 = !git ds HEAD~2 HEAD
   dnc = !git dn --cached
   dn1 = !git dn HEAD~ HEAD
+  dn2 = !git dn HEAD~2 HEAD
   dec = !git de --cached
   de1 = !git de HEAD~ HEAD
+  de2 = !git de HEAD~2 HEAD
