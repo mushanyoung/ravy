@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-for fgbg in 48 38 ; do #Foreground/Background
-  for color in {0..255} ; do #Colors
-    #Display the color
+for fgbg in 48 38 ; do
+  for color in {0..255} ; do
     printf " \e[${fgbg};5;${color}m%4s \e[0m" "${color}"
-    #Display 16 colors per lines
     if [[ $((($color + 1) % 16)) == 0 ]] ; then
       echo
     fi
