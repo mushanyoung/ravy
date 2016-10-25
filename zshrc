@@ -31,7 +31,7 @@ if [[ -f ~/.zplug/init.zsh ]]; then
   # duplicate to get both binary included by zplug
   zplug 'junegunn/fzf', as:command, use:"bin", hook-build:'./install --bin >/dev/null'
   zplug 'junegunn/fzf', as:command, use:"bin/fzf-tmux"
-  zplug 'junegunn/fzf', use:"shell/key-bindings.zsh"
+  # zplug 'junegunn/fzf', use:"shell/key-bindings.zsh"
 
   zplug "supercrabtree/k"
   zplug "djui/alias-tips"
@@ -95,179 +95,246 @@ fi
 
 # Zle {{{
 
-KEYTIMEOUT=1
+if [[ $- == *i* ]]; then
 
-# use emacs mode for command line
-bindkey -e
+  KEYTIMEOUT=1
 
-# ctrl-a and ctrl-e
-bindkey '^A' beginning-of-line
-bindkey '^E' end-of-line
+  # use emacs mode for command line
+  bindkey -e
 
-# undo and redo
-bindkey '^_' undo
-bindkey '\e-' redo
+  # ctrl-a and ctrl-e
+  bindkey '^A' beginning-of-line
+  bindkey '^E' end-of-line
 
-# zsh-history-substring-search: bind ^P and ^N to it
-bindkey '^P' history-substring-search-up
-bindkey '^N' history-substring-search-down
+  # undo and redo
+  bindkey '^_' undo
+  bindkey '\e-' redo
 
-# autosuggestion
-bindkey '\ek' autosuggest-clear
+  # zsh-history-substring-search: bind ^P and ^N to it
+  bindkey '^P' history-substring-search-up
+  bindkey '^N' history-substring-search-down
 
-# Use C-x C-e to edit the current command line in editor
-autoload -U edit-command-line
-zle -N edit-command-line
-bindkey '\C-x\C-e' edit-command-line
+  # autosuggestion
+  bindkey '\ek' autosuggest-clear
 
-# Smart URLs
-autoload -Uz url-quote-magic
-zle -N self-insert url-quote-magic
+  # Use C-x C-e to edit the current command line in editor
+  autoload -U edit-command-line
+  zle -N edit-command-line
+  bindkey '\C-x\C-e' edit-command-line
 
-# M-. and M-m to insert word in previous lines
-autoload -Uz copy-earlier-word
-zle -N copy-earlier-word
-bindkey '\em' copy-earlier-word
-bindkey '\e.' insert-last-word
+  # Smart URLs
+  autoload -Uz url-quote-magic
+  zle -N self-insert url-quote-magic
 
-# chars treated as a part of a word
-WORDCHARS=$'\'\\/*?_-.,[]~&;!#$%^(){}<>+:=@'
+  # M-. and M-m to insert word in previous lines
+  autoload -Uz copy-earlier-word
+  zle -N copy-earlier-word
+  bindkey '\em' copy-earlier-word
+  bindkey '\e.' insert-last-word
 
-# C-B / C-F to move, C-W to kill by word
-# M-b / M-f to move, M-w to kill by word with bash style
-autoload -U select-word-style
-autoload -U backward-kill-word-match
-autoload -U forward-word-match
-autoload -U backward-word-match
-zle -N backward-kill-word-match
-zle -N forward-word-match
-zle -N backward-word-match
+  # chars treated as a part of a word
+  WORDCHARS=$'\'\\/*?_-.,[]~&;!#$%^(){}<>+:=@'
 
-forward-word-alter () {
-  select-word-style bash
-  zle forward-word-match
-}
-backward-word-alter () {
-  select-word-style bash
-  zle backward-word-match
-}
-backward-kill-word-alter () {
-  select-word-style bash
-  zle backward-kill-word-match
-}
-zle -N forward-word-alter
-zle -N backward-word-alter
-zle -N backward-kill-word-alter
-bindkey '\ef' forward-word-alter
-bindkey '\eb' backward-word-alter
-bindkey '\ew' backward-kill-word-alter
-bindkey '^F' forward-word
-bindkey '^B' backward-word
-bindkey '^W' backward-kill-word
+  # C-B / C-F to move, C-W to kill by word
+  # M-b / M-f to move, M-w to kill by word with bash style
+  autoload -U select-word-style
+  autoload -U backward-kill-word-match
+  autoload -U forward-word-match
+  autoload -U backward-word-match
+  zle -N backward-kill-word-match
+  zle -N forward-word-match
+  zle -N backward-word-match
 
-# ranger file explorer
-ranger-cd () {
-  tempfile=$(mktemp)
-  ranger --choosedir="$tempfile" "${@:-$(pwd)}" < $TTY
-  if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(echo -n `pwd`)" ]]; then
-    cd -- "$(cat "$tempfile")"
-  fi
-  rm -f -- "$tempfile"
-  zle redisplay
-  zle -M ""
-}
-zle -N ranger-cd
-bindkey '^K' ranger-cd
+  forward-word-alter () {
+    select-word-style bash
+    zle forward-word-match
+  }
+  backward-word-alter () {
+    select-word-style bash
+    zle backward-word-match
+  }
+  backward-kill-word-alter () {
+    select-word-style bash
+    zle backward-kill-word-match
+  }
+  zle -N forward-word-alter
+  zle -N backward-word-alter
+  zle -N backward-kill-word-alter
+  bindkey '\ef' forward-word-alter
+  bindkey '\eb' backward-word-alter
+  bindkey '\ew' backward-kill-word-alter
+  bindkey '^F' forward-word
+  bindkey '^B' backward-word
+  bindkey '^W' backward-kill-word
 
-# Use FZF to modify the current word with tmux words
-fzf-tmux-words-widget () {
-  if [[ -z "$TMUX_PANE" ]]; then
-    return 1
-  fi
-  local prefix tokens word
-
-  # Extract the last word, or empty string when starting a new word.
-  if [[ ! -n $LBUFFER || ${LBUFFER[-1]} == ' ' ]]; then
-    word=""
-    prefix=$LBUFFER
-  else
-    tokens=(${(z)LBUFFER})
-    word=${tokens[-1]}
-    prefix=${LBUFFER:0:-$#word}
-  fi
-
-  if word=$( tmuxwords | fzf -q "$word" ); then
-    LBUFFER="$prefix$word"
+  # ranger file explorer
+  ranger-cd () {
+    tempfile=$(mktemp)
+    ranger --choosedir="$tempfile" "${@:-$(pwd)}" < $TTY
+    if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(echo -n `pwd`)" ]]; then
+      cd -- "$(cat "$tempfile")"
+    fi
+    rm -f -- "$tempfile"
     zle redisplay
-  fi
-}
-zle -N fzf-tmux-words-widget
-bindkey '\eF' fzf-tmux-words-widget
-zle -N fzf-open-file-widget
-bindkey '\eo' fzf-open-file-widget
-zle -N fzf-open-vim-session-widget
-bindkey '\es' fzf-open-vim-session-widget
+    zle -M ""
+  }
+  zle -N ranger-cd
+  bindkey '^K' ranger-cd
 
-# fzf default completion
-bindkey '^R' fzf-history-widget
-bindkey '^T' fzf-file-widget
-bindkey '\et' fzf-cd-widget
+  # toggle glob for current command line
+  glob-toggle () {
+    [[ -z $BUFFER ]] && zle up-history
+    if [[ $BUFFER == noglob\ * ]]; then
+      LBUFFER="${LBUFFER#noglob }"
+    else
+      LBUFFER="noglob $LBUFFER"
+    fi
+  }
+  zle -N glob-toggle
+  bindkey '\eg' glob-toggle
 
-# toggle glob for current command line
-glob-toggle () {
-  [[ -z $BUFFER ]] && zle up-history
-  if [[ $BUFFER == noglob\ * ]]; then
-    LBUFFER="${LBUFFER#noglob }"
+  # toggle sudo for current command line
+  sudo-toggle () {
+    [[ -z $BUFFER ]] && zle up-history
+    if [[ $BUFFER == sudo\ * ]]; then
+      LBUFFER="${LBUFFER#sudo }"
+    else
+      LBUFFER="sudo $LBUFFER"
+    fi
+  }
+  zle -N sudo-toggle
+  bindkey '^S' sudo-toggle
+
+  # fancy-ctrl-z
+  fancy-ctrl-z () {
+    if [[ $#BUFFER -eq 0 ]]; then
+      BUFFER="fg"
+      zle accept-line
+    else
+      zle push-input
+      zle clear-screen
+    fi
+  }
+  zle -N fancy-ctrl-z
+  bindkey '^Z' fancy-ctrl-z
+
+  # menu select and completion
+  bindkey '^I' expand-or-complete
+
+  zmodload zsh/complist
+  zle -C complete-menu menu-select _generic
+  _complete_menu () {
+    setopt localoptions alwayslastprompt
+    zle complete-menu
+  }
+  zle -N _complete_menu
+  bindkey '^J' _complete_menu
+  bindkey -M menuselect '^F' forward-word
+  bindkey -M menuselect '^B' backward-word
+  bindkey -M menuselect '^J' forward-char
+  bindkey -M menuselect '^K' backward-char
+  bindkey -M menuselect '/' history-incremental-search-forward
+  bindkey -M menuselect '^?' undo
+  bindkey -M menuselect '^C' undo
+
+  # FZF
+
+  export FZF_DEFAULT_OPTS='--bind=ctrl-f:page-down,ctrl-b:page-up'
+  export FZF_DEFAULT_COMMAND='ag -g ""'
+
+  if hash fzf-tmux 2>/dev/null; then
+    export FZF_CMD='command fzf-tmux -d40%'
   else
-    LBUFFER="noglob $LBUFFER"
+    export FZF_CMD='command fzf'
   fi
-}
-zle -N glob-toggle
-bindkey '\eg' glob-toggle
 
-# toggle sudo for current command line
-sudo-toggle () {
-  [[ -z $BUFFER ]] && zle up-history
-  if [[ $BUFFER == sudo\ * ]]; then
-    LBUFFER="${LBUFFER#sudo }"
-  else
-    LBUFFER="sudo $LBUFFER"
-  fi
-}
-zle -N sudo-toggle
-bindkey '^S' sudo-toggle
+  alias fzf='$(__fzfcmd)'
 
-# fancy-ctrl-z
-fancy-ctrl-z () {
-  if [[ $#BUFFER -eq 0 ]]; then
-    BUFFER="fg"
-    zle accept-line
-  else
-    zle push-input
-    zle clear-screen
-  fi
-}
-zle -N fancy-ctrl-z
-bindkey '^Z' fancy-ctrl-z
+  __fzfcmd() {
+    echo $FZF_CMD
+  }
 
-# menu select and completion
-bindkey '^I' expand-or-complete
+  # Paste the selected file path(s) into the command line
+  fzf-file-widget() {
+    local files=$(ag -g "" | $(__fzfcmd) -m | while read item; do echo -n "${(q)item} "; done)
+    LBUFFER="${LBUFFER}$files"
+    zle redisplay
+  }
 
-zmodload zsh/complist
-zle -C complete-menu menu-select _generic
-_complete_menu () {
-  setopt localoptions alwayslastprompt
-  zle complete-menu
-}
-zle -N _complete_menu
-bindkey '^J' _complete_menu
-bindkey -M menuselect '^F' forward-word
-bindkey -M menuselect '^B' backward-word
-bindkey -M menuselect '^J' forward-char
-bindkey -M menuselect '^K' backward-char
-bindkey -M menuselect '/' history-incremental-search-forward
-bindkey -M menuselect '^?' undo
-bindkey -M menuselect '^C' undo
+  # Cd into the selected directory
+  fzf-cd-widget() {
+    cd "${$(find . -type d | sed 1d | cut -b3- | $(__fzfcmd) +m):-.}"
+    zle reset-prompt
+  }
+
+  # Open the selected file by default editor, CTRL-O to open with `open` command
+  fzf-open-file-widget () {
+    local out file key cmd
+    out=$(ag -g "" | $(__fzfcmd) --exit-0 --expect=ctrl-o)
+    key=$(head -1 <<< "$out")
+    file=$(head -2 <<< "$out" | tail -1)
+    zle redisplay
+    if [[ -n "$file" ]]; then
+      [[ "$key" == 'ctrl-o' ]] && cmd="open $file" || cmd="${EDITOR:-vim} $file"
+      BUFFER="$cmd"
+      zle accept-line
+    fi
+  }
+
+  # open recent files of vim
+  fzf-open-vim-file-widget () {
+    local file
+    file=$(grep '^>' ~/.viminfo | cut -c3- |
+    while read line; do
+      [[ -f "${line/\~/$HOME}" ]] && echo "$line"
+    done |
+    $(__fzfcmd) -d +m -1 -q "$*")
+    zle redisplay
+    if [[ -n $file ]]; then
+      BUFFER="vim $file"
+      zle accept-line
+    fi
+  }
+
+  # open session matched by query, create a new one if there isn't a match
+  fzf-open-vim-session-widget () {
+    local session=$(ls ~/.vim/sessions | sed 's/\.vim//' | $(__fzfcmd) --exit-0)
+    zle redisplay
+    if [[ -n $session ]]; then
+      cd ${$(cat ~/.vim/sessions/$session.vim | grep '^cd' | head -1 | cut -d' ' -f2-)/#\~/$HOME}
+      BUFFER="vim '+OpenSession $session'"
+      zle accept-line
+    fi
+  }
+
+  # CTRL-R - Paste the selected command from history into the command line
+  fzf-history-widget() {
+    local selected num
+    setopt localoptions noglobsubst
+    selected=( $(fc -l 1 | $(__fzfcmd) +s --tac +m -n2..,.. --tiebreak=index --toggle-sort=ctrl-r ${=FZF_CTRL_R_OPTS} -q "${LBUFFER//$/\\$}") )
+    if [ -n "$selected" ]; then
+      num=$selected[1]
+      if [ -n "$num" ]; then
+        zle vi-fetch-history -n $num
+      fi
+    fi
+    zle redisplay
+  }
+
+  zle -N fzf-file-widget
+  bindkey '^T' fzf-file-widget
+  zle -N fzf-cd-widget
+  bindkey '\et' fzf-cd-widget
+  zle -N fzf-open-file-widget
+  bindkey '\eo' fzf-open-file-widget
+  zle -N fzf-open-vim-file-widget
+  bindkey '\ev' fzf-open-vim-file-widget
+  zle -N fzf-open-vim-session-widget
+  bindkey '\es' fzf-open-vim-session-widget
+  zle -N fzf-history-widget
+  bindkey '^R' fzf-history-widget
+
+fi
 
 # }}}
 
@@ -366,7 +433,6 @@ fi
 # editor
 alias vi=vim
 alias v=vim
-alias vs=fzf-open-vim-session
 export EDITOR=vim
 export GIT_EDITOR=vim
 
@@ -384,75 +450,6 @@ autoload -Uz zmv add-zsh-hook
 # }}}
 
 [[ -n $RV_DEBUG ]] && echo 'env end:' $(_rv_prompt_timer_get)
-
-# FZF {{{
-
-export FZF_DEFAULT_OPTS='--bind=ctrl-f:page-down,ctrl-b:page-up'
-export FZF_DEFAULT_COMMAND='ag -g ""'
-export FZF_CTRL_T_COMMAND='ag -g ""'
-export FZF_ALT_C_COMMAND='find . -type d | sed 1d | cut -b3-'
-
-# Open the selected file by default editor, CTRL-O to open with `open` command
-fzf-open-file () {
-  local out file key
-  out=$(ag -g "" | fzf --exit-0 --expect=ctrl-o)
-  key=$(head -1 <<< "$out")
-  file=$(head -2 <<< "$out" | tail -1)
-  if [[ -n "$file" ]]; then
-    [[ "$key" == 'ctrl-o' ]] && open "$file" || ${EDITOR:-vim} "$file"
-  fi
-}
-
-fzf-open-file-widget () {
-  local out file key cmd
-  out=$(eval $FZF_CTRL_T_COMMAND | fzf --exit-0 --expect=ctrl-o)
-  key=$(head -1 <<< "$out")
-  file=$(head -2 <<< "$out" | tail -1)
-  zle redisplay
-  if [[ -n "$file" ]]; then
-    [[ "$key" == 'ctrl-o' ]] && cmd="open $file" || cmd="${EDITOR:-vim} $file"
-    BUFFER="$cmd"
-    zle accept-line
-  fi
-}
-
-# open session matched by query, create a new one if there isn't a match
-fzf-open-vim-session () {
-  session=$(ls ~/.vim/sessions | sed 's/\.vim//' | fzf -q "$1" --select-1 --exit-0)
-  if [[ -n $session ]]; then
-    cd ${$(cat ~/.vim/sessions/$session.vim | grep '^cd' | head -1 | cut -d' ' -f2-)/#\~/$HOME}
-    vim "+OpenSession $session"
-  elif [[ -n $1 ]]; then
-    vim "+SaveSession $1"
-  fi
-}
-
-fzf-open-vim-session-widget () {
-  session=$(ls ~/.vim/sessions | sed 's/\.vim//' | fzf --exit-0)
-  zle redisplay
-  if [[ -n $session ]]; then
-    cd ${$(cat ~/.vim/sessions/$session.vim | grep '^cd' | head -1 | cut -d' ' -f2-)/#\~/$HOME}
-    BUFFER="vim '+OpenSession $session'"
-    zle accept-line
-  fi
-}
-
-# open recent files of vim
-fzf-open-file-vim () {
-  local files
-  files=$(grep '^>' ~/.viminfo | cut -c3- |
-  while read line; do
-    [[ -f "${line/\~/$HOME}" ]] && echo "$line"
-  done | fzf -d -m -1 -q "$*") && vim -- ${files//\~/$HOME}
-}
-
-alias fzf='fzf-tmux'
-alias fo='fzf-open-file'
-alias fv='fzf-open-file-vim'
-
-# }}}
-
-[[ -n $RV_DEBUG ]] && echo 'fzf end:' $(_rv_prompt_timer_get)
 
 # Completions {{{
 
