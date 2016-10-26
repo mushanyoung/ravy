@@ -46,6 +46,12 @@
   rv = remote -v
   gr = grep -n -I
 
+  # execute shell command on the top level of the repo
+  exec = "!exec "
+
+  # print toplevel path of the repo
+  root = rev-parse --show-toplevel
+
   # swap last two commits
   swaplast = "!GIT_SEQUENCE_EDITOR=\"sed -i -n 'h;1n;2p;g;p'\" git rebase -i HEAD~2"
 
