@@ -1,7 +1,7 @@
 # Modeline & Load {{{
 # vim: set foldlevel=0 foldmethod=marker filetype=zsh:
 
-if [[ "$RV_PROFILE" == true ]]; then
+if [[ "$RAVY_PROFILE" == true ]]; then
   # http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
   PS4=$'%D{%M%S%.} %N:%i> '
   exec 3>&2 2>${0:A:h}/profile.$$
@@ -713,28 +713,28 @@ function {
 
 local LA="" PD=" "
 
-RV_PROMPT_LAST_CMD_STATUS=%F{240}\${_rv_prompt_timer_result:+\$_rv_prompt_timer_result$PD}%(?..%F{160}\$(nice_exit_code))
-RV_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}${LA}\ %F{28}%K{234}$LA$PD
-RV_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n$PD}
-RV_PROMPT_PATH=%F{6}%~$PD
-RV_PROMPT_GIT=%F{64}\${_rv_prompt_git_result:+\$_rv_prompt_git_result$PD}
-RV_PROMPT_X=%F{166}\${DISPLAY:+X$PD}
-RV_PROMPT_JOBS=%F{163}%(1j.\&%j.$PD)
-RV_PROMPT_CUSTOMIZE=""
-RV_PROMPT_CMD="%F{240}%k❯%f "
-RV_RPROMPT2_CMD="%F{240}❮%^"
+RAVY_PROMPT_LAST_CMD_STATUS=%F{240}\${_rv_prompt_timer_result:+\$_rv_prompt_timer_result$PD}%(?..%F{160}\$(nice_exit_code))
+RAVY_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}${LA}\ %F{28}%K{234}$LA$PD
+RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n$PD}
+RAVY_PROMPT_PATH=%F{6}%~$PD
+RAVY_PROMPT_GIT=%F{64}\${_rv_prompt_git_result:+\$_rv_prompt_git_result$PD}
+RAVY_PROMPT_X=%F{166}\${DISPLAY:+X$PD}
+RAVY_PROMPT_JOBS=%F{163}%(1j.\&%j.$PD)
+RAVY_PROMPT_CUSTOMIZE=""
+RAVY_PROMPT_CMD="%F{240}%k❯%f "
+RAVY_RPROMPT2_CMD="%F{240}❮%^"
 
 }
 
 # render status for last command
 _rv_prompt_last_command_status () {
-  print -P "${RV_PROMPT_LAST_CMD_STATUS}"
+  print -P "${RAVY_PROMPT_LAST_CMD_STATUS}"
 }
 
-PROMPT=\${RV_PROMPT_SYMBOL}\${RV_PROMPT_USER}\${RV_PROMPT_PATH}${RV_PROMPT_GIT}${RV_PROMPT_X}\${RV_PROMPT_JOBS}\${RV_PROMPT_CUSTOMIZE}$'\n'\${RV_PROMPT_CMD}
+PROMPT=\${RAVY_PROMPT_SYMBOL}\${RAVY_PROMPT_USER}\${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_X}\${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}$'\n'\${RAVY_PROMPT_CMD}
 unset RPROMPT
-PROMPT2=\${RV_PROMPT_CMD}
-RPROMPT2=\${RV_RPROMPT2_CMD}
+PROMPT2=\${RAVY_PROMPT_CMD}
+RPROMPT2=\${RAVY_RPROMPT2_CMD}
 
 add-zsh-hook preexec _rv_prompt_timer_start
 add-zsh-hook precmd _rv_prompt_timer_stop
@@ -770,7 +770,7 @@ fi
 
 # }}}
 
-if [[ "$RV_PROFILE" == true ]]; then
+if [[ "$RAVY_PROFILE" == true ]]; then
   unsetopt xtrace
   exec 2>&3 3>&-
 fi

@@ -11,17 +11,17 @@ _rv_prompt_git () {
   git_st=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
 
   st_parser=(
-  '^## .*ahead'         "${RV_PROMPT_GIT_AHEAD->}"
-  '^## .*behind'        "${RV_PROMPT_GIT_BEHIND-<}"
-  '^## .*diverged'      "${RV_PROMPT_GIT_DIVERGED-x}"
-  '^A. '                "${RV_PROMPT_GIT_ADDED-+}"
-  '^R. '                "${RV_PROMPT_GIT_RENAMED-~}"
-  '^C. '                "${RV_PROMPT_GIT_COPIED-c}"
-  '^.D |^D. '           "${RV_PROMPT_GIT_DELETED--}"
-  '^M. '                "${RV_PROMPT_GIT_MODIFIED-.}"
-  '^.M '                "${RV_PROMPT_GIT_TREE_CHANGED-*}"
-  '^U. |^.U |^AA |^DD ' "${RV_PROMPT_GIT_UNMERGED-^}"
-  '^\?\? '              "${RV_PROMPT_GIT_UNTRACKED-#}"
+  '^## .*ahead'         "${RAVY_PROMPT_GIT_AHEAD->}"
+  '^## .*behind'        "${RAVY_PROMPT_GIT_BEHIND-<}"
+  '^## .*diverged'      "${RAVY_PROMPT_GIT_DIVERGED-x}"
+  '^A. '                "${RAVY_PROMPT_GIT_ADDED-+}"
+  '^R. '                "${RAVY_PROMPT_GIT_RENAMED-~}"
+  '^C. '                "${RAVY_PROMPT_GIT_COPIED-c}"
+  '^.D |^D. '           "${RAVY_PROMPT_GIT_DELETED--}"
+  '^M. '                "${RAVY_PROMPT_GIT_MODIFIED-.}"
+  '^.M '                "${RAVY_PROMPT_GIT_TREE_CHANGED-*}"
+  '^U. |^.U |^AA |^DD ' "${RAVY_PROMPT_GIT_UNMERGED-^}"
+  '^\?\? '              "${RAVY_PROMPT_GIT_UNTRACKED-#}"
   )
 
   for (( k = 1; k <= $#st_parser; k += 2 )) do

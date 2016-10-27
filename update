@@ -1,3 +1,3 @@
 #!/usr/bin/env zsh
 
-RV_UPDATE=true "${0:A:h}/install"
+RAVY_UPDATE=true "${0:A:h}/install"

@@ -31,7 +31,7 @@ if [[ ! -d ~/.config/nvim ]]; then
 fi
 ln -s -f ~/.vimrc ~/.config/nvim/init.vim
 
-if [[ ! -e ~/.vim/autoload/plug.vim || -n $RV_UPDATE ]]; then
+if [[ ! -e ~/.vim/autoload/plug.vim || -n $RAVY_UPDATE ]]; then
   curl -sfLo ~/.vim/autoload/plug.vim \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 fi
@@ -45,7 +45,7 @@ touch $RAVY/custom/gitconfig
 echo 'Installing Zplug'
 if [[ ! -d ~/.zplug ]]; then
   git clone https://github.com/zplug/zplug ~/.zplug
-elif [[ -n $RV_UPDATE ]]; then
+elif [[ -n $RAVY_UPDATE ]]; then
   git -C ~/.zplug pull --rebase
 fi
 
