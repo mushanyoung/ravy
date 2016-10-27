@@ -382,8 +382,8 @@ unsetopt CHECK_JOBS       # Don't report on jobs when shell exit.
 
 # History
 HISTFILE=~/.zhistory             # The path to the history file.
-HISTSIZE=10000                   # The maximum number of events to save in the internal history.
-SAVEHIST=10000                   # The maximum number of events to save in the history file.
+HISTSIZE=100000                  # The maximum number of events to be kept in a session.
+SAVEHIST=100000                  # The maximum number of events to save in the history file.
 
 setopt BANG_HIST                 # Treat the '!' character specially during expansion.
 setopt EXTENDED_HISTORY          # Write the history file in the ':start:elapsed;command' format.
