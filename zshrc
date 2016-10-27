@@ -1,9 +1,16 @@
 # Modeline & Load {{{
 # vim: set foldlevel=0 foldmethod=marker filetype=zsh:
 
-# prevent from loading more than once
-[[ -n $RAVY_LOADED ]] && return 0
-RAVY_LOADED=true
+if [[ "$RV_PROFILE" == true ]]; then
+  # http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
+  PS4=$'%D{%M%S%.} %N:%i> '
+  exec 3>&2 2>${0:A:h}/profile.$$
+  setopt xtrace prompt_subst
+else
+  # prevent from loading more than once
+  [[ -n $RAVY_LOADED ]] && return 0
+  RAVY_LOADED=true
+fi
 
 # load zshenv to make sure paths are set correctly
 source ${0:A:h}/zshenv
@@ -15,8 +22,6 @@ source ${0:A:h}/lib.zsh
 _rv_prompt_timer_start
 
 # }}}
-
-[[ -n $RV_DEBUG ]] && echo 'lib end:' $(_rv_prompt_timer_get)
 
 # Zplug START {{{
 
@@ -90,8 +95,6 @@ if [[ -f ~/.zplug/init.zsh ]]; then
 fi
 
 # }}}
-
-[[ -n $RV_DEBUG ]] && echo 'zplug init end:' $(_rv_prompt_timer_get)
 
 # Zle {{{
 
@@ -338,8 +341,6 @@ fi
 
 # }}}
 
-[[ -n $RV_DEBUG ]] && echo 'zle end:' $(_rv_prompt_timer_get)
-
 # Zplug END {{{
 
 if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
@@ -357,8 +358,6 @@ if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
 fi
 
 # }}}
-
-[[ -n $RV_DEBUG ]] && echo 'zplug load end:' $(_rv_prompt_timer_get)
 
 # Environment {{{
 
@@ -448,8 +447,6 @@ fi
 autoload -Uz zmv add-zsh-hook
 
 # }}}
-
-[[ -n $RV_DEBUG ]] && echo 'env end:' $(_rv_prompt_timer_get)
 
 # Completions {{{
 
@@ -543,8 +540,6 @@ zstyle ':completion:*:manuals' separate-sections true
 zstyle ':completion:*:manuals.(^1*)' insert-sections true
 
 # }}}
-
-[[ -n $RV_DEBUG ]] && echo 'completion end:' $(_rv_prompt_timer_get)
 
 # Util Functions & Aliases {{{
 
@@ -703,8 +698,6 @@ open_remote () {
 
 # }}}
 
-[[ -n $RV_DEBUG ]] && echo 'utils end:' $(_rv_prompt_timer_get)
-
 # Prompt {{{
 
 # Terminal title
@@ -771,12 +764,13 @@ fi
 
 # }}}
 
-[[ -n $RV_DEBUG ]] && echo 'prompt end:' $(_rv_prompt_timer_get)
-
 # Custom {{{
 
 [[ -f $RAVY_CUSTOM/zshrc ]] && source $RAVY_CUSTOM/zshrc
 
 # }}}
 
-[[ -n $RV_DEBUG ]] && echo 'custom end:' $(_rv_prompt_timer_get) || true
+if [[ "$RV_PROFILE" == true ]]; then
+  unsetopt xtrace
+  exec 2>&3 3>&-
+fi
