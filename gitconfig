@@ -37,6 +37,7 @@
   fta = fetch --all
   rb = rebase
   st = status
+  sh = stash
   sm = submodule
   smu = submodule update --init --recursive
   smpa = submodule foreach git pull --rebase
