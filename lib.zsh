@@ -1,10 +1,10 @@
-# generate git prompt to _rv_prompt_git_result
-_rv_prompt_git () {
+# generate git prompt to _ravy_prompt_git_result
+_ravy_prompt_git () {
   local ref k git_st st_str st_count
 
   # exit if current directory is not a git repo
   if ! ref=$(command git symbolic-ref --short HEAD 2>/dev/null || command git rev-parse --short HEAD 2>/dev/null); then
-    _rv_prompt_git_result=
+    _ravy_prompt_git_result=
     return
   fi
 
@@ -33,16 +33,16 @@ _rv_prompt_git () {
     fi
   done
 
-  _rv_prompt_git_result="${ref}${st_str:+ $st_str}"
+  _ravy_prompt_git_result="${ref}${st_str:+ $st_str}"
 }
 
 # current millseconds
-_rv_time_now_ms () {
+_ravy_time_now_ms () {
   perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)'
 }
 
 # get human readable representation of time
-_rv_prompt_pretty_time () {
+_ravy_prompt_pretty_time () {
   local ms s repre=''
   ms=$1
   if ((ms < 10000)) then
@@ -57,33 +57,33 @@ _rv_prompt_pretty_time () {
 }
 
 # start timer
-_rv_prompt_timer_start () {
-  if [[ ! -n $_rv_prompt_timer ]]; then
-    _rv_prompt_timer=$(_rv_time_now_ms)
+_ravy_prompt_timer_start () {
+  if [[ ! -n $_ravy_prompt_timer ]]; then
+    _ravy_prompt_timer=$(_ravy_time_now_ms)
   fi
 }
 
 # get elapsed time without stopping timer
-_rv_prompt_timer_get () {
-  if [[ -n $_rv_prompt_timer ]]; then
-    local ms=$(($(_rv_time_now_ms) - $_rv_prompt_timer))
-    echo $(_rv_prompt_pretty_time $ms)
+_ravy_prompt_timer_get () {
+  if [[ -n $_ravy_prompt_timer ]]; then
+    local ms=$(($(_ravy_time_now_ms) - $_ravy_prompt_timer))
+    echo $(_ravy_prompt_pretty_time $ms)
   fi
 }
 
 # get elapsed time and stop timer
-_rv_prompt_timer_stop () {
-  if [[ -n $_rv_prompt_timer ]]; then
-    local ms=$(($(_rv_time_now_ms) - $_rv_prompt_timer))
-    _rv_prompt_timer_result=$(_rv_prompt_pretty_time $ms)
-    unset _rv_prompt_timer
+_ravy_prompt_timer_stop () {
+  if [[ -n $_ravy_prompt_timer ]]; then
+    local ms=$(($(_ravy_time_now_ms) - $_ravy_prompt_timer))
+    _ravy_prompt_timer_result=$(_ravy_prompt_pretty_time $ms)
+    unset _ravy_prompt_timer
   else
-    unset _rv_prompt_timer_result
+    unset _ravy_prompt_timer_result
   fi
 }
 
 # Set the terminal or terminal multiplexer title.
-_rv_termtitle () {
+_ravy_termtitle () {
   local window_title_format tab_title_format formatted
   zformat -f formatted "%s" "s:$argv"
 
@@ -99,7 +99,7 @@ _rv_termtitle () {
 }
 
 # Set the terminal title with current command.
-_rv_termtitle_command () {
+_ravy_termtitle_command () {
   emulate -L zsh
   setopt EXTENDED_GLOB
 
@@ -115,7 +115,7 @@ _rv_termtitle_command () {
     jobs "$job_name" 2>/dev/null > >(
     read index discarded
     # The index is already surrounded by brackets: [1].
-    _rv_termtitle_command "${(e):-\$jobtexts_from_parent_shell$index}"
+    _ravy_termtitle_command "${(e):-\$jobtexts_from_parent_shell$index}"
     )
   else
     # Set the command name, or in the case of sudo or ssh, the next command.
@@ -123,12 +123,12 @@ _rv_termtitle_command () {
     local truncated_cmd="!${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
     unset MATCH
 
-    _rv_termtitle "$truncated_cmd"
+    _ravy_termtitle "$truncated_cmd"
   fi
 }
 
 # Set the terminal title with current path.
-_rv_termtitle_path () {
+_ravy_termtitle_path () {
   emulate -L zsh
   setopt EXTENDED_GLOB
 
@@ -136,6 +136,6 @@ _rv_termtitle_path () {
   local truncated_path="${abbreviated_path/(#m)?(#c16,)/..${MATCH[-14,-1]}}"
   unset MATCH
 
-  _rv_termtitle "$truncated_path"
+  _ravy_termtitle "$truncated_path"
 }
 

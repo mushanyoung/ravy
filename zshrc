@@ -19,7 +19,7 @@ source ${0:A:h}/zshenv
 source ${0:A:h}/lib.zsh
 
 # record time to initialize shell environment
-_rv_prompt_timer_start
+_ravy_prompt_timer_start
 
 # }}}
 
@@ -700,8 +700,8 @@ open_remote () {
 
 # Terminal title
 if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
-  add-zsh-hook preexec _rv_termtitle_command
-  add-zsh-hook precmd _rv_termtitle_path
+  add-zsh-hook preexec _ravy_termtitle_command
+  add-zsh-hook precmd _ravy_termtitle_path
 fi
 
 # Shell prompt
@@ -711,11 +711,11 @@ function {
 
 local LA="" PD=" "
 
-RAVY_PROMPT_LAST_CMD_STATUS=%F{240}\${_rv_prompt_timer_result:+\$_rv_prompt_timer_result$PD}%(?..%F{160}\$(nice_exit_code))
+RAVY_PROMPT_LAST_CMD_STATUS=%F{240}\${_ravy_prompt_timer_result:+\$_ravy_prompt_timer_result$PD}%(?..%F{160}\$(nice_exit_code))
 RAVY_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}${LA}\ %F{28}%K{234}$LA$PD
 RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n$PD}
 RAVY_PROMPT_PATH=%F{6}%~$PD
-RAVY_PROMPT_GIT=%F{64}\${_rv_prompt_git_result:+\$_rv_prompt_git_result$PD}
+RAVY_PROMPT_GIT=%F{64}\${_ravy_prompt_git_result:+\$_ravy_prompt_git_result$PD}
 RAVY_PROMPT_X=%F{166}\${DISPLAY:+X$PD}
 RAVY_PROMPT_JOBS=%F{163}%(1j.\&%j.$PD)
 RAVY_PROMPT_CUSTOMIZE=""
@@ -725,7 +725,7 @@ RAVY_RPROMPT2_CMD="%F{240}❮%^"
 }
 
 # render status for last command
-_rv_prompt_last_command_status () {
+_ravy_prompt_last_command_status () {
   print -P "${RAVY_PROMPT_LAST_CMD_STATUS}"
 }
 
@@ -734,10 +734,10 @@ unset RPROMPT
 PROMPT2=\${RAVY_PROMPT_CMD}
 RPROMPT2=\${RAVY_RPROMPT2_CMD}
 
-add-zsh-hook preexec _rv_prompt_timer_start
-add-zsh-hook precmd _rv_prompt_timer_stop
-add-zsh-hook precmd _rv_prompt_git
-add-zsh-hook precmd _rv_prompt_last_command_status
+add-zsh-hook preexec _ravy_prompt_timer_start
+add-zsh-hook precmd _ravy_prompt_timer_stop
+add-zsh-hook precmd _ravy_prompt_git
+add-zsh-hook precmd _ravy_prompt_last_command_status
 
 # }}}
 
