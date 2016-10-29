@@ -27,8 +27,7 @@ _rv_prompt_timer_start
 
 if [[ -f ~/.zplug/init.zsh ]]; then
   # zplug env
-  unset ZPLUG_SHALLOW
-  ZPLUG_CLONE_DEPTH=1
+  zstyle :zplug:tag depth 1
 
   # load zplug
   source ~/.zplug/init.zsh
@@ -36,7 +35,6 @@ if [[ -f ~/.zplug/init.zsh ]]; then
   # duplicate to get both binary included by zplug
   zplug 'junegunn/fzf', as:command, use:"bin", hook-build:'./install --bin >/dev/null'
   zplug 'junegunn/fzf', as:command, use:"bin/fzf-tmux"
-  # zplug 'junegunn/fzf', use:"shell/key-bindings.zsh"
 
   zplug "supercrabtree/k"
   zplug "djui/alias-tips"
