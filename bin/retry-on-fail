@@ -1,0 +1,11 @@
+#!/usr/bin/env zsh
+
+while true; do
+  eval "$@"
+  if [[ $? == 0 ]]; then
+    break;
+  fi
+  echo 'Failed, retrying...'
+  sleep 2
+done
+
