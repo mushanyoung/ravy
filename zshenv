@@ -12,11 +12,15 @@ prepand_folder_to_path () {
   fi
 }
 
+append_folder_to_fpath () {
+  if [[ -d $1 ]]; then
+    fpath+=$1
+  fi
+}
+
 prepand_folder_to_path $HOME/.brew/bin
 prepand_folder_to_path $RAVY/bin
 prepand_folder_to_path $RAVY_CUSTOM/bin
 
-# custom zsh functions
-if [[ -d $RAVY_CUSTOM/zsh-functions ]]; then
-  fpath+=$RAVY_CUSTOM/zsh-functions
-fi
+append_folder_to_fpath $RAVY_CUSTOM/zsh-functions
+append_folder_to_fpath $(brew --prefix)/completions/zsh
