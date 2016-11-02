@@ -33,7 +33,7 @@ if [[ -f ~/.zplug/init.zsh ]]; then
   source ~/.zplug/init.zsh
 
   # duplicate to get both binary included by zplug
-  zplug 'junegunn/fzf', as:command, use:"bin", hook-build:'./install --bin >/dev/null'
+  zplug 'junegunn/fzf', as:command, use:"bin/fzf", hook-build:'./install --bin >/dev/null'
   zplug 'junegunn/fzf', as:command, use:"bin/fzf-tmux"
 
   zplug "supercrabtree/k"
