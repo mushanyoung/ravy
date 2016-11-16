@@ -31,6 +31,10 @@ if [[ ! -d ~/.config/nvim ]]; then
 fi
 ln -s -f ~/.vimrc ~/.config/nvim/init.vim
 
+echo 'Configuring mpv'
+mkdir -p ~/.config ~/.config/mpv
+ln -s -f $RAVY/mpv.conf ~/.config/mpv/mpv.conf
+
 if [[ ! -e ~/.vim/autoload/plug.vim || -n $RAVY_UPDATE ]]; then
   curl -sfLo ~/.vim/autoload/plug.vim \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
