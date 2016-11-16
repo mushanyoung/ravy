@@ -23,4 +23,4 @@ prepand_folder_to_path $RAVY/bin
 prepand_folder_to_path $RAVY_CUSTOM/bin
 
 append_folder_to_fpath $RAVY_CUSTOM/zsh-functions
-append_folder_to_fpath $(brew --prefix)/completions/zsh
+append_folder_to_fpath $(brew --prefix 2>/dev/null)/completions/zsh
