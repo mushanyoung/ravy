@@ -37,7 +37,6 @@ if [[ -f ~/.zplug/init.zsh ]]; then
   zplug 'junegunn/fzf', as:command, use:"bin/fzf-tmux"
 
   zplug "supercrabtree/k"
-  zplug "djui/alias-tips"
   zplug "bric3/nice-exit-code"
   zplug "micha/resty"
   zplug "joshuarubin/zsh-archive"
@@ -57,9 +56,6 @@ if [[ -f ~/.zplug/init.zsh ]]; then
   fi
 
   # Pre zplug settings
-
-  # alias-tips
-  export ZSH_PLUGINS_ALIAS_TIPS_TEXT="Alias: "
 
   # zsh syntax highlighting
   ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
