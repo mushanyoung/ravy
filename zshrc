@@ -2,13 +2,13 @@
 # vim: set foldlevel=0 foldmethod=marker filetype=zsh:
 
 if [[ "$RAVY_PROFILE" == true ]]; then
-  # http://zsh.sourceforge.net/Doc/Release/Prompt-Expansion.html
-  PS4=$'%D{%M%S%.} %N:%i> '
-  exec 3>&2 2>${0:A:h}/profile.$$
-  setopt xtrace prompt_subst
+  zmodload zsh/zprof
+fi
+
+# prevent from loading more than once
+if [[ -n $RAVY_LOADED ]]; then
+  return 0
 else
-  # prevent from loading more than once
-  [[ -n $RAVY_LOADED ]] && return 0
   RAVY_LOADED=true
 fi
 
@@ -767,7 +767,3 @@ fi
 
 # }}}
 
-if [[ "$RAVY_PROFILE" == true ]]; then
-  unsetopt xtrace
-  exec 2>&3 3>&-
-fi
