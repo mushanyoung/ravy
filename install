@@ -3,8 +3,8 @@
 RAVY="${0:A:h}"
 
 echo 'Linking dotfiles'
-if [[ ! -f ~/.agignore ]]; then
-  cat $RAVY/ignores >> ~/.agignore
+if ! grep "RAVY_TMP" ~/.ignore &>/dev/null; then
+  cat $RAVY/ignore >> ~/.ignore
 fi
 
 if ! grep "source $RAVY/zshrc" ~/.zshrc &>/dev/null; then
