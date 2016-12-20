@@ -43,9 +43,9 @@ if [[ -f ~/.zplug/init.zsh ]]; then
   zplug "zsh-users/zsh-completions"
   zplug "Tarrasch/zsh-bd"
 
-  zplug "zsh-users/zsh-syntax-highlighting", nice:17
-  zplug "zsh-users/zsh-history-substring-search", nice:18
-  zplug "zsh-users/zsh-autosuggestions", nice:19
+  zplug "zsh-users/zsh-syntax-highlighting", defer:2
+  zplug "zsh-users/zsh-history-substring-search", defer:2
+  zplug "zsh-users/zsh-autosuggestions", defer:3
 
   # Install plugins if there are plugins that have not been installed
   if ! zplug check --verbose; then
@@ -341,7 +341,7 @@ if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
   ZPLUG_LOADED=true
 
   # load plugins managed by zplug
-  zplug load --verbose 2>/dev/null
+  zplug load
 
   # Post zplug settings
   # zsh auto suggestions
