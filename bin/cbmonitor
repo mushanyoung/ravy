@@ -1,20 +1,20 @@
 #!/usr/bin/env swift
 import AppKit
 
-let pasteBoard = NSPasteboard.generalPasteboard()
+let pasteBoard = NSPasteboard.general()
 
 var previousChangeCount: Int = pasteBoard.changeCount
 
 while true {
-  NSThread.sleepForTimeInterval(0.1)
+  Thread.sleep(forTimeInterval: 0.1)
   let currentChangeCount = pasteBoard.changeCount
   if currentChangeCount != previousChangeCount {
     previousChangeCount = currentChangeCount
     print(currentChangeCount)
-    let task = NSTask()
-    task.launchPath = "/usr/bin/env"
-    task.arguments = ["env", "cbscripts"]
-    task.launch()
-    task.waitUntilExit()
+    let process = Process()
+    process.launchPath = "/usr/bin/env"
+    process.arguments = ["env", "cbscripts"]
+    process.launch()
+    process.waitUntilExit()
   }
 }
