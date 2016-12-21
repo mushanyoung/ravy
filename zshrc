@@ -23,73 +23,6 @@ _ravy_prompt_timer_start
 
 # }}}
 
-# Zplug START {{{
-
-if [[ -f ~/.zplug/init.zsh ]]; then
-  # zplug env
-  zstyle :zplug:tag depth 1
-
-  # load zplug
-  source ~/.zplug/init.zsh
-
-  # duplicate to get both binary included by zplug
-  zplug 'junegunn/fzf', as:command, use:"bin/fzf", hook-build:'./install --bin >/dev/null'
-  zplug 'junegunn/fzf', as:command, use:"bin/fzf-tmux"
-
-  zplug "supercrabtree/k"
-  zplug "bric3/nice-exit-code"
-  zplug "micha/resty"
-  zplug "joshuarubin/zsh-archive"
-  zplug "zsh-users/zsh-completions"
-  zplug "Tarrasch/zsh-bd"
-
-  zplug "zsh-users/zsh-syntax-highlighting", defer:2
-  zplug "zsh-users/zsh-history-substring-search", defer:2
-  zplug "zsh-users/zsh-autosuggestions", defer:3
-
-  # Install plugins if there are plugins that have not been installed
-  if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -q; then
-      echo; zplug install
-    fi
-  fi
-
-  # Pre zplug settings
-
-  # zsh syntax highlighting
-  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
-
-  typeset -A ZSH_HIGHLIGHT_STYLES
-  ZSH_HIGHLIGHT_STYLES=(
-  'unknown-token'            'fg=red,bold'
-  'reserved-word'            'fg=yellow'
-  'builtin'                  'fg=green,bold'
-  'function'                 'fg=white,bold'
-  'command'                  'fg=green'
-  'alias'                    'fg=green'
-  'suffix-alias'             'fg=green,underline'
-  'hashed-command'           'fg=green'
-  'precommand'               'fg=magenta'
-  'path'                     'fg=cyan'
-  'commandseparator'         'fg=white,bold'
-  'globbing'                 'fg=blue'
-  'single-hyphen-option'     'fg=yellow'
-  'double-hyphen-option'     'fg=yellow'
-  'single-quoted-argument'   'fg=yellow,bold'
-  'dollar-quoted-argument'   'fg=yellow,bold'
-  'double-quoted-argument'   'fg=yellow'
-  'back-quoted-argument'     'fg=blue'
-  'assign'                   'fg=magenta,bold'
-  'redirection'              'fg=white,bold'
-  'comment'                  'fg=black,bold'
-  'default'                  'none'
-  )
-
-fi
-
-# }}}
-
 # Zle {{{
 
 if [[ $- == *i* ]]; then
@@ -335,15 +268,74 @@ fi
 
 # }}}
 
-# Zplug END {{{
+# Zplug {{{
 
 if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
+
   ZPLUG_LOADED=true
 
-  # load plugins managed by zplug
+  # zplug env
+  zstyle :zplug:tag depth 1
+
+  # load zplug
+  source ~/.zplug/init.zsh
+
+  # plugins
+  zplug "supercrabtree/k"
+  zplug "bric3/nice-exit-code"
+  zplug "micha/resty"
+  zplug "joshuarubin/zsh-archive"
+  zplug "zsh-users/zsh-completions"
+  zplug "Tarrasch/zsh-bd"
+
+  zplug "zsh-users/zsh-syntax-highlighting", defer:2
+  zplug "zsh-users/zsh-history-substring-search", defer:2
+  zplug "zsh-users/zsh-autosuggestions", defer:3
+
+  # Install plugins if there are plugins that have not been installed
+  if ! zplug check --verbose; then
+    printf "Install? [y/N]: "
+    if read -q; then
+      echo; zplug install
+    fi
+  fi
+
+  # Pre-load settings
+
+  # zsh syntax highlighting
+  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
+
+  typeset -A ZSH_HIGHLIGHT_STYLES
+  ZSH_HIGHLIGHT_STYLES=(
+  'unknown-token'            'fg=red,bold'
+  'reserved-word'            'fg=yellow'
+  'builtin'                  'fg=green,bold'
+  'function'                 'fg=white,bold'
+  'command'                  'fg=green'
+  'alias'                    'fg=green'
+  'suffix-alias'             'fg=green,underline'
+  'hashed-command'           'fg=green'
+  'precommand'               'fg=magenta'
+  'path'                     'fg=cyan'
+  'commandseparator'         'fg=white,bold'
+  'globbing'                 'fg=blue'
+  'single-hyphen-option'     'fg=yellow'
+  'double-hyphen-option'     'fg=yellow'
+  'single-quoted-argument'   'fg=yellow,bold'
+  'dollar-quoted-argument'   'fg=yellow,bold'
+  'double-quoted-argument'   'fg=yellow'
+  'back-quoted-argument'     'fg=blue'
+  'assign'                   'fg=magenta,bold'
+  'redirection'              'fg=white,bold'
+  'comment'                  'fg=black,bold'
+  'default'                  'none'
+  )
+
+  # load plugins
   zplug load
 
-  # Post zplug settings
+  # Post-load settings
+
   # zsh auto suggestions
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
   'backward-delete-char' 'complete-menu' 'expand-or-complete'
