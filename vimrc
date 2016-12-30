@@ -260,14 +260,7 @@ cnoremap w!! w !sudo tee % >/dev/null
 
 " }}
 
-" nmap / vmap {{
-
-" map leader key to >
-let g:mapleader = '>'
-
-" use space and backslash as the actual leader key for my own key bindings
-map <SPACE> \
-map <SPACE><SPACE> \\
+" base key remap {{
 
 " disable arrow keys
 noremap <UP> <NOP>
@@ -285,37 +278,33 @@ nnoremap k gk
 nnoremap gj j
 nnoremap gk k
 
+" clear screen and cancel hlsearch
+nnoremap <silent> <C-L> :noh<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
+
 " 0 go to first non blank, ^ go to the very beginning
 nnoremap 0 ^
 nnoremap ^ 0
+
+" }}
+
+" nmap / vmap {{
+
+" map leader key to >
+let g:mapleader = '>'
+
+" use space and backslash as the actual leader key for my own key bindings
+map <SPACE> \
+map <SPACE><SPACE> \\
+
+" write
+nnoremap \w :write<CR>
 
 " cycle in buffers
 nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
 
-" clear screen and cancel hlsearch
-nnoremap <silent> <C-L> :noh<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
-
-" similar to gf, open file path under cursor, but in a split window in right
-nnoremap gw :let mycurf=expand("<cfile>")<CR>:execute("vsplit ".mycurf)<CR>
-
-" invoke make with makeprg option
-nnoremap <F6> :make<CR>
-
-" execute current buffer in shell
-function! ExecuteBufferInShell()
-  write
-  silent !cp %:p %:p~tmp
-  silent !chmod +x %:p~tmp
-  silent !%:p~tmp 2>&1 | tee /tmp/exec-output
-  silent !rm -f %:p~tmp
-  split /tmp/exec-output
-  redraw!
-endfunction
-nnoremap <F5> :call ExecuteBufferInShell()<CR>
-
-" write
-nnoremap \w :write<CR>
+" forward yanked text to clip
+nnoremap <silent> \y :call system('clip >/dev/tty', @0)<CR>:echo 'Yanked text sent.'<CR>
 
 " quick substitute
 vnoremap \c :s/
@@ -330,14 +319,26 @@ nnoremap \<S-TAB> v<
 vnoremap \<TAB> >gv
 vnoremap \<S-TAB> <gv
 
-" forward yanked text to clip
-nnoremap <silent> \y :call system('clip >/dev/tty', @0)<CR>:echo 'Yanked text sent.'<CR>
-
 " toggle foldenable
-nnoremap <silent> \u :set invfoldenable<CR>
+nnoremap <silent>\u :set invfoldenable<CR>:echo &foldenable?'Fold enabled.':'Fold disabled.'<CR>
+
+" toggle mouse
+nnoremap <silent>\m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"set mouse=a<BAR>echo 'Mouse Enabled.'"<CR>
+
+" toggle quick fix window
+nnoremap <silent>\q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
+
+" toggle auto zz when scrolling
+nnoremap <silent>\z :let &scrolloff=999-&scrolloff<CR>:echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
 
 " change working directory to the newly opened buffer
 nnoremap \fh :lcd %:p:h<CR>:pwd<CR>
+
+" change working directory to the newly opened buffer
+nnoremap \fu :lcd ..<CR>:pwd<CR>
+
+" change working directory to the newly opened buffer
+nnoremap \fe :lcd<SPACE>
 
 " close current buffer
 nnoremap \fd :bdelete!<CR>
@@ -348,11 +349,11 @@ nnoremap \fn :enew<CR>
 " print full path of current buffer
 nnoremap \fp :echo expand('%:p')<CR>
 
-" toggle auto zz when scrolling
-nnoremap <silent> \zz :let &scrolloff=999-&scrolloff<CR>
+" similar to gf, open file path under cursor, but in a split window in right
+nnoremap gw :let mycurf=expand("<cfile>")<CR>:execute("vsplit ".mycurf)<CR>
 
 " insert an empty line without entering insert mode
-nmap \<CR> <PLUG>unimpairedBlankDown<CR>
+nmap \<CR> <PLUG>unimpairedBlankDown
 nmap \\<CR> <PLUG>unimpairedBlankUp<CR>
 
 " copy current line
@@ -362,20 +363,26 @@ nnoremap \<C-Y> "tyy"tp0
 nnoremap \ve :edit $MYVIMRC<CR>
 nnoremap \vs :source $MYVIMRC<CR>
 
-" highlight repeated lines
-nnoremap <silent> \tr :syn clear Repeat<CR>:g/^\(.*\)\n\ze\%(.*\n\)*\1$/exe 'syn match Repeat "^' . escape(getline('.'), '".\^$*[]') . '$"'<CR>:nohlsearch<BAR>echo 'Repeated lines highlighted.'<CR>
+" print key maps in a new buffer
+nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent imap<BAR>silent cmap<BAR>redir END<BAR>put =kms<CR>
 
-" open quick fix window
-function! ToggleQuickFix()
-  if exists("g:qfix_win")
-    cclose
-    unlet g:qfix_win
-  else
-    copen
-    let g:qfix_win = bufnr("$")
-  endif
+" invoke make with makeprg option
+nnoremap \rm :make<CR>
+
+" execute current buffer in shell
+function! ExecuteBufferInShell()
+  write
+  silent !cp %:p %:p~tmp
+  silent !chmod +x %:p~tmp
+  silent !%:p~tmp 2>&1 | tee /tmp/exec-output
+  silent !rm -f %:p~tmp
+  split /tmp/exec-output
+  redraw!
 endfunction
-nnoremap <silent>\q :call ToggleQuickFix()<CR>
+nnoremap \re :call ExecuteBufferInShell()<CR>
+
+" highlight repeated lines
+nnoremap <silent> \rl :syn clear Repeat<CR>:g/^\(.*\)\n\ze\%(.*\n\)*\1$/exe 'syn match Repeat "^' . escape(getline('.'), '".\^$*[]') . '$"'<CR>:nohlsearch<BAR>echo 'Repeated lines highlighted.'<CR>
 
 " diff current buffer to its original (saved) version
 function! DiffOrig()
@@ -391,30 +398,6 @@ nnoremap <silent> \de :bdelete!<CR>:diffoff<CR>
 nnoremap <silent> \dgl :diffget 1<CR>:diffupdate<CR>
 nnoremap <silent> \dgb :diffget 2<CR>:diffupdate<CR>
 nnoremap <silent> \dgr :diffget 3<CR>:diffupdate<CR>
-
-" print current key maps in a new buffer
-function! ListAllkeyMaps()
-  enew
-  redir => allkeymaps
-  silent map
-  silent imap
-  silent cmap
-  redir END
-  put =allkeymaps
-endfunction
-nnoremap \vm :call ListAllkeyMaps()<CR>
-
-" toggle mouse
-function! ToggleMouse()
-  if &mouse == 'a'
-    set mouse=
-    echo 'Mouse Disabled'
-  else
-    set mouse=a
-    echo 'Mouse Enabled'
-  endif
-endfunction
-nnoremap <silent>\m :call ToggleMouse()<CR>
 
 " file explorer by ranger
 function! RangerFileExplorer()
@@ -453,7 +436,7 @@ nnoremap \ff :call RangerFileExplorer()<CR>
 
 " Tags {{
 
-nnoremap <F4> :TagbarToggle<CR>
+nnoremap \t :TagbarToggle<CR>
 
 let g:easytags_async=1
 let g:easytags_always_enabled=1
