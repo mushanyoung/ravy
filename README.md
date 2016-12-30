@@ -20,5 +20,6 @@ git clone https://github.com/mushanyang/ravy.git ~/.ravy
     - get [**exuberant-ctags**](http://ctags.sourceforge.net/) to enable tag related features
     - `:PlugInstall` to bootstrap
 3. [**tmux**](https://tmux.github.io/)
-4. [**ag**](https://github.com/ggreer/the_silver_searcher)
-5. [**ranger**](http://ranger.nongnu.org/)
+4. [**fzf**](https://github.com/junegunn/fzf)
+5. [**ag**](https://github.com/ggreer/the_silver_searcher)
+6. [**ranger**](http://ranger.nongnu.org/)
