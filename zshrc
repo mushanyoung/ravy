@@ -63,7 +63,7 @@ if [[ $- == *i* ]]; then
   bindkey '\e.' insert-last-word
 
   # chars treated as a part of a word
-  WORDCHARS=$'\'\\/*?_-.,[]~&;!#$%^(){}<>+:=@'
+  WORDCHARS=$'\'\\/|*?_-.,[]~&;!#$%^(){}<>+:=@'
 
   # C-B / C-F to move, C-W to kill by word
   # M-b / M-f to move, M-w to kill by word with bash style
