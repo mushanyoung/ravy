@@ -304,7 +304,7 @@ nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
 
 " forward yanked text to clip
-nnoremap <silent> \y :call system('clip >/dev/tty', @0)<CR>:echo 'Yanked text sent.'<CR>
+nnoremap <silent> \y :call system('clip >/dev/tty', @0)<BAR>echo 'Yanked text sent.'<CR>
 
 " quick substitute
 vnoremap \c :s/
@@ -320,7 +320,7 @@ vnoremap \<TAB> >gv
 vnoremap \<S-TAB> <gv
 
 " toggle foldenable
-nnoremap <silent>\u :set invfoldenable<CR>:echo &foldenable?'Fold enabled.':'Fold disabled.'<CR>
+nnoremap <silent>\u :set invfoldenable<BAR>echo &foldenable?'Fold enabled.':'Fold disabled.'<CR>
 
 " toggle mouse
 nnoremap <silent>\m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"set mouse=a<BAR>echo 'Mouse Enabled.'"<CR>
@@ -329,13 +329,13 @@ nnoremap <silent>\m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"se
 nnoremap <silent>\q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
 
 " toggle auto zz when scrolling
-nnoremap <silent>\z :let &scrolloff=999-&scrolloff<CR>:echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
+nnoremap <silent>\z :let &scrolloff=999-&scrolloff<BAR>:echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
 
 " change working directory to the newly opened buffer
-nnoremap \fh :lcd %:p:h<CR>:pwd<CR>
+nnoremap \fh :lcd %:p:h<BAR>pwd<CR>
 
 " change working directory to the newly opened buffer
-nnoremap \fu :lcd ..<CR>:pwd<CR>
+nnoremap \fu :lcd ..<BAR>pwd<CR>
 
 " change working directory to the newly opened buffer
 nnoremap \fe :lcd<SPACE>
@@ -350,7 +350,7 @@ nnoremap \fn :enew<CR>
 nnoremap \fp :echo expand('%:p')<CR>
 
 " similar to gf, open file path under cursor, but in a split window in right
-nnoremap gw :let mycurf=expand("<cfile>")<CR>:execute("vsplit ".mycurf)<CR>
+nnoremap gw :let mycurf=expand("<cfile>")<BAR>exec("vsplit ".mycurf)<CR>
 
 " insert an empty line without entering insert mode
 nmap \<CR> <PLUG>unimpairedBlankDown
@@ -367,22 +367,7 @@ nnoremap \vs :source $MYVIMRC<CR>
 nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent imap<BAR>silent cmap<BAR>redir END<BAR>put =kms<CR>
 
 " invoke make with makeprg option
-nnoremap \rm :make<CR>
-
-" execute current buffer in shell
-function! ExecuteBufferInShell()
-  write
-  silent !cp %:p %:p~tmp
-  silent !chmod +x %:p~tmp
-  silent !%:p~tmp 2>&1 | tee /tmp/exec-output
-  silent !rm -f %:p~tmp
-  split /tmp/exec-output
-  redraw!
-endfunction
-nnoremap \re :call ExecuteBufferInShell()<CR>
-
-" highlight repeated lines
-nnoremap <silent> \rl :syn clear Repeat<CR>:g/^\(.*\)\n\ze\%(.*\n\)*\1$/exe 'syn match Repeat "^' . escape(getline('.'), '".\^$*[]') . '$"'<CR>:nohlsearch<BAR>echo 'Repeated lines highlighted.'<CR>
+nnoremap \fr :make<CR>
 
 " diff current buffer to its original (saved) version
 function! DiffOrig()
@@ -394,10 +379,10 @@ function! DiffOrig()
   diffthis
 endfunction
 nnoremap \do :call DiffOrig()<CR>
-nnoremap <silent> \de :bdelete!<CR>:diffoff<CR>
-nnoremap <silent> \dgl :diffget 1<CR>:diffupdate<CR>
-nnoremap <silent> \dgb :diffget 2<CR>:diffupdate<CR>
-nnoremap <silent> \dgr :diffget 3<CR>:diffupdate<CR>
+nnoremap <silent> \de :bdelete!<BAR>diffoff<CR>
+nnoremap <silent> \dgl :diffget 1<BAR>diffupdate<CR>
+nnoremap <silent> \dgb :diffget 2<BAR>diffupdate<CR>
+nnoremap <silent> \dgr :diffget 3<BAR>diffupdate<CR>
 
 " file explorer by ranger
 function! RangerFileExplorer()
@@ -426,7 +411,7 @@ function! RangerFileExplorer()
   endfor
   redraw!
 endfunction
-nnoremap \ff :call RangerFileExplorer()<CR>
+nnoremap \r :call RangerFileExplorer()<CR>
 
 " }}
 
@@ -436,7 +421,7 @@ nnoremap \ff :call RangerFileExplorer()<CR>
 
 " Tags {{
 
-nnoremap \t :TagbarToggle<CR>
+nnoremap <C-T> :TagbarToggle<CR>
 
 let g:easytags_async=1
 let g:easytags_always_enabled=1
@@ -450,7 +435,7 @@ if !executable("ag")
   let g:ag_prg="ack --column"
 endif
 
-nnoremap FF :Ag<SPACE>
+nnoremap \t :Ag<SPACE>
 
 " }}
 
@@ -462,12 +447,12 @@ let g:AutoPairsShortcutToggle=''
 
 " fzf {{
 
-nnoremap <silent> o   :Files<CR>
-nnoremap <silent> \fo   :Files<CR>
-nnoremap <silent> \ft   :BTags<CR>
-nnoremap <silent> \fk   :Marks<CR>
-nnoremap <silent> \fs   :Buffers<CR>
-nnoremap <silent> \b    :Buffers<CR>
+nnoremap <silent> o :Files<CR>
+nnoremap <silent> \fo :Files<CR>
+nnoremap <silent> \ft :BTags<CR>
+nnoremap <silent> \fk :Marks<CR>
+nnoremap <silent> \fs :Buffers<CR>
+nnoremap <silent> \b  :Buffers<CR>
 
 " }}
 
@@ -521,6 +506,7 @@ nmap \hs <PLUG>GitGutterStageHunk
 nmap \hv <PLUG>GitGutterPreviewHunk
 
 nmap \hb :let g:gitgutter_diff_base=''<LEFT>
+nmap \h1 :let g:gitgutter_diff_base='HEAD~'<BAR>write<CR>
 
 omap ic <PLUG>GitGutterTextObjectInnerPending
 omap ac <PLUG>GitGutterTextObjectOuterPending
@@ -553,10 +539,10 @@ function! OpenSessionFZF()
   endfunction
 
   return fzf#run({
-    \ 'source': xolox#session#get_names(0),
-    \ 'sink': function('SessionSink'),
-    \ 'options': '+m --prompt="Session> "',
-    \ 'down': '~40%'})
+        \ 'source': xolox#session#get_names(0),
+        \ 'sink': function('SessionSink'),
+        \ 'options': '+m --prompt="Session> "',
+        \ 'down': '~40%'})
 endfunction
 nnoremap \so :call OpenSessionFZF()<CR>
 nmap s \so
