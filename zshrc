@@ -169,38 +169,26 @@ if [[ $- == *i* ]]; then
 
   # FZF
 
-  export FZF_DEFAULT_OPTS='--bind=ctrl-f:page-down,ctrl-b:page-up'
+  export FZF_DEFAULT_OPTS='--height=50% --min-height=9 --bind=ctrl-f:page-down,ctrl-b:page-up'
   export FZF_DEFAULT_COMMAND='ag -g ""'
-
-  if hash fzf-tmux 2>/dev/null; then
-    export FZF_CMD='command fzf-tmux -d40%'
-  else
-    export FZF_CMD='command fzf'
-  fi
-
-  alias fzf='$(__fzfcmd)'
-
-  __fzfcmd() {
-    echo $FZF_CMD
-  }
 
   # Paste the selected file path(s) into the command line
   fzf-file-widget() {
-    local files=$(ag -g "" | $(__fzfcmd) -m | while read item; do echo -n "${(q)item} "; done)
+    local files=$(ag -g "" | fzf -m | while read item; do echo -n "${(q)item} "; done)
     LBUFFER="${LBUFFER}$files"
     zle redisplay
   }
 
   # Cd into the selected directory
   fzf-cd-widget() {
-    cd "${$(find . -type d | sed 1d | cut -b3- | $(__fzfcmd) +m):-.}"
+    cd "${$(find . -type d | sed 1d | cut -b3- | fzf +m):-.}"
     zle reset-prompt
   }
 
   # Open the selected file by default editor, CTRL-O to open with `open` command
   fzf-open-file-widget () {
     local out file key cmd
-    out=$(ag -g "" | $(__fzfcmd) --exit-0 --expect=ctrl-o)
+    out=$(ag -g "" | fzf --exit-0 --expect=ctrl-o)
     key=$(head -1 <<< "$out")
     file=$(head -2 <<< "$out" | tail -1)
     zle redisplay
@@ -218,7 +206,7 @@ if [[ $- == *i* ]]; then
     while read line; do
       [[ -f "${line/\~/$HOME}" ]] && echo "$line"
     done |
-    $(__fzfcmd) -d +m -1 -q "$*")
+    fzf -d +m -1 -q "$*")
     zle redisplay
     if [[ -n $file ]]; then
       BUFFER="vim $file"
@@ -228,7 +216,7 @@ if [[ $- == *i* ]]; then
 
   # open session matched by query, create a new one if there isn't a match
   fzf-open-vim-session-widget () {
-    local session=$(ls ~/.vim/sessions | sed 's/\.vim//' | $(__fzfcmd) --exit-0)
+    local session=$(ls ~/.vim/sessions | sed 's/\.vim//' | fzf --exit-0)
     zle redisplay
     if [[ -n $session ]]; then
       cd ${$(cat ~/.vim/sessions/$session.vim | grep '^cd' | head -1 | cut -d' ' -f2-)/#\~/$HOME}
@@ -241,7 +229,7 @@ if [[ $- == *i* ]]; then
   fzf-history-widget() {
     local selected num
     setopt localoptions noglobsubst
-    selected=( $(fc -l 1 | $(__fzfcmd) +s --tac +m -n2..,.. --tiebreak=index --toggle-sort=ctrl-r ${=FZF_CTRL_R_OPTS} -q "${LBUFFER//$/\\$}") )
+    selected=( $(fc -l 1 | fzf +s --tac +m -n2..,.. --tiebreak=index --toggle-sort=ctrl-r ${=FZF_CTRL_R_OPTS} -q "${LBUFFER//$/\\$}") )
     if [ -n "$selected" ]; then
       num=$selected[1]
       if [ -n "$num" ]; then
