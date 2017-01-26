@@ -144,8 +144,10 @@ defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
 # Always open everything in Finder's column view. This is important.
 defaults write com.apple.Finder FXPreferredViewStyle Nlsv
 
-# Show hidden files and file extensions by default
-defaults write com.apple.finder AppleShowAllFiles -bool true
+# Hide hidden files
+defaults write com.apple.finder AppleShowAllFiles -bool false
+
+# Show file extensions
 defaults write NSGlobalDomain AppleShowAllExtensions -bool true
 
 # Disable the warning when changing file extensions
