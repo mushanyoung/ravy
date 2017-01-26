@@ -1,30 +1,29 @@
 #!/usr/bin/env zsh
 
+append_content_if_absent () {
+  local file=$1
+  local text=$2
+  local appending=${3:-$2}
+  if ! grep "$text" $file &>/dev/null; then
+    if [ -f $appending ]; then
+      cat $appending >> $file
+    else
+      echo "$appending" >> $file
+    fi
+  fi
+}
+
 RAVY="${0:A:h}"
 
 echo 'Linking dotfiles'
-if ! grep "RAVY_TMP" ~/.ignore &>/dev/null; then
-  cat $RAVY/ignore >> ~/.ignore
-fi
-
-if ! grep "source $RAVY/zshrc" ~/.zshrc &>/dev/null; then
-  echo "source $RAVY/zshrc" >> ~/.zshrc
-fi
-if ! grep "source $RAVY/zshenv" ~/.zshenv &>/dev/null; then
-  echo "source $RAVY/zshenv" >> ~/.zshenv
-fi
-if ! grep "path=$RAVY/gitconfig" ~/.gitconfig &>/dev/null; then
-  echo "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig" \
-    >> ~/.gitconfig
-fi
-if ! grep "source $RAVY/tmux.conf" ~/.tmux.conf &>/dev/null; then
-  echo "source $RAVY/tmux.conf" >> ~/.tmux.conf
-fi
+append_content_if_absent ~/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
+append_content_if_absent ~/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
+append_content_if_absent ~/.tmux.conf "source -q $RAVY/tmux.conf"
+append_content_if_absent ~/.gitconfig "path=$RAVY/config" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
+append_content_if_absent ~/.ignore $RAVY/ignore
 
 echo 'Configuring Vim/NeoVim'
-if ! grep "source $RAVY/vimrc" ~/.vimrc &>/dev/null; then
-  echo "source $RAVY/vimrc" >> ~/.vimrc
-fi
+append_content_if_absent ~/.vimrc "if filereadable('$RAVY/vimrc') | source $RAVY/vimrc | endif"
 mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.vim/autoload ~/.config
 if [[ ! -d ~/.config/nvim ]]; then
   ln -s -f ~/.vim ~/.config/nvim
