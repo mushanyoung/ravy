@@ -456,15 +456,42 @@ nnoremap <silent> \b  :Buffers<CR>
 
 " }}
 
-" vim-airline {{
+" neoformat {{
 
-let g:airline_powerline_fonts=1
+noremap \fm :Neoformat<CR>
+
+" Only msg when there is an error.
+let g:neoformat_only_msg_on_error = 1
+
+" Enable alignment
+let g:neoformat_basic_format_align = 1
+
+" Enable tab to spaces conversion
+let g:neoformat_basic_format_retab = 1
+
+" Let clang-format use Google style.
+let g:neoformat_c_clangformat = {
+      \ 'exe': 'clang-format',
+      \ 'args': ['--style Google'],
+      \ 'stdin': 1,
+      \ }
+let g:neoformat_cpp_clangformat = g:neoformat_c_clangformat
+let g:neoformat_objc_clangformat = g:neoformat_c_clangformat
+let g:neoformat_proto_clangformat = g:neoformat_c_clangformat
+let g:neoformat_java_clangformat = g:neoformat_c_clangformat
+
+" Use clang-format for c, cpp, objc and proto.
+let g:neoformat_enabled_c = ['clangformat']
+let g:neoformat_enabled_cpp = ['clangformat']
+let g:neoformat_enabled_objc = ['clangformat']
+let g:neoformat_enabled_proto = ['clangformat']
+let g:neoformat_enabled_java = ['clangformat']
 
 " }}
 
-" vim-autoformat {{
+" vim-airline {{
 
-nnoremap <silent>\fm :Autoformat<CR>
+let g:airline_powerline_fonts=1
 
 " }}
 
@@ -716,7 +743,7 @@ Plug 'vim-scripts/vim-scroll-position'
 Plug 'christoomey/vim-tmux-navigator'
 
 " Auto format
-Plug 'Chiel92/vim-autoformat'
+Plug 'sbdchd/neoformat'
 
 " Interactive scratchpad
 Plug 'metakirby5/codi.vim'
