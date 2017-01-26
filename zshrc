@@ -637,6 +637,7 @@ alias pc='HIGH_CPU_MEM_ONLY=1 pa'
 alias bubo='brew update && brew outdated'
 alias bubc='brew upgrade && brew cleanup'
 alias bubu='bubo && bubc'
+alias bi="brew install --force-bottle"
 
 # Ravy commands
 alias ravy="cd $RAVY"
