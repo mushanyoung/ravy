@@ -68,8 +68,9 @@ defaults write com.apple.ActivityMonitor SortDirection -int 0
 # Interfaces: trackpad, mouse, keyboard, bluetooth, etc.
 ###############################################################################
 
-# Set a really fast keyboard repeat rate.
-defaults write -g KeyRepeat -int 0
+# Key repeat interval: 1 for 15ms
+defaults write -g InitialKeyRepeat -int 15
+defaults write -g KeyRepeat -int 3
 
 # Disable press-and-hold for keys in favor of key repeat.
 defaults write -g ApplePressAndHoldEnabled -bool false
