@@ -482,6 +482,8 @@ let g:EasyClipUsePasteToggleDefaults = 0
 nmap p <PLUG>EasyClipSwapPasteForward
 nmap n <PLUG>EasyClipSwapPasteBackwards
 
+nmap M <Plug>MoveMotionEndOfLinePlug
+
 " }}
 
 " vim-easymotion {{
@@ -563,6 +565,16 @@ nnoremap \sc :CloseSession<CR>
 nnoremap \sv :ViewSession<CR>
 
 nnoremap \sf :echo 'Current Session: ' . xolox#session#find_current_session()<CR>
+
+" }}
+
+" vim-sneak {{
+
+" use case option from search settings
+let g:sneak#use_ic_scs = 1
+
+" label mode
+let g:sneak#label = 1
 
 " }}
 
