@@ -38,8 +38,8 @@ defaults write com.assple.SoftwareUpdate ScheduleFrequency -int 1
 # Disable the “Are you sure you want to open this application?” dialog
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 
-# Disable Swipe controls for Google Chrome
-defaults write com.google.Chrome.plist AppleEnableSwipeNavigateWithScrolls -bool FALSE
+# Enable Swipe controls for Google Chrome
+defaults write com.google.Chrome.plist AppleEnableSwipeNavigateWithScrolls -bool true
 
 # Disable inline attachments in Mail.app (just show the icons)
 defaults write com.apple.mail DisableInlineAttachmentViewing -bool true
