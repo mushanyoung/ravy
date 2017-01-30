@@ -552,13 +552,7 @@ kill_keyword () {
 }
 
 # wrapper of zsh-bd, cd up 1 level by default
-d () {
-  if (($#<1)); then
-    cd ..
-  else
-    bd $*
-  fi
-}
+d () { bd ${*:-1}; }
 compctl -V directories -K _bd d
 
 # launch an interactive repl scratchpad within vim
@@ -583,19 +577,14 @@ _git-di(){ _git-diff }
 _git-de(){ _git-diff }
 
 # list files, do not record in history
-alias l=' ls-color'
-alias ls=' ls'
-alias ll=' ls -lFh'
-alias la=' l -A'
+alias l='ls-color'
+alias la='ls-color -A'
+alias ll='ls -lFh'
 
 # change directory, do not record in history
-alias d=' d'
-alias cd=' cd'
-alias fl=' cd -'
-alias ..=' cd ..'
-alias pu=' pushd'
-alias po=' popd'
-alias dd=' d'
+alias pu='pushd'
+alias po='popd'
+alias dd='d'
 
 # abbreviations
 alias g='git'
