@@ -585,6 +585,10 @@ alias ll='ls -lFh'
 alias pu='pushd'
 alias po='popd'
 alias dd='d'
+take () {
+  mkdir -p $1
+  cd $1
+}
 
 # abbreviations
 alias g='git'
