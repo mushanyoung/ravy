@@ -27,11 +27,11 @@
   au = add -u
   br = branch
   ci = commit --verbose
-  cia = !git ci -a
-  cim = !git ci --amend
-  cimn = !git ci --amend --no-edit
-  ciam = !git cia --amend
-  ciamn = !git cia --amend --no-edit
+  cia = commit --verbose -a
+  cim = commit --verbose --amend
+  cimn = commit --verboase --amend --no-edit
+  ciam = commit --verboase -a --amend
+  ciamn = commit --verbose -a --amend --no-edit
   cp = cherry-pick
   ft = fetch
   fta = fetch --all
@@ -42,16 +42,14 @@
   smu = submodule update --init --recursive
   smpa = submodule foreach git pull --rebase
   pr = pull --rebase
-  pm = !git pr && git smu
-  pp = !git pm && git push
   rv = remote -v
   gr = grep -n -I
+  pm = !git pr && git smu
+  pp = !git pm && git push
+  root = rev-parse --show-toplevel
 
   # execute shell command on the top level of the repo
   exec = "!exec "
-
-  # print toplevel path of the repo
-  root = rev-parse --show-toplevel
 
   # swap last two commits
   swaplast = "!GIT_SEQUENCE_EDITOR=\"sed -i -n 'h;1n;2p;g;p'\" git rebase -i HEAD~2"
@@ -60,11 +58,11 @@
   co = "!gco(){ if [[ $# > 0 ]]; then git checkout $@; else git branch -vv | fzf +m | cut -c 3- | awk '{print $1}' | xargs git checkout; fi;}; gco"
 
   # logs
-  l = "!gpretty() { \
+  l = "!gl() { \
     git log --pretty='tformat:%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s' $@ | \
     perl -pe 's/(\\(\\d+ \\w+)[^<)]*ago\\)/\\1)/' | \
     column -s '|' -t | \
-    ${GIT_PAGER:-less -FXRS}; }; gpretty"
+    ${GIT_PAGER:-less -FXRS}; }; gl"
 
   lg = !git l --graph
   r = !GIT_PAGER=cat git l -10
@@ -79,7 +77,7 @@
   dn = diff --name-only
 
   # edit changed files, ran at the top level of current git repo
-  de = "!gde(){ files=$(git diff --name-only $@); [[ $? == 0 ]] && ${GIT_EDITOR:-vim} $files; }; gde"
+  de = "!gde(){ files=$(git diff --name-only $@) && ${GIT_EDITOR:-vim} $files; }; gde"
 
   dfc = !git df --cached
   df1 = !git df HEAD~ HEAD
