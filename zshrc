@@ -580,10 +580,11 @@ kill_keyword () {
 d () { bd ${*:-1}; }
 compctl -V directories -K _bd d
 
-# launch an interactive repl scratchpad within vim
+# Codi: launch an interactive repl scratchpad within vim
+# Usage: codi [filetype] [filename]
 codi() {
   local syntax="${1:-python}"
-  [[ $# > 0 ]] && shift
+  shift
   vim -c \
     "let g:startify_disable_at_vimenter = 1 |\
     set bt=nofile ls=0 noru nonu nornu |\
