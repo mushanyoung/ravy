@@ -29,8 +29,8 @@
   ci = commit --verbose
   cia = commit --verbose -a
   cim = commit --verbose --amend
-  cimn = commit --verboase --amend --no-edit
-  ciam = commit --verboase -a --amend
+  cimn = commit --verbose --amend --no-edit
+  ciam = commit --verbose -a --amend
   ciamn = commit --verbose -a --amend --no-edit
   cp = cherry-pick
   ft = fetch
