@@ -172,31 +172,53 @@ if [[ $- == *i* ]]; then
   export FZF_DEFAULT_OPTS='--height=50% --min-height=9 --bind=ctrl-f:page-down,ctrl-b:page-up'
   export FZF_DEFAULT_COMMAND='ag -g ""'
 
-  # Paste the selected file path(s) into the command line
-  fzf-file-widget() {
-    local files=$(ag -g "" | fzf -m | while read item; do echo -n "${(q)item} "; done)
-    LBUFFER="${LBUFFER}$files"
-    zle redisplay
-  }
-
-  # Cd into the selected directory
-  fzf-cd-widget() {
-    cd "${$(find . -type d | sed 1d | cut -b3- | fzf +m):-.}"
-    zle reset-prompt
-  }
-
-  # Open the selected file by default editor, CTRL-O to open with `open` command
-  fzf-open-file-widget () {
-    local out file key cmd
-    out=$(ag -g "" | fzf --exit-0 --expect=ctrl-o)
+  # C-M / Enter to append selected files into buffer
+  # C-D to change to the folder contains the first file
+  # C-O to `open` selected files
+  # C-E to edit selected files
+  fzf-file-widget () {
+    local out key files file cmd
+    out=$(ag -a --hidden -g '' | fzf -m --exit-0 --expect=ctrl-o,ctrl-e,ctrl-d)
     key=$(head -1 <<< "$out")
-    file=$(head -2 <<< "$out" | tail -1)
-    zle redisplay
-    if [[ -n "$file" ]]; then
-      [[ "$key" == 'ctrl-o' ]] && cmd="open $file" || cmd="${EDITOR:-vim} $file"
-      BUFFER="$cmd"
-      zle accept-line
+    files=$(tail -n +2 <<< "$out" | xargs)
+    if [[ -n $files ]]; then
+      if [[ -z $key ]]; then
+        LBUFFER="${LBUFFER% }${LBUFFER:+ }$files"
+      elif [[ $key == 'ctrl-d' ]]; then
+        file=$(head -2 <<< "$out" | tail -1)
+        cd ${file:h}
+        zle reset-prompt
+        return
+      else
+        if [[ $key == 'ctrl-o' ]]; then
+          cmd="open $files"
+        elif [[ $key == 'ctrl-e' ]]; then
+          cmd="${EDITOR:-vim} $files"
+        fi
+        BUFFER="$cmd"
+        zle accept-line
+      fi
     fi
+    zle redisplay
+  }
+
+  # C-M / Enter to append the selected directory into buffer
+  # C-D to change directory to the selected one
+  fzf-directory-widget() {
+    local out key directory
+    out=$(find . -type d | sed 1d | cut -b3- | fzf +m --exit-0 --expect=ctrl-d)
+    key=$(head -1 <<< "$out")
+    directory=$(tail -1 <<< "$out")
+    if [[ -n $directory ]]; then
+      if [[ -z $key ]]; then
+        LBUFFER="${LBUFFER% }${LBUFFER:+ }$directory"
+      else
+        cd $directory
+        zle reset-prompt
+        return
+      fi
+    fi
+    zle redisplay
   }
 
   # open recent files of vim
@@ -228,8 +250,10 @@ if [[ $- == *i* ]]; then
   # CTRL-R - Paste the selected command from history into the command line
   fzf-history-widget() {
     local selected num
-    setopt localoptions noglobsubst
-    selected=( $(fc -l 1 | fzf +s --tac +m -n2..,.. --tiebreak=index --toggle-sort=ctrl-r ${=FZF_CTRL_R_OPTS} -q "${LBUFFER//$/\\$}") )
+    setopt localoptions noglobsubst pipefail 2> /dev/null
+    selected=( $(fc -l 1 |
+      FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m" fzf) )
+    local ret=$?
     if [ -n "$selected" ]; then
       num=$selected[1]
       if [ -n "$num" ]; then
@@ -237,14 +261,15 @@ if [[ $- == *i* ]]; then
       fi
     fi
     zle redisplay
+    typeset -f zle-line-init >/dev/null && zle zle-line-init
+    return $ret
   }
 
   zle -N fzf-file-widget
-  bindkey '^T' fzf-file-widget
-  zle -N fzf-cd-widget
-  bindkey '\et' fzf-cd-widget
-  zle -N fzf-open-file-widget
-  bindkey '\eo' fzf-open-file-widget
+  bindkey '\eo' fzf-file-widget
+  zle -N fzf-directory-widget
+  bindkey '^O' fzf-directory-widget
+
   zle -N fzf-open-vim-file-widget
   bindkey '\ev' fzf-open-vim-file-widget
   zle -N fzf-open-vim-session-widget
