@@ -285,7 +285,8 @@ fi
 
 ZPLUG_HOME=${ZPLUG_HOME:-~/.zplug}
 
-if [[ -f $ZPLUG_HOME/init.zsh ]]; then
+if [[ -f $ZPLUG_HOME/init.zsh && -z $ZPLUG_LOADED ]]; then
+  ZPLUG_LOADED=true
 
   # load zplug
   source $ZPLUG_HOME/init.zsh
