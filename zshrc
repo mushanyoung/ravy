@@ -283,15 +283,15 @@ fi
 
 # Zplug {{{
 
-if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
+ZPLUG_HOME=${ZPLUG_HOME:-~/.zplug}
 
-  ZPLUG_LOADED=true
+if [[ -f $ZPLUG_HOME/init.zsh ]]; then
+
+  # load zplug
+  source $ZPLUG_HOME/init.zsh
 
   # zplug env
   zstyle :zplug:tag depth 1
-
-  # load zplug
-  source ~/.zplug/init.zsh
 
   # plugins
   zplug "supercrabtree/k"
@@ -313,12 +313,11 @@ if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
     fi
   fi
 
-  # Pre-load settings
+  # load plugins
+  zplug load
 
   # zsh syntax highlighting
   ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
-
-  typeset -A ZSH_HIGHLIGHT_STYLES
   ZSH_HIGHLIGHT_STYLES=(
   'unknown-token'            'fg=red,bold'
   'reserved-word'            'fg=yellow'
@@ -344,16 +343,11 @@ if [[ -f ~/.zplug/init.zsh && -z $ZPLUG_LOADED ]]; then
   'default'                  'none'
   )
 
-  # load plugins
-  zplug load
-
-  # Post-load settings
-
   # zsh auto suggestions
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
   'backward-delete-char' 'complete-menu' 'expand-or-complete'
   )
-  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
 fi
 
 # }}}
