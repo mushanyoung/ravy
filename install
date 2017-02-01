@@ -20,7 +20,7 @@ append_content_if_absent ~/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
 append_content_if_absent ~/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
 append_content_if_absent ~/.tmux.conf "source -q $RAVY/tmux.conf"
 append_content_if_absent ~/.gitconfig "path=$RAVY/config" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
-append_content_if_absent ~/.ignore $RAVY/ignore
+append_content_if_absent ~/.ignore "RAVY_TMP" $RAVY/ignore
 
 echo 'Configuring Vim/NeoVim'
 append_content_if_absent ~/.vimrc "if filereadable('$RAVY/vimrc') | source $RAVY/vimrc | endif"
