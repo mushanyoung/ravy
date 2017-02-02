@@ -15,22 +15,22 @@ append_content_if_absent () {
 
 RAVY="${0:A:h}"
 
-echo 'Linking dotfiles'
+echo "Linking dotfiles"
 append_content_if_absent ~/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
 append_content_if_absent ~/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
 append_content_if_absent ~/.tmux.conf "source -q $RAVY/tmux.conf"
 append_content_if_absent ~/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
 append_content_if_absent ~/.ignore "RAVY_TMP" "$RAVY/ignore"
 
-echo 'Configuring Vim/NeoVim'
-append_content_if_absent ~/.vimrc "if filereadable('$RAVY/vimrc') | source $RAVY/vimrc | endif"
+echo "Configuring Vim/NeoVim"
+append_content_if_absent ~/.vimrc "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
 mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.vim/autoload ~/.config
 if [ ! -d ~/.config/nvim ]; then
   ln -s -f ~/.vim ~/.config/nvim
 fi
 ln -s -f ~/.vimrc ~/.config/nvim/init.vim
 
-echo 'Configuring mpv'
+echo "Configuring mpv"
 mkdir -p ~/.config ~/.config/mpv
 ln -s -f "$RAVY/mpv.conf" ~/.config/mpv/mpv.conf
 
@@ -39,25 +39,25 @@ if [ ! -e ~/.vim/autoload/plug.vim ] || [ -n "$RAVY_UPDATE" ]; then
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 fi
 
-echo 'Touching custom files'
+echo "Touching custom files"
 mkdir -p "$RAVY/custom" "$RAVY/custom/bin" "$RAVY/custom/zsh-functions"
 touch "$RAVY/custom/zshrc"
 touch "$RAVY/custom/vimrc"
 touch "$RAVY/custom/gitconfig"
 
-echo 'Installing Zplug'
+echo "Installing Zplug"
 if [ ! -d ~/.zplug ]; then
   git clone https://github.com/zplug/zplug ~/.zplug
 elif [ -n "$RAVY_UPDATE" ]; then
   git -C ~/.zplug pull --rebase
 fi
 
-echo 'Installing custom settings'
+echo "Installing custom settings"
 if command -v "$RAVY/custom/install" >/dev/null; then
   "$RAVY/custom/install"
 fi
 
 if [ -d ~/Library/Rime ]; then
-  echo 'Installing rime custom settings'
-  cp "$RAVY/rime/*" ~/Library/Rime
+  echo "Installing rime custom settings"
+  cp "$RAVY"/rime/* ~/Library/Rime
 fi

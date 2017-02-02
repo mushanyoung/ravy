@@ -1,4 +1,3 @@
-# !/usr/bin/env zsh
 # Modeline & Load {{{
 # vim: set foldlevel=0 foldmethod=marker filetype=zsh:
 
@@ -29,24 +28,24 @@ if [[ $- == *i* ]]; then
   bindkey -e
 
   # ctrl-a and ctrl-e
-  bindkey '^A' beginning-of-line
-  bindkey '^E' end-of-line
+  bindkey "^A" beginning-of-line
+  bindkey "^E" end-of-line
 
   # undo and redo
-  bindkey '^_' undo
-  bindkey '\e-' redo
+  bindkey "^_" undo
+  bindkey "\e-" redo
 
   # zsh-history-substring-search: bind ^P and ^N to it
-  bindkey '^P' history-substring-search-up
-  bindkey '^N' history-substring-search-down
+  bindkey "^P" history-substring-search-up
+  bindkey "^N" history-substring-search-down
 
   # autosuggestion
-  bindkey '\ek' autosuggest-clear
+  bindkey "\ek" autosuggest-clear
 
   # Use C-x C-e to edit the current command line in editor
   autoload -U edit-command-line
   zle -N edit-command-line
-  bindkey '\C-x\C-e' edit-command-line
+  bindkey "\C-x\C-e" edit-command-line
 
   # Smart URLs
   autoload -Uz url-quote-magic
@@ -55,8 +54,8 @@ if [[ $- == *i* ]]; then
   # M-. and M-m to insert word in previous lines
   autoload -Uz copy-earlier-word
   zle -N copy-earlier-word
-  bindkey '\em' copy-earlier-word
-  bindkey '\e.' insert-last-word
+  bindkey "\em" copy-earlier-word
+  bindkey "\e." insert-last-word
 
   # C-B / C-F to move, C-W to kill by word
   # M-b / M-f to move, M-w to kill by word with bash style
@@ -83,12 +82,12 @@ if [[ $- == *i* ]]; then
   zle -N _forward-word-alter
   zle -N _backward-word-alter
   zle -N _backward-kill-word-alter
-  bindkey '\ef' _forward-word-alter
-  bindkey '\eb' _backward-word-alter
-  bindkey '\ew' _backward-kill-word-alter
-  bindkey '^F' forward-word
-  bindkey '^B' backward-word
-  bindkey '^W' backward-kill-word
+  bindkey "\ef" _forward-word-alter
+  bindkey "\eb" _backward-word-alter
+  bindkey "\ew" _backward-kill-word-alter
+  bindkey "^F" forward-word
+  bindkey "^B" backward-word
+  bindkey "^W" backward-kill-word
 
   # ranger file explorer
   _ranger-cd () {
@@ -102,7 +101,7 @@ if [[ $- == *i* ]]; then
     zle -M ""
   }
   zle -N _ranger-cd
-  bindkey '^K' _ranger-cd
+  bindkey "^K" _ranger-cd
 
   # toggle glob for current command line
   _glob-toggle () {
@@ -114,7 +113,7 @@ if [[ $- == *i* ]]; then
     fi
   }
   zle -N _glob-toggle
-  bindkey '\eg' _glob-toggle
+  bindkey "\eg" _glob-toggle
 
   # toggle sudo for current command line
   _sudo-toggle () {
@@ -126,7 +125,7 @@ if [[ $- == *i* ]]; then
     fi
   }
   zle -N _sudo-toggle
-  bindkey '^S' _sudo-toggle
+  bindkey "^S" _sudo-toggle
 
   # fancy-ctrl-z
   _fancy-ctrl-z () {
@@ -139,10 +138,10 @@ if [[ $- == *i* ]]; then
     fi
   }
   zle -N _fancy-ctrl-z
-  bindkey '^Z' _fancy-ctrl-z
+  bindkey "^Z" _fancy-ctrl-z
 
   # menu select and completion
-  bindkey '^I' expand-or-complete
+  bindkey "^I" expand-or-complete
 
   zmodload zsh/complist
   zle -C complete-menu menu-select _generic
@@ -151,19 +150,19 @@ if [[ $- == *i* ]]; then
     zle complete-menu
   }
   zle -N _complete-menu
-  bindkey '^J' _complete-menu
-  bindkey -M menuselect '^F' forward-word
-  bindkey -M menuselect '^B' backward-word
-  bindkey -M menuselect '^J' forward-char
-  bindkey -M menuselect '^K' backward-char
-  bindkey -M menuselect '/' history-incremental-search-forward
-  bindkey -M menuselect '^?' undo
-  bindkey -M menuselect '^C' undo
+  bindkey "^J" _complete-menu
+  bindkey -M menuselect "^F" forward-word
+  bindkey -M menuselect "^B" backward-word
+  bindkey -M menuselect "^J" forward-char
+  bindkey -M menuselect "^K" backward-char
+  bindkey -M menuselect "/" history-incremental-search-forward
+  bindkey -M menuselect "^?" undo
+  bindkey -M menuselect "^C" undo
 
   # FZF
 
-  export FZF_DEFAULT_OPTS='--height=50% --min-height=9 --bind=ctrl-f:page-down,ctrl-b:page-up'
-  export FZF_DEFAULT_COMMAND='ag -g ""'
+  export FZF_DEFAULT_OPTS="--height=50% --min-height=9 --bind=ctrl-f:page-down,ctrl-b:page-up"
+  export FZF_DEFAULT_COMMAND="ag -g ''"
 
   # C-M / Enter to append selected files into buffer
   # C-D to change to the folder contains the first file
@@ -177,15 +176,15 @@ if [[ $- == *i* ]]; then
     if [[ -n $files ]]; then
       if [[ -z $key ]]; then
         LBUFFER="${LBUFFER% }${LBUFFER:+ }$files"
-      elif [[ $key == 'ctrl-d' ]]; then
+      elif [[ $key == "ctrl-d" ]]; then
         file=$(head -2 <<< "$out" | tail -1)
         cd -- "${file:h}" || return
         zle reset-prompt
         return
       else
-        if [[ $key == 'ctrl-o' ]]; then
+        if [[ $key == "ctrl-o" ]]; then
           cmd="open $files"
-        elif [[ $key == 'ctrl-e' ]]; then
+        elif [[ $key == "ctrl-e" ]]; then
           cmd="${EDITOR:-vim} $files"
         fi
         BUFFER="$cmd"
@@ -217,7 +216,7 @@ if [[ $- == *i* ]]; then
   # open recent files of vim
   _fzf-open-vim-file () {
     local file
-    file=$(grep '^>' ~/.viminfo | cut -c3- |
+    file=$(grep "^>" ~/.viminfo | cut -c3- |
     while read -r line; do
       [[ -f "${line/\~/$HOME}" ]] && echo "$line"
     done |
@@ -229,13 +228,13 @@ if [[ $- == *i* ]]; then
     fi
   }
 
-  # open session matched by query, create a new one if there isn't a match
+  # open session matched by query, create a new one if there is no match
   _fzf-open-vim-session () {
     local session
-    session=$(cd ~/.vim/sessions && find . | cut -b3- | sed -e '1d' -e 's/\.vim$//' | fzf --exit-0)
+    session=$(cd ~/.vim/sessions && find . | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --exit-0)
     zle redisplay
     if [[ -n $session ]]; then
-      cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim | head -1 | cut -d' ' -f2-)/#\~/$HOME} || return
+      cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim | head -1 | cut -d" " -f2-)/#\~/$HOME} || return
       BUFFER="vim '+OpenSession $session'"
       zle accept-line
     fi
@@ -248,8 +247,8 @@ if [[ $- == *i* ]]; then
     selected=( $(fc -l 1 |
       FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m" fzf) )
     local ret=$?
-    if [ -n "$selected" ]; then
-      num=$selected[1]
+    if [ -n "${selected[@]}" ]; then
+      num="${selected[1]}"
       if [ -n "$num" ]; then
         zle vi-fetch-history -n "$num"
       fi
@@ -265,11 +264,11 @@ if [[ $- == *i* ]]; then
   zle -N _fzf-open-vim-session
   zle -N _fzf-history
 
-  bindkey '\eo' _fzf-file
-  bindkey '^O' _fzf-directory
-  bindkey '\ev' _fzf-open-vim-file
-  bindkey '\es' _fzf-open-vim-session
-  bindkey '^R' _fzf-history
+  bindkey "\eo" _fzf-file
+  bindkey "^O" _fzf-directory
+  bindkey "\ev" _fzf-open-vim-file
+  bindkey "\es" _fzf-open-vim-session
+  bindkey "^R" _fzf-history
 fi
 
 # }}}
@@ -313,34 +312,34 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   # zsh syntax highlighting
   export ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
   export ZSH_HIGHLIGHT_STYLES=(
-  'unknown-token'            'fg=red,bold'
-  'reserved-word'            'fg=yellow'
-  'builtin'                  'fg=green,bold'
-  'function'                 'fg=white,bold'
-  'command'                  'fg=green'
-  'alias'                    'fg=green'
-  'suffix-alias'             'fg=green,underline'
-  'hashed-command'           'fg=green'
-  'precommand'               'fg=magenta'
-  'path'                     'fg=cyan'
-  'commandseparator'         'fg=white,bold'
-  'globbing'                 'fg=blue'
-  'single-hyphen-option'     'fg=yellow'
-  'double-hyphen-option'     'fg=yellow'
-  'single-quoted-argument'   'fg=yellow,bold'
-  'dollar-quoted-argument'   'fg=yellow,bold'
-  'double-quoted-argument'   'fg=yellow'
-  'back-quoted-argument'     'fg=blue'
-  'assign'                   'fg=magenta,bold'
-  'redirection'              'fg=white,bold'
-  'comment'                  'fg=black,bold'
-  'default'                  'none'
+  "unknown-token"            "fg=red,bold"
+  "reserved-word"            "fg=yellow"
+  "builtin"                  "fg=green,bold"
+  "function"                 "fg=white,bold"
+  "command"                  "fg=green"
+  "alias"                    "fg=green"
+  "suffix-alias"             "fg=green,underline"
+  "hashed-command"           "fg=green"
+  "precommand"               "fg=magenta"
+  "path"                     "fg=cyan"
+  "commandseparator"         "fg=white,bold"
+  "globbing"                 "fg=blue"
+  "single-hyphen-option"     "fg=yellow"
+  "double-hyphen-option"     "fg=yellow"
+  "single-quoted-argument"   "fg=yellow,bold"
+  "dollar-quoted-argument"   "fg=yellow,bold"
+  "double-quoted-argument"   "fg=yellow"
+  "back-quoted-argument"     "fg=blue"
+  "assign"                   "fg=magenta,bold"
+  "redirection"              "fg=white,bold"
+  "comment"                  "fg=black,bold"
+  "default"                  "none"
   )
 
   # zsh auto suggestions
-  export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
+  export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
-  'backward-delete-char' 'complete-menu' 'expand-or-complete'
+  "backward-delete-char" "complete-menu" "expand-or-complete"
   )
 fi
 
@@ -357,15 +356,15 @@ setopt PIPE_FAIL              # Piped command fails for precedents.
 setopt BRACE_CCL              # Allow brace character class list expansion.
 setopt COMBINING_CHARS        # Combine zero-length punctuation characters (accents) with the base character.
 setopt RC_QUOTES              # Allow 'Henry''s Garage' instead of 'Henry'\''s Garage'.
-unsetopt MAIL_WARNING         # Don't print a warning message if a mail file has been accessed.
+unsetopt MAIL_WARNING         # Do not print a warning message if a mail file has been accessed.
 
 # Jobs
 setopt LONG_LIST_JOBS         # List jobs in the long format by default.
 setopt AUTO_RESUME            # Attempt to resume existing job before creating a new process.
 setopt NOTIFY                 # Report status of background jobs immediately.
-unsetopt BG_NICE              # Don't run all background jobs at a lower priority.
-unsetopt HUP                  # Don't kill jobs on shell exit.
-unsetopt CHECK_JOBS           # Don't report on jobs when shell exit.
+unsetopt BG_NICE              # Do not run all background jobs at a lower priority.
+unsetopt HUP                  # Do not kill jobs on shell exit.
+unsetopt CHECK_JOBS           # Do not report on jobs when shell exit.
 
 # History
 export HISTFILE=~/.zhistory   # The path to the history file.
@@ -450,90 +449,88 @@ unsetopt FLOW_CONTROL      # Disable start/stop characters in shell editor.
 # Styles
 
 # Use caching to make completion for commands such as dpkg and apt usable.
-zstyle ':completion::complete:*' use-cache on
-zstyle ':completion::complete:*' cache-path "${HOME}/.zcompcache"
+zstyle ":completion::complete:*" use-cache on
+zstyle ":completion::complete:*" cache-path "${HOME}/.zcompcache"
 
 # Case-insensitive (all), partial-word, and then substring completion.
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+zstyle ":completion:*" matcher-list "m:{a-zA-Z}={A-Za-z}" "r:|[._-]=* r:|=*" "l:|=* r:|=*"
 unsetopt CASE_GLOB
 
 # Group matches and describe.
-zstyle ':completion:*:*:*:*:*' menu select
-zstyle ':completion:*:matches' group 'yes'
-zstyle ':completion:*:options' description 'yes'
-zstyle ':completion:*:options' auto-description '%d'
-zstyle ':completion:*:corrections' format ' %F{green}-- %d (errors: %e) --%f'
-zstyle ':completion:*:descriptions' format ' %F{yellow}-- %d --%f'
-zstyle ':completion:*:messages' format ' %F{purple} -- %d --%f'
-zstyle ':completion:*:warnings' format ' %F{red}-- no matches found --%f'
-zstyle ':completion:*:default' list-prompt '%S%M matches%s'
-zstyle ':completion:*' format ' %F{yellow}-- %d --%f'
-zstyle ':completion:*' group-name ''
-zstyle ':completion:*' verbose yes
+zstyle ":completion:*:*:*:*:*" menu select
+zstyle ":completion:*:matches" group "yes"
+zstyle ":completion:*:options" description "yes"
+zstyle ":completion:*:options" auto-description '%d'
+zstyle ":completion:*:corrections" format ' %F{green}-- %d (errors: %e) --%f'
+zstyle ":completion:*:descriptions" format ' %F{yellow}-- %d --%f'
+zstyle ":completion:*:messages" format ' %F{purple} -- %d --%f'
+zstyle ":completion:*:warnings" format ' %F{red}-- no matches found --%f'
+zstyle ":completion:*:default" list-prompt '%S%M matches%s'
+zstyle ":completion:*" format ' %F{yellow}-- %d --%f'
+zstyle ":completion:*" group-name ''
+zstyle ":completion:*" verbose yes
 
 # Fuzzy match mistyped completions.
-zstyle ':completion:*' completer _complete _match _approximate
-zstyle ':completion:*:match:*' original only
-zstyle ':completion:*:approximate:*' max-errors 1 numeric
+zstyle ":completion:*" completer _complete _match _approximate
+zstyle ":completion:*:match:*" original only
+zstyle ":completion:*:approximate:*" max-errors 1 numeric
 
 # Increase the number of errors based on the length of the typed word.
-zstyle -e ':completion:*:approximate:*' max-errors 'reply=($((($#PREFIX+$#SUFFIX)/3))numeric)'
+zstyle -e ":completion:*:approximate:*" max-errors "reply=(\$(((\$#PREFIX+\$#SUFFIX)/3))numeric)"
 
-# Don't complete unavailable commands.
-zstyle ':completion:*:functions' ignored-patterns '(_*|pre(cmd|exec))'
+# Don"t complete unavailable commands.
+zstyle ":completion:*:functions" ignored-patterns "(_*|pre(cmd|exec))"
 
 # Array completion element sorting.
-zstyle ':completion:*:*:-subscript-:*' tag-order indexes parameters
+zstyle ":completion:*:*:-subscript-:*" tag-order indexes parameters
 
 # Directories
-zstyle ':completion:*:default' list-colors "${(s.:.)LS_COLORS}"
-zstyle ':completion:*:*:cd:*' tag-order local-directories directory-stack path-directories
-zstyle ':completion:*:*:cd:*:directory-stack' menu yes select
-zstyle ':completion:*:-tilde-:*' group-order 'named-directories' 'path-directories' 'users' 'expand'
-zstyle ':completion:*' squeeze-slashes true
+zstyle ":completion:*:default" list-colors "${(s.:.)LS_COLORS}"
+zstyle ":completion:*:*:cd:*" tag-order local-directories directory-stack path-directories
+zstyle ":completion:*:*:cd:*:directory-stack" menu yes select
+zstyle ":completion:*:-tilde-:*" group-order "named-directories" "path-directories" "users" "expand"
+zstyle ":completion:*" squeeze-slashes true
 
 # History
-zstyle ':completion:*:history-words' stop yes
-zstyle ':completion:*:history-words' remove-all-dups yes
-zstyle ':completion:*:history-words' list false
-zstyle ':completion:*:history-words' menu yes
+zstyle ":completion:*:history-words" stop yes
+zstyle ":completion:*:history-words" remove-all-dups yes
+zstyle ":completion:*:history-words" list false
+zstyle ":completion:*:history-words" menu yes
 
-# Don't complete uninteresting users...
-zstyle ':completion:*:*:*:users' ignored-patterns \
+# Do not complete uninteresting users...
+zstyle ":completion:*:*:*:users" ignored-patterns \
   adm amanda apache avahi beaglidx bin cacti canna clamav daemon \
   dbus distcache dovecot fax ftp games gdm gkrellmd gopher \
   hacluster haldaemon halt hsqldb ident junkbust ldap lp mail \
   mailman mailnull mldonkey mysql nagios \
   named netdump news nfsnobody nobody nscd ntp nut nx openvpn \
   operator pcap postfix postgres privoxy pulse pvm quagga radvd \
-  rpc rpcuser rpm shutdown squid sshd sync uucp vcsa xfs '_*'
+  rpc rpcuser rpm shutdown squid sshd sync uucp vcsa xfs "_*"
 
 # ... unless we really want to.
-zstyle '*' single-ignored show
+zstyle "*" single-ignored show
 
 # Ignore multiple entries.
-zstyle ':completion:*:(rm|kill|diff):*' ignore-line other
-zstyle ':completion:*:rm:*' file-patterns '*:all-files'
+zstyle ":completion:*:(rm|kill|diff):*" ignore-line other
+zstyle ":completion:*:rm:*" file-patterns "*:all-files"
 
 # Kill
-zstyle ':completion:*:*:*:*:processes' command 'ps -u $LOGNAME -o pid,user,command -w'
-zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#) ([0-9a-z-]#)*=01;36=0=01'
-zstyle ':completion:*:*:kill:*' menu yes select
-zstyle ':completion:*:*:kill:*' force-list always
-zstyle ':completion:*:*:kill:*' insert-ids single
+zstyle ":completion:*:*:*:*:processes" command "ps -u \$LOGNAME -o pid,user,command -w"
+zstyle ":completion:*:*:kill:*:processes" list-colors "=(#b) #([0-9]#) ([0-9a-z-]#)*=01;36=0=01"
+zstyle ":completion:*:*:kill:*" menu yes select
+zstyle ":completion:*:*:kill:*" force-list always
+zstyle ":completion:*:*:kill:*" insert-ids single
 
 # Man
-zstyle ':completion:*:manuals' separate-sections true
-zstyle ':completion:*:manuals.(^1*)' insert-sections true
+zstyle ":completion:*:manuals" separate-sections true
+zstyle ":completion:*:manuals.(^1*)" insert-sections true
 
 # }}}
 
 # Util Functions & Aliases {{{
 
 # ping handles url
-ping () {
-  sed -E -e 's#.*://##' -e 's#/.*$##' <<< "$@" | xargs ping
-}
+ping () { sed -E -e 's#.*://##' -e 's#/.*$##' <<< "$@" | xargs ping; }
 
 # interactive mv
 imv () {
@@ -579,72 +576,78 @@ _git-di(){ _git-diff; }
 _git-de(){ _git-diff; }
 
 # list files, do not record in history
-alias l='ls-color'
-alias la='ls-color -A'
-alias ll='ls -lFh'
+alias l="ls-color"
+alias la="ls-color -A"
+alias ll="ls -lFh"
 
 # change directory, do not record in history
-alias pu='pushd'
-alias po='popd'
-alias dd='d'
+alias pu="pushd"
+alias po="popd"
+alias dd="d"
 take () { mkdir -p "$1" && cd -- "$1" || return; }
 
 # abbreviations
-alias g='git'
-alias t='tmux'
-alias sw='subl -n -w'
-alias hs='history'
-alias tf='tail -f'
-alias rd='rmdir'
-alias rb='ruby'
+alias g="git"
+alias t="tmux"
+alias sw="subl -n -w"
+alias hs="history"
+alias tf="tail -f"
+alias rd="rmdir"
+alias rb="ruby"
 
 # python abbreviations
-alias py='python2'
-alias py2='python2'
-alias py3='python3'
-alias ipy='ipython2'
-alias ipy2='ipython2'
-alias ipy3='ipython3'
-alias pip='pip2'
-alias pip2u='pip2 list --outdated | awk "!/Could not|ignored/ { print \$1}" | xargs pip2 install -U'
-alias pip3u='pip3 list --outdated | awk "!/Could not|ignored/ { print \$1}" | xargs pip3 install -U'
+alias py="python2"
+alias py2="python2"
+alias py3="python3"
+alias ipy="ipython2"
+alias ipy2="ipython2"
+alias ipy3="ipython3"
+alias pip="pip2"
+pip2-update-all () {
+  pip2 list --outdated | awk "!/Could not|ignored/ { print \$1}" | xargs pip2 install -U
+}
+pip3-update-all () {
+  pip3 list --outdated | awk "!/Could not|ignored/ { print \$1}" | xargs pip3 install -U
+}
 
 # http serve current working dir in a given port (8000 in default)
-alias serve='python -m SimpleHTTPServer'
+alias serve="python -m SimpleHTTPServer"
 
 # print abosolute path for given file
 alias realpath="perl -MCwd -e 'print Cwd::abs_path(shift), \"\\n\"'"
 
 # Lists the ten most used commands.
-alias history-stat='history 0 | awk "{print \$2}" | sort | uniq -c | sort -n -r | head'
+history-stat () {
+  history 0 | awk "{print \$2}" | sort | uniq -c | sort -n -r | head
+}
 
 # grep with default options
-alias grep='grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}'
+alias grep="grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}"
 
 # ps-color
-alias pa='ps-color'
-alias pc='HIGH_CPU_MEM_ONLY=1 pa'
+alias pa="ps-color"
+alias pc="HIGH_CPU_MEM_ONLY=1 pa"
 
 # brew commands
-alias bubo='brew update && brew outdated'
-alias bubc='brew upgrade && brew cleanup'
-alias bubu='bubo && bubc'
+alias bubo="brew update && brew outdated"
+alias bubc="brew upgrade && brew cleanup"
+alias bubu="bubo && bubc"
 alias bi="brew install --force-bottle"
 
 # Ravy commands
-alias ravy='cd $RAVY'
-alias ravycustom='cd $RAVY_CUSTOM'
+alias ravy="cd \$RAVY"
+alias ravycustom="cd \$RAVY_CUSTOM"
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
 # Rsync commands
 if hash rsync 2>/dev/null; then
-  _rsync_cmd='rsync --verbose --progress --human-readable --compress --archive --hard-links --one-file-system'
+  _rsync_cmd="rsync --verbose --progress --human-readable --compress --archive --hard-links --one-file-system"
 
-  if grep -q 'xattrs' <(rsync --help 2>&1); then
+  if grep -q "xattrs" <(rsync --help 2>&1); then
     _rsync_cmd="${_rsync_cmd} --acls --xattrs"
   fi
 
-  if [[ "$OSTYPE" == darwin* ]] && grep -q 'file-flags' <(rsync --help 2>&1); then
+  if [[ $OSTYPE =~ ^darwin ]] && grep -q "file-flags" <(rsync --help 2>&1); then
     _rsync_cmd="${_rsync_cmd} --crtimes --fileflags --protect-decmpfs --force-change"
   fi
 
@@ -657,23 +660,20 @@ if hash rsync 2>/dev/null; then
 fi
 
 # Open command through cbmonitor
-open_remote () {
-  clip <<< 'open:['"$1"']'
-}
+open_remote () { clip <<< "open:[$1]"; }
 
 # }}}
 
 # Prompt {{{
 
-# Handlers
 # current millseconds
-_ravy_time_now_ms () {
+_ravy_prompt_now_ms () {
   perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)'
 }
 
 # get human readable representation of time
 _ravy_prompt_pretty_time () {
-  local ms="$1" s repre=''
+  local ms="$1" s repre
   if ((ms < 10000)) then
     repre=${ms}ms
   else
@@ -687,61 +687,88 @@ _ravy_prompt_pretty_time () {
 
 # start timer
 _ravy_prompt_timer_start () {
-  [[ $_RAVY_PROMPT_TIMER ]] || _RAVY_PROMPT_TIMER=$(_ravy_time_now_ms)
+  [[ $_RAVY_PROMPT_TIMER ]] || _RAVY_PROMPT_TIMER=$(_ravy_prompt_now_ms)
 }
 
 # get elapsed time without stopping timer
 _ravy_prompt_timer_get () {
-  [[ $_RAVY_PROMPT_TIMER ]] && _ravy_prompt_pretty_time $[$(_ravy_time_now_ms) - _RAVY_PROMPT_TIMER]
+  [[ $_RAVY_PROMPT_TIMER ]] && _ravy_prompt_pretty_time $(($(_ravy_prompt_now_ms) - _RAVY_PROMPT_TIMER))
 }
 
 # get elapsed time and stop timer
 _ravy_prompt_timer_stop () {
-  if [[ $_RAVY_PROMPT_TIMER ]]; then
-    _RAVY_PROMPT_TIMER_READ=$(_ravy_prompt_timer_get)
-    unset _RAVY_PROMPT_TIMER
-  else
-    unset _RAVY_PROMPT_TIMER_READ
-  fi
+  export _RAVY_PROMPT_TIMER_READ
+  _RAVY_PROMPT_TIMER_READ=$(_ravy_prompt_timer_get)
+  unset _RAVY_PROMPT_TIMER
 }
 
 # generate git prompt to _RAVY_PROMPT_GIT_READ
 _ravy_prompt_git () {
   local ref k git_st st_str st_count
-
   # exit if current directory is not a git repo
-  if ! ref=$(command git symbolic-ref --short HEAD 2>/dev/null || command git rev-parse --short HEAD 2>/dev/null); then
-    unset _RAVY_PROMPT_GIT_READ
-    return
-  fi
-
-  git_st=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
-
-  st_parser=(
-  '^## .*ahead'         "${RAVY_PROMPT_GIT_AHEAD->}"
-  '^## .*behind'        "${RAVY_PROMPT_GIT_BEHIND-<}"
-  '^## .*diverged'      "${RAVY_PROMPT_GIT_DIVERGED-x}"
-  '^A. '                "${RAVY_PROMPT_GIT_ADDED-+}"
-  '^R. '                "${RAVY_PROMPT_GIT_RENAMED-~}"
-  '^C. '                "${RAVY_PROMPT_GIT_COPIED-c}"
-  '^.D |^D. '           "${RAVY_PROMPT_GIT_DELETED--}"
-  '^M. '                "${RAVY_PROMPT_GIT_MODIFIED-.}"
-  '^.M '                "${RAVY_PROMPT_GIT_TREE_CHANGED-*}"
-  '^U. |^.U |^AA |^DD ' "${RAVY_PROMPT_GIT_UNMERGED-^}"
-  '^\?\? '              "${RAVY_PROMPT_GIT_UNTRACKED-#}"
-  )
-
-  for (( k = 1; k <= $#st_parser; k += 2 )) do
-    if st_count=$(grep -E -c "$st_parser[k]" <<< "$git_st" 2>/dev/null); then
-      st_str+="$st_parser[k+1]"
-      if (( st_count > 1 )) then
-        st_str+=$st_count
+  if ref=$(command git symbolic-ref --short HEAD 2>/dev/null || command git rev-parse --short HEAD 2>/dev/null); then
+    git_st=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
+    st_parser=(
+    "^## .*ahead"         "${RAVY_PROMPT_GIT_AHEAD->}"
+    "^## .*behind"        "${RAVY_PROMPT_GIT_BEHIND-<}"
+    "^## .*diverged"      "${RAVY_PROMPT_GIT_DIVERGED-x}"
+    "^A. "                "${RAVY_PROMPT_GIT_ADDED-+}"
+    "^R. "                "${RAVY_PROMPT_GIT_RENAMED-~}"
+    "^C. "                "${RAVY_PROMPT_GIT_COPIED-c}"
+    "^.D |^D. "           "${RAVY_PROMPT_GIT_DELETED--}"
+    "^M. "                "${RAVY_PROMPT_GIT_MODIFIED-.}"
+    "^.M "                "${RAVY_PROMPT_GIT_TREE_CHANGED-*}"
+    "^U. |^.U |^AA |^DD " "${RAVY_PROMPT_GIT_UNMERGED-^}"
+    "^\?\? "              "${RAVY_PROMPT_GIT_UNTRACKED-#}"
+    )
+    for (( k = 1; k <= $#st_parser; k += 2 )) do
+      if st_count=$(grep -E -c "${st_parser[k]}" <<< "$git_st" 2>/dev/null); then
+        st_str+="${st_parser[k+1]}"
+        (( st_count > 1 )) && st_str+=$st_count
       fi
-    fi
-  done
-
-  _RAVY_PROMPT_GIT_READ="${ref}${st_str:+ $st_str}"
+    done
+    export _RAVY_PROMPT_GIT_READ="${ref}"
+    export _RAVY_PROMPT_GIT_ST_READ="${st_str}"
+  else
+    unset _RAVY_PROMPT_GIT_READ _RAVY_PROMPT_GIT_ST_READ
+  fi
 }
+
+setopt PROMPT_SUBST
+
+_la=""
+
+export RAVY_PROMPT_LAST_CMD_STATUS="%F{240}\${_RAVY_PROMPT_TIMER_READ} %(?..%F{160}\$(nice_exit_code))"
+export RAVY_PROMPT_SYMBOL="%K{234}%E%F{234}%K{28}$_la %F{28}%K{234}$_la "
+export RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n }
+export RAVY_PROMPT_PATH="%F{6}%~ "
+export RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ}%F{178}\${_RAVY_PROMPT_GIT_ST_READ:+\$_RAVY_PROMPT_GIT_ST_READ }"
+export RAVY_PROMPT_X="%F{166}\${DISPLAY:+X }"
+export RAVY_PROMPT_JOBS="%F{163}%(1j.&%j. )"
+export RAVY_PROMPT_CUSTOMIZE=""
+export RAVY_PROMPT_CMD="%F{240}%k❯%f "
+export RAVY_RPROMPT2_CMD="%F{240}❮%^"
+
+unset _la _pd
+
+# render status for last command
+_ravy_prompt_last_command_status () {
+  print -P "${RAVY_PROMPT_LAST_CMD_STATUS}"
+}
+
+export PROMPT="\${RAVY_PROMPT_SYMBOL}\${RAVY_PROMPT_USER}\${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_X}\${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}"$'\n'"\${RAVY_PROMPT_CMD}"
+unset RPROMPT
+export PROMPT2="\${RAVY_PROMPT_CMD}"
+export RPROMPT2="\${RAVY_RPROMPT2_CMD}"
+
+add-zsh-hook preexec _ravy_prompt_timer_start
+add-zsh-hook precmd _ravy_prompt_timer_stop
+add-zsh-hook precmd _ravy_prompt_git
+add-zsh-hook precmd _ravy_prompt_last_command_status
+
+# }}}
+
+# Terminal title {{{
 
 # Set the terminal or terminal multiplexer title.
 _ravy_termtitle () {
@@ -800,38 +827,6 @@ _ravy_termtitle_path () {
   _ravy_termtitle "$truncated_path"
 }
 
-# Prompt
-setopt PROMPT_SUBST
-
-local la="" pd=" "
-
-RAVY_PROMPT_LAST_CMD_STATUS=%F{240}\${_RAVY_PROMPT_TIMER_READ:+\$_RAVY_PROMPT_TIMER_READ}"%(?..%F{160}\$(nice_exit_code))"
-RAVY_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}$la\ %F{28}%K{234}$la$pd
-RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n$pd}
-RAVY_PROMPT_PATH=%F{6}%~$pd
-RAVY_PROMPT_GIT=%F{64}\${_RAVY_PROMPT_GIT_READ:+\$_RAVY_PROMPT_GIT_READ$pd}
-RAVY_PROMPT_X=%F{166}\${DISPLAY:+X$pd}
-RAVY_PROMPT_JOBS=%F{163}"%(1j.\&%j.$pd)"
-RAVY_PROMPT_CUSTOMIZE=""
-RAVY_PROMPT_CMD="%F{240}%k❯%f "
-RAVY_RPROMPT2_CMD="%F{240}❮%^"
-
-# render status for last command
-_ravy_prompt_last_command_status () {
-  print -P "${RAVY_PROMPT_LAST_CMD_STATUS}"
-}
-
-PROMPT=\${RAVY_PROMPT_SYMBOL}\${RAVY_PROMPT_USER}\${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_X}\${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}$'\n'\${RAVY_PROMPT_CMD}
-unset RPROMPT
-PROMPT2=\${RAVY_PROMPT_CMD}
-RPROMPT2=\$RAVY_RPROMPT2_CMD
-
-add-zsh-hook preexec _ravy_prompt_timer_start
-add-zsh-hook precmd _ravy_prompt_timer_stop
-add-zsh-hook precmd _ravy_prompt_git
-add-zsh-hook precmd _ravy_prompt_last_command_status
-
-# Terminal title
 if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
   add-zsh-hook preexec _ravy_termtitle_command
   add-zsh-hook precmd _ravy_termtitle_path
@@ -842,21 +837,13 @@ fi
 # Background Singleton Process {{{
 
 # Run given command only if there is not one running.
-singleton-command () {
-  if ! pgrep -f "(^| |/)$*( |\$)" > /dev/null; then
-    exec "$@"
-  fi
-}
+singleton-command () { pgrep -f "(^| |/)$#( |\$)" > /dev/null || exec "$@"; }
 
 # Run singleton-command in background.
-singleton-command-background () {
-  (singleton-command "$@" &) &> /dev/null
-}
+singleton-command-background () { (singleton-command "$@" &) &>/dev/null; }
 
 # clipboard monitor
-if [[ $(uname) == Darwin ]]; then
-  singleton-command-background cbmonitor
-fi
+[[ $OSTYPE =~ ^darwin ]] && singleton-command-background cbmonitor
 
 # }}}
 
