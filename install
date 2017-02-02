@@ -22,22 +22,25 @@ append_content_if_absent ~/.tmux.conf "source -q $RAVY/tmux.conf"
 append_content_if_absent ~/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
 append_content_if_absent ~/.ignore "RAVY_TMP" "$RAVY/ignore"
 
+echo "Installing zplug"
+[ -d ~/.zplug ] || git clone https://github.com/zplug/zplug ~/.zplug
+
 echo "Configuring Vim/NeoVim"
 append_content_if_absent ~/.vimrc "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
 mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.vim/autoload ~/.config
-if [ ! -d ~/.config/nvim ]; then
-  ln -s -f ~/.vim ~/.config/nvim
-fi
+
+[ -d ~/.config/nvim ] || ln -s -f ~/.vim ~/.config/nvim
 ln -s -f ~/.vimrc ~/.config/nvim/init.vim
 
 echo "Configuring mpv"
 mkdir -p ~/.config ~/.config/mpv
 ln -s -f "$RAVY/mpv.conf" ~/.config/mpv/mpv.conf
 
-if [ ! -e ~/.vim/autoload/plug.vim ] || [ -n "$RAVY_UPDATE" ]; then
-  curl -sfLo ~/.vim/autoload/plug.vim \
-    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-fi
+echo "Installing rime custom settings"
+[ -d ~/Library/Rime ] && cp "$RAVY"/rime/* ~/Library/Rime
+
+[ -e ~/.vim/autoload/plug.vim ] || curl -sfLo ~/.vim/autoload/plug.vim \
+  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 echo "Touching custom files"
 mkdir -p "$RAVY/custom" "$RAVY/custom/bin" "$RAVY/custom/zsh-functions"
@@ -45,19 +48,5 @@ touch "$RAVY/custom/zshrc"
 touch "$RAVY/custom/vimrc"
 touch "$RAVY/custom/gitconfig"
 
-echo "Installing Zplug"
-if [ ! -d ~/.zplug ]; then
-  git clone https://github.com/zplug/zplug ~/.zplug
-elif [ -n "$RAVY_UPDATE" ]; then
-  git -C ~/.zplug pull --rebase
-fi
-
 echo "Installing custom settings"
-if command -v "$RAVY/custom/install" >/dev/null; then
-  "$RAVY/custom/install"
-fi
-
-if [ -d ~/Library/Rime ]; then
-  echo "Installing rime custom settings"
-  cp "$RAVY"/rime/* ~/Library/Rime
-fi
+command -v "$RAVY/custom/install" >/dev/null && "$RAVY/custom/install"
