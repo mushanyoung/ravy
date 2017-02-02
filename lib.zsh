@@ -92,7 +92,7 @@ _ravy_termtitle () {
   printf "\e]1;%s\a" "${(V%)formatted}"
 
   # print window title
-  if [[ "$TERM" =~ ^screen ]]; then
+  if [[ $TERM =~ ^screen ]]; then
     printf "\ek%s\e\\" "${(V%)formatted}"
   else
     printf "\e]2;%s\a" "${(V%)formatted}"
@@ -105,7 +105,7 @@ _ravy_termtitle_command () {
   setopt EXTENDED_GLOB
 
   # Get the command name that is under job control.
-  if [[ "${2[(w)1]}" =~ ^(fg|%.*)(\;|)$ ]]; then
+  if [[ "${2[(w)1]}" == (fg|%*)(\;|) ]]; then
     # Get the job name, and, if missing, set it to the default %+.
     local job_name="${${2[(wr)%*(\;|)]}:-%+}"
 
