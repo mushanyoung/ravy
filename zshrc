@@ -1,29 +1,22 @@
+# !/usr/bin/env zsh
 # Modeline & Load {{{
 # vim: set foldlevel=0 foldmethod=marker filetype=zsh:
 
-if [[ "$RAVY_PROFILE" == true ]]; then
-  zmodload zsh/zprof
-fi
-
 # prevent from loading more than once
-if [[ -n $RAVY_LOADED ]]; then
-  return 0
-else
-  RAVY_LOADED=true
-fi
+[[ -n $RAVY_LOADED ]] && return 0 || RAVY_LOADED=true
 
 # load zshenv to make sure paths are set correctly
 source "${0:A:h}/zshenv"
 
-# load lib
-source "${0:A:h}/lib.zsh"
+# Load zprof if profiling enabled.
+[[ "$RAVY_PROFILE" == true ]] && zmodload zsh/zprof
 
-# record time to initialize shell environment
-_ravy_prompt_timer_start
+# Record time to initialize shell environment.
+_RAVY_PROMPT_TIMER=$(perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)')
 
 # }}}
 
-# Zle {{{
+# ZLE & FZF {{{
 
 if [[ $- == *i* ]]; then
 
@@ -75,30 +68,30 @@ if [[ $- == *i* ]]; then
   zle -N forward-word-match
   zle -N backward-word-match
 
-  forward-word-alter () {
+  _forward-word-alter () {
     select-word-style bash
     zle forward-word-match
   }
-  backward-word-alter () {
+  _backward-word-alter () {
     select-word-style bash
     zle backward-word-match
   }
-  backward-kill-word-alter () {
+  _backward-kill-word-alter () {
     select-word-style bash
     zle backward-kill-word-match
   }
-  zle -N forward-word-alter
-  zle -N backward-word-alter
-  zle -N backward-kill-word-alter
-  bindkey '\ef' forward-word-alter
-  bindkey '\eb' backward-word-alter
-  bindkey '\ew' backward-kill-word-alter
+  zle -N _forward-word-alter
+  zle -N _backward-word-alter
+  zle -N _backward-kill-word-alter
+  bindkey '\ef' _forward-word-alter
+  bindkey '\eb' _backward-word-alter
+  bindkey '\ew' _backward-kill-word-alter
   bindkey '^F' forward-word
   bindkey '^B' backward-word
   bindkey '^W' backward-kill-word
 
   # ranger file explorer
-  ranger-cd () {
+  _ranger-cd () {
     tempfile=$(mktemp)
     ranger --choosedir="$tempfile" "${@:-$(pwd)}" < "$TTY"
     if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(pwd)" ]]; then
@@ -108,35 +101,35 @@ if [[ $- == *i* ]]; then
     zle redisplay
     zle -M ""
   }
-  zle -N ranger-cd
-  bindkey '^K' ranger-cd
+  zle -N _ranger-cd
+  bindkey '^K' _ranger-cd
 
   # toggle glob for current command line
-  glob-toggle () {
+  _glob-toggle () {
     [[ -z $BUFFER ]] && zle up-history
-    if [[ $BUFFER == noglob\ * ]]; then
+    if [[ $BUFFER =~ ^noglob ]]; then
       LBUFFER="${LBUFFER#noglob }"
     else
       LBUFFER="noglob $LBUFFER"
     fi
   }
-  zle -N glob-toggle
-  bindkey '\eg' glob-toggle
+  zle -N _glob-toggle
+  bindkey '\eg' _glob-toggle
 
   # toggle sudo for current command line
-  sudo-toggle () {
+  _sudo-toggle () {
     [[ -z $BUFFER ]] && zle up-history
-    if [[ $BUFFER == sudo\ * ]]; then
+    if [[ $BUFFER =~ ^sudo ]]; then
       LBUFFER="${LBUFFER#sudo }"
     else
       LBUFFER="sudo $LBUFFER"
     fi
   }
-  zle -N sudo-toggle
-  bindkey '^S' sudo-toggle
+  zle -N _sudo-toggle
+  bindkey '^S' _sudo-toggle
 
   # fancy-ctrl-z
-  fancy-ctrl-z () {
+  _fancy-ctrl-z () {
     if [[ $#BUFFER -eq 0 ]]; then
       BUFFER="fg"
       zle accept-line
@@ -145,20 +138,20 @@ if [[ $- == *i* ]]; then
       zle clear-screen
     fi
   }
-  zle -N fancy-ctrl-z
-  bindkey '^Z' fancy-ctrl-z
+  zle -N _fancy-ctrl-z
+  bindkey '^Z' _fancy-ctrl-z
 
   # menu select and completion
   bindkey '^I' expand-or-complete
 
   zmodload zsh/complist
   zle -C complete-menu menu-select _generic
-  _complete_menu () {
+  _complete-menu () {
     setopt localoptions alwayslastprompt
     zle complete-menu
   }
-  zle -N _complete_menu
-  bindkey '^J' _complete_menu
+  zle -N _complete-menu
+  bindkey '^J' _complete-menu
   bindkey -M menuselect '^F' forward-word
   bindkey -M menuselect '^B' backward-word
   bindkey -M menuselect '^J' forward-char
@@ -176,7 +169,7 @@ if [[ $- == *i* ]]; then
   # C-D to change to the folder contains the first file
   # C-O to `open` selected files
   # C-E to edit selected files
-  fzf-file-widget () {
+  _fzf-file () {
     local out key files file cmd
     out=$(ag -a --hidden -g '' | fzf -m --exit-0 --expect=ctrl-o,ctrl-e,ctrl-d)
     key=$(head -1 <<< "$out")
@@ -204,7 +197,7 @@ if [[ $- == *i* ]]; then
 
   # C-M / Enter to append the selected directory into buffer
   # C-D to change directory to the selected one
-  fzf-directory-widget() {
+  _fzf-directory() {
     local out key directory
     out=$(find . -type "d" | sed 1d | cut -b3- | fzf +m --exit-0 --expect=ctrl-d)
     key=$(head -1 <<< "$out")
@@ -222,7 +215,7 @@ if [[ $- == *i* ]]; then
   }
 
   # open recent files of vim
-  fzf-open-vim-file-widget () {
+  _fzf-open-vim-file () {
     local file
     file=$(grep '^>' ~/.viminfo | cut -c3- |
     while read -r line; do
@@ -237,7 +230,7 @@ if [[ $- == *i* ]]; then
   }
 
   # open session matched by query, create a new one if there isn't a match
-  fzf-open-vim-session-widget () {
+  _fzf-open-vim-session () {
     local session
     session=$(cd ~/.vim/sessions && find . | cut -b3- | sed -e '1d' -e 's/\.vim$//' | fzf --exit-0)
     zle redisplay
@@ -249,7 +242,7 @@ if [[ $- == *i* ]]; then
   }
 
   # CTRL-R - Paste the selected command from history into the command line
-  fzf-history-widget() {
+  _fzf-history() {
     local selected num
     setopt localoptions noglobsubst pipefail 2> /dev/null
     selected=( $(fc -l 1 |
@@ -266,18 +259,17 @@ if [[ $- == *i* ]]; then
     return $ret
   }
 
-  zle -N fzf-file-widget
-  bindkey '\eo' fzf-file-widget
-  zle -N fzf-directory-widget
-  bindkey '^O' fzf-directory-widget
+  zle -N _fzf-file
+  zle -N _fzf-directory
+  zle -N _fzf-open-vim-file
+  zle -N _fzf-open-vim-session
+  zle -N _fzf-history
 
-  zle -N fzf-open-vim-file-widget
-  bindkey '\ev' fzf-open-vim-file-widget
-  zle -N fzf-open-vim-session-widget
-  bindkey '\es' fzf-open-vim-session-widget
-  zle -N fzf-history-widget
-  bindkey '^R' fzf-history-widget
-
+  bindkey '\eo' _fzf-file
+  bindkey '^O' _fzf-directory
+  bindkey '\ev' _fzf-open-vim-file
+  bindkey '\es' _fzf-open-vim-session
+  bindkey '^R' _fzf-history
 fi
 
 # }}}
@@ -357,10 +349,11 @@ fi
 # Environment {{{
 
 # lang
-LANG=en_US.UTF-8
-LANGUAGE=$LANG
+export LANG=en_US.UTF-8
+export LANGUAGE=$LANG
 
 # General
+setopt PIPE_FAIL              # Piped command fails for precedents.
 setopt BRACE_CCL              # Allow brace character class list expansion.
 setopt COMBINING_CHARS        # Combine zero-length punctuation characters (accents) with the base character.
 setopt RC_QUOTES              # Allow 'Henry''s Garage' instead of 'Henry'\''s Garage'.
@@ -557,7 +550,7 @@ imv () {
 }
 
 # kill processes of current user containing a specific keyword
-kill_keyword () { pgrep "$1" | xargs kill -9; }
+kgrep () { pgrep "$1" | xargs kill -9; }
 
 # wrapper of zsh-bd, cd up 1 level by default
 d () { bd "${@:-1}"; }
@@ -672,30 +665,156 @@ open_remote () {
 
 # Prompt {{{
 
-# Terminal title
-if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
-  add-zsh-hook preexec _ravy_termtitle_command
-  add-zsh-hook precmd _ravy_termtitle_path
-fi
+# Handlers
+# current millseconds
+_ravy_time_now_ms () {
+  perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)'
+}
 
-# Shell prompt
+# get human readable representation of time
+_ravy_prompt_pretty_time () {
+  local ms="$1" s repre=''
+  if ((ms < 10000)) then
+    repre=${ms}ms
+  else
+    s=$((ms / 1000))
+    ((s > 3600)) && repre+=$((s / 3600))h
+    ((s > 60)) && repre+=$((s / 60 % 60))m
+    repre+=$((s % 60))s
+  fi
+  echo $repre
+}
+
+# start timer
+_ravy_prompt_timer_start () {
+  [[ $_RAVY_PROMPT_TIMER ]] || _RAVY_PROMPT_TIMER=$(_ravy_time_now_ms)
+}
+
+# get elapsed time without stopping timer
+_ravy_prompt_timer_get () {
+  [[ $_RAVY_PROMPT_TIMER ]] && _ravy_prompt_pretty_time $[$(_ravy_time_now_ms) - _RAVY_PROMPT_TIMER]
+}
+
+# get elapsed time and stop timer
+_ravy_prompt_timer_stop () {
+  if [[ $_RAVY_PROMPT_TIMER ]]; then
+    _RAVY_PROMPT_TIMER_READ=$(_ravy_prompt_timer_get)
+    unset _RAVY_PROMPT_TIMER
+  else
+    unset _RAVY_PROMPT_TIMER_READ
+  fi
+}
+
+# generate git prompt to _RAVY_PROMPT_GIT_READ
+_ravy_prompt_git () {
+  local ref k git_st st_str st_count
+
+  # exit if current directory is not a git repo
+  if ! ref=$(command git symbolic-ref --short HEAD 2>/dev/null || command git rev-parse --short HEAD 2>/dev/null); then
+    unset _RAVY_PROMPT_GIT_READ
+    return
+  fi
+
+  git_st=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
+
+  st_parser=(
+  '^## .*ahead'         "${RAVY_PROMPT_GIT_AHEAD->}"
+  '^## .*behind'        "${RAVY_PROMPT_GIT_BEHIND-<}"
+  '^## .*diverged'      "${RAVY_PROMPT_GIT_DIVERGED-x}"
+  '^A. '                "${RAVY_PROMPT_GIT_ADDED-+}"
+  '^R. '                "${RAVY_PROMPT_GIT_RENAMED-~}"
+  '^C. '                "${RAVY_PROMPT_GIT_COPIED-c}"
+  '^.D |^D. '           "${RAVY_PROMPT_GIT_DELETED--}"
+  '^M. '                "${RAVY_PROMPT_GIT_MODIFIED-.}"
+  '^.M '                "${RAVY_PROMPT_GIT_TREE_CHANGED-*}"
+  '^U. |^.U |^AA |^DD ' "${RAVY_PROMPT_GIT_UNMERGED-^}"
+  '^\?\? '              "${RAVY_PROMPT_GIT_UNTRACKED-#}"
+  )
+
+  for (( k = 1; k <= $#st_parser; k += 2 )) do
+    if st_count=$(grep -E -c "$st_parser[k]" <<< "$git_st" 2>/dev/null); then
+      st_str+="$st_parser[k+1]"
+      if (( st_count > 1 )) then
+        st_str+=$st_count
+      fi
+    fi
+  done
+
+  _RAVY_PROMPT_GIT_READ="${ref}${st_str:+ $st_str}"
+}
+
+# Set the terminal or terminal multiplexer title.
+_ravy_termtitle () {
+  local formatted
+  zformat -f formatted "%s" "s:$argv"
+
+  # print table title
+  printf "\e]1;%s\a" "${(V%)formatted}"
+
+  # print window title
+  if [[ $TERM =~ ^screen ]]; then
+    printf "\ek%s\e\\" "${(V%)formatted}"
+  else
+    printf "\e]2;%s\a" "${(V%)formatted}"
+  fi
+}
+
+# Set the terminal title with current command.
+_ravy_termtitle_command () {
+  emulate -L zsh
+  setopt EXTENDED_GLOB
+
+  # Get the command name that is under job control.
+  if [[ "${2[(w)1]}" == (fg|%*)(\;|) ]]; then
+    # Get the job name, and, if missing, set it to the default %+.
+    local job_name="${${2[(wr)%*(\;|)]}:-%+}"
+
+    # Make a local copy for use in the subshell.
+    local -A jobtexts_from_parent_shell
+    jobtexts_from_parent_shell=(${(kv)jobtexts})
+
+    jobs "$job_name" 2>/dev/null > >(
+      read -r index discarded
+      # The index is already surrounded by brackets: [0].
+      _ravy_termtitle_command "${(e):-\$jobtexts_from_parent_shell$index}"
+    )
+  else
+    # Set the command name, or in the case of sudo or ssh, the next command.
+    local cmd="${${2[(wr)^(*=*|sudo|ssh|-*)]}:t}"
+    local truncated_cmd="!${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
+    unset MATCH
+
+    _ravy_termtitle "$truncated_cmd"
+  fi
+}
+
+# Set the terminal title with current path.
+_ravy_termtitle_path () {
+  emulate -L zsh
+  setopt EXTENDED_GLOB
+
+  local abbreviated_path="${PWD/#$HOME/~}"
+  local truncated_path="${abbreviated_path/(#m)?(#c16,)/..${MATCH[-14,-1]}}"
+  unset MATCH
+
+  _ravy_termtitle "$truncated_path"
+}
+
+# Prompt
 setopt PROMPT_SUBST
 
-LA=""
-PD=" "
+local la="" pd=" "
 
-RAVY_PROMPT_LAST_CMD_STATUS=%F{240}\${_ravy_prompt_timer_result:+\$_ravy_prompt_timer_result$PD}"%(?..%F{160}\$(nice_exit_code))"
-RAVY_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}${LA}\ %F{28}%K{234}$LA$PD
-RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n$PD}
-RAVY_PROMPT_PATH=%F{6}%~$PD
-RAVY_PROMPT_GIT=%F{64}\${_ravy_prompt_git_result:+\$_ravy_prompt_git_result$PD}
-RAVY_PROMPT_X=%F{166}\${DISPLAY:+X$PD}
-RAVY_PROMPT_JOBS=%F{163}"%(1j.\&%j.$PD)"
+RAVY_PROMPT_LAST_CMD_STATUS=%F{240}\${_RAVY_PROMPT_TIMER_READ:+\$_RAVY_PROMPT_TIMER_READ}"%(?..%F{160}\$(nice_exit_code))"
+RAVY_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}$la\ %F{28}%K{234}$la$pd
+RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n$pd}
+RAVY_PROMPT_PATH=%F{6}%~$pd
+RAVY_PROMPT_GIT=%F{64}\${_RAVY_PROMPT_GIT_READ:+\$_RAVY_PROMPT_GIT_READ$pd}
+RAVY_PROMPT_X=%F{166}\${DISPLAY:+X$pd}
+RAVY_PROMPT_JOBS=%F{163}"%(1j.\&%j.$pd)"
 RAVY_PROMPT_CUSTOMIZE=""
 RAVY_PROMPT_CMD="%F{240}%k❯%f "
 RAVY_RPROMPT2_CMD="%F{240}❮%^"
-
-unset LA PD
 
 # render status for last command
 _ravy_prompt_last_command_status () {
@@ -711,6 +830,12 @@ add-zsh-hook preexec _ravy_prompt_timer_start
 add-zsh-hook precmd _ravy_prompt_timer_stop
 add-zsh-hook precmd _ravy_prompt_git
 add-zsh-hook precmd _ravy_prompt_last_command_status
+
+# Terminal title
+if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
+  add-zsh-hook preexec _ravy_termtitle_command
+  add-zsh-hook precmd _ravy_termtitle_path
+fi
 
 # }}}
 
@@ -740,4 +865,3 @@ fi
 [[ -f $RAVY_CUSTOM/zshrc ]] && source "$RAVY_CUSTOM/zshrc"
 
 # }}}
-
