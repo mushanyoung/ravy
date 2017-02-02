@@ -13,10 +13,10 @@ else
 fi
 
 # load zshenv to make sure paths are set correctly
-source ${0:A:h}/zshenv
+source "${0:A:h}/zshenv"
 
 # load lib
-source ${0:A:h}/lib.zsh
+source "${0:A:h}/lib.zsh"
 
 # record time to initialize shell environment
 _ravy_prompt_timer_start
@@ -27,7 +27,10 @@ _ravy_prompt_timer_start
 
 if [[ $- == *i* ]]; then
 
-  KEYTIMEOUT=1
+  # chars treated as a part of a word
+  export WORDCHARS=$'\'\\/|*?_-.,[]~&;!#$%^(){}<>+:=@'
+
+  export KEYTIMEOUT=1
 
   # use emacs mode for command line
   bindkey -e
@@ -61,9 +64,6 @@ if [[ $- == *i* ]]; then
   zle -N copy-earlier-word
   bindkey '\em' copy-earlier-word
   bindkey '\e.' insert-last-word
-
-  # chars treated as a part of a word
-  WORDCHARS=$'\'\\/|*?_-.,[]~&;!#$%^(){}<>+:=@'
 
   # C-B / C-F to move, C-W to kill by word
   # M-b / M-f to move, M-w to kill by word with bash style
@@ -100,9 +100,9 @@ if [[ $- == *i* ]]; then
   # ranger file explorer
   ranger-cd () {
     tempfile=$(mktemp)
-    ranger --choosedir="$tempfile" "${@:-$(pwd)}" < $TTY
-    if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(echo -n `pwd`)" ]]; then
-      cd -- "$(cat "$tempfile")"
+    ranger --choosedir="$tempfile" "${@:-$(pwd)}" < "$TTY"
+    if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(pwd)" ]]; then
+      cd -- "$(cat "$tempfile")" || return
     fi
     rm -f -- "$tempfile"
     zle redisplay
@@ -186,7 +186,7 @@ if [[ $- == *i* ]]; then
         LBUFFER="${LBUFFER% }${LBUFFER:+ }$files"
       elif [[ $key == 'ctrl-d' ]]; then
         file=$(head -2 <<< "$out" | tail -1)
-        cd ${file:h}
+        cd -- "${file:h}" || return
         zle reset-prompt
         return
       else
@@ -206,14 +206,14 @@ if [[ $- == *i* ]]; then
   # C-D to change directory to the selected one
   fzf-directory-widget() {
     local out key directory
-    out=$(find . -type d | sed 1d | cut -b3- | fzf +m --exit-0 --expect=ctrl-d)
+    out=$(find . -type "d" | sed 1d | cut -b3- | fzf +m --exit-0 --expect=ctrl-d)
     key=$(head -1 <<< "$out")
     directory=$(tail -1 <<< "$out")
     if [[ -n $directory ]]; then
       if [[ -z $key ]]; then
         LBUFFER="${LBUFFER% }${LBUFFER:+ }$directory"
       else
-        cd $directory
+        cd -- "$directory" || return
         zle reset-prompt
         return
       fi
@@ -225,7 +225,7 @@ if [[ $- == *i* ]]; then
   fzf-open-vim-file-widget () {
     local file
     file=$(grep '^>' ~/.viminfo | cut -c3- |
-    while read line; do
+    while read -r line; do
       [[ -f "${line/\~/$HOME}" ]] && echo "$line"
     done |
     fzf -d +m -1 -q "$*")
@@ -238,10 +238,11 @@ if [[ $- == *i* ]]; then
 
   # open session matched by query, create a new one if there isn't a match
   fzf-open-vim-session-widget () {
-    local session=$(ls ~/.vim/sessions | sed 's/\.vim//' | fzf --exit-0)
+    local session
+    session=$(cd ~/.vim/sessions && find . | cut -b3- | sed -e '1d' -e 's/\.vim$//' | fzf --exit-0)
     zle redisplay
     if [[ -n $session ]]; then
-      cd ${$(cat ~/.vim/sessions/$session.vim | grep '^cd' | head -1 | cut -d' ' -f2-)/#\~/$HOME}
+      cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim | head -1 | cut -d' ' -f2-)/#\~/$HOME} || return
       BUFFER="vim '+OpenSession $session'"
       zle accept-line
     fi
@@ -257,7 +258,7 @@ if [[ $- == *i* ]]; then
     if [ -n "$selected" ]; then
       num=$selected[1]
       if [ -n "$num" ]; then
-        zle vi-fetch-history -n $num
+        zle vi-fetch-history -n "$num"
       fi
     fi
     zle redisplay
@@ -285,11 +286,11 @@ fi
 
 ZPLUG_HOME=${ZPLUG_HOME:-~/.zplug}
 
-if [[ -f $ZPLUG_HOME/init.zsh && -z $ZPLUG_LOADED ]]; then
+if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   ZPLUG_LOADED=true
 
   # load zplug
-  source $ZPLUG_HOME/init.zsh
+  source "$ZPLUG_HOME/init.zsh"
 
   # zplug env
   zstyle :zplug:tag depth 1
@@ -309,7 +310,7 @@ if [[ -f $ZPLUG_HOME/init.zsh && -z $ZPLUG_LOADED ]]; then
   # Install plugins if there are plugins that have not been installed
   if ! zplug check --verbose; then
     printf "Install? [y/N]: "
-    if read -q; then
+    if read -r -q; then
       echo; zplug install
     fi
   fi
@@ -318,8 +319,8 @@ if [[ -f $ZPLUG_HOME/init.zsh && -z $ZPLUG_LOADED ]]; then
   zplug load
 
   # zsh syntax highlighting
-  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
-  ZSH_HIGHLIGHT_STYLES=(
+  export ZSH_HIGHLIGHT_HIGHLIGHTERS=(main line root)
+  export ZSH_HIGHLIGHT_STYLES=(
   'unknown-token'            'fg=red,bold'
   'reserved-word'            'fg=yellow'
   'builtin'                  'fg=green,bold'
@@ -345,7 +346,7 @@ if [[ -f $ZPLUG_HOME/init.zsh && -z $ZPLUG_LOADED ]]; then
   )
 
   # zsh auto suggestions
-  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
+  export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=240'
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
   'backward-delete-char' 'complete-menu' 'expand-or-complete'
   )
@@ -374,9 +375,9 @@ unsetopt HUP                  # Don't kill jobs on shell exit.
 unsetopt CHECK_JOBS           # Don't report on jobs when shell exit.
 
 # History
-HISTFILE=~/.zhistory          # The path to the history file.
-HISTSIZE=100000               # The maximum number of events to be kept in a session.
-SAVEHIST=100000               # The maximum number of events to save in the history file.
+export HISTFILE=~/.zhistory   # The path to the history file.
+export HISTSIZE=100000        # The maximum number of events to be kept in a session.
+export SAVEHIST=100000        # The maximum number of events to save in the history file.
 
 setopt BANG_HIST              # Treat the '!' character specially during expansion.
 setopt EXTENDED_HISTORY       # Write the history file in the ':start:elapsed;command' format.
@@ -396,8 +397,8 @@ unsetopt CORRECT_ALL          # Do not auto correct arguments.
 unsetopt CORRECT              # Do not auto correct commands.
 
 # Colors
-CLICOLOR=xterm-256color
-LSCOLORS=
+export CLICOLOR=xterm-256color
+export LSCOLORS=
 
 # enable 256color for xterm if connects to Display
 if [[ -n $DISPLAY && $TERM == "xterm" ]]; then
@@ -405,8 +406,8 @@ if [[ -n $DISPLAY && $TERM == "xterm" ]]; then
 fi
 
 # pager
-PAGER="less"
-LESS="FRSXMi"
+export PAGER="less"
+export LESS="FRSXMi"
 
 # Termcap
 export LESS_TERMCAP_mb=$'\E[01;31m'       # begin blinking
@@ -430,10 +431,10 @@ export GIT_EDITOR=vim
 
 # ls color evaluations
 if hash dircolors &>/dev/null; then
-  eval $(dircolors -b $RAVY/LS_COLORS)
+  eval "$(dircolors -b "$RAVY/LS_COLORS")"
 elif hash gdircolors &>/dev/null; then
   # coreutils from brew
-  eval $(gdircolors -b $RAVY/LS_COLORS)
+  eval "$(gdircolors -b "$RAVY/LS_COLORS")"
 fi
 
 # load zsh modules
@@ -492,7 +493,7 @@ zstyle ':completion:*:functions' ignored-patterns '(_*|pre(cmd|exec))'
 zstyle ':completion:*:*:-subscript-:*' tag-order indexes parameters
 
 # Directories
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*:default' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*:*:cd:*' tag-order local-directories directory-stack path-directories
 zstyle ':completion:*:*:cd:*:directory-stack' menu yes select
 zstyle ':completion:*:-tilde-:*' group-order 'named-directories' 'path-directories' 'users' 'expand'
@@ -536,43 +537,30 @@ zstyle ':completion:*:manuals.(^1*)' insert-sections true
 
 # Util Functions & Aliases {{{
 
-# Change dir to target folder or the parent folder of target file
-cdd () {
-  local file=$1
-  if [[ -e $file ]]; then
-    if [[ -f $file ]]; then
-      cd -- ${file:h}
-    else
-      cd -- $file
-    fi
-  else
-    false
-  fi
-}
-
 # ping handles url
 ping () {
-  command ping $(sed -E -e 's#https?://##' -e 's#/.*$##' <<< $*)
+  sed -E -e 's#.*://##' -e 's#/.*$##' <<< "$@" | xargs ping
 }
 
 # interactive mv
 imv () {
   local src dst
   for src; do
-    [[ -e $src ]] || { print -u2 "$src does not exist"; continue }
-    dst=$src
-    vared dst
-    [[ $src != $dst ]] && mkdir -p $dst:h && mv -n $src $dst
+    if [[ -e $src ]]; then
+      dst=$src
+      vared dst
+      [[ $src != "$dst" ]] && mkdir -p $dst:h && mv -n $src $dst
+    else
+      print -u2 "$src does not exist"
+    fi
   done
 }
 
 # kill processes of current user containing a specific keyword
-kill_keyword () {
-  ps x | grep "$1" | awk '{print $1}' | xargs kill -9
-}
+kill_keyword () { pgrep "$1" | xargs kill -9; }
 
 # wrapper of zsh-bd, cd up 1 level by default
-d () { bd ${*:-1}; }
+d () { bd "${@:-1}"; }
 compctl -V directories -K _bd d
 
 # Codi: launch an interactive repl scratchpad within vim
@@ -590,12 +578,12 @@ codi() {
 }
 
 # git completion function for git aliases
-_git-co(){ _git-checkout }
-_git-l(){ _git-log }
-_git-lg(){ _git-log }
-_git-df(){ _git-diff }
-_git-di(){ _git-diff }
-_git-de(){ _git-diff }
+_git-co(){ _git-checkout; }
+_git-l(){ _git-log; }
+_git-lg(){ _git-log; }
+_git-df(){ _git-diff; }
+_git-di(){ _git-diff; }
+_git-de(){ _git-diff; }
 
 # list files, do not record in history
 alias l='ls-color'
@@ -606,10 +594,7 @@ alias ll='ls -lFh'
 alias pu='pushd'
 alias po='popd'
 alias dd='d'
-take () {
-  mkdir -p $1
-  cd $1
-}
+take () { mkdir -p "$1" && cd -- "$1" || return; }
 
 # abbreviations
 alias g='git'
@@ -628,8 +613,8 @@ alias ipy='ipython2'
 alias ipy2='ipython2'
 alias ipy3='ipython3'
 alias pip='pip2'
-alias pip2u=$'pip2 list --outdated | awk \'!/Could not|ignored/ { print $1}\' | xargs pip2 install -U'
-alias pip3u=$'pip3 list --outdated | awk \'!/Could not|ignored/ { print $1}\' | xargs pip3 install -U'
+alias pip2u='pip2 list --outdated | awk "!/Could not|ignored/ { print \$1}" | xargs pip2 install -U'
+alias pip3u='pip3 list --outdated | awk "!/Could not|ignored/ { print \$1}" | xargs pip3 install -U'
 
 # http serve current working dir in a given port (8000 in default)
 alias serve='python -m SimpleHTTPServer'
@@ -638,7 +623,7 @@ alias serve='python -m SimpleHTTPServer'
 alias realpath="perl -MCwd -e 'print Cwd::abs_path(shift), \"\\n\"'"
 
 # Lists the ten most used commands.
-alias history-stat="history 0 | awk '{print \$2}' | sort | uniq -c | sort -n -r | head"
+alias history-stat='history 0 | awk "{print \$2}" | sort | uniq -c | sort -n -r | head'
 
 # grep with default options
 alias grep='grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}'
@@ -654,9 +639,8 @@ alias bubu='bubo && bubc'
 alias bi="brew install --force-bottle"
 
 # Ravy commands
-alias ravy="cd $RAVY"
-alias ravycustom="cd $RAVY_CUSTOM"
-alias ravyedit="$EDITOR ${0:A}"
+alias ravy='cd $RAVY'
+alias ravycustom='cd $RAVY_CUSTOM'
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
 # Rsync commands
@@ -689,7 +673,7 @@ open_remote () {
 # Prompt {{{
 
 # Terminal title
-if [[ "$TERM" != (dumb|linux|*bsd*|eterm*) ]]; then
+if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
   add-zsh-hook preexec _ravy_termtitle_command
   add-zsh-hook precmd _ravy_termtitle_path
 fi
@@ -697,22 +681,21 @@ fi
 # Shell prompt
 setopt PROMPT_SUBST
 
-function {
+LA=""
+PD=" "
 
-local LA="" PD=" "
-
-RAVY_PROMPT_LAST_CMD_STATUS=%F{240}\${_ravy_prompt_timer_result:+\$_ravy_prompt_timer_result$PD}%(?..%F{160}\$(nice_exit_code))
+RAVY_PROMPT_LAST_CMD_STATUS=%F{240}\${_ravy_prompt_timer_result:+\$_ravy_prompt_timer_result$PD}"%(?..%F{160}\$(nice_exit_code))"
 RAVY_PROMPT_SYMBOL=%K{234}%E%F{234}%K{28}${LA}\ %F{28}%K{234}$LA$PD
 RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n$PD}
 RAVY_PROMPT_PATH=%F{6}%~$PD
 RAVY_PROMPT_GIT=%F{64}\${_ravy_prompt_git_result:+\$_ravy_prompt_git_result$PD}
 RAVY_PROMPT_X=%F{166}\${DISPLAY:+X$PD}
-RAVY_PROMPT_JOBS=%F{163}%(1j.\&%j.$PD)
+RAVY_PROMPT_JOBS=%F{163}"%(1j.\&%j.$PD)"
 RAVY_PROMPT_CUSTOMIZE=""
 RAVY_PROMPT_CMD="%F{240}%k❯%f "
 RAVY_RPROMPT2_CMD="%F{240}❮%^"
 
-}
+unset LA PD
 
 # render status for last command
 _ravy_prompt_last_command_status () {
@@ -722,7 +705,7 @@ _ravy_prompt_last_command_status () {
 PROMPT=\${RAVY_PROMPT_SYMBOL}\${RAVY_PROMPT_USER}\${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_X}\${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}$'\n'\${RAVY_PROMPT_CMD}
 unset RPROMPT
 PROMPT2=\${RAVY_PROMPT_CMD}
-RPROMPT2=\${RAVY_RPROMPT2_CMD}
+RPROMPT2=\$RAVY_RPROMPT2_CMD
 
 add-zsh-hook preexec _ravy_prompt_timer_start
 add-zsh-hook precmd _ravy_prompt_timer_stop
@@ -736,13 +719,13 @@ add-zsh-hook precmd _ravy_prompt_last_command_status
 # Run given command only if there is not one running.
 singleton-command () {
   if ! pgrep -f "(^| |/)$*( |\$)" > /dev/null; then
-    exec $*
+    exec "$@"
   fi
 }
 
 # Run singleton-command in background.
 singleton-command-background () {
-  (singleton-command $* &) &> /dev/null
+  (singleton-command "$@" &) &> /dev/null
 }
 
 # clipboard monitor
@@ -754,7 +737,7 @@ fi
 
 # Custom {{{
 
-[[ -f $RAVY_CUSTOM/zshrc ]] && source $RAVY_CUSTOM/zshrc
+[[ -f $RAVY_CUSTOM/zshrc ]] && source "$RAVY_CUSTOM/zshrc"
 
 # }}}
 

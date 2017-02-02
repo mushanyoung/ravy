@@ -1,3 +1,4 @@
+
 # generate git prompt to _ravy_prompt_git_result
 _ravy_prompt_git () {
   local ref k git_st st_str st_count
@@ -25,8 +26,8 @@ _ravy_prompt_git () {
   )
 
   for (( k = 1; k <= $#st_parser; k += 2 )) do
-    if st_count=$(grep -E -c $st_parser[k] <<<$git_st 2>/dev/null); then
-      st_str+=$st_parser[k+1]
+    if st_count=$(grep -E -c "$st_parser[k]" <<< "$git_st" 2>/dev/null); then
+      st_str+="$st_parser[k+1]"
       if (( st_count > 1 )) then
         st_str+=$st_count
       fi
@@ -49,8 +50,8 @@ _ravy_prompt_pretty_time () {
     repre=${ms}ms
   else
     s=$((ms / 1000))
-    if ((s > 3600)) then repre+=$((s / 3600))h fi
-    if ((s > 60)) then repre+=$((s / 60 % 60))m fi
+    if ((s > 3600)) then repre+=$((s / 3600))h; fi
+    if ((s > 60)) then repre+=$((s / 60 % 60))m; fi
     repre+=$((s % 60))s
   fi
   echo $repre
@@ -66,15 +67,15 @@ _ravy_prompt_timer_start () {
 # get elapsed time without stopping timer
 _ravy_prompt_timer_get () {
   if [[ -n $_ravy_prompt_timer ]]; then
-    local ms=$(($(_ravy_time_now_ms) - $_ravy_prompt_timer))
-    echo $(_ravy_prompt_pretty_time $ms)
+    local ms=$(($(_ravy_time_now_ms) - _ravy_prompt_timer))
+    _ravy_prompt_pretty_time $ms
   fi
 }
 
 # get elapsed time and stop timer
 _ravy_prompt_timer_stop () {
   if [[ -n $_ravy_prompt_timer ]]; then
-    local ms=$(($(_ravy_time_now_ms) - $_ravy_prompt_timer))
+    local ms=$(($(_ravy_time_now_ms) - _ravy_prompt_timer))
     _ravy_prompt_timer_result=$(_ravy_prompt_pretty_time $ms)
     unset _ravy_prompt_timer
   else
@@ -84,18 +85,18 @@ _ravy_prompt_timer_stop () {
 
 # Set the terminal or terminal multiplexer title.
 _ravy_termtitle () {
-  local window_title_format tab_title_format formatted
+  local formatted
   zformat -f formatted "%s" "s:$argv"
 
-  if [[ "$TERM" == screen* ]]; then
-    window_title_format="\ek%s\e\\"
-  else
-    window_title_format="\e]2;%s\a"
-  fi
-  tab_title_format="\e]1;%s\a"
+  # print table title
+  printf "\e]1;%s\a" "${(V%)formatted}"
 
-  printf "$tab_title_format" "${(V%)formatted}"
-  printf "$window_title_format" "${(V%)formatted}"
+  # print window title
+  if [[ "$TERM" =~ ^screen ]]; then
+    printf "\ek%s\e\\" "${(V%)formatted}"
+  else
+    printf "\e]2;%s\a" "${(V%)formatted}"
+  fi
 }
 
 # Set the terminal title with current command.
@@ -104,7 +105,7 @@ _ravy_termtitle_command () {
   setopt EXTENDED_GLOB
 
   # Get the command name that is under job control.
-  if [[ "${2[(w)1]}" == (fg|%*)(\;|) ]]; then
+  if [[ "${2[(w)1]}" =~ ^(fg|%.*)(\;|)$ ]]; then
     # Get the job name, and, if missing, set it to the default %+.
     local job_name="${${2[(wr)%*(\;|)]}:-%+}"
 
@@ -113,9 +114,9 @@ _ravy_termtitle_command () {
     jobtexts_from_parent_shell=(${(kv)jobtexts})
 
     jobs "$job_name" 2>/dev/null > >(
-    read index discarded
-    # The index is already surrounded by brackets: [1].
-    _ravy_termtitle_command "${(e):-\$jobtexts_from_parent_shell$index}"
+      read -r index discarded
+      # The index is already surrounded by brackets: [0].
+      _ravy_termtitle_command "${(e):-\$jobtexts_from_parent_shell$index}"
     )
   else
     # Set the command name, or in the case of sudo or ssh, the next command.

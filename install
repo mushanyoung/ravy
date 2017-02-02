@@ -1,14 +1,14 @@
 #!/usr/bin/env zsh
 
 append_content_if_absent () {
-  local file=$1
-  local text=$2
-  local appending=${3:-$2}
-  if ! grep "$text" $file &>/dev/null; then
-    if [ -f $appending ]; then
-      cat $appending >> $file
+  file="$1"
+  text="$2"
+  appending=${3:-$2}
+  if ! grep "$text" "$file" >/dev/null 2>&1; then
+    if [ -f "$appending" ]; then
+      cat "$appending" >> "$file"
     else
-      echo "$appending" >> $file
+      echo "$appending" >> "$file"
     fi
   fi
 }
@@ -19,45 +19,45 @@ echo 'Linking dotfiles'
 append_content_if_absent ~/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
 append_content_if_absent ~/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
 append_content_if_absent ~/.tmux.conf "source -q $RAVY/tmux.conf"
-append_content_if_absent ~/.gitconfig "path=$RAVY/config" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
-append_content_if_absent ~/.ignore "RAVY_TMP" $RAVY/ignore
+append_content_if_absent ~/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
+append_content_if_absent ~/.ignore "RAVY_TMP" "$RAVY/ignore"
 
 echo 'Configuring Vim/NeoVim'
 append_content_if_absent ~/.vimrc "if filereadable('$RAVY/vimrc') | source $RAVY/vimrc | endif"
 mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.vim/autoload ~/.config
-if [[ ! -d ~/.config/nvim ]]; then
+if [ ! -d ~/.config/nvim ]; then
   ln -s -f ~/.vim ~/.config/nvim
 fi
 ln -s -f ~/.vimrc ~/.config/nvim/init.vim
 
 echo 'Configuring mpv'
 mkdir -p ~/.config ~/.config/mpv
-ln -s -f $RAVY/mpv.conf ~/.config/mpv/mpv.conf
+ln -s -f "$RAVY/mpv.conf" ~/.config/mpv/mpv.conf
 
-if [[ ! -e ~/.vim/autoload/plug.vim || -n $RAVY_UPDATE ]]; then
+if [ ! -e ~/.vim/autoload/plug.vim ] || [ -n "$RAVY_UPDATE" ]; then
   curl -sfLo ~/.vim/autoload/plug.vim \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 fi
 
 echo 'Touching custom files'
-mkdir -p $RAVY/custom $RAVY/custom/bin $RAVY/custom/zsh-functions
-touch $RAVY/custom/zshrc
-touch $RAVY/custom/vimrc
-touch $RAVY/custom/gitconfig
+mkdir -p "$RAVY/custom" "$RAVY/custom/bin" "$RAVY/custom/zsh-functions"
+touch "$RAVY/custom/zshrc"
+touch "$RAVY/custom/vimrc"
+touch "$RAVY/custom/gitconfig"
 
 echo 'Installing Zplug'
-if [[ ! -d ~/.zplug ]]; then
+if [ ! -d ~/.zplug ]; then
   git clone https://github.com/zplug/zplug ~/.zplug
-elif [[ -n $RAVY_UPDATE ]]; then
+elif [ -n "$RAVY_UPDATE" ]; then
   git -C ~/.zplug pull --rebase
 fi
 
 echo 'Installing custom settings'
-if command -v $RAVY/custom/install >/dev/null; then
-  $RAVY/custom/install
+if command -v "$RAVY/custom/install" >/dev/null; then
+  "$RAVY/custom/install"
 fi
 
-if [[ -d ~/Library/Rime ]]; then
+if [ -d ~/Library/Rime ]; then
   echo 'Installing rime custom settings'
-  cp $RAVY/rime/* ~/Library/Rime
+  cp "$RAVY/rime/*" ~/Library/Rime
 fi
