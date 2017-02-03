@@ -2,7 +2,7 @@
 # vim: set foldlevel=0 foldmethod=marker filetype=zsh:
 
 # prevent from loading more than once
-[[ -n $RAVY_LOADED ]] && return 0 || RAVY_LOADED=true
+[[ $RAVY_LOADED ]] && return 0 || RAVY_LOADED=true
 
 # load zshenv to make sure paths are set correctly
 source "${0:A:h}/zshenv"
@@ -170,7 +170,7 @@ if [[ $- == *i* ]]; then
   # C-O to open selected files
   _fzf-files () {
     local key files file clear_cmd="redisplay"
-    sh -c "${FZF_FILES_CMD:-ag -a --hidden -g ''} | fzf -m --exit-0 --expect=ctrl-a,ctrl-d,ctrl-e,ctrl-o ${FZF_FILES_OPT}" | {
+    eval "${FZF_FILES_COMMAND:-ag -a --hidden -g ''}" | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} -m --exit-0 --expect=ctrl-a,ctrl-d,ctrl-e,ctrl-o ${FZF_FILES_OPT}" fzf | {
       read -r key
       files=("${(f)$(cat)}")
     }
@@ -200,19 +200,19 @@ if [[ $- == *i* ]]; then
 
   # directories
   _fzf-directories() {
-    FZF_FILES_CMD="find . -type d | sed 1d | cut -b3-" _fzf-files
+    FZF_FILES_COMMAND="find . -type d | sed 1d | cut -b3-" _fzf-files
   }
 
   # recent files of vim
   _fzf-vim-files () {
-    FZF_FILES_CMD="grep '^>' ~/.viminfo | cut -b3-" _fzf-files
+    FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3-" _fzf-files
   }
 
   # open session matched by query, create a new one if there is no match
   _fzf-vim-sessions () {
     local session
     session=$(cd ~/.vim/sessions && find . | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --exit-0)
-    if [[ -n $session ]]; then
+    if [[ $session ]]; then
       cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim | head -1 | cut -d" " -f2-)/#\~/$HOME} || return
       BUFFER="vim '+OpenSession $session'"
       zle reset-prompt
@@ -227,9 +227,9 @@ if [[ $- == *i* ]]; then
     selected=( $(fc -l 1 |
     FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m" fzf ) )
     local ret=$?
-    if [ -n "$selected" ]; then
+    if [ "$selected" ]; then
       num=$selected[1]
-      if [ -n "$num" ]; then
+      if [ "$num" ]; then
         zle vi-fetch-history -n $num
       fi
     fi
@@ -373,7 +373,7 @@ export CLICOLOR=xterm-256color
 export LSCOLORS=
 
 # enable 256color for xterm if connects to Display
-if [[ -n $DISPLAY && $TERM == "xterm" ]]; then
+if [[ $DISPLAY && $TERM == "xterm" ]]; then
   export TERM=xterm-256color
 fi
 
@@ -569,7 +569,6 @@ take () { mkdir -p "$1" && cd -- "$1" || return; }
 # abbreviations
 alias g="git"
 alias t="tmux"
-alias sw="subl -n -w"
 alias hs="history"
 alias tf="tail -f"
 alias rd="rmdir"
