@@ -164,93 +164,73 @@ if [[ $- == *i* ]]; then
   export FZF_DEFAULT_OPTS="--height=50% --min-height=9 --bind=ctrl-f:page-down,ctrl-b:page-up"
   export FZF_DEFAULT_COMMAND="ag -g ''"
 
-  # C-M / Enter to append selected files into buffer
-  # C-D to change to the folder contains the first file
-  # C-O to `open` selected files
+  # C-A to append selected files into buffer
   # C-E to edit selected files
-  _fzf-file () {
-    local out key files file cmd
-    out=$(ag -a --hidden -g '' | fzf -m --exit-0 --expect=ctrl-o,ctrl-e,ctrl-d)
-    key=$(head -1 <<< "$out")
-    files=$(tail -n +2 <<< "$out" | xargs)
-    if [[ -n $files ]]; then
-      if [[ -z $key ]]; then
+  # C-D to change to the folder contains the first file
+  # C-O to open selected files
+  _fzf-files () {
+    local key files file clear_cmd="redisplay"
+    sh -c "${FZF_FILES_CMD:-ag -a --hidden -g ''} | fzf -m --exit-0 --expect=ctrl-a,ctrl-d,ctrl-e,ctrl-o ${FZF_FILES_OPT}" | {
+      read -r key
+      files=("${(f)$(cat)}")
+    }
+    if [[ $files ]]; then
+      if [[ ! $key =~ [AaDdOoEe]$ ]]; then
+        zle redisplay
+        zle -R "$files" "(A)ppend, (E)dit, change (D)irectory, (O)pen:"
+      fi
+      while [[ ! $key =~ [AaDdOoEe]$ ]]; do read -r -k key; done
+      if [[ $key =~ [Aa]$ ]]; then
         LBUFFER="${LBUFFER% }${LBUFFER:+ }$files"
-      elif [[ $key == "ctrl-d" ]]; then
-        file=$(head -2 <<< "$out" | tail -1)
-        cd -- "${file:h}" || return
-        zle reset-prompt
-        return
-      else
-        if [[ $key == "ctrl-o" ]]; then
-          cmd="open $files"
-        elif [[ $key == "ctrl-e" ]]; then
-          cmd="${EDITOR:-vim} $files"
-        fi
-        BUFFER="$cmd"
+      elif [[ $key =~ [Dd]$ ]]; then
+        file="${files[1]/#\~/$HOME}"
+        while [[ ! -d $file ]]; do file="${file:h}"; done
+        cd -- "$file" || return
+        clear_cmd="reset-prompt"
+      elif [[ $key =~ [Ee]$ ]]; then
+        BUFFER="${EDITOR:-vim} $files"
+        zle accept-line
+      elif [[ $key =~ [Oo]$ ]]; then
+        BUFFER="open $files"
         zle accept-line
       fi
     fi
-    zle redisplay
+    zle "$clear_cmd"
   }
 
-  # C-M / Enter to append the selected directory into buffer
-  # C-D to change directory to the selected one
-  _fzf-directory() {
-    local out key directory
-    out=$(find . -type "d" | sed 1d | cut -b3- | fzf +m --exit-0 --expect=ctrl-d)
-    key=$(head -1 <<< "$out")
-    directory=$(tail -1 <<< "$out")
-    if [[ -n $directory ]]; then
-      if [[ -z $key ]]; then
-        LBUFFER="${LBUFFER% }${LBUFFER:+ }$directory"
-      else
-        cd -- "$directory" || return
-        zle reset-prompt
-        return
-      fi
-    fi
-    zle redisplay
+  # directories
+  _fzf-directories() {
+    FZF_FILES_CMD="find . -type d | sed 1d | cut -b3-" _fzf-files
   }
 
-  # open recent files of vim
-  _fzf-open-vim-file () {
-    local file
-    file=$(grep "^>" ~/.viminfo | cut -c3- |
-    while read -r line; do
-      [[ -f "${line/\~/$HOME}" ]] && echo "$line"
-    done |
-    fzf -d +m -1 -q "$*")
-    zle redisplay
-    if [[ -n $file ]]; then
-      BUFFER="vim $file"
-      zle accept-line
-    fi
+  # recent files of vim
+  _fzf-vim-files () {
+    FZF_FILES_CMD="grep '^>' ~/.viminfo | cut -b3-" _fzf-files
   }
 
   # open session matched by query, create a new one if there is no match
-  _fzf-open-vim-session () {
+  _fzf-vim-sessions () {
     local session
     session=$(cd ~/.vim/sessions && find . | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --exit-0)
-    zle redisplay
     if [[ -n $session ]]; then
       cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim | head -1 | cut -d" " -f2-)/#\~/$HOME} || return
       BUFFER="vim '+OpenSession $session'"
+      zle reset-prompt
       zle accept-line
     fi
   }
 
   # CTRL-R - Paste the selected command from history into the command line
-  _fzf-history() {
+  _fzf-history () {
     local selected num
     setopt localoptions noglobsubst pipefail 2> /dev/null
     selected=( $(fc -l 1 |
-      FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m" fzf) )
+    FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m" fzf ) )
     local ret=$?
-    if [ -n "${selected[@]}" ]; then
-      num="${selected[1]}"
+    if [ -n "$selected" ]; then
+      num=$selected[1]
       if [ -n "$num" ]; then
-        zle vi-fetch-history -n "$num"
+        zle vi-fetch-history -n $num
       fi
     fi
     zle redisplay
@@ -258,16 +238,16 @@ if [[ $- == *i* ]]; then
     return $ret
   }
 
-  zle -N _fzf-file
-  zle -N _fzf-directory
-  zle -N _fzf-open-vim-file
-  zle -N _fzf-open-vim-session
+  zle -N _fzf-files
+  zle -N _fzf-directories
+  zle -N _fzf-vim-files
+  zle -N _fzf-vim-sessions
   zle -N _fzf-history
 
-  bindkey "\eo" _fzf-file
-  bindkey "^O" _fzf-directory
-  bindkey "\ev" _fzf-open-vim-file
-  bindkey "\es" _fzf-open-vim-session
+  bindkey "\eo" _fzf-files
+  bindkey "^O" _fzf-directories
+  bindkey "\ev" _fzf-vim-files
+  bindkey "\es" _fzf-vim-sessions
   bindkey "^R" _fzf-history
 fi
 
