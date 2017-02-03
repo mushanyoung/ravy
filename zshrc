@@ -170,7 +170,8 @@ if [[ $- == *i* ]]; then
   # C-O to open selected files
   ravy::zle::fzf::files () {
     local key files file clear_cmd="redisplay"
-    eval "${FZF_FILES_COMMAND:-ag -a --hidden -g ''}" | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} -m --exit-0 --expect=ctrl-a,ctrl-d,ctrl-e,ctrl-o ${FZF_FILES_OPT}" fzf | {
+    eval "${FZF_FILES_COMMAND:-ag -a --hidden -g ''}" \
+      | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} -m --exit-0 --expect=ctrl-a,ctrl-d,ctrl-e,ctrl-o ${FZF_FILES_OPT}" fzf | {
       read -r key
       files=("${(f)$(cat)}")
     }
@@ -211,9 +212,12 @@ if [[ $- == *i* ]]; then
   # open session matched by query, create a new one if there is no match
   ravy::zle::fzf::vim_sessions () {
     local session
-    session=$(cd ~/.vim/sessions && find . | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --exit-0)
+    session=$(cd ~/.vim/sessions && find . \
+      | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --exit-0)
     if [[ $session ]]; then
-      cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim | head -1 | cut -d" " -f2-)/#\~/$HOME} || return
+      cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim \
+        | head -1 \
+        | cut -d" " -f2-)/#\~/$HOME}
       BUFFER="vim '+OpenSession $session'"
       zle reset-prompt
       zle accept-line
@@ -224,8 +228,8 @@ if [[ $- == *i* ]]; then
   ravy::zle::fzf::history () {
     local selected num
     setopt localoptions noglobsubst pipefail 2> /dev/null
-    selected=( $(fc -l 1 |
-    FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m" fzf ) )
+    selected=( $(fc -l 1 \
+      | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m" fzf ) )
     local ret=$?
     if [ "$selected" ]; then
       num=$selected[1]
@@ -412,10 +416,10 @@ fi
 # Options
 setopt COMPLETE_IN_WORD    # Complete from both ends of a word.
 setopt ALWAYS_TO_END       # Move cursor to the end of a completed word.
-setopt PATH_DIRS           # Perform path search even on command names with slashes.
+setopt PATH_DIRS           # Do path search even on command names with slashes.
 setopt AUTO_MENU           # Show completion menu on a successive tab press.
 setopt AUTO_LIST           # Automatically list choices on ambiguous completion.
-setopt AUTO_PARAM_SLASH    # If completed parameter is a directory, add a trailing slash.
+setopt AUTO_PARAM_SLASH    # Add trailing slash for completed directory.
 unsetopt MENU_COMPLETE     # Do not autoselect the first completion entry.
 unsetopt FLOW_CONTROL      # Disable start/stop characters in shell editor.
 
@@ -531,13 +535,12 @@ compctl -V directories -K _bd d
 codi() {
   local syntax="${1:-python}"
   shift
-  vim -c \
-    "let g:startify_disable_at_vimenter = 1 |\
-    set bt=nofile ls=0 noru nonu nornu |\
-    hi ColorColumn ctermbg=NONE |\
-    hi VertSplit ctermbg=NONE |\
-    hi NonText ctermfg=0 |\
-    Codi $syntax" "$@"
+  vim -c "let g:startify_disable_at_vimenter = 1 |\
+          set bt=nofile ls=0 noru nonu nornu |\
+          hi ColorColumn ctermbg=NONE |\
+          hi VertSplit ctermbg=NONE |\
+          hi NonText ctermfg=0 |\
+          Codi $syntax" "$@"
 }
 
 # git completion function for git aliases
@@ -576,10 +579,10 @@ alias ipy2="ipython2"
 alias ipy3="ipython3"
 alias pip="pip2"
 pip2-update-all () {
-  pip2 list --outdated | awk "!/Could not|ignored/ { print \$1}" | xargs pip2 install -U
+  pip2 list --outdated | awk "!/Could not|ignored/ {print \$1}" | xargs pip2 install -U
 }
 pip3-update-all () {
-  pip3 list --outdated | awk "!/Could not|ignored/ { print \$1}" | xargs pip3 install -U
+  pip3 list --outdated | awk "!/Could not|ignored/ {print \$1}" | xargs pip3 install -U
 }
 
 # http serve current working dir in a given port (8000 in default)
@@ -677,7 +680,8 @@ ravy::prompt::timer_stop () {
 ravy::prompt::git () {
   local ref k git_st st_str st_count
   # exit if current directory is not a git repo
-  if ref=$(command git symbolic-ref --short HEAD 2>/dev/null || command git rev-parse --short HEAD 2>/dev/null); then
+  if ref=$(command git symbolic-ref --short HEAD 2>/dev/null \
+        || command git rev-parse --short HEAD 2>/dev/null); then
     git_st=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
     st_parser=(
     "^## .*ahead"         "${RAVY_PROMPT_GIT_AHEAD->}"
