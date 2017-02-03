@@ -7,8 +7,8 @@
 # load zshenv to make sure paths are set correctly
 source "${0:A:h}/zshenv"
 
-# Load zprof if profiling enabled.
-[[ "$RAVY_PROFILE" == true ]] && zmodload zsh/zprof
+# Load zprof if profiling is enabled.
+[[ $RAVY_PROFILE ]] && zmodload zsh/zprof
 
 # Record time to initialize shell environment.
 _RAVY_PROMPT_TIMER=$(perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)')
