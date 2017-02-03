@@ -150,7 +150,7 @@ if [[ $- == *i* ]]; then
     zle complete-menu
   }
   zle -N _complete-menu
-  bindkey "^J" _complete-menu
+  bindkey "^T" _complete-menu
   bindkey -M menuselect "^F" forward-word
   bindkey -M menuselect "^B" backward-word
   bindkey -M menuselect "^J" forward-char
