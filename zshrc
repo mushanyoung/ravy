@@ -267,7 +267,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   zstyle :zplug:tag depth 1
 
   # plugins
-  zplug 'zplug/zplug', hook-build:'zplug --self-manage'
   zplug "supercrabtree/k"
   zplug "bric3/nice-exit-code"
   zplug "micha/resty"
