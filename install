@@ -1,15 +1,9 @@
 #!/usr/bin/env zsh
 
 append_content_if_absent () {
-  file="$1"
-  text="$2"
-  appending=${3:-$2}
+  local file="$1" text="$2" appending=${3:-$2}
   if ! grep "$text" "$file" >/dev/null 2>&1; then
-    if [ -f "$appending" ]; then
-      cat "$appending" >> "$file"
-    else
-      echo "$appending" >> "$file"
-    fi
+    [ -f "$appending" ] && cat "$appending" >> "$file" || echo "$appending" >> "$file"
   fi
 }
 
@@ -49,4 +43,4 @@ touch "$RAVY/custom/vimrc"
 touch "$RAVY/custom/gitconfig"
 
 echo "Installing custom settings"
-command -v "$RAVY/custom/install" >/dev/null && "$RAVY/custom/install"
+command -v "$RAVY/custom/install" >/dev/null && "$RAVY/custom/install" || true
