@@ -105,24 +105,16 @@ if [[ $- == *i* ]]; then
 
   # toggle glob for current command line
   ravy::zle::glob_toggle () {
-    [[ -z $BUFFER ]] && zle up-history
-    if [[ $BUFFER =~ ^noglob ]]; then
-      LBUFFER="${LBUFFER#noglob }"
-    else
-      LBUFFER="noglob $LBUFFER"
-    fi
+    [[ $BUFFER ]] || zle up-history
+    [[ $BUFFER =~ ^noglob ]] && LBUFFER="${LBUFFER#noglob }" || LBUFFER="noglob $LBUFFER"
   }
   zle -N ravy::zle::glob_toggle
-  bindkey "\eg" ravy::zle::glob_toggle
+  bindkey "^R" ravy::zle::glob_toggle
 
   # toggle sudo for current command line
   ravy::zle::sudo_toggle () {
-    [[ -z $BUFFER ]] && zle up-history
-    if [[ $BUFFER =~ ^sudo ]]; then
-      LBUFFER="${LBUFFER#sudo }"
-    else
-      LBUFFER="sudo $LBUFFER"
-    fi
+    [[ $BUFFER ]] || zle up-history
+    [[ $BUFFER =~ ^sudo ]] && LBUFFER="${LBUFFER#sudo }" || LBUFFER="sudo $LBUFFER"
   }
   zle -N ravy::zle::sudo_toggle
   bindkey "^S" ravy::zle::sudo_toggle
@@ -249,10 +241,10 @@ if [[ $- == *i* ]]; then
   zle -N ravy::zle::fzf::history
 
   bindkey "\eo" ravy::zle::fzf::files
-  bindkey "^O" ravy::zle::fzf::directories
+  bindkey "\et" ravy::zle::fzf::directories
   bindkey "\ev" ravy::zle::fzf::vim_files
   bindkey "\es" ravy::zle::fzf::vim_sessions
-  bindkey "^R" ravy::zle::fzf::history
+  bindkey "\er" ravy::zle::fzf::history
 fi
 
 # }}}
@@ -281,14 +273,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   zplug "zsh-users/zsh-syntax-highlighting", defer:2
   zplug "zsh-users/zsh-history-substring-search", defer:2
   zplug "zsh-users/zsh-autosuggestions", defer:3
-
-  # Install plugins if there are plugins that have not been installed
-  if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -r -q; then
-      echo; zplug install
-    fi
-  fi
 
   # load plugins
   zplug load
@@ -402,12 +386,9 @@ alias vi=vim
 alias v=vim
 
 # ls color evaluations
-if hash dircolors &>/dev/null; then
-  eval "$(dircolors -b "$RAVY_HOME/LS_COLORS")"
-elif hash gdircolors &>/dev/null; then
-  # coreutils from brew
-  eval "$(gdircolors -b "$RAVY_HOME/LS_COLORS")"
-fi
+hash dircolors &>/dev/null && dircolor_cmd=dircolors
+hash gdircolors &>/dev/null && dircolor_cmd=gdircolors
+[[ $dircolor_cmd ]] && eval "$($dircolor_cmd -b "$RAVY_HOME/LS_COLORS")"
 
 # }}}
 
@@ -747,64 +728,65 @@ add-zsh-hook precmd ravy::prompt::command_ret
 
 # Terminal title {{{
 
-# Set the terminal or terminal multiplexer title.
-ravy::termtitle::settitle () {
-  local formatted
-  zformat -f formatted "%s" "s:$argv"
+if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
 
-  # print table title
-  printf "\e]1;%s\a" "${(V%)formatted}"
+  # Set the terminal or terminal multiplexer title.
+  ravy::termtitle::settitle () {
+    local formatted
+    zformat -f formatted "%s" "s:$argv"
 
-  # print window title
-  if [[ $TERM =~ ^screen ]]; then
-    printf "\ek%s\e\\" "${(V%)formatted}"
-  else
-    printf "\e]2;%s\a" "${(V%)formatted}"
-  fi
-}
+    # print table title
+    printf "\e]1;%s\a" "${(V%)formatted}"
 
-# Set the terminal title with current command.
-ravy::termtitle::command () {
-  emulate -L zsh
-  setopt EXTENDED_GLOB
+    # print window title
+    if [[ $TERM =~ ^screen ]]; then
+      printf "\ek%s\e\\" "${(V%)formatted}"
+    else
+      printf "\e]2;%s\a" "${(V%)formatted}"
+    fi
+  }
 
-  # Get the command name that is under job control.
-  if [[ "${2[(w)1]}" == (fg|%*)(\;|) ]]; then
-    # Get the job name, and, if missing, set it to the default %+.
-    local job_name="${${2[(wr)%*(\;|)]}:-%+}"
+  # Set the terminal title with current command.
+  ravy::termtitle::command () {
+    emulate -L zsh
+    setopt EXTENDED_GLOB
 
-    # Make a local copy for use in the subshell.
-    local -A jobtexts_from_parent_shell
-    jobtexts_from_parent_shell=(${(kv)jobtexts})
+    # Get the command name that is under job control.
+    if [[ "${2[(w)1]}" == (fg|%*)(\;|) ]]; then
+      # Get the job name, and, if missing, set it to the default %+.
+      local job_name="${${2[(wr)%*(\;|)]}:-%+}"
 
-    jobs "$job_name" 2>/dev/null > >(
-      read -r index discarded
-      # The index is already surrounded by brackets: [0].
-      ravy::termtitle::command "${(e):-\$jobtexts_from_parent_shell$index}"
-    )
-  else
-    # Set the command name, or in the case of sudo or ssh, the next command.
-    local cmd="${${2[(wr)^(*=*|sudo|ssh|-*)]}:t}"
-    local truncated_cmd="!${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
+      # Make a local copy for use in the subshell.
+      local -A jobtexts_from_parent_shell
+      jobtexts_from_parent_shell=(${(kv)jobtexts})
+
+      jobs "$job_name" 2>/dev/null > >(
+        read -r index discarded
+        # The index is already surrounded by brackets: [0].
+        ravy::termtitle::command "${(e):-\$jobtexts_from_parent_shell$index}"
+      )
+    else
+      # Set the command name, or in the case of sudo or ssh, the next command.
+      local cmd="${${2[(wr)^(*=*|sudo|ssh|-*)]}:t}"
+      local truncated_cmd="!${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
+      unset MATCH
+
+      ravy::termtitle::settitle "$truncated_cmd"
+    fi
+  }
+
+  # Set the terminal title with current path.
+  ravy::termtitle::path () {
+    emulate -L zsh
+    setopt EXTENDED_GLOB
+
+    local abbreviated_path="${PWD/#$HOME/~}"
+    local truncated_path="${abbreviated_path/(#m)?(#c16,)/..${MATCH[-14,-1]}}"
     unset MATCH
 
-    ravy::termtitle::settitle "$truncated_cmd"
-  fi
-}
+    ravy::termtitle::settitle "$truncated_path"
+  }
 
-# Set the terminal title with current path.
-ravy::termtitle::path () {
-  emulate -L zsh
-  setopt EXTENDED_GLOB
-
-  local abbreviated_path="${PWD/#$HOME/~}"
-  local truncated_path="${abbreviated_path/(#m)?(#c16,)/..${MATCH[-14,-1]}}"
-  unset MATCH
-
-  ravy::termtitle::settitle "$truncated_path"
-}
-
-if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
   add-zsh-hook preexec ravy::termtitle::command
   add-zsh-hook precmd ravy::termtitle::path
 fi
