@@ -592,7 +592,7 @@ alias bi="brew install --force-bottle"
 
 # Ravy commands
 alias ravy="cd \$RAVY_HOME"
-alias ravycustom="cd \$RAVY_CUSTOM"
+alias ravycustom="cd \$RAVY_CUSTOM_HOME"
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
 # Rsync commands
@@ -808,6 +808,6 @@ singleton-command-background () { (singleton-command "$@" &) &>/dev/null; }
 
 # Custom {{{
 
-[[ -f $RAVY_CUSTOM/zshrc ]] && source "$RAVY_CUSTOM/zshrc"
+[[ -f $RAVY_CUSTOM_HOME/zshrc ]] && source "$RAVY_CUSTOM_HOME/zshrc"
 
 # }}}
