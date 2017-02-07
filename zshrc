@@ -91,7 +91,7 @@ if [[ $- == *i* ]]; then
 
   # ranger file explorer
   ravy::zle::ranger_cd () {
-    tempfile=$(mktemp)
+    local tempfile=$(mktemp)
     ranger --choosedir="$tempfile" "${@:-$(pwd)}" < "$TTY"
     if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(pwd)" ]]; then
       cd -- "$(cat "$tempfile")" || return
@@ -348,11 +348,11 @@ unsetopt BG_NICE              # Do not run all background jobs at a lower priori
 unsetopt HUP                  # Do not kill jobs on shell exit.
 unsetopt CHECK_JOBS           # Do not report on jobs when shell exit.
 
-# History
-export HISTFILE=~/.zhistory   # The path to the history file.
-export HISTSIZE=100000        # The maximum number of events to be kept in a session.
-export SAVEHIST=100000        # The maximum number of events to save in the history file.
+# Auto correcting
+unsetopt CORRECT_ALL          # Do not auto correct arguments.
+unsetopt CORRECT              # Do not auto correct commands.
 
+# History
 setopt BANG_HIST              # Treat the '!' character specially during expansion.
 setopt EXTENDED_HISTORY       # Write the history file in the ':start:elapsed;command' format.
 setopt INC_APPEND_HISTORY     # Write to the history file immediately, not when the shell exits.
@@ -366,26 +366,27 @@ setopt HIST_IGNORE_SPACE      # Do not record an event starting with a space.
 setopt HIST_VERIFY            # Do not execute immediately upon history expansion.
 setopt HIST_BEEP              # Beep when accessing non-existent history.
 
-# Auto correcting
-unsetopt CORRECT_ALL          # Do not auto correct arguments.
-unsetopt CORRECT              # Do not auto correct commands.
+export HISTFILE=~/.zhistory   # The path to the history file.
+export HISTSIZE=100000        # The maximum number of events to be kept in a session.
+export SAVEHIST=100000        # The maximum number of events to save in the history file.
+
+# term color
+[[ $DISPLAY && $TERM == "xterm" ]] && export TERM=xterm-256color
+export CLICOLOR=xterm-256color
 
 # lang
 export LANG=en_US.UTF-8
 export LANGUAGE=$LANG
 
-# Colors
-export CLICOLOR=xterm-256color
-export LSCOLORS=
+# editor
+export EDITOR=vim
+export GIT_EDITOR=vim
+alias vi=vim
+alias v=vim
 
-# enable 256color for xterm if connects to Display
-[[ $DISPLAY && $TERM == "xterm" ]] && export TERM=xterm-256color
-
-# pager
+# pager: less
 export PAGER="less"
 export LESS="FRSXMi"
-
-# Termcap
 export LESS_TERMCAP_mb=$'\E[01;31m'       # begin blinking
 export LESS_TERMCAP_md=$'\E[01;38;5;74m'  # begin bold
 export LESS_TERMCAP_me=$'\E[0m'           # end mode
@@ -394,19 +395,14 @@ export LESS_TERMCAP_se=$'\E[0m'           # end standout-mode
 export LESS_TERMCAP_us=$'\E[04;38;5;146m' # begin underline
 export LESS_TERMCAP_ue=$'\E[0m'           # end underline
 
-# always add a colon before MANPATH so that man would search by executables
-[[ $MANPATH != :* ]] && MANPATH=":$MANPATH"
-
-# editor
-export EDITOR=vim
-export GIT_EDITOR=vim
-alias vi=vim
-alias v=vim
+# MANPATH should always have a leading colon to search by executables
+[[ ! $MANPATH =~ ^: ]] && MANPATH=":$MANPATH"
 
 # ls color evaluations
 hash dircolors &>/dev/null && dircolor_cmd=dircolors
 hash gdircolors &>/dev/null && dircolor_cmd=gdircolors
 [[ $dircolor_cmd ]] && eval "$($dircolor_cmd -b "$RAVY_HOME/LS_COLORS")"
+unset dircolor_cmd
 
 # }}}
 
@@ -569,7 +565,7 @@ alias tf="tail -f"
 alias rd="rmdir"
 alias rb="ruby"
 
-# python abbreviations
+# python
 alias py="python2"
 alias py2="python2"
 alias py3="python3"
