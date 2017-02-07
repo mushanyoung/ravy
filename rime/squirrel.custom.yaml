@@ -1,6 +1,0 @@
-patch:
-  style/horizontal: true
-  style/color_scheme: native
-  style/inline_preedit: false
-  app_options/com.runningwithcrayons.Alfred-3:
-    ascii_mode: true

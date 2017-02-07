@@ -26,13 +26,6 @@ mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.vim/autoload ~/.config
 [ -d ~/.config/nvim ] || ln -s -f ~/.vim ~/.config/nvim
 ln -s -f ~/.vimrc ~/.config/nvim/init.vim
 
-echo "Configuring mpv"
-mkdir -p ~/.config ~/.config/mpv
-ln -s -f "$RAVY/mpv.conf" ~/.config/mpv/mpv.conf
-
-echo "Installing rime custom settings"
-[ -d ~/Library/Rime ] && cp "$RAVY"/rime/* ~/Library/Rime
-
 [ -e ~/.vim/autoload/plug.vim ] || curl -sfLo ~/.vim/autoload/plug.vim \
   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
