@@ -3,9 +3,6 @@
 if [[ ! -t 1 ]]; then
     piping=true
 fi
-if [[ -n "$HIGH_CPU_MEM_ONLY" ]]; then
-    high_cpu_mem_only=true
-fi
 ps -a -x -o "user,pid,%cpu,%mem,tt,start,time,command" |
 awk '
     NR>1 {
@@ -30,7 +27,7 @@ awk '
 ' |
 column -t -s '	' |
 sed 's/  |/|/g' |
-if [[ $piping != 'true' ]]; then cut -c -$(tput cols); else cat; fi |
+if [[ $piping != 'true' ]]; then cut -c -"$(tput cols)"; else cat; fi |
 awk '
     BEGIN {
         FS="|"
@@ -48,9 +45,8 @@ awk '
         # pid
         $2 = c($2, 26)
 
-        # if HIGH_CPU_MEM_ONLY is set
-        # by default not to print the line
-        PRINTING = '"${high_cpu_mem_only:+0}${high_cpu_mem_only:-1}"'
+        # print the line only when HIGH_CPU_MEM_ONLY is set
+        PRINTING = '"${HIGH_CPU_MEM_ONLY:+0}${HIGH_CPU_MEM_ONLY:-1}"'
 
         # %cpu, %mem
         for (i=3;i<=4;i++) {
