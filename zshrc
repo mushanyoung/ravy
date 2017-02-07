@@ -160,44 +160,58 @@ if [[ $- == *i* ]]; then
   # C-E to edit selected files
   # C-D to change to the folder contains the first file
   # C-O to open selected files
+
   ravy::zle::fzf::files () {
-    local key files file clear_cmd="redisplay"
-    eval "${FZF_FILES_COMMAND:-ag -a --hidden -g ''}" \
-      | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} -m --exit-0 --expect=ctrl-a,ctrl-d,ctrl-e,ctrl-o ${FZF_FILES_OPT}" fzf | {
-      read -r key
-      files=("${(f)$(cat)}")
-    }
-    if [[ $files ]]; then
+    local out key file_list file_str zle_clear_cmd="redisplay"
+    setopt localoptions pipefail
+    out=$(eval "${FZF_FILES_COMMAND:-ag -a -g ''}" 2>/dev/null \
+      | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} -m --reverse --exit-0 --expect=ctrl-a,ctrl-d,ctrl-e,ctrl-o ${FZF_FILES_OPT}" fzf)
+    key=$(head -1 <<< $out)
+    file_list=("${(f)$(tail -n +2 <<< $out)}")
+    if [[ $file_list ]]; then
+      # escape space, unescape break line
+      file_str="${$(echo ${(q)file_list[*]})/\\\~\//~/}"
       if [[ ! $key =~ [AaDdOoEe]$ ]]; then
-        zle redisplay
-        zle -R "$files" "(A)ppend, (E)dit, change (D)irectory, (O)pen:"
+        zle -R "$file_str" "(A)ppend, (E)dit, change (D)irectory, (O)pen, (Esc):"
       fi
-      while [[ ! $key =~ [AaDdOoEe]$ ]]; do read -r -k key; done
+      while [[ ! $key =~ [AaDdOoEe]$ ]]; do read -r -k key; done
       if [[ $key =~ [Aa]$ ]]; then
-        LBUFFER="${LBUFFER% }${LBUFFER:+ }$files"
+        LBUFFER="${LBUFFER% }${LBUFFER:+ }$file_str"
       elif [[ $key =~ [Dd]$ ]]; then
-        file="${files[1]/#\~/$HOME}"
-        while [[ ! -d $file ]]; do file="${file:h}"; done
-        cd -- "$file" || return
-        clear_cmd="reset-prompt"
+        file_str="${file_list[1]/#\~/$HOME}"
+        [[ -d $file_str ]] || file_str="${file_str:h}"
+        cd -- "$file_str" || return
+        zle_clear_cmd="reset-prompt"
       elif [[ $key =~ [Ee]$ ]]; then
-        BUFFER="${EDITOR:-vim} $files"
+        BUFFER="${EDITOR:-vim} -- $file_str"
         zle accept-line
       elif [[ $key =~ [Oo]$ ]]; then
-        BUFFER="open $files"
+        BUFFER="open -- $file_str"
         zle accept-line
       fi
     fi
-    zle "$clear_cmd"
+    zle "$zle_clear_cmd"
+    typeset -f zle-line-init >/dev/null && zle zle-line-init
+    return 0
+  }
+
+  # hidden files
+  ravy::zle::fzf::files::hidden() {
+    FZF_FILES_COMMAND="ag -a --hidden -g ''" ravy::zle::fzf::files
   }
 
   # directories
-  ravy::zle::fzf::directories() {
+  ravy::zle::fzf::files::directories() {
+    FZF_FILES_COMMAND="find . -type d -not -path '*/\.*' | sed 1d | cut -b3-" ravy::zle::fzf::files
+  }
+
+  # hidden directories
+  ravy::zle::fzf::files::directories::hidden() {
     FZF_FILES_COMMAND="find . -type d | sed 1d | cut -b3-" ravy::zle::fzf::files
   }
 
   # recent files of vim
-  ravy::zle::fzf::vim_files () {
+  ravy::zle::fzf::files::vim () {
     FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3-" ravy::zle::fzf::files
   }
 
@@ -205,7 +219,7 @@ if [[ $- == *i* ]]; then
   ravy::zle::fzf::vim_sessions () {
     local session
     session=$(cd ~/.vim/sessions && find . \
-      | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --exit-0)
+      | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --exit-0 --reverse)
     if [[ $session ]]; then
       cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim \
         | head -1 \
@@ -221,7 +235,7 @@ if [[ $- == *i* ]]; then
     local selected num
     setopt localoptions noglobsubst pipefail 2> /dev/null
     selected=( $(fc -l 1 \
-      | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m" fzf ) )
+      | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m --reverse" fzf ) )
     local ret=$?
     if [ "$selected" ]; then
       num=$selected[1]
@@ -235,14 +249,18 @@ if [[ $- == *i* ]]; then
   }
 
   zle -N ravy::zle::fzf::files
-  zle -N ravy::zle::fzf::directories
-  zle -N ravy::zle::fzf::vim_files
+  zle -N ravy::zle::fzf::files::hidden
+  zle -N ravy::zle::fzf::files::directories
+  zle -N ravy::zle::fzf::files::directories::hidden
+  zle -N ravy::zle::fzf::files::vim
   zle -N ravy::zle::fzf::vim_sessions
   zle -N ravy::zle::fzf::history
 
   bindkey "\eo" ravy::zle::fzf::files
-  bindkey "\ed" ravy::zle::fzf::directories
-  bindkey "\ev" ravy::zle::fzf::vim_files
+  bindkey "\eO" ravy::zle::fzf::files::hidden
+  bindkey "\ed" ravy::zle::fzf::files::directories
+  bindkey "\eD" ravy::zle::fzf::files::directories::hidden
+  bindkey "\ev" ravy::zle::fzf::files::vim
   bindkey "\es" ravy::zle::fzf::vim_sessions
   bindkey "\er" ravy::zle::fzf::history
 fi
