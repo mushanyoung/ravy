@@ -794,7 +794,7 @@ fi
 # Background Singleton Process {{{
 
 # Run given command only if there is not one running.
-singleton-command () { pgrep -f "(^| |/)$#( |\$)" > /dev/null || exec "$@"; }
+singleton-command () { pgrep -f "(^| |/)$@( |\$)" > /dev/null || eval "$@"; }
 
 # Run singleton-command in background.
 singleton-command-background () { (singleton-command "$@" &) &>/dev/null; }
