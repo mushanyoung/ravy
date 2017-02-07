@@ -338,13 +338,7 @@ nnoremap \fd :bdelete!<CR>
 " new buffer
 nnoremap \fn :enew<CR>
 
-" \g*: GitGutter
-
-" window move & split
-nnoremap <silent> \h :call RavyWinMove('h')<CR>
-nnoremap <silent> \j :call RavyWinMove('j')<CR>
-nnoremap <silent> \k :call RavyWinMove('k')<CR>
-nnoremap <silent> \l :call RavyWinMove('l')<CR>
+" \h*: GitGutter
 
 " toggle mouse
 nnoremap <silent> \m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"set mouse=a<BAR>echo 'Mouse Enabled.'"<CR>
@@ -372,6 +366,7 @@ nnoremap \w :write<CR>
 
 " forward yanked text to clip
 nnoremap <silent> \y :call system('clip >/dev/tty', @0)<BAR>echo 'Yanked text sent.'<CR>
+vmap \y y\y
 
 " toggle auto zz when scrolling
 nnoremap <silent> \z :let &scrolloff=999-&scrolloff<BAR>:echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
@@ -407,6 +402,12 @@ nnoremap <silent> j :TmuxNavigateDown<CR>
 nnoremap <silent> k :TmuxNavigateUp<CR>
 nnoremap <silent> l :TmuxNavigateRight<CR>
 nnoremap <silent> p :TmuxNavigatePrevious<CR>
+
+" window move & split
+nnoremap <silent> \h :call RavyWinMove('h')<CR>
+nnoremap <silent> \j :call RavyWinMove('j')<CR>
+nnoremap <silent> \k :call RavyWinMove('k')<CR>
+nnoremap <silent> \l :call RavyWinMove('l')<CR>
 nnoremap <silent> c :close<CR>
 
 " key maps pool
@@ -422,7 +423,11 @@ nnoremap y <NOP>
 nnoremap z <NOP>
 nnoremap \b <NOP>
 nnoremap \e <NOP>
+nnoremap \g <NOP>
 nnoremap \i <NOP>
+nnoremap \j <NOP>
+nnoremap \k <NOP>
+nnoremap \l <NOP>
 nnoremap \n <NOP>
 nnoremap \o <NOP>
 nnoremap \p <NOP>
@@ -525,18 +530,18 @@ function! GitGutterDiffBase()
   echo "GitGutter diff base: " . g:gitgutter_diff_base
 endfunction
 
-nmap \gn <PLUG>GitGutterNextHunk
-nmap \gp <PLUG>GitGutterPrevHunk
+nmap \hn <PLUG>GitGutterNextHunk
+nmap \hp <PLUG>GitGutterPrevHunk
 
-nmap \gu <PLUG>GitGutterUndoHunk
-nmap \gs <PLUG>GitGutterStageHunk
-nmap \gv <PLUG>GitGutterPreviewHunk
+nmap \hu <PLUG>GitGutterUndoHunk
+nmap \hs <PLUG>GitGutterStageHunk
+nmap \hv <PLUG>GitGutterPreviewHunk
 
-nnoremap <silent> \gc :call GitGutterDiffBase()<CR>
-nnoremap <silent> \gr :let g:gitgutter_diff_base=''<BAR>silent write<BAR>call GitGutterDiffBase()<CR>
-nnoremap \gb :let g:gitgutter_diff_base=''<LEFT>
+nnoremap <silent> \hc :call GitGutterDiffBase()<CR>
+nnoremap <silent> \hr :let g:gitgutter_diff_base=''<BAR>silent write<BAR>call GitGutterDiffBase()<CR>
+nnoremap \hb :let g:gitgutter_diff_base=''<LEFT>
 for i in range(0, 9)
-  exec 'nmap <silent> \g' . i . ' :let g:gitgutter_diff_base="HEAD~' . i . '"<BAR>silent write<BAR>call GitGutterDiffBase()<CR>'
+  exec 'nmap <silent> \h' . i . ' :let g:gitgutter_diff_base="HEAD~' . i . '"<BAR>silent write<BAR>call GitGutterDiffBase()<CR>'
 endfor
 
 " text objects
