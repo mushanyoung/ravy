@@ -10,7 +10,6 @@ while true {
   let currentChangeCount = pasteBoard.changeCount
   if currentChangeCount != previousChangeCount {
     previousChangeCount = currentChangeCount
-    print(currentChangeCount)
     let process = Process()
     process.launchPath = "/usr/bin/env"
     process.arguments = ["env", "cbscripts"]

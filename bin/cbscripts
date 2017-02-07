@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 
-_getpaste () {
-  pbpaste
-}
+_getpaste () { pbpaste; }
 
 content=$(_getpaste)
 
-pattern='^open:\[([^]]*)\]$'
-action='open \1'
+pattern='^(open):\[([^]]*)\]$'
 
 if [[ $content =~ $pattern ]]; then
-  echo "match: '$BASH_REMATCH'"
-  real_action=$( sed -E "s/$pattern/$action/" <<< $BASH_REMATCH )
-  echo "action: $real_action"
-  $real_action
+  echo "match: '${BASH_REMATCH[0]}'"
+  action="${BASH_REMATCH[1]} ${BASH_REMATCH[2]}"
+  echo "$action"
+  $action
 fi

@@ -2,9 +2,7 @@
 
 while true; do
   eval "$@"
-  if [[ $? == 0 ]]; then
-    break;
-  fi
+  [[ $? == 0 ]] && break
   echo 'Failed, retrying...'
   sleep 2
 done
