@@ -223,9 +223,9 @@ function! RavyDirectories()
   endfunction
 
   return fzf#run({
-        \ 'source': '(echo ./..; find . -type d | sed 1d) | cut -b3-',
+        \ 'source': '(echo ./..; find . -type d -not -path "*/\.*" | sed 1d) | cut -b3-',
         \ 'sink': function('DirectorySink'),
-        \ 'options': '+m --prompt="Directories> "',
+        \ 'options': '+m --prompt="Dir> "',
         \ 'down': '~40%'})
 endfunction
 

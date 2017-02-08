@@ -165,7 +165,7 @@ if [[ $- == *i* ]]; then
     local out key file_list file_str zle_clear_cmd="redisplay"
     setopt localoptions pipefail
     out=$(eval "${FZF_FILES_COMMAND:-ag -a -g ''}" 2>/dev/null \
-      | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} -m --reverse --exit-0 --expect=ctrl-a,ctrl-d,ctrl-e,ctrl-o ${FZF_FILES_OPT}" fzf)
+      | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} -m --reverse --expect=ctrl-a,ctrl-d,ctrl-e,ctrl-o ${FZF_FILES_OPT:---prompt 'File> '}" fzf)
     key=$(head -1 <<< $out)
     file_list=("${(f)$(tail -n +2 <<< $out)}")
     if [[ $file_list ]]; then
@@ -197,29 +197,29 @@ if [[ $- == *i* ]]; then
 
   # hidden files
   ravy::zle::fzf::files::hidden() {
-    FZF_FILES_COMMAND="ag -a --hidden -g ''" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="ag -a --hidden -g ''" FZF_FILES_OPT="--prompt '.File> '" ravy::zle::fzf::files
   }
 
   # directories
   ravy::zle::fzf::files::directories() {
-    FZF_FILES_COMMAND="find . -type d -not -path '*/\.*' | sed 1d | cut -b3-" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="find . -type d -not -path '*/\.*' | sed 1d | cut -b3-" FZF_FILES_OPT="--prompt 'Dir> '" ravy::zle::fzf::files
   }
 
   # hidden directories
   ravy::zle::fzf::files::directories::hidden() {
-    FZF_FILES_COMMAND="find . -type d | sed 1d | cut -b3-" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="find . -type d | sed 1d | cut -b3-" FZF_FILES_OPT="--prompt '.Dir> '" ravy::zle::fzf::files
   }
 
   # recent files of vim
   ravy::zle::fzf::files::vim () {
-    FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3-" ravy::zle::fzf::files
+  FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3-" FZF_FILES_OPT="--prompt 'File(vim)> '" ravy::zle::fzf::files
   }
 
   # open session matched by query, create a new one if there is no match
   ravy::zle::fzf::vim_sessions () {
     local session
     session=$(cd ~/.vim/sessions && find . \
-      | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --exit-0 --reverse)
+      | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --prompt='Session> ' --reverse)
     if [[ $session ]]; then
       cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim \
         | head -1 \
@@ -235,7 +235,7 @@ if [[ $- == *i* ]]; then
     local selected num
     setopt localoptions noglobsubst pipefail 2> /dev/null
     selected=( $(fc -l 1 \
-      | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r $FZF_CTRL_R_OPTS --query=${(q)LBUFFER} +m --reverse" fzf ) )
+      | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS +s --tac -n2..,.. --tiebreak=index --toggle-sort=ctrl-r --prompt='Hist> ' --query=${(q)LBUFFER} +m --reverse" fzf ) )
     local ret=$?
     if [ "$selected" ]; then
       num=$selected[1]
