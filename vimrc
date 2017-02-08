@@ -395,20 +395,19 @@ nnoremap <silent> v :History<CR>
 nnoremap <silent> ; :History:<CR>
 nnoremap <silent> / :History/<CR>
 
-" tmux navigator
+" tmux navigator, window move & split
 let g:tmux_navigator_no_mappings = 1
 nnoremap <silent> h :TmuxNavigateLeft<CR>
 nnoremap <silent> j :TmuxNavigateDown<CR>
 nnoremap <silent> k :TmuxNavigateUp<CR>
 nnoremap <silent> l :TmuxNavigateRight<CR>
 nnoremap <silent> p :TmuxNavigatePrevious<CR>
-
-" window move & split
-nnoremap <silent> \h :call RavyWinMove('h')<CR>
-nnoremap <silent> \j :call RavyWinMove('j')<CR>
-nnoremap <silent> \k :call RavyWinMove('k')<CR>
-nnoremap <silent> \l :call RavyWinMove('l')<CR>
+nnoremap <silent> H :call RavyWinMove('h')<CR>
+nnoremap <silent> J :call RavyWinMove('j')<CR>
+nnoremap <silent> K :call RavyWinMove('k')<CR>
+nnoremap <silent> L :call RavyWinMove('l')<CR>
 nnoremap <silent> c :close<CR>
+nnoremap <silent> C :close<CR>
 
 " key maps pool
 nnoremap e <NOP>
