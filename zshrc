@@ -227,6 +227,8 @@ if [[ $- == *i* ]]; then
       BUFFER="vim '+OpenSession $session'"
       zle reset-prompt
       zle accept-line
+    else
+      zle redisplay
     fi
   }
 
