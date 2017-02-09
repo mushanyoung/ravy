@@ -4,14 +4,14 @@
 
 [[ $OSTYPE =~ ^darwin ]] || exit 1
 
-/usr/bin/ruby -x "$0"                               |
+/usr/bin/env ruby -x "$0"                               |
   fzf --ansi --multi --no-hscroll --tiebreak=begin  |
   awk 'BEGIN { FS = "\t" } { print $2 }'            |
   xargs open
 
 exit $?
 
-#!ruby
+#!/usr/bin/env ruby
 # encoding: utf-8
 
 require 'json'
