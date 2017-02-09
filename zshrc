@@ -524,9 +524,6 @@ imv () {
   done
 }
 
-# kill processes of current user containing a specific keyword
-kgrep () { pgrep -f "$1" | xargs kill -9; }
-
 # wrapper of zsh-bd, cd up 1 level by default
 d () { bd "${@:-1}"; }
 compctl -V directories -K _bd d
