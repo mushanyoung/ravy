@@ -196,6 +196,29 @@ augroup END
 
 " Functions {{
 
+" Get visual selection text
+function! GetVisualSelection()
+  let [lnum1, col1] = getpos("'<")[1:2]
+  let [lnum2, col2] = getpos("'>")[1:2]
+  let lines = getline(lnum1, lnum2)
+  let lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
+  let lines[0] = lines[0][col1 - 1:]
+  return join(lines, "\n")
+endfunction
+
+" send text to [remote] clipboard
+function! RavyClip(text)
+  call system('clip >/dev/tty', a:text)
+endfunction
+
+" open a link remotely
+function! RavyOpenLink(url)
+  let t:url = substitute(a:url, "[\x0d\x0a].*", "", "")
+  let t:url = substitute(t:url, '^\s\+', "", "")
+  let t:url = (t:url =~ '.*://' ? '' : 'http://') . t:url
+  call RavyClip("open\x0d" . t:url)
+endfunction
+
 " Move to a window in the given direction, if can't move, create a new one
 function! RavyWinMove(direction)
   let t:curwin = winnr()
@@ -216,6 +239,7 @@ function! RavyDiffOrig()
   diffthis
 endfunction
 
+" fzf to select a directory to change to
 function! RavyDirectories()
   function! DirectorySink(line)
     exec "cd " . a:line
@@ -340,6 +364,9 @@ nnoremap \fn :enew<CR>
 
 " \h*: GitGutter
 
+nnoremap \l :call RavyOpenLink(@0)<CR>
+vnoremap \l :call RavyOpenLink(GetVisualSelection())<CR>
+
 " toggle mouse
 nnoremap <silent> \m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"set mouse=a<BAR>echo 'Mouse Enabled.'"<CR>
 
@@ -365,8 +392,8 @@ nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent imap<BAR>silent cmap
 nnoremap \w :write<CR>
 
 " forward yanked text to clip
-nnoremap <silent> \y :call system('clip >/dev/tty', @0)<BAR>echo 'Yanked text sent.'<CR>
-vmap \y y\y
+nnoremap <silent> \y :call RavyClip(@0)<BAR>echo 'Text Clipped.'<CR>
+vnoremap <silent> \y :call RavyClip(GetVisualSelection())<CR>
 
 " toggle auto zz when scrolling
 nnoremap <silent> \z :let &scrolloff=999-&scrolloff<BAR>:echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
@@ -426,7 +453,6 @@ nnoremap \g <NOP>
 nnoremap \i <NOP>
 nnoremap \j <NOP>
 nnoremap \k <NOP>
-nnoremap \l <NOP>
 nnoremap \n <NOP>
 nnoremap \o <NOP>
 nnoremap \p <NOP>
