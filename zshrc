@@ -636,7 +636,7 @@ if hash rsync 2>/dev/null; then
 fi
 
 # Open command through cbmonitor
-open_remote () { clip <<< "open:[$1]"; }
+open_remote () { clip <<< $'open\x0d'"$@" > /dev/tty; }
 
 # }}}
 

@@ -1,19 +1,32 @@
 #!/usr/bin/env swift
 import AppKit
 
-let pasteBoard = NSPasteboard.general()
+let pasteboard = NSPasteboard.general()
 
-var previousChangeCount: Int = pasteBoard.changeCount
+var previousChangeCount: Int = pasteboard.changeCount
+var previousCstring: String = ""
 
 while true {
-  Thread.sleep(forTimeInterval: 0.1)
-  let currentChangeCount = pasteBoard.changeCount
-  if currentChangeCount != previousChangeCount {
+  Thread.sleep(forTimeInterval: 0.2)
+  let currentChangeCount = pasteboard.changeCount
+  if (currentChangeCount != previousChangeCount) {
     previousChangeCount = currentChangeCount
-    let process = Process()
-    process.launchPath = "/usr/bin/env"
-    process.arguments = ["env", "cbscripts"]
-    process.launch()
-    process.waitUntilExit()
+    var cstring: String = ""
+    for element in pasteboard.pasteboardItems! {
+      if let str = element.string(forType: "public.utf8-plain-text") {
+        cstring = str
+        break
+      }
+    }
+    if (cstring != "") {
+      if (cstring != previousCstring) {
+        previousCstring = cstring
+        let process = Process()
+        process.launchPath = "/usr/bin/env"
+        process.arguments = ["env", "cbscripts"]
+        process.launch()
+        process.waitUntilExit()
+      }
+    }
   }
 }

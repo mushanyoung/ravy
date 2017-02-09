@@ -4,11 +4,12 @@ _getpaste () { pbpaste; }
 
 content=$(_getpaste)
 
-pattern='^(open):\[([^]]*)\]$'
+pattern=$'^(open)\x0d(.*)$'
 
 if [[ $content =~ $pattern ]]; then
-  echo "match: '${BASH_REMATCH[0]}'"
-  action="${BASH_REMATCH[1]} ${BASH_REMATCH[2]}"
+  op=${BASH_REMATCH[1]}
+  arg=$(head -1 <<< "${BASH_REMATCH[2]}")
+  action="$op \$""'${arg//\'/\'}'"
   echo "$action"
-  $action
+  eval "$action"
 fi
