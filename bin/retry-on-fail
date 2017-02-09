@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
 while true; do
-  eval "$@"
-  [[ $? == 0 ]] && break
+  eval "$@" && break
   echo 'Failed, retrying...'
-  sleep 2
+  sleep "${INTERVAL:-2}"
 done
 

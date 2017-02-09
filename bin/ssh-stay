@@ -7,17 +7,13 @@ ssh_command=${SSH_COMMAND:-ssh}
 execute_command=${EXECUTE_COMMAND:-tmux attach -t tmux || tmux new-session -s tmux}
 reconnect_interval=${RECONNECT_INTERVAL:-10}
 alive_interval=${ALIVE_INTERVAL:-10}
-
-ssh_opts=$*
-
 ssh_default_opts="-t -oCompression=yes -oCheckHostIP=no -oServerAliveInterval=${alive_interval}"
+ssh_opts="$*"
 
-while [ 1 ]; do
-  ${ssh_command} ${ssh_default_opts} ${ssh_opts} ${execute_command:+-- ${execute_command}}
-
-  if [ $? -eq 0 ]; then break; fi
-
+while true; do
+  eval "${ssh_command} ${ssh_default_opts} ${ssh_opts} ${execute_command:+-- ${execute_command}}" \
+    && break
   echo "SSH connection lost, reconnecting in ${reconnect_interval} seconds..."
-  sleep ${reconnect_interval}
+  sleep "${reconnect_interval}"
 done
 
