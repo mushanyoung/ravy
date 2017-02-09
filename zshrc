@@ -589,9 +589,6 @@ pip3-update-all () {
 # http serve current working dir in a given port (8000 in default)
 alias serve="python -m SimpleHTTPServer"
 
-# print abosolute path for given file
-alias realpath="perl -MCwd -e 'print Cwd::abs_path(shift), \"\\n\"'"
-
 # Lists the ten most used commands.
 history-stat () {
   history 0 | awk "{print \$2}" | sort | uniq -c | sort -n -r | head
