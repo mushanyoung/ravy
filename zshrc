@@ -509,8 +509,8 @@ zstyle ":completion:*:manuals.(^1*)" insert-sections true
 
 # Util Functions & Aliases {{{
 
-# ping handles url
-ping () { sed -E -e 's#.*://##' -e 's#/.*$##' <<< "$@" | xargs ping; }
+# zmv
+autoload -Uz zmv
 
 # interactive mv
 imv () {
@@ -525,6 +525,9 @@ imv () {
     fi
   done
 }
+
+# ping handles url
+ping () { sed -E -e 's#.*://##' -e 's#/.*$##' <<< "$@" | xargs ping; }
 
 # wrapper of zsh-bd, cd up 1 level by default
 d () { bd "${@:-1}"; }
@@ -728,7 +731,7 @@ export PROMPT="\${RAVY_PROMPT_SYMBOL}\${RAVY_PROMPT_USER}\${RAVY_PROMPT_PATH}${R
 export PROMPT2="\${RAVY_PROMPT_CMD}"
 unset RPROMPT RPROMPT2
 
-autoload -Uz zmv add-zsh-hook
+autoload -Uz add-zsh-hook
 
 add-zsh-hook preexec ravy::prompt::timer_start
 add-zsh-hook precmd ravy::prompt::timer_stop
