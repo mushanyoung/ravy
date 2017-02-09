@@ -364,8 +364,8 @@ nnoremap \fn :enew<CR>
 
 " \h*: GitGutter
 
-nnoremap \l :call RavyOpenLink(@0)<CR>
-vnoremap \l :call RavyOpenLink(GetVisualSelection())<CR>
+nnoremap <silent> \l :call RavyOpenLink(@0)<BAR>echo 'Link Sent'<CR>
+vnoremap <silent> \l :call RavyOpenLink(GetVisualSelection())<CR>
 
 " toggle mouse
 nnoremap <silent> \m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"set mouse=a<BAR>echo 'Mouse Enabled.'"<CR>
@@ -392,7 +392,7 @@ nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent imap<BAR>silent cmap
 nnoremap \w :write<CR>
 
 " forward yanked text to clip
-nnoremap <silent> \y :call RavyClip(@0)<BAR>echo 'Text Clipped.'<CR>
+nnoremap <silent> \y :call RavyClip(@0)<BAR>echo 'Text Clipped'<CR>
 vnoremap <silent> \y :call RavyClip(GetVisualSelection())<CR>
 
 " toggle auto zz when scrolling
