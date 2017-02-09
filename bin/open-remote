@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-# Open command through cbmonitor
+# Open file or url through clipboard monitor
 command clip <<< $'open\x0d'"$*" > /dev/tty

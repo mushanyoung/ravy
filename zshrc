@@ -811,7 +811,7 @@ singleton-command () { pgrep -f "(^| |/)$@( |\$)" > /dev/null || eval "$@"; }
 singleton-command-background () { (singleton-command "$@" &) &>/dev/null; }
 
 # clipboard monitor
-[[ $OSTYPE =~ ^darwin ]] && singleton-command-background cbmonitor
+[[ $OSTYPE =~ ^darwin ]] && singleton-command-background open-remote-monitor
 
 # }}}
 

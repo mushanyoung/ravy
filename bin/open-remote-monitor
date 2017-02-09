@@ -23,7 +23,7 @@ while true {
         previousCstring = cstring
         let process = Process()
         process.launchPath = "/usr/bin/env"
-        process.arguments = ["env", "cbscripts"]
+        process.arguments = ["open-remote-executor"]
         process.launch()
         process.waitUntilExit()
       }
