@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Open command through cbmonitor
+command clip <<< $'open\x0d'"$*" > /dev/tty

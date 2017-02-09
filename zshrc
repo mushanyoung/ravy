@@ -632,9 +632,6 @@ if hash rsync 2>/dev/null; then
   unset _rsync_cmd
 fi
 
-# Open command through cbmonitor
-open_remote () { clip <<< $'open\x0d'"$@" > /dev/tty; }
-
 # }}}
 
 # Prompt {{{
