@@ -201,12 +201,12 @@ if [[ $- == *i* ]]; then
   }
 
   # directories
-  ravy::zle::fzf::files::directories() {
+  ravy::zle::fzf::files::dirs() {
     FZF_FILES_COMMAND="find . -type d -not -path '*/\.*' | sed 1d | cut -b3-" FZF_FILES_OPT="--prompt 'Dir> '" ravy::zle::fzf::files
   }
 
   # hidden directories
-  ravy::zle::fzf::files::directories::hidden() {
+  ravy::zle::fzf::files::dirs::hidden() {
     FZF_FILES_COMMAND="find . -type d | sed 1d | cut -b3-" FZF_FILES_OPT="--prompt '.Dir> '" ravy::zle::fzf::files
   }
 
@@ -252,16 +252,16 @@ if [[ $- == *i* ]]; then
 
   zle -N ravy::zle::fzf::files
   zle -N ravy::zle::fzf::files::hidden
-  zle -N ravy::zle::fzf::files::directories
-  zle -N ravy::zle::fzf::files::directories::hidden
+  zle -N ravy::zle::fzf::files::dirs
+  zle -N ravy::zle::fzf::files::dirs::hidden
   zle -N ravy::zle::fzf::files::vim
   zle -N ravy::zle::fzf::vim_sessions
   zle -N ravy::zle::fzf::history
 
   bindkey "\eo" ravy::zle::fzf::files
   bindkey "\eO" ravy::zle::fzf::files::hidden
-  bindkey "\ed" ravy::zle::fzf::files::directories
-  bindkey "\eD" ravy::zle::fzf::files::directories::hidden
+  bindkey "\ed" ravy::zle::fzf::files::dirs
+  bindkey "\eD" ravy::zle::fzf::files::dirs::hidden
   bindkey "\ev" ravy::zle::fzf::files::vim
   bindkey "\es" ravy::zle::fzf::vim_sessions
   bindkey "\er" ravy::zle::fzf::history
