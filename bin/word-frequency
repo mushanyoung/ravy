@@ -5,5 +5,5 @@ ruby -F'[^a-zA-Z]+' -ane '
     $F.each { |word| $words[word.downcase] += 1 }
     END     { $words.each { |word, i| printf "%3d %s\n", i, word } }
 ' |
-sort -rn
+sort -n
 
