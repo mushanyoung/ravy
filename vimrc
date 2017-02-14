@@ -90,9 +90,12 @@ set wildignore+=*.swf,*.fla
 set wildignore+=*.mp3,*.mp4,*.avi,*.mkv
 set wildignore+=*.git*,*.hg*,*.svn*
 set wildignore+=*sass-cache*
-set wildignore+=*.DS_Store
 set wildignore+=log/**
 set wildignore+=tmp/**
+set wildignore+=*~,*~orig
+set wildignore+=*.DS_Store
+set wildignore+=.tags,.tags_sorted_by_file,tags
+set wildignore+=node_modules
 
 " }}
 
@@ -357,10 +360,10 @@ nnoremap \fp :pwd<CR>
 nnoremap \f.. :lcd ..<BAR>pwd<CR>
 nnoremap \fh :lcd %:p:h<BAR>pwd<CR>
 nnoremap \fe :lcd<SPACE>
-" close current buffer
-nnoremap \fd :bdelete!<CR>
 " new buffer
 nnoremap \fn :enew<CR>
+" close current buffer
+nnoremap \fd :Bdelete!<CR>
 
 " \h*: GitGutter
 
@@ -455,7 +458,6 @@ nnoremap \j <NOP>
 nnoremap \k <NOP>
 nnoremap \n <NOP>
 nnoremap \o <NOP>
-nnoremap \p <NOP>
 nnoremap \t <NOP>
 nnoremap \x <NOP>
 
@@ -577,6 +579,16 @@ xmap ac <PLUG>GitGutterTextObjectOuterVisual
 
 " }}
 
+" vim-indent-guides {{
+
+let g:indent_guides_auto_colors = 0
+let g:indent_guides_start_level = 2
+autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=grey
+autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=darkgrey
+nnoremap \p :IndentGuidesToggle<CR>
+
+" }}
+
 " vim-peekaboo {{
 
 let g:peekaboo_window = 'vertical leftabove 40new'
@@ -684,6 +696,8 @@ Plug 'junegunn/vim-easy-align'         " ga to align a region of text on a key (
 Plug 'junegunn/vim-peekaboo'           " extends \", @, i:<C-R> to list the contents registers
 Plug 'justinmk/vim-sneak'              " s: motion to match 2 characters
 Plug 'metakirby5/codi.vim'             " Interactive scratchpad
+Plug 'moll/vim-bbye'                   " sane Bdelete
+Plug 'nathanaelkane/vim-indent-guides' " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'  " highlight trailing blanks and provide StripWhitespace function
 Plug 'sbdchd/neoformat'                " Auto format
 Plug 'scrooloose/syntastic'            " check code syntax
