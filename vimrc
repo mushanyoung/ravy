@@ -2,106 +2,43 @@
 " vim: set foldmarker={{,}} foldlevel=0 foldmethod=marker filetype=vim:
 " }}
 
-" General Settings {{
+" Settings {{
 
-" histories and storages
-set backupdir=~/.vim/tmp/,.
-set undodir=~/.vim/tmp//,.
-set directory=~/.vim/tmp//,.
-set nobackup writebackup
-set swapfile
-set undofile undolevels=1000 undoreload=10000
-set history=10000
-
-" session options
+" General
+set backupdir=~/.vim/tmp/,. nobackup writebackup
+set directory=~/.vim/tmp//,. swapfile
+set undodir=~/.vim/tmp//,. undofile undolevels=1000 undoreload=10000
 set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
-
-" max column number to be parsed for syntax
-set synmaxcol=255
-
-" default shell
-set shell=bash
-
-" when switching to a buffer, jump to the window if there is one with it opened
-set switchbuf=useopen
-
-" enable mouse by default
-set mouse=a
-
-" enable vim modeline and its search range
-set modeline modelines=9
-
-" last window always have a status line
-set laststatus=2
-
-" hidden buffer
-set hidden
-
-" does not move the cursor to start of line for some commands
-set nostartofline
-
-" no timeout for mapped key sequence, timeout for key code sequence
-set notimeout timeoutlen=1000 ttimeout ttimeoutlen=100
-
-" allow backspacing over everything in insert mode
-set backspace=indent,eol,start
-
-" no spell check
-set nospell
-
-" auto read when file is changed from outside
-set autoread
-
-" no Byte Order Mark
-set nobomb
-
-" split window: vertical to the right and horizontal to the below
-set splitright splitbelow
-
-" search: smart case, incremental & highlight
+set wildignore+=*.png,*.jpg,*.gif,*.ico,*.mp3,*.mp4,*.avi,*.mkv,*.o,*.obj,*.pyc,*.swf,*.fla,*.git*,*.hg*,*.svn*,*sass-cache*,log/**,tmp/**,*~,*~orig,*.DS_Store,tags,.tags,.tags_sorted_by_file,node_modules
+set encoding=utf-8 termencoding=utf-8 fileencoding=utf-8 fileencodings=utf-8,big5,gbk,euc-jp,euc-kr,iso8859-1,utf-16le,latin1
+set tabstop=8 softtabstop=2 shiftwidth=2 expandtab smarttab
 set ignorecase smartcase hlsearch incsearch
-
-" indent
 set copyindent smartindent nocindent
-filetype plugin indent on
+set modeline modelines=9
+set history=10000
+set shell=bash
+set mouse=a
+set autoread
+set formatoptions=nmMcroqlj
+set ttimeout ttimeoutlen=100   " timeout for key code sequence
+set notimeout                  " no timeout for key map sequence
+set backspace=indent,eol,start " allow backspacing over everything in insert mode
+set splitright splitbelow      " split window: vertical to the right and horizontal to the below
+set hidden                     " hidden buffers
+set nospell                    " no spell check
+set nobomb                     " no Byte Order Mark
+set synmaxcol=255              " max columnlength for syntax parsing
+set switchbuf=useopen          " when switching to a buffer, jump to a window with it opened
+set laststatus=2               " last window always have a status line
+set nostartofline              " does not move the cursor to start of line for some commands
 
-" Show matched brackets/parenthesis, enable extended % matching
-set showmatch
-set matchpairs+=<:>
-runtime macros/matchit.vim
-
-" set terminal title or terminal multiplexer window name
+" UI
+set number numberwidth=4
+set nofoldenable foldmethod=indent foldlevel=0
+set list listchars=tab:›\ ,trail:•,extends:>,precedes:<,nbsp:.
+set showmatch matchpairs+=<:>
+set viewoptions=folds,options,cursor,unix,slash
 set title titlestring=#%t%(\ %a%)%(\ %r%)%(\ %m%)
-if &term =~ "screen*"
-  set t_ts=k t_fs=\
-endif
-
-" encodings
-set encoding=utf-8
-set fileencoding=utf-8
-set termencoding=utf-8
-set fileencodings=utf-8,big5,gbk,euc-jp,euc-kr,iso8859-1,utf-16le,latin1
-scriptencoding utf-8
-
-" ignores output objects / media formats / VCS files
-set wildignore+=*.o,*.obj,*.pyc
-set wildignore+=*.png,*.jpg,*.gif,*.ico
-set wildignore+=*.swf,*.fla
-set wildignore+=*.mp3,*.mp4,*.avi,*.mkv
-set wildignore+=*.git*,*.hg*,*.svn*
-set wildignore+=*sass-cache*
-set wildignore+=log/**
-set wildignore+=tmp/**
-set wildignore+=*~,*~orig
-set wildignore+=*.DS_Store
-set wildignore+=.tags,.tags_sorted_by_file,tags
-set wildignore+=node_modules
-
-" }}
-
-" UI Settings {{
-
-set wrap
 set linebreak
 set background=dark
 set tabpagemax=50
@@ -111,57 +48,21 @@ set showcmd
 set lazyredraw
 set cursorline
 set display=lastline
-
-" auto formatting options
-set formatoptions=nmMcroql
-if v:version > 703 || v:version == 703 && has("patch541")
-  set formatoptions+=j " Delete comment character when joining commented lines
-endif
-
-" line number
-set number numberwidth=4
-
-" visual bell on errors
 set visualbell
-
-" show tab when multi tabs exist
-set showtabline=1
-
-" Tab completion:
-" Show list instead of just completing
-" list matches, then longest common part, then all.
-set wildmenu wildmode=list:longest,full
-
-" Backspace and cursor keys wrap too
-set whichwrap=b,s,h,l,<,>,[,]
-
-" 5 lines away from margins to scroll 1 line
-set scrolloff=5 scrolljump=1
-
-" Prefer whitespace than tab
-set tabstop=8 softtabstop=2 shiftwidth=2 expandtab smarttab
-
-" show hideen characters
-set list listchars=tab:›\ ,trail:•,extends:>,precedes:<,nbsp:.
-
-" Abbreviation of file messages: try <C-G>
-set shortmess+=filmnrxoOtT
-
-" Allow for cursor beyond last character
-set virtualedit=onemore
-
-" Better Unix / Windows compatibility
-set viewoptions=folds,options,cursor,unix,slash
-
-" fold everything based on indent, but disable by default
-set nofoldenable foldmethod=indent foldlevel=0
-
-" highlight over width boundary
 set textwidth=80
-set colorcolumn=+1
+set wildmenu wildmode=list:longest,full " completions: list matches, then longest common part, then all.
+set wrap whichwrap=b,s,h,l,<,>,[,]      " Backspace and cursor keys wrap too
+set showtabline=1                       " show tab when multi tabs exist
+set virtualedit=onemore                 " cursor beyond last character
+set colorcolumn=+1                      " highlight over width boundary
+set scrolloff=4 scrolljump=1            " 4 lines away from margins to scroll 1 line
+set shortmess+=filmnrxoOtT              " Abbreviation of file messages: try <C-G>
 
-" Sign Column should match background
-highlight clear SignColumn
+if &term =~ "screen*" | set t_ts=k t_fs=\ | endif " escape string for window name of screen
+runtime macros/matchit.vim                            " enable extended % matching
+highlight clear SignColumn                            " Sign Column should match background
+scriptencoding utf-8
+filetype plugin indent on
 
 " }}
 
@@ -271,12 +172,6 @@ noremap <RIGHT> <NOP>
 " scroll the view port faster
 nnoremap <C-E> 3<C-E>
 nnoremap <C-Y> 3<C-Y>
-
-" j, k travels visual line and gj, gk travels real line
-nnoremap j gj
-nnoremap k gk
-nnoremap gj j
-nnoremap gk k
 
 " 0 go to first non blank, ^ go to the very beginning
 nnoremap 0 ^
@@ -399,7 +294,7 @@ nnoremap <silent> \y :call RavyClip(@0)<BAR>echo 'Text Clipped'<CR>
 vnoremap <silent> \y :call RavyClip(GetVisualSelection())<CR>
 
 " toggle auto zz when scrolling
-nnoremap <silent> \z :let &scrolloff=999-&scrolloff<BAR>:echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
+nnoremap <silent> \z :let &scrolloff=999-&scrolloff<BAR>echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
 
 " indent / unindent
 nnoremap \<TAB> v>
@@ -409,7 +304,7 @@ vnoremap \<S-TAB> <gv
 
 " insert an empty line without entering insert mode
 nmap \<CR> <PLUG>unimpairedBlankDown
-nmap \\<CR> <PLUG>unimpairedBlankUp<CR>
+nmap \\<CR> <PLUG>unimpairedBlankUp
 
 " FZF
 nnoremap a :Ag<SPACE>
@@ -583,8 +478,13 @@ xmap ac <PLUG>GitGutterTextObjectOuterVisual
 
 let g:indent_guides_auto_colors = 0
 let g:indent_guides_start_level = 2
-autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=grey
-autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=darkgrey
+
+augroup indentguides
+  autocmd!
+  autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=grey
+  autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=darkgrey
+augroup END
+
 nnoremap \p :IndentGuidesToggle<CR>
 
 " }}
@@ -669,25 +569,22 @@ if filereadable($RAVY_CUSTOM_HOME."/vimrc")
   source $RAVY_CUSTOM_HOME/vimrc
 endif
 
-if isdirectory($RAVY_CUSTOM_HOME."/vim")
-  set rtp+=$RAVY_CUSTOM_HOME/vim
-endif
-
 " }}
 
 " Plugins {{
 
-" setup plugins
 call plug#begin('~/.vim/bundle')
 
 Plug 'ConradIrwin/vim-bracketed-paste' " auto paste mode when pasting from terminal
 Plug 'PeterRincker/vim-argumentative'  " argument: [, ], to jump & <, >, to shift & a, i, is text-object
+Plug 'SirVer/ultisnips'                " snippets manager
 Plug 'Valloric/MatchTagAlways'         " always highlight matching markup language tags
 Plug 'airblade/vim-gitgutter'          " git: hunks operation indicator
 Plug 'ap/vim-css-color'                " show css color in code
 Plug 'christoomey/vim-tmux-navigator'  " pane navigate integration with tmux
 Plug 'easymotion/vim-easymotion'       " choose from positions which repeated motions would reach
 Plug 'google/vim-searchindex'          " search: show match index and total match count
+Plug 'honza/vim-snippets'              " snippets
 Plug 'jiangmiao/auto-pairs'            " Insert or delete brackets, parens, quotes in pair
 Plug 'jpo/vim-railscasts-theme'        " decent colorscheme
 Plug 'junegunn/fzf'                    " fzf integration
@@ -719,17 +616,10 @@ if executable('ctags')
   Plug 'majutsushi/tagbar'             " tag explorer
 endif
 
-if v:version >= 704
-  Plug 'SirVer/ultisnips'              " snippets manager
-  Plug 'honza/vim-snippets'            " snippets
-endif
-
 call plug#end()
 
-" default colorscheme
 if !exists('g:colors_name')
   colorscheme railscasts
 endif
 
 " }}
-
