@@ -309,8 +309,8 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   "function"                      "fg=green,underline,bold"
   "suffix-alias"                  "fg=green,underline"
   "precommand"                    "fg=magenta"
-  "path_prefix"                   "fg=cyan"
-  "path"                          "fg=cyan"
+  "path_prefix"                   "fg=23"
+  "path"                          "fg=30"
   "commandseparator"              "fg=blue,bold"
   "redirection"                   "fg=blue,bold"
   "history-expansion"             "fg=black,bold"
@@ -696,7 +696,11 @@ ravy::prompt::git () {
     for (( k = 1; k <= $#st_parser; k += 2 )) do
       if st_count=$(grep -E -c "${st_parser[k]}" <<< "$git_st" 2>/dev/null); then
         st_str+="${st_parser[k+1]}"
-        (( st_count > 1 )) && st_str+=$st_count
+        if (( st_count > 2 )); then
+          st_str+=$st_count
+        elif (( st_count == 2 )); then
+          st_str+="${st_parser[k+1]}"
+        fi
       fi
     done
     export _RAVY_PROMPT_GIT_READ="${ref}"
@@ -713,8 +717,8 @@ _la=""
 RAVY_PROMPT_CMD_RET="%F{240}\${_RAVY_PROMPT_TIMER_READ:+\$_RAVY_PROMPT_TIMER_READ }%(?..%F{160}\$(nice_exit_code))"
 RAVY_PROMPT_SYMBOL="%K{234}%E%F{234}%K{28}$_la %F{28}%K{234}$_la "
 RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{93\}%n }
-RAVY_PROMPT_PATH="%F{6}%~ "
-RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ}%F{178}\${_RAVY_PROMPT_GIT_READ:+\$_RAVY_PROMPT_GIT_ST_READ }"
+RAVY_PROMPT_PATH="%F{30}%~ "
+RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ}%F{172}\${_RAVY_PROMPT_GIT_READ:+\$_RAVY_PROMPT_GIT_ST_READ }"
 RAVY_PROMPT_X="%F{166}\${DISPLAY:+X }"
 RAVY_PROMPT_JOBS="%F{163}%(1j.&%j. )"
 RAVY_PROMPT_CUSTOMIZE=""

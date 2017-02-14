@@ -39,9 +39,9 @@ awk '
         $3 = c($3, 236)
 
         # size
-        if ($4 ~ /^[0-9.]+K/) { color = 19 }
-        else if ($4 ~ /^[0-9.]+[MGTP]/) { color = 21 }
-        else { color = 17 }
+        if ($4 ~ /^[0-9.]+K/) { color = 136 }
+        else if ($4 ~ /^[0-9.]+[MGTP]/) { color = 172 }
+        else { color = 58 }
         $4 = c($4, color)
 
         print
