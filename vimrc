@@ -71,17 +71,11 @@ filetype plugin indent on
 augroup buffer_editing
   autocmd!
 
-  " remove trailing whitespace before writing to buffer
   autocmd BufWritePre * StripWhitespace
 
-  " restore cursor position
-  autocmd BufReadPost *
-        \ if line("'\"") >= 1 && line("'\"") <= line("$") |
-        \   execute "normal! g`\"" |
-        \ endif
-
-  " when editing a git commit message
-  " set the cursor position to the beginning
+  " restore cursor position when read a buffer
+  " set the cursor position to the beginning when editing commit message
+  autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
   autocmd BufReadPost COMMIT_EDITMSG normal gg0
 augroup END
 
