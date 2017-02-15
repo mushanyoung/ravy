@@ -379,8 +379,10 @@ export HISTSIZE=100000        # The maximum number of events to be kept in a ses
 export SAVEHIST=100000        # The maximum number of events to save in the history file.
 
 # term color
-[[ $DISPLAY && $TERM == "xterm" ]] && export TERM=xterm-256color
-export CLICOLOR=xterm-256color
+if [[ $TERM =~ ^xterm ]] && [[ -e /usr/share/terminfo/x/xterm-256color || -e /usr/share/terminfo/78/xterm-256color ]]; then
+  export TERM=xterm-256color
+  export CLICOLOR=xterm-256color
+fi
 
 # lang
 export LANG=en_US.UTF-8
