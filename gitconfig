@@ -77,10 +77,10 @@
   dn = diff --name-only
 
   # edit changed files, ran at the top level of current git repo
-  de = "!gde(){ files=$(git diff --name-only $@) && ${GIT_EDITOR:-vim} -- $files; }; gde"
+  de = "!gde(){ IFS=$'\\n' files=($(git diff --name-only \"$@\")) && ${GIT_EDITOR:-vim} -- \"${files[@]}\"; }; gde"
 
   # print the farest folder containing all changed files
-  dd = "!gdlcs(){ git diff --name-only \"$@\" | sed -e 'N;s/^\\(.*\\).*\\n\\1.*$/\\1\\n\\1/;D'; }; gdlcs"
+  dd = "!gdd(){ git diff --name-only \"$@\" | sed -e 'N;s/^\\(.*\\).*\\n\\1.*$/\\1\\n\\1/;D'; }; gdd"
 
   dfc = !git df --cached
   df1 = !git df HEAD~ HEAD
