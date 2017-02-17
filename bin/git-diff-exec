@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# execute commands against changed files
+
+files="$(git diff --name-only "$@")"
+
+if [[ $files ]]; then
+  OIFS="$IFS"
+  IFS=$'\n'
+  files=($files)
+  IFS="$OIFS"
+  ${DIFF_EXEC_CMD:-vim} "${files[@]}"
+fi
+
