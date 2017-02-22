@@ -2,12 +2,13 @@
 # execute commands against changed files
 
 files="$(git diff --name-only "$@")"
+[[ $files ]] || exit
 
-if [[ $files ]]; then
-  OIFS="$IFS"
-  IFS=$'\n'
-  files=($files)
-  IFS="$OIFS"
-  ${DIFF_EXEC_CMD:-vim} "${files[@]}"
-fi
+dpath="$(sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D' <<< "$files")"
+[[ -d $dpath ]] || dpath=$(dirname "$dpath")
 
+OIFS="$IFS"
+IFS=$'\n'
+files=($files)
+IFS="$OIFS"
+${DIFF_EXEC_CMD:-vim} ${DIFF_EXEC_VIM_LCS_DIR:+"+cd $dpath"} "${files[@]}"

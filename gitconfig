@@ -75,7 +75,7 @@
   di = !cdiff -c auto -s -w 0 --
   ds = diff --stat
   dn = diff --name-only
-  de = !DIFF_EXEC_CMD=vim git diff-exec
+  de = !DIFF_EXEC_CMD=vim DIFF_EXEC_VIM_LCS_DIR=1 git diff-exec
 
   # print the farest folder containing all changed files
   dd = "!gdd(){ git diff --name-only \"$@\" | sed -e 'N;s/^\\(.*\\).*\\n\\1.*$/\\1\\n\\1/;D'; }; gdd"

@@ -241,12 +241,10 @@ nnoremap <silent> \db :diffget 2<BAR>diffupdate<CR>
 nnoremap <silent> \dr :diffget 3<BAR>diffupdate<CR>
 
 " file, buffer, working directory
-" print full path of current buffer
-nnoremap \ff :echo expand('%:p')<CR>
-" print current working directory
-nnoremap \fp :pwd<CR>
+" print current working directory and path of current buffer
+nnoremap \ff :echo getcwd().' > '. expand('%')<CR>
 " change working directory
-nnoremap \f.. :lcd ..<BAR>pwd<CR>
+nnoremap \f. :lcd ..<BAR>pwd<CR>
 nnoremap \fh :lcd %:p:h<BAR>pwd<CR>
 nnoremap \fe :lcd<SPACE>
 " new buffer
