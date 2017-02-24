@@ -568,7 +568,7 @@ _git-de(){ _git-diff; }
 # change directory to the farest folder containing all changed files
 gd () {
   local dpath
-  dpath="$(command git dd "${@:-HEAD~}")"
+  dpath="$(command git dd "${@:-HEAD}")"
   [[ $dpath ]] || return
   dpath="$(command git rev-parse --show-toplevel)/$dpath"
   [[ -d $dpath ]] || dpath=$(dirname "$dpath")
