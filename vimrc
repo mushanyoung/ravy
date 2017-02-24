@@ -304,7 +304,7 @@ vnoremap a y:Ag \V<C-R>"<CR>
 nnoremap <silent> b :Buffers<CR>
 nnoremap d :call RavyDirectories()<CR>
 nnoremap <silent> m :Marks<CR>
-nnoremap <silent> n :Lines<CR>
+nnoremap <silent> e :Lines<CR>
 nnoremap <silent> o :Files<CR>
 nnoremap <silent> q :Snippets<CR>
 nnoremap <silent> t :Filetypes<CR>
@@ -326,8 +326,6 @@ nnoremap <silent> L :call RavyWinMove('l')<CR>
 nnoremap <silent> c :close<CR>
 nnoremap <silent> C :close<CR>
 
-" key maps pool
-nnoremap e <NOP>
 nnoremap f <NOP>
 nnoremap g <NOP>
 nnoremap i <NOP>
@@ -365,13 +363,17 @@ let g:easytags_always_enabled=1
 
 " auto-pairs {{
 
+let g:AutoPairsFlyMode = 1
 let g:AutoPairsShortcutToggle=''
+let g:AutoPairsShortcutFastWrap = 'e'
+let g:AutoPairsShortcutJump = 'n'
+let g:AutoPairsShortcutBackInsert = 'b'
 
 " }}
 
 " neoformat {{
 
-noremap \fm :Neoformat<CR>
+nnoremap \fm :Neoformat<CR>
 
 " Only msg when there is an error.
 let g:neoformat_only_msg_on_error = 1
