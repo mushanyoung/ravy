@@ -404,6 +404,12 @@ let g:neoformat_enabled_java = ['clangformat']
 
 " }}
 
+" syntastic {{
+
+let g:syntastic_always_populate_loc_list = 1
+
+" }}
+
 " vim-airline {{
 
 let g:airline_powerline_fonts=1
