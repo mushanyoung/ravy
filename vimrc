@@ -300,7 +300,6 @@ nmap \\<CR> <PLUG>unimpairedBlankUp
 
 " FZF
 nnoremap a :Ag<SPACE>
-vnoremap a y:Ag \V<C-R>"<CR>
 nnoremap <silent> b :Buffers<CR>
 nnoremap d :call RavyDirectories()<CR>
 nnoremap <silent> m :Marks<CR>
@@ -326,6 +325,7 @@ nnoremap <silent> L :call RavyWinMove('l')<CR>
 nnoremap <silent> c :close<CR>
 nnoremap <silent> C :close<CR>
 
+" key pool
 nnoremap f <NOP>
 nnoremap g <NOP>
 nnoremap i <NOP>
@@ -335,6 +335,7 @@ nnoremap w <NOP>
 nnoremap x <NOP>
 nnoremap y <NOP>
 nnoremap z <NOP>
+nnoremap  <NOP>
 nnoremap \b <NOP>
 nnoremap \e <NOP>
 nnoremap \g <NOP>
@@ -365,15 +366,17 @@ let g:easytags_always_enabled=1
 
 let g:AutoPairsFlyMode = 1
 let g:AutoPairsShortcutToggle=''
-let g:AutoPairsShortcutFastWrap = 'e'
-let g:AutoPairsShortcutJump = 'n'
-let g:AutoPairsShortcutBackInsert = 'b'
+let g:AutoPairsShortcutBackInsert = '<C-b>'
+let g:AutoPairsShortcutFastWrap = '<C-e>'
+let g:AutoPairsShortcutJump = ''
+
+nnoremap n :call AutoPairsJump()<CR>
 
 " }}
 
 " neoformat {{
 
-nnoremap \fm :Neoformat<CR>
+noremap \fm :Neoformat<CR>
 
 " Only msg when there is an error.
 let g:neoformat_only_msg_on_error = 1
