@@ -400,8 +400,6 @@ export LANGUAGE=$LANG
 # editor
 export EDITOR=vim
 export GIT_EDITOR=vim
-alias vi=vim
-alias v=vim
 
 # pager: less
 export PAGER="less"
@@ -578,6 +576,10 @@ alias gd1="gd HEAD~ HEAD"
 alias gd2="gd HEAD~2 HEAD"
 alias gdc="gd --cached"
 
+# vim
+alias vi=vim
+alias v=vim
+
 # list files, do not record in history
 alias l="ls-color"
 alias la="ls-color -A"
@@ -632,6 +634,9 @@ alias bubo="brew update && brew outdated"
 alias bubc="brew upgrade && brew cleanup"
 alias bubu="bubo && bubc"
 alias bi="brew install --force-bottle"
+
+# open-remote
+[[ $SSH_CONNECTION ]] && alias open="open-remote"
 
 # Ravy commands
 alias ravy="cd \$RAVY_HOME"
