@@ -737,14 +737,14 @@ ravy::prompt::git () {
 setopt PROMPT_SUBST
 
 RAVY_PROMPT_CMD_RET="%F{240}\${_RAVY_PROMPT_TIMER_READ} %(?..%F{160}\$(nice_exit_code))"
-RAVY_PROMPT_SYMBOL="%F{103}❯%K{234}%E "
+RAVY_PROMPT_SYMBOL="%K{238} %K{237} %K{236} %K{235} %K{234}%E"
 RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{103\}%n }
 RAVY_PROMPT_PATH="%F{30}%~ "
 RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ}%F{172}\${_RAVY_PROMPT_GIT_READ:+\$_RAVY_PROMPT_GIT_ST_READ }"
 RAVY_PROMPT_X="%F{166}\${DISPLAY:+X }"
 RAVY_PROMPT_JOBS="%F{163}%(1j.&%j .)"
 RAVY_PROMPT_CUSTOMIZE=""
-RAVY_PROMPT_CMD="%F{103}%k%_❯%f "
+RAVY_PROMPT_CMD="%F{239}%k%_❯%f "
 
 # render status for last command
 ravy::prompt::command_ret () {
