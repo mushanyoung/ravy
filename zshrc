@@ -2,13 +2,13 @@
 # vim: set foldlevel=0 foldmethod=marker filetype=zsh:
 
 # prevent from loading more than once
-[[ $RAVY_LOADED ]] && return 0 || RAVY_LOADED=true
+[[ -n $RAVY_LOADED ]] && return 0 || RAVY_LOADED=true
 
 # load zshenv to make sure paths are set correctly
 source "${0:A:h}/zshenv"
 
 # Load zprof if profiling is enabled.
-[[ $RAVY_PROFILE ]] && zmodload zsh/zprof
+[[ -n $RAVY_PROFILE ]] && zmodload zsh/zprof
 
 # Record time to initialize shell environment.
 _RAVY_PROMPT_TIMER=$(perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)')
@@ -105,7 +105,7 @@ if [[ $- == *i* ]]; then
 
   # toggle glob for current command line
   ravy::zle::glob_toggle () {
-    [[ $BUFFER ]] || zle up-history
+    [[ -n $BUFFER ]] || zle up-history
     [[ $BUFFER =~ ^noglob ]] && LBUFFER="${LBUFFER#noglob }" || LBUFFER="noglob $LBUFFER"
   }
   zle -N ravy::zle::glob_toggle
@@ -113,7 +113,7 @@ if [[ $- == *i* ]]; then
 
   # toggle sudo for current command line
   ravy::zle::sudo_toggle () {
-    [[ $BUFFER ]] || zle up-history
+    [[ -n $BUFFER ]] || zle up-history
     [[ $BUFFER =~ ^sudo ]] && LBUFFER="${LBUFFER#sudo }" || LBUFFER="sudo $LBUFFER"
   }
   zle -N ravy::zle::sudo_toggle
@@ -171,7 +171,7 @@ if [[ $- == *i* ]]; then
       | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} -m --reverse --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-o,alt-o,ctrl-q,alt-q ${default_fzf_opts}" fzf)
     key=$(head -1 <<< $out)
     file_list=("${(f)$(tail -n +2 <<< $out)}")
-    if [[ $file_list ]]; then
+    if [[ -n $file_list ]]; then
       # escape space, unescape break line
       file_str="${$(echo ${(q)file_list[*]})/\\\~\//~/}"
       key="${key:-$default_action}"
@@ -229,7 +229,7 @@ if [[ $- == *i* ]]; then
     local session
     session=$(cd ~/.vim/sessions && find . \
       | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --prompt='Session> ' --reverse)
-    if [[ $session ]]; then
+    if [[ -n $session ]]; then
       cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim \
         | head -1 \
         | cut -d" " -f2-)/#\~/$HOME}
@@ -418,7 +418,7 @@ export LESS_TERMCAP_ue=$'\E[0m'           # end underline
 # ls color evaluations
 hash dircolors &>/dev/null && dircolor_cmd=dircolors
 hash gdircolors &>/dev/null && dircolor_cmd=gdircolors
-[[ $dircolor_cmd ]] && eval "$($dircolor_cmd -b "$RAVY_HOME/LS_COLORS")"
+[[ -n $dircolor_cmd ]] && eval "$($dircolor_cmd -b "$RAVY_HOME/LS_COLORS")"
 unset dircolor_cmd
 
 # }}}
@@ -567,7 +567,7 @@ _git-de(){ _git-diff; }
 gd () {
   local dpath
   dpath="$(command git dd "${@:-HEAD}")"
-  [[ $dpath ]] || return
+  [[ -n $dpath ]] || return
   dpath="$(command git rev-parse --show-toplevel)/$dpath"
   [[ -d $dpath ]] || dpath=$(dirname "$dpath")
   [[ -d $dpath ]] && cd $dpath
@@ -636,7 +636,7 @@ alias bubu="bubo && bubc"
 alias bi="brew install --force-bottle"
 
 # open-remote
-[[ $SSH_CONNECTION ]] && alias open="open-remote"
+[[ -n $SSH_CONNECTION ]] && alias open="open-remote"
 
 # Ravy commands
 alias ravy="cd \$RAVY_HOME"
@@ -688,12 +688,12 @@ ravy::prompt::timer_format () {
 
 # start timer
 ravy::prompt::timer_start () {
-  [[ $_RAVY_PROMPT_TIMER ]] || _RAVY_PROMPT_TIMER=$(ravy::prompt::timer_now)
+  [[ -n $_RAVY_PROMPT_TIMER ]] || _RAVY_PROMPT_TIMER=$(ravy::prompt::timer_now)
 }
 
 # get elapsed time without stopping timer
 ravy::prompt::timer_get () {
-  [[ $_RAVY_PROMPT_TIMER ]] && ravy::prompt::timer_format $(($(ravy::prompt::timer_now) - _RAVY_PROMPT_TIMER))
+  [[ -n $_RAVY_PROMPT_TIMER ]] && ravy::prompt::timer_format $(($(ravy::prompt::timer_now) - _RAVY_PROMPT_TIMER))
 }
 
 # get elapsed time and stop timer
