@@ -387,12 +387,6 @@ export HISTFILE=~/.zhistory   # The path to the history file.
 export HISTSIZE=100000        # The maximum number of events to be kept in a session.
 export SAVEHIST=100000        # The maximum number of events to save in the history file.
 
-# term color
-if [[ $TERM =~ ^xterm ]] && [[ -e /usr/share/terminfo/x/xterm-256color || -e /usr/share/terminfo/78/xterm-256color ]]; then
-  export TERM=xterm-256color
-  export CLICOLOR=xterm-256color
-fi
-
 # lang
 export LANG=en_US.UTF-8
 export LANGUAGE=$LANG
@@ -414,6 +408,9 @@ export LESS_TERMCAP_ue=$'\E[0m'           # end underline
 
 # MANPATH should always have a leading colon to search by executables
 [[ ! $MANPATH =~ ^: ]] && MANPATH=":$MANPATH"
+
+# term color
+[[ $TERM =~ ^xterm ]] && export TERM=xterm-256color
 
 # ls color evaluations
 hash dircolors &>/dev/null && dircolor_cmd=dircolors
