@@ -297,7 +297,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   zplug "micha/resty"
   zplug "joshuarubin/zsh-archive"
   zplug "zsh-users/zsh-completions"
-  zplug "Tarrasch/zsh-bd"
 
   zplug "zsh-users/zsh-syntax-highlighting", defer:2
   zplug "zsh-users/zsh-history-substring-search", defer:2
@@ -535,9 +534,61 @@ imv () {
 # ping handles url
 ping () { sed -E -e 's#.*://##' -e 's#/.*$##' <<< "$@" | xargs ping; }
 
-# wrapper of zsh-bd, cd up 1 level by default
-d () { bd "${@:-1}"; }
-compctl -V directories -K _bd d
+# cd up, default 1 level
+# usage: $0 <name-of-any-parent-directory>
+#        $0 <number-of-folders>
+d () {
+  local arg i parents parent folder_depth dest
+  arg="${1:-1}"
+  # example: $PWD == /home/arash/abc ==> $folder_depth == 3
+  folder_depth=${#${(ps:/:)${PWD}}}
+  dest="./"
+
+  # First try to find a folder with matching name (could potentially be a number)
+  # Get parents (in reverse order)
+  for i in {$((folder_depth+1))..2}; do
+    parents=($parents "$(echo $PWD | cut -d'/' -f$i)")
+  done
+  parents=($parents "/")
+  # Build dest and 'cd' to it
+  foreach parent (${parents}); do
+    if [[ $arg == $parent ]]; then
+      cd $dest
+      return 0
+    fi
+    dest+="../"
+  done
+
+  # If the user provided an integer, go up as many times as asked
+  dest="./"
+  if [[ $arg = <-> ]]; then
+    if [[ $arg -gt $folder_depth ]]; then
+      print -- "bd: Error: Can not go up $arg times (not enough parent directories)"
+      return 1
+    fi
+    for i in {1..$arg}; do
+      dest+="../"
+    done
+    cd $dest
+    return 0
+  fi
+
+  # If the above methods fail
+  print -- "bd: Error: No parent directory named '$arg'"
+  return 1
+}
+
+_d () {
+  # Get parents (in reverse order)
+  local i folder_depth
+  folder_depth=${#${(ps:/:)${PWD}}}
+  for i in {$((folder_depth+1))..2}; do
+    reply=($reply "`echo $PWD | cut -d'/' -f$i`")
+  done
+  reply=($reply "/")
+}
+
+compctl -V directories -K _d d
 
 # Codi: launch an interactive repl scratchpad within vim
 # Usage: codi [filetype] [filename]
