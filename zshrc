@@ -119,19 +119,6 @@ if [[ $- == *i* ]]; then
   zle -N ravy::zle::sudo_toggle
   bindkey "^S" ravy::zle::sudo_toggle
 
-  # fancy_ctrl_z
-  ravy::zle::fancy_ctrl_z () {
-    if [[ $#BUFFER -eq 0 ]]; then
-      BUFFER="fg"
-      zle accept-line
-    else
-      zle push-input
-      zle clear-screen
-    fi
-  }
-  zle -N ravy::zle::fancy_ctrl_z
-  bindkey "^Z" ravy::zle::fancy_ctrl_z
-
   # menu select and completion
   bindkey "^I" expand-or-complete
 
@@ -241,7 +228,7 @@ if [[ $- == *i* ]]; then
     fi
   }
 
-  # CTRL-R - Paste the selected command from history into the command line
+  # Paste the selected command from history into the command line
   ravy::zle::fzf::history () {
     local selected num
     setopt localoptions noglobsubst pipefail 2> /dev/null
@@ -258,6 +245,19 @@ if [[ $- == *i* ]]; then
     typeset -f zle-line-init >/dev/null && zle zle-line-init
     return $ret
   }
+
+  # Restore the background job.
+  ravy::zle::fzf::ctrl_z () {
+    jobnum=$(jobs -l | fzf -0 -1 --tac | sed 's#\[\(.\+\)\].*#\1#')
+    zle redisplay
+    if [[ -n $jobnum ]]; then
+      [[ $#BUFFER > 0 ]] && zle push-input
+      BUFFER="fg %$jobnum"
+      zle accept-line
+    fi
+  }
+  zle -N ravy::zle::fzf::ctrl_z
+  bindkey "^Z" ravy::zle::fzf::ctrl_z
 
   zle -N ravy::zle::fzf::files::files
   zle -N ravy::zle::fzf::files::files::hidden
