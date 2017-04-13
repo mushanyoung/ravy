@@ -248,7 +248,7 @@ if [[ $- == *i* ]]; then
 
   # Restore the background job.
   ravy::zle::fzf::ctrl_z () {
-    jobnum=$(jobs -l | fzf -0 -1 --tac | sed 's#\[\(.\+\)\].*#\1#')
+    jobnum=$(jobs -l | fzf -0 -1 --tac | sed 's#\[\(.*\)\].*#\1#')
     zle redisplay
     if [[ -n $jobnum ]]; then
       [[ $#BUFFER > 0 ]] && zle push-input
