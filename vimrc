@@ -74,20 +74,10 @@ augroup buffer_editing
   autocmd BufWritePre * StripWhitespace
 
   " restore cursor position when read a buffer
-  " set the cursor position to the beginning when editing commit message
   autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
+
+  " set the cursor position to the beginning when editing commit message
   autocmd BufReadPost COMMIT_EDITMSG normal gg0
-augroup END
-
-augroup filetypes
-  autocmd!
-
-  " set make program for scripting languages
-  autocmd BufRead,BufNewFile *.js  setlocal makeprg=js\ %
-  autocmd BufRead,BufNewFile *.pl  setlocal makeprg=perl\ %
-  autocmd BufRead,BufNewFile *.php setlocal makeprg=php\ %
-  autocmd BufRead,BufNewFile *.py  setlocal makeprg=python\ %
-  autocmd BufRead,BufNewFile *.rb  setlocal makeprg=ruby\ -w\ %
 augroup END
 
 " }}
@@ -263,9 +253,6 @@ nnoremap <silent> \m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"s
 " toggle quick fix window
 nnoremap <silent> \q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
 
-" invoke make with makeprg option
-nnoremap \r :make<CR>
-
 " \s*: vim-session
 
 " toggle foldenable
@@ -344,6 +331,7 @@ nnoremap \j <NOP>
 nnoremap \k <NOP>
 nnoremap \n <NOP>
 nnoremap \o <NOP>
+nnoremap \r <NOP>
 nnoremap \t <NOP>
 nnoremap \x <NOP>
 
