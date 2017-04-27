@@ -29,6 +29,6 @@ A OSX to Unix remote working environment.
 Run following script in either frontend or host machine.
 
 ```
-git clone https://github.com/mushanyang/ravy.git ~/.ravy
+git clone https://github.com/mushanyoung/ravy.git ~/.ravy
 ~/.ravy/install
 ```
