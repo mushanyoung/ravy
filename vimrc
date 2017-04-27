@@ -96,7 +96,7 @@ endfunction
 
 " send text to [remote] clipboard
 function! RavyClip(text)
-  call system('clip >/dev/tty', a:text)
+  silent call system('clip >/dev/tty', a:text)
 endfunction
 
 " open a link remotely
@@ -268,9 +268,12 @@ nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent imap<BAR>silent cmap
 " write
 nnoremap \w :write<CR>
 
-" forward yanked text to clip
-nnoremap <silent> \y :call RavyClip(@0)<BAR>echo 'Text Clipped'<CR>
-vnoremap <silent> \y :call RavyClip(GetVisualSelection())<CR>
+" forward yanked text to clip when in remote
+if $SSH_CONNECTION != ""
+  vnoremap <silent> y y:call RavyClip(@0)<BAR>echo 'Yanked and Sent'<CR>
+  nnoremap <silent> \y :call RavyClip(@0)<BAR>echo 'Yanked Sent'<CR>
+  vnoremap <silent> \y :call RavyClip(GetVisualSelection())<CR>
+endif
 
 " toggle auto zz when scrolling
 nnoremap <silent> \z :let &scrolloff=999-&scrolloff<BAR>echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
