@@ -593,6 +593,7 @@ Plug 'sheerun/vim-polyglot'            " a set of filetype plugins
 Plug 'svermeulen/vim-easyclip'         " better clipboard of vim
 Plug 'terryma/vim-expand-region'       " +, - to expand and shrink selection
 Plug 'terryma/vim-multiple-cursors'    " multiple cursors and multiple modifications
+Plug 'tmux-plugins/vim-tmux'
 Plug 'tpope/vim-commentary'            " gc to comment codes
 Plug 'tpope/vim-repeat'                " `.` supports to repeat mapped key sequence
 Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / texts

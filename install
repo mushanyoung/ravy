@@ -30,6 +30,10 @@ ln -s -f ~/.vimrc ~/.config/nvim/init.vim
 [ -e ~/.vim/autoload/plug.vim ] || curl -sfLo ~/.vim/autoload/plug.vim \
   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
+echo "tmux"
+mkdir -p ~/.tmux ~/.tmux/plugins
+[ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
 echo "custom configs"
 mkdir -p "$RAVY/custom" "$RAVY/custom/bin" "$RAVY/custom/zsh-functions"
 touch "$RAVY/custom/zshrc" "$RAVY/custom/vimrc" "$RAVY/custom/gitconfig"
