@@ -1,6 +1,4 @@
 #!/usr/bin/env perl
-# Copy input stream to the terminal which opens the tty client
-# From: https://github.com/skaji/remote-pbcopy-iterm2
 use strict;
 use warnings;
 use MIME::Base64 qw(encode_base64);
@@ -24,8 +22,8 @@ my $format = sub {
         if ($pid) {
             my $ps = `ps -p $pid -o command= 2>/dev/null` || "";
             chomp $ps;
-            (undef, my $option) = split /\s+/, $ps, 3;
-            if ($option && $option eq "-CC") {
+            (undef, my @option) = split /\s+/, $ps;
+            if (grep { $_ eq "-CC" } @option) {
                 return $format{normal};
             }
         }
@@ -38,3 +36,20 @@ my $format = sub {
 }->();
 
 printf $format, encode_base64($input, "");
+
+__END__
+=head1 NAME
+pbcopy - remote pbcopy for iTerm2
+=head1 SYNOPSIS
+    [remote] $ echo "copy to clipboard from remote!" | pbcopy
+    [local] $ pbcopy
+    copy to clipboard from remote!
+=head1 SEE ALSO
+=over 4
+=item * http://doda.b.sourceforge.jp/2011/12/15/tmux-set-clipboard/
+=item * http://qiita.com/kefir_/items/1f635fe66b778932e278
+=item * http://qiita.com/kefir_/items/515ed5264fce40dec522
+=back
+=head1 AUTHOR
+Shoichi Kaji
+=cut
