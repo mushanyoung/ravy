@@ -211,6 +211,10 @@ if [[ $- == *i* ]]; then
     FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3-" FZF_FILES_FZF_OPTS="--prompt 'File(vim)> '" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
+  ravy::zle::fzf::files::vim::last () {
+    FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3- | head -1" FZF_FILES_FZF_OPTS="--prompt 'File(vim)> ' --select-1" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
+  }
+
   # open session matched by query, create a new one if there is no match
   ravy::zle::fzf::vim_sessions () {
     local session
@@ -264,6 +268,7 @@ if [[ $- == *i* ]]; then
   zle -N ravy::zle::fzf::files::dirs
   zle -N ravy::zle::fzf::files::dirs::hidden
   zle -N ravy::zle::fzf::files::vim
+  zle -N ravy::zle::fzf::files::vim::last
   zle -N ravy::zle::fzf::vim_sessions
   zle -N ravy::zle::fzf::history
 
@@ -272,6 +277,7 @@ if [[ $- == *i* ]]; then
   bindkey "\ed" ravy::zle::fzf::files::dirs
   bindkey "\eD" ravy::zle::fzf::files::dirs::hidden
   bindkey "\ev" ravy::zle::fzf::files::vim
+  bindkey "\eV" ravy::zle::fzf::files::vim::last
   bindkey "\es" ravy::zle::fzf::vim_sessions
   bindkey "\er" ravy::zle::fzf::history
 fi
