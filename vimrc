@@ -400,6 +400,12 @@ let g:airline_powerline_fonts=1
 
 " }}
 
+" vim-bracketed-paste {{
+
+let g:bracketed_paste_tmux_wrap = 0
+
+" }}
+
 " vim-easy-align {{
 
 xmap ga <PLUG>(EasyAlign)
