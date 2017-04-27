@@ -31,6 +31,7 @@ set synmaxcol=255              " max columnlength for syntax parsing
 set switchbuf=useopen          " when switching to a buffer, jump to a window with it opened
 set laststatus=2               " last window always have a status line
 set nostartofline              " does not move the cursor to start of line for some commands
+set clipboard=unnamed          " use the OS clipboard by default
 
 " UI
 set number numberwidth=4
