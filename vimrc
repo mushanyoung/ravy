@@ -554,15 +554,7 @@ let g:UltiSnipsEditSplit="vertical"
 
 " }}
 
-" Custom Settings {{
-
-if filereadable($RAVY_CUSTOM_HOME."/vimrc")
-  source $RAVY_CUSTOM_HOME/vimrc
-endif
-
-" }}
-
-" Plugins {{
+" Plugins & Custom Settings {{
 
 call plug#begin('~/.vim/bundle')
 
@@ -576,6 +568,7 @@ Plug 'christoomey/vim-tmux-navigator'  " pane navigate integration with tmux
 Plug 'easymotion/vim-easymotion'       " choose from positions which repeated motions would reach
 Plug 'google/vim-searchindex'          " search: show match index and total match count
 Plug 'honza/vim-snippets'              " snippets
+Plug 'ivanov/vim-ipython'              " ipython integration
 Plug 'jiangmiao/auto-pairs'            " Insert or delete brackets, parens, quotes in pair
 Plug 'jpo/vim-railscasts-theme'        " decent colorscheme
 Plug 'junegunn/fzf'                    " fzf integration
@@ -593,7 +586,6 @@ Plug 'sheerun/vim-polyglot'            " a set of filetype plugins
 Plug 'svermeulen/vim-easyclip'         " better clipboard of vim
 Plug 'terryma/vim-expand-region'       " +, - to expand and shrink selection
 Plug 'terryma/vim-multiple-cursors'    " multiple cursors and multiple modifications
-Plug 'tmux-plugins/vim-tmux'
 Plug 'tpope/vim-commentary'            " gc to comment codes
 Plug 'tpope/vim-repeat'                " `.` supports to repeat mapped key sequence
 Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / texts
@@ -606,6 +598,10 @@ Plug 'xolox/vim-session'               " session manager
 if executable('ctags')
   Plug 'xolox/vim-easytags'            " auto generate tags
   Plug 'majutsushi/tagbar'             " tag explorer
+endif
+
+if filereadable($RAVY_CUSTOM_HOME."/vimrc")
+  source $RAVY_CUSTOM_HOME/vimrc
 endif
 
 call plug#end()
