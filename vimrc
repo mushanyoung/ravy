@@ -352,7 +352,7 @@ let g:easytags_always_enabled=1
 
 " auto-pairs {{
 
-let g:AutoPairsFlyMode = 1
+let g:AutoPairsFlyMode = 0
 let g:AutoPairsShortcutToggle=''
 let g:AutoPairsShortcutBackInsert = '<C-b>'
 let g:AutoPairsShortcutFastWrap = '<C-e>'
