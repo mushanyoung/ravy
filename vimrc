@@ -18,18 +18,14 @@ set modeline modelines=9
 set history=10000
 set shell=bash
 set mouse=a
-set autoread
-set formatoptions=nmMcroqlj
-set ttimeout ttimeoutlen=100   " timeout for key code sequence
+set formatoptions=nmMcroql
 set notimeout                  " no timeout for key map sequence
-set backspace=indent,eol,start " allow backspacing over everything in insert mode
 set splitright splitbelow      " split window: vertical to the right and horizontal to the below
 set hidden                     " hidden buffers
 set nospell                    " no spell check
 set nobomb                     " no Byte Order Mark
 set synmaxcol=255              " max columnlength for syntax parsing
 set switchbuf=useopen          " when switching to a buffer, jump to a window with it opened
-set laststatus=2               " last window always have a status line
 set nostartofline              " does not move the cursor to start of line for some commands
 set clipboard=unnamed          " use the OS clipboard by default
 
@@ -42,13 +38,10 @@ set viewoptions=folds,options,cursor,unix,slash
 set title titlestring=#%t%(\ %a%)%(\ %r%)%(\ %m%)
 set linebreak
 set background=dark
-set tabpagemax=50
-set noruler
 set noshowmode
 set showcmd
 set lazyredraw
 set cursorline
-set display=lastline
 set visualbell
 set textwidth=80
 set wildmenu wildmode=list:longest,full " completions: list matches, then longest common part, then all.
@@ -56,11 +49,10 @@ set wrap whichwrap=b,s,h,l,<,>,[,]      " Backspace and cursor keys wrap too
 set showtabline=1                       " show tab when multi tabs exist
 set virtualedit=onemore                 " cursor beyond last character
 set colorcolumn=+1                      " highlight over width boundary
-set scrolloff=4 scrolljump=1            " 4 lines away from margins to scroll 1 line
+set scrolloff=3 scrolljump=1            " 3 lines away from margins to scroll 1 line
 set shortmess+=filmnrxoOtT              " Abbreviation of file messages: try <C-G>
 
 if &term =~ "screen*" | set t_ts=k t_fs=\ | endif " escape string for window name of screen
-runtime macros/matchit.vim                            " enable extended % matching
 highlight clear SignColumn                            " Sign Column should match background
 scriptencoding utf-8
 filetype plugin indent on
@@ -161,9 +153,6 @@ nnoremap <C-Y> 3<C-Y>
 " 0 go to first non blank, ^ go to the very beginning
 nnoremap 0 ^
 nnoremap ^ 0
-
-" clear screen and cancel hlsearch
-nnoremap <silent> <C-L> :noh<C-R>=has('diff')?'<Bar>diffupdate':''<CR><CR><C-L>
 
 " }}
 
@@ -592,6 +581,7 @@ Plug 'terryma/vim-expand-region'       " +, - to expand and shrink selection
 Plug 'terryma/vim-multiple-cursors'    " multiple cursors and multiple modifications
 Plug 'tpope/vim-commentary'            " gc to comment codes
 Plug 'tpope/vim-repeat'                " `.` supports to repeat mapped key sequence
+Plug 'tpope/vim-sensible'              " default settings
 Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / texts
 Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'         " status line with powerline fonts
