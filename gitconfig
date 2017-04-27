@@ -22,6 +22,7 @@
   extendedRegexp = true
 [alias]
   aliases = !git config --get-regexp alias | cut -c7- | sed -E 's/([^ ]*) /'"$(tput setaf 5)"'\\1^'"$(tput sgr0)"'/' | column -t -s^
+  a = add
   aa = add --all :/
   ac = add --all .
   au = add -u
