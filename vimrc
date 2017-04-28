@@ -579,6 +579,7 @@ Plug 'metakirby5/codi.vim'             " Interactive scratchpad
 Plug 'moll/vim-bbye'                   " sane Bdelete
 Plug 'nathanaelkane/vim-indent-guides' " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'  " highlight trailing blanks and provide StripWhitespace function
+Plug 'octol/vim-cpp-enhanced-highlight'
 Plug 'sbdchd/neoformat'                " Auto format
 Plug 'scrooloose/syntastic'            " check code syntax
 Plug 'sheerun/vim-polyglot'            " a set of filetype plugins
@@ -594,6 +595,9 @@ Plug 'vim-airline/vim-airline'         " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
 Plug 'xolox/vim-misc'                  " vim plugin util
 Plug 'xolox/vim-session'               " session manager
+
+let g:cpp_class_scope_highlight = 1
+let g:cpp_experimental_template_highlight = 1
 
 if executable('ctags')
   Plug 'xolox/vim-easytags'            " auto generate tags
