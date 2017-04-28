@@ -309,8 +309,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   zplug "zsh-users/zsh-history-substring-search", defer:2
   zplug "zsh-users/zsh-autosuggestions", defer:3
 
-  zplug 'zplug/zplug', hook-build:'zplug --self-manage'
-
   # load plugins
   if ! zplug check --verbose; then
     printf "Install? [y/N]: "
