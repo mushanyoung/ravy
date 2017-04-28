@@ -303,6 +303,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   zplug "micha/resty"
   zplug "joshuarubin/zsh-archive"
   zplug "zsh-users/zsh-completions"
+  zplug "ymattw/cdiff", as:command, use:cdiff
 
   zplug "zsh-users/zsh-syntax-highlighting", defer:2
   zplug "zsh-users/zsh-history-substring-search", defer:2
