@@ -569,7 +569,6 @@ Plug 'google/vim-searchindex'          " search: show match index and total matc
 Plug 'honza/vim-snippets'              " snippets
 Plug 'ivanov/vim-ipython'              " ipython integration
 Plug 'jiangmiao/auto-pairs'            " Insert or delete brackets, parens, quotes in pair
-Plug 'jpo/vim-railscasts-theme'        " decent colorscheme
 Plug 'junegunn/fzf'                    " fzf integration
 Plug 'junegunn/fzf.vim'                " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/vim-easy-align'         " ga to align a region of text on a key (<C-X> to use a regex)
@@ -577,6 +576,7 @@ Plug 'junegunn/vim-peekaboo'           " extends \", @, i:<C-R> to list the cont
 Plug 'justinmk/vim-sneak'              " s: motion to match 2 characters
 Plug 'metakirby5/codi.vim'             " Interactive scratchpad
 Plug 'moll/vim-bbye'                   " sane Bdelete
+Plug 'mushanyoung/vim-windflower'
 Plug 'nathanaelkane/vim-indent-guides' " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'  " highlight trailing blanks and provide StripWhitespace function
 Plug 'octol/vim-cpp-enhanced-highlight'
@@ -611,7 +611,7 @@ endif
 call plug#end()
 
 if !exists('g:colors_name')
-  colorscheme railscasts
+  colorscheme windflower
 endif
 
 " }}
