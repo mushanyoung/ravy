@@ -9,6 +9,7 @@ A OSX to Unix remote working environment.
 - [**powerline-fonts**](https://github.com/powerline/fonts)
 - [**Homebrew**](http://brew.sh/): install to $HOME/.brew
   - [**Zsh**](http://www.zsh.org/) >= 5.3
+  - [**git**](https://git-scm.com/)
   - [**coreutils**](https://www.gnu.org/software/coreutils)
   - [**fzf**](https://github.com/junegunn/fzf)
   - [**ag**](https://github.com/ggreer/the_silver_searcher)
@@ -16,6 +17,7 @@ A OSX to Unix remote working environment.
 ### Remote Unix Host
 - [**Linuxbrew**](http://linuxbrew.sh/): install to $HOME/.brew
   - [**Zsh**](http://www.zsh.org/) >= 5.3
+  - [**git**](https://git-scm.com/)
   - [**tmux**](https://tmux.github.io/) >= 2.4
   - [**Vim**](http://www.vim.org/) >= 8.0
       - `:PlugInstall` to bootstrap
