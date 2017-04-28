@@ -89,7 +89,7 @@ endfunction
 
 " send text to [remote] clipboard
 function! RavyClip(text)
-  silent call system('clip >/dev/tty', a:text)
+  silent call system('pbcopy >/dev/tty', a:text)
 endfunction
 
 " open a link remotely
