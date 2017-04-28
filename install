@@ -15,7 +15,6 @@ append_content_if_absent ~/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
 append_content_if_absent ~/.tmux.conf "source -q $RAVY/tmux.conf"
 append_content_if_absent ~/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
 append_content_if_absent ~/.ignore "RAVY_TMP" "$RAVY/ignore"
-cp $RAVY/jshintrc $HOME/.jshintrc
 
 echo "zplug"
 [ -d ~/.zplug ] || git clone https://github.com/zplug/zplug ~/.zplug
