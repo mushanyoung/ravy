@@ -406,6 +406,13 @@ let g:bracketed_paste_tmux_wrap = 0
 
 " }}
 
+" vim-cpp-enhanced-highlight {{
+
+let g:cpp_class_scope_highlight = 1
+let g:cpp_experimental_template_highlight = 1
+
+" }}
+
 " vim-easy-align {{
 
 xmap ga <PLUG>(EasyAlign)
@@ -592,12 +599,10 @@ Plug 'tpope/vim-sensible'              " default settings
 Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / texts
 Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'         " status line with powerline fonts
+Plug 'vim-jp/vim-cpp'
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
 Plug 'xolox/vim-misc'                  " vim plugin util
 Plug 'xolox/vim-session'               " session manager
-
-let g:cpp_class_scope_highlight = 1
-let g:cpp_experimental_template_highlight = 1
 
 if executable('ctags')
   Plug 'xolox/vim-easytags'            " auto generate tags
