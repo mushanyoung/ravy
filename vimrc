@@ -4,9 +4,14 @@
 
 " Settings {{
 
+" make directory if necessary
+if !isdirectory(expand("~/.vim/tmp")) || !isdirectory(expand("~/.vim/bundle"))
+  call system("mkdir -p ~/.vim/tmp ~/.vim/bundle")
+end
+
 " General
-set backupdir=~/.vim/tmp/,. nobackup writebackup
 set directory=~/.vim/tmp//,. swapfile
+set backupdir=~/.vim/tmp//,. nobackup writebackup
 set undodir=~/.vim/tmp//,. undofile undolevels=1000 undoreload=10000
 set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
 set wildignore+=*.png,*.jpg,*.gif,*.ico,*.mp3,*.mp4,*.avi,*.mkv,*.o,*.obj,*.pyc,*.swf,*.fla,*.git*,*.hg*,*.svn*,*sass-cache*,log/**,tmp/**,*~,*~orig,*.DS_Store,tags,.tags,.tags_sorted_by_file,node_modules
@@ -19,6 +24,7 @@ set history=10000
 set shell=bash
 set mouse=a
 set formatoptions=nmMcroql
+set iskeyword+=-
 set notimeout                  " no timeout for key map sequence
 set splitright splitbelow      " split window: vertical to the right and horizontal to the below
 set hidden                     " hidden buffers
@@ -31,7 +37,7 @@ set clipboard=unnamed          " use the OS clipboard by default
 
 " UI
 set number numberwidth=4
-set nofoldenable foldmethod=indent foldlevel=0
+set nofoldenable foldmethod=indent foldlevel=0 foldnestmax=3
 set list listchars=tab:›\ ,trail:•,extends:>,precedes:<,nbsp:.
 set showmatch matchpairs+=<:>
 set viewoptions=folds,options,cursor,unix,slash
@@ -42,15 +48,17 @@ set noshowmode
 set showcmd
 set lazyredraw
 set cursorline
-set visualbell
 set textwidth=80
+set visualbell noerrorbells
 set wildmenu wildmode=list:longest,full " completions: list matches, then longest common part, then all.
 set wrap whichwrap=b,s,h,l,<,>,[,]      " Backspace and cursor keys wrap too
 set showtabline=1                       " show tab when multi tabs exist
 set virtualedit=onemore                 " cursor beyond last character
 set colorcolumn=+1                      " highlight over width boundary
 set scrolloff=3 scrolljump=1            " 3 lines away from margins to scroll 1 line
-set shortmess+=filmnrxoOtT              " Abbreviation of file messages: try <C-G>
+set sidescrolloff=10 sidescroll=1       " 10 columns away from margins to scroll 1 column
+set shortmess+=filmnrxoOtTI             " Abbreviation of file messages: try <C-G>
+set winwidth=79 winheight=5 winminheight=5
 
 if &term =~ "screen*" | set t_ts=k t_fs=\ | endif " escape string for window name of screen
 highlight clear SignColumn                            " Sign Column should match background
@@ -169,7 +177,7 @@ inoremap <expr><C-J> pumvisible() ? "\<C-N>" : "\<C-J>"
 inoremap <expr><C-K> pumvisible() ? "\<C-P>" : "\<C-K>"
 
 " insert current opened buffer's directory in command line
-cnoremap %% <C-R>=expand('%:p:h').'/'<CR>
+cnoremap <expr> %% getcmdtype() == ':' ? expand('%:h').'/' : '%%'
 
 " C-P, C-N to prefix search in history
 cnoremap <C-P> <UP>
@@ -190,6 +198,9 @@ nnoremap gB :bnext<CR>
 
 " similar to gf, open file path under cursor, but in a split window in right
 nnoremap gw :let mycurf=expand("<cfile>")<BAR>exec("vsplit ".mycurf)<CR>
+
+" Visually select the text that was last edited/pasted
+noremap gV `[v`]
 
 " window resize & split
 noremap <C-W>0 :resize +5<CR>
