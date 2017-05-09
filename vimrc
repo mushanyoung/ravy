@@ -9,6 +9,14 @@ if !isdirectory(expand("~/.vim/tmp")) || !isdirectory(expand("~/.vim/bundle"))
   call system("mkdir -p ~/.vim/tmp ~/.vim/bundle")
 end
 
+" neovim settings
+if has('nvim')
+  set inccommand=nosplit
+  set clipboard=
+else
+  set clipboard=unnamed
+end
+
 " General
 set directory=~/.vim/tmp//,. swapfile
 set backupdir=~/.vim/tmp//,. nobackup writebackup
@@ -33,7 +41,6 @@ set nobomb                     " no Byte Order Mark
 set synmaxcol=255              " max columnlength for syntax parsing
 set switchbuf=useopen          " when switching to a buffer, jump to a window with it opened
 set nostartofline              " does not move the cursor to start of line for some commands
-set clipboard=unnamed          " use the OS clipboard by default
 
 " UI
 set number numberwidth=4
@@ -606,7 +613,6 @@ Plug 'terryma/vim-expand-region'       " +, - to expand and shrink selection
 Plug 'terryma/vim-multiple-cursors'    " multiple cursors and multiple modifications
 Plug 'tpope/vim-commentary'            " gc to comment codes
 Plug 'tpope/vim-repeat'                " `.` supports to repeat mapped key sequence
-Plug 'tpope/vim-sensible'              " default settings
 Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / texts
 Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'         " status line with powerline fonts
@@ -614,6 +620,10 @@ Plug 'vim-jp/vim-cpp'
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
 Plug 'xolox/vim-misc'                  " vim plugin util
 Plug 'xolox/vim-session'               " session manager
+
+if !has('nvim')
+  Plug 'tpope/vim-sensible'            " default settings
+endif
 
 if executable('ctags')
   Plug 'xolox/vim-easytags'            " auto generate tags
