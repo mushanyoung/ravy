@@ -277,7 +277,7 @@ nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent imap<BAR>silent cmap
 nnoremap \w :write<CR>
 
 " forward yanked text to clip when in remote
-if $SSH_CONNECTION != ""
+if $SSH_CONNECTION != "" || has('nvim')
   vnoremap <silent> y y:call RavyClip(@0)<BAR>echo 'Yanked and Sent'<CR>
   nnoremap <silent> \y :call RavyClip(@0)<BAR>echo 'Yanked Sent'<CR>
   vnoremap <silent> \y :call RavyClip(GetVisualSelection())<CR>
