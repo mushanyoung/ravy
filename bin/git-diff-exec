@@ -2,7 +2,7 @@
 # execute commands against changed files
 
 files="$(git diff --name-only "$@")"
-[[ $files ]] || exit
+[[ -n $files ]] || exit
 
 dpath="$(sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D' <<< "$files")"
 [[ -d $dpath ]] || dpath=$(dirname "$dpath")
