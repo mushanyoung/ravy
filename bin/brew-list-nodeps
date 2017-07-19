@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+
+brew list | while read -r line; do
+  deps=$(brew uses --installed --include-build $line)
+  [[ -z $deps ]] && echo $line
+done
