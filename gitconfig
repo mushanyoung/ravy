@@ -57,11 +57,12 @@
   droplast = reset --hard HEAD~
 
   # checkout from the selection of a branch list, if no params given
-  co = "!gco(){ if [[ $# > 0 ]]; then git checkout $@; else git branch -vv | fzf +m --exit-0 | cut -c 3- | awk '{print $1}' | xargs git checkout; fi;}; gco"
+  co = "!gco(){ if [[ $# > 0 ]]; then git checkout $@; \
+    else git branch -vv | fzf +m --exit-0 | cut -c 3- | awk '{print $1}' | xargs git checkout; fi;}; gco"
 
   # logs
   l = "!gl() { \
-    git log --pretty='tformat:%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s' $@ | \
+    git log --color=always --pretty='tformat:%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s' $@ | \
     perl -pe 's/(\\(\\d+ \\w+)[^<)]*ago\\)/\\1)/' | \
     column -s '|' -t | \
     ${GIT_PAGER:-less -FXRS}; }; gl"
