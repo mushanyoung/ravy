@@ -904,7 +904,7 @@ fi
 singleton-command () { pgrep -f "(^| |/)$@( |\$)" > /dev/null || eval "$@"; }
 
 # Run singleton-command in background.
-singleton-command-background () { (singleton-command "$@" &) &>/dev/null; }
+singleton-command-background () { (singleton-command "$@" &!) &>/dev/null; }
 
 # clipboard monitor
 [[ $OSTYPE =~ ^darwin ]] && singleton-command-background open-remote-monitor
