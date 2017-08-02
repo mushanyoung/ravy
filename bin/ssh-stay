@@ -4,7 +4,7 @@
 
 # Configurable parameters
 ssh_command=${SSH_COMMAND:-ssh}
-execute_command=${EXECUTE_COMMAND:-tmux attach -t tmux || tmux new-session -s tmux}
+execute_command=${EXECUTE_COMMAND:-tmux new-session -A -s tmux}
 reconnect_interval=${RECONNECT_INTERVAL:-10}
 alive_interval=${ALIVE_INTERVAL:-10}
 ssh_default_opts="-t -oCompression=yes -oCheckHostIP=no -oServerAliveInterval=${alive_interval}"
