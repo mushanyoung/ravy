@@ -20,7 +20,7 @@ _RAVY_PROMPT_TIMER=$(perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*
 if [[ $- == *i* ]]; then
 
   # chars treated as a part of a word
-  export WORDCHARS=$'\'\\/|*?_-.,[]~&;!#$%^(){}<>+:=@'
+  export WORDCHARS=""
 
   export KEYTIMEOUT=1
 
@@ -60,33 +60,28 @@ if [[ $- == *i* ]]; then
   # C-B / C-F to move, C-W to kill by word
   # M-b / M-f to move, M-w to kill by word with bash style
   autoload -U select-word-style
-  autoload -U backward-kill-word-match
   autoload -U forward-word-match
   autoload -U backward-word-match
-  zle -N backward-kill-word-match
   zle -N forward-word-match
   zle -N backward-word-match
 
-  ravy::zle::forward_word_bash () {
-    select-word-style bash
+  ravy::zle::forward_word_shell () {
+    select-word-style shell
     zle forward-word-match
   }
-  ravy::zle::backward_word_bash () {
-    select-word-style bash
+  ravy::zle::backward_word_shell () {
+    select-word-style shell
     zle backward-word-match
   }
-  ravy::zle::backward_kill_word_bash () {
-    select-word-style bash
-    zle backward-kill-word-match
-  }
-  zle -N ravy::zle::forward_word_bash
-  zle -N ravy::zle::backward_word_bash
-  zle -N ravy::zle::backward_kill_word_bash
-  bindkey "\ef" ravy::zle::forward_word_bash
-  bindkey "\eb" ravy::zle::backward_word_bash
-  bindkey "\ew" ravy::zle::backward_kill_word_bash
+
+  zle -N ravy::zle::forward_word_shell
+  zle -N ravy::zle::backward_word_shell
+  bindkey "\ef" ravy::zle::forward_word_shell
+  bindkey "\eb" ravy::zle::backward_word_shell
+
   bindkey "^F" forward-word
   bindkey "^B" backward-word
+  bindkey "^D" kill-word
   bindkey "^W" backward-kill-word
 
   # ranger file explorer
