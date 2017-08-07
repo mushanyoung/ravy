@@ -295,7 +295,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   # plugins
   zplug "supercrabtree/k"
   zplug "bric3/nice-exit-code"
-  zplug "joshuarubin/zsh-archive"
   zplug "zsh-users/zsh-completions"
   zplug "ymattw/cdiff", as:command, use:cdiff
   zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
