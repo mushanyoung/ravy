@@ -294,7 +294,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
 
   # plugins
   zplug "supercrabtree/k"
-  zplug "bric3/nice-exit-code"
   zplug "zsh-users/zsh-completions"
   zplug "ymattw/cdiff", as:command, use:cdiff
   zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
@@ -645,6 +644,42 @@ _d () {
 }
 
 compctl -V directories -K _d d
+
+# Print the exit status code with its associated signal name if it is not
+# zero and preserve the exit status.
+nice_exit_code () {
+  local exit_status="${1:-$(print -P %?)}" sig_name
+  [[ -z $exit_status || $exit_status == 0 ]] && return
+
+  case $exit_status in
+    # usual exit codes
+    -1)   sig_name=FATAL ;;
+    1)    sig_name=WARN ;; # Miscellaneous errors, such as "divide by zero"
+    2)    sig_name=BUILTINMISUSE ;; # misuse of shell builtins (pretty rare)
+    126)  sig_name=CCANNOTINVOKE ;; # cannot invoke requested command (ex : source script_with_syntax_error)
+    127)  sig_name=CNOTFOUND ;; # command not found (ex : source script_not_existing)
+    129)  sig_name=HUP ;;
+    130)  sig_name=INT ;;
+    131)  sig_name=QUIT ;;
+    132)  sig_name=ILL ;;
+    134)  sig_name=ABRT ;;
+    136)  sig_name=FPE ;;
+    137)  sig_name=KILL ;;
+    139)  sig_name=SEGV ;;
+    141)  sig_name=PIPE ;;
+    143)  sig_name=TERM ;;
+    # assuming we are on an x86 system here
+    # this MIGHT get annoying since those are in a range of exit codes
+    # programs sometimes use.... we'll see.
+    19)  sig_name=STOP ;;
+    20)  sig_name=TSTP ;;
+    21)  sig_name=TTIN ;;
+    22)  sig_name=TTOU ;;
+  esac
+
+  echo "$ZSH_PROMPT_EXIT_SIGNAL_PREFIX${exit_status}:${sig_name:-$exit_status}$ZSH_PROMPT_EXIT_SIGNAL_SUFFIX"
+  return $exit_status
+}
 
 # Codi: launch an interactive repl scratchpad within vim
 # Usage: codi [filetype] [filename]
