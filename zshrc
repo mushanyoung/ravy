@@ -586,6 +586,9 @@ imv () {
   done
 }
 
+# bc
+= () { bc -l <<< "$@"; }
+
 # ping handles url
 ping () { sed -E -e 's#.*://##' -e 's#/.*$##' <<< "$@" | xargs ping; }
 
