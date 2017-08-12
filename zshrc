@@ -651,36 +651,39 @@ compctl -V directories -K _d d
 # Print the exit status code with its associated signal name if it is not
 # zero and preserve the exit status.
 nice_exit_code () {
-  local exit_status="${1:-$(print -P %?)}" sig_name
+  local exit_status="${1:-$(print -P %?)}" sig_name ref
   [[ -z $exit_status || $exit_status == 0 ]] && return
 
-  case $exit_status in
+  typeset -A ref
+  ref=(
     # usual exit codes
-    -1)   sig_name=FATAL ;;
-    1)    sig_name=WARN ;; # Miscellaneous errors, such as "divide by zero"
-    2)    sig_name=BUILTINMISUSE ;; # misuse of shell builtins (pretty rare)
-    126)  sig_name=CCANNOTINVOKE ;; # cannot invoke requested command (ex : source script_with_syntax_error)
-    127)  sig_name=CNOTFOUND ;; # command not found (ex : source script_not_existing)
-    129)  sig_name=HUP ;;
-    130)  sig_name=INT ;;
-    131)  sig_name=QUIT ;;
-    132)  sig_name=ILL ;;
-    134)  sig_name=ABRT ;;
-    136)  sig_name=FPE ;;
-    137)  sig_name=KILL ;;
-    139)  sig_name=SEGV ;;
-    141)  sig_name=PIPE ;;
-    143)  sig_name=TERM ;;
+    -1  FATAL
+    1   WARN          # Miscellaneous errors, such as "divide by zero"
+    2   BUILTINMISUSE # misuse of shell builtins (pretty rare)
+    126 CCANNOTINVOKE # cannot invoke requested command (ex : source script_with_syntax_error)
+    127 CNOTFOUND     # command not found (ex : source script_not_existing)
+    129 HUP
+    130 INT
+    131 QUIT
+    132 ILL
+    134 ABRT
+    136 FPE
+    137 KILL
+    139 SEGV
+    141 PIPE
+    143 TERM
     # assuming we are on an x86 system here
     # this MIGHT get annoying since those are in a range of exit codes
     # programs sometimes use.... we'll see.
-    19)  sig_name=STOP ;;
-    20)  sig_name=TSTP ;;
-    21)  sig_name=TTIN ;;
-    22)  sig_name=TTOU ;;
-  esac
+    19  STOP
+    20  TSTP
+    21  TTIN
+    22  TTOU
+  )
 
-  echo "$ZSH_PROMPT_EXIT_SIGNAL_PREFIX${exit_status}:${sig_name:-$exit_status}$ZSH_PROMPT_EXIT_SIGNAL_SUFFIX"
+  sig_name=$ref[$exit_status]
+
+  echo "${exit_status}:${sig_name:-$exit_status}"
   return $exit_status
 }
 
