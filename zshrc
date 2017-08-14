@@ -767,10 +767,10 @@ alias py3="python3"
 alias ipy3="ipython3"
 
 pip2-update-all () {
-  pip2 list --outdated | awk "!/Could not|ignored/ {print \$1}" | xargs pip2 install -U
+  pip2 list --outdated --format=legacy | awk "!/Could not|ignored/ {print \$1}" | xargs pip2 install -U
 }
 pip3-update-all () {
-  pip3 list --outdated | awk "!/Could not|ignored/ {print \$1}" | xargs pip3 install -U
+  pip3 list --outdated  --format=legacy| awk "!/Could not|ignored/ {print \$1}" | xargs pip3 install -U
 }
 
 # http serve current working dir in a given port (8000 in default)
