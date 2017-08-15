@@ -990,16 +990,25 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
   }
 
   ravy::termtitle::iterm_tab_color () {
-    local value=($(python -c "import random; import os; random.seed(os.getcwd()); print (random.randint(0,255)+255)/2,(random.randint(0,255)+255)/2,(random.randint(0,255)+255)/2"))
-    printf "\033]6;1;bg;red;brightness;$value[1]\a"
-    printf "\033]6;1;bg;green;brightness;$value[2]\a"
-    printf "\033]6;1;bg;blue;brightness;$value[3]\a"
+    printf "\033]6;1;bg;red;brightness;$1\a"
+    printf "\033]6;1;bg;green;brightness;$2\a"
+    printf "\033]6;1;bg;blue;brightness;$3\a"
   }
 
-  ravy::termtitle::iterm_tab_color
+  ravy::termtitle::iterm_tab_color_keyword () {
+    local value=($(python -c "import random; random.seed('$1');
+for _ in range(3): print (random.randint(0,255)+255)/2,"))
+    ravy::termtitle::iterm_tab_color "${value[@]}"
+  }
+
+  ravy::termtitle::iterm_tab_color_path () {
+    ravy::termtitle::iterm_tab_color_keyword $PWD
+  }
+
+  ravy::termtitle::iterm_tab_color_path
   autoload -U add-zsh-hook
 
-  add-zsh-hook chpwd ravy::termtitle::iterm_tab_color
+  add-zsh-hook chpwd ravy::termtitle::iterm_tab_color_path
   add-zsh-hook preexec ravy::termtitle::command
   add-zsh-hook precmd ravy::termtitle::path
 fi
