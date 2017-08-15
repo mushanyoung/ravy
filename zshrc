@@ -293,6 +293,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   zstyle :zplug:tag depth 1
 
   # plugins
+  zplug "chrissicool/zsh-256color"
   zplug "supercrabtree/k"
   zplug "zsh-users/zsh-completions"
   zplug "ymattw/cdiff", as:command, use:cdiff
@@ -426,9 +427,6 @@ export LESS_TERMCAP_ue=$'\E[0m'           # end underline
 
 # MANPATH should always have a leading colon to search by executables
 [[ ! $MANPATH =~ ^: ]] && MANPATH=":$MANPATH"
-
-# term color
-[[ $TERM =~ ^xterm ]] && export TERM=xterm-256color
 
 # ls color evaluations
 hash dircolors &>/dev/null && dircolor_cmd=dircolors
