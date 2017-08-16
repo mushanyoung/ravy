@@ -937,57 +937,32 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
     local formatted
     zformat -f formatted "%s" "s:$argv"
 
-    # print table title
-    printf "\e]1;%s\a" "${(V%)formatted}"
-
-    # print window title
-    if [[ $TERM =~ ^screen ]]; then
+    if [[ $TERM =~ ^screen || -n $TMUX ]]; then
       printf "\ek%s\e\\" "${(V%)formatted}"
-    else
-      printf "\e]2;%s\a" "${(V%)formatted}"
+    elif [[ $TERM =~ ^rxvt-unicode ]]; then
+      printf '\33]2;%s\007' ${(V%)formatted}
+    elif [[ $TERM =~ ^xterm ]]; then
+      printf "\e]0;%s\a" "${(V%)formatted}"
     fi
   }
 
   # Set the terminal title with current command.
   ravy::termtitle::command () {
-    emulate -L zsh
-    setopt EXTENDED_GLOB
+    local -a cmd
 
-    # Get the command name that is under job control.
-    if [[ "${2[(w)1]}" == (fg|%*)(\;|) ]]; then
-      # Get the job name, and, if missing, set it to the default %+.
-      local job_name="${${2[(wr)%*(\;|)]}:-%+}"
+    # Re-parse the command line
+    cmd=(${(z)${1//\\/\\\\\\\\}})
 
-      # Make a local copy for use in the subshell.
-      local -A jobtexts_from_parent_shell
-      jobtexts_from_parent_shell=(${(kv)jobtexts})
+    case $cmd[1] in
+      fg) cmd=(${(z)jobtexts[${(Q)cmd[2]:-%+}]}) ;;
+      %*) cmd=(${(z)jobtexts[${(Q)cmd[1]:-%+}]}) ;;
+    esac
 
-      jobs "$job_name" 2>/dev/null > >(
-        read -r index discarded
-        # The index is already surrounded by brackets: [0].
-        ravy::termtitle::command "${(e):-\$jobtexts_from_parent_shell$index}"
-      )
-    else
-      # Set the command name, or in the case of sudo or ssh, the next command.
-      local cmd="${${2[(wr)^(*=*|sudo|ssh|-*)]}:t}"
-      local truncated_cmd="!${cmd/(#m)?(#c16,)/${MATCH[1,14]}..}"
-      unset MATCH
-
-      ravy::termtitle::settitle "$truncated_cmd"
-    fi
+    ravy::termtitle::settitle "!$cmd[1]"
   }
 
   # Set the terminal title with current path.
-  ravy::termtitle::path () {
-    emulate -L zsh
-    setopt EXTENDED_GLOB
-
-    local abbreviated_path="${PWD/#$HOME/~}"
-    local truncated_path="${abbreviated_path/(#m)?(#c16,)/..${MATCH[-14,-1]}}"
-    unset MATCH
-
-    ravy::termtitle::settitle "$truncated_path"
-  }
+  ravy::termtitle::path () { ravy::termtitle::settitle "%18<...<%~"; }
 
   ravy::termtitle::iterm_tab_color () {
     printf "\033]6;1;bg;red;brightness;$1\a"
