@@ -295,6 +295,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   # plugins
   zplug "chrissicool/zsh-256color"
   zplug "supercrabtree/k"
+  zplug "hlissner/zsh-autopair"
   zplug "zsh-users/zsh-completions"
   zplug "ymattw/cdiff", as:command, use:cdiff
   zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
