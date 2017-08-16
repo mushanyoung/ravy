@@ -13,6 +13,7 @@ A OSX to Unix remote working environment.
   - [**coreutils**](https://www.gnu.org/software/coreutils)
   - [**fzf**](https://github.com/junegunn/fzf)
   - [**ag**](https://github.com/ggreer/the_silver_searcher)
+  - [**terminal-notifier**](https://github.com/julienXX/terminal-notifier)
 
 ### Remote Unix Host
 - [**Linuxbrew**](http://linuxbrew.sh/): install to $HOME/.brew
@@ -28,7 +29,7 @@ A OSX to Unix remote working environment.
 
 ## Install
 
-Run following script in either frontend or host machine.
+Run following script in both frontend and host machine.
 
 ```
 git clone https://github.com/mushanyoung/ravy.git ~/.ravy

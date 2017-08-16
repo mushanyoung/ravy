@@ -293,6 +293,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   zstyle :zplug:tag depth 1
 
   # plugins
+  zplug "marzocchi/zsh-notify"
   zplug "chrissicool/zsh-256color"
   zplug "supercrabtree/k"
   zplug "hlissner/zsh-autopair"
