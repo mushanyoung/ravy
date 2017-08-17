@@ -144,13 +144,14 @@ if [[ $- == *i* ]]; then
   # C-O to open selected files
 
   ravy::zle::fzf::files () {
-    local default_action="${FZF_FILES_DEFAULT_ACTION:-q}"
     local cmd="${FZF_FILES_COMMAND:-ag -a -g ''}"
-    local default_fzf_opts="${FZF_FILES_FZF_OPTS:---prompt 'File> '}"
+    local default_action="${FZF_FILES_DEFAULT_ACTION:-q}"
+    local prompt_opt="--prompt '${FZF_FILES_PROMPT:-File}> '"
+    local fzf_opts="${FZF_FILES_OPTS}"
     local out key file_list file_str zle_clear_cmd="redisplay"
     setopt localoptions pipefail
     out=$(eval "${cmd}" 2>/dev/null \
-      | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} -m --reverse --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-o,alt-o,ctrl-q,alt-q ${default_fzf_opts}" fzf)
+      | FZF_DEFAULT_OPTS="${FZF_DEFAULT_OPTS} ${prompt_opt} -m --reverse --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-o,alt-o,ctrl-q,alt-q ${fzf_opts}" fzf)
     key=$(head -1 <<< $out)
     file_list=("${(f)$(tail -n +2 <<< $out)}")
     if [[ -n $file_list ]]; then
@@ -158,7 +159,7 @@ if [[ $- == *i* ]]; then
       file_str="${$(echo ${(q)file_list[*]})/\\\~\//~/}"
       key="${key:-$default_action}"
       if [[ $key =~ [Qq]$ ]]; then
-        zle -R "$file_str" "(A)ppend, (E)dit, change (D)irectory, (O)pen, (Esc):"
+        zle -R "$file_str" "(A)ppend, (E)dit, enter (D)irectory, (O)pen, (Esc):"
         while [[ ! $key =~ [AaDdOoEe]$ ]]; do read -r -k key; done
       fi
       if [[ $key =~ [Aa]$ ]]; then
@@ -183,31 +184,31 @@ if [[ $- == *i* ]]; then
 
   # hidden files
   ravy::zle::fzf::files::files() {
-    FZF_FILES_COMMAND="ag -a -g ''" FZF_FILES_FZF_OPTS="--prompt 'File> '" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="ag -a -g ''" FZF_FILES_PROMPT="File" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
   # hidden files
   ravy::zle::fzf::files::files::hidden() {
-    FZF_FILES_COMMAND="ag -a --hidden -g ''" FZF_FILES_FZF_OPTS="--prompt '.File> '" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="ag -a --hidden -g ''" FZF_FILES_PROMPT=".File" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
   # directories
   ravy::zle::fzf::files::dirs() {
-    FZF_FILES_COMMAND="find . -type d -not -path '*/\.*' | sed 1d | cut -b3-" FZF_FILES_FZF_OPTS="--prompt 'Dir> '" FZF_FILES_DEFAULT_ACTION="d" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="find . -type d -not -path '*/\.*' | sed 1d | cut -b3-" FZF_FILES_PROMPT="Dir" FZF_FILES_DEFAULT_ACTION="d" ravy::zle::fzf::files
   }
 
   # hidden directories
   ravy::zle::fzf::files::dirs::hidden() {
-    FZF_FILES_COMMAND="find . -type d | sed 1d | cut -b3-" FZF_FILES_FZF_OPTS="--prompt '.Dir> '" FZF_FILES_DEFAULT_ACTION="d" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="find . -type d | sed 1d | cut -b3-" FZF_FILES_PROMPT=".Dir" FZF_FILES_DEFAULT_ACTION="d" ravy::zle::fzf::files
   }
 
   # recent files of vim
   ravy::zle::fzf::files::vim () {
-    FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3-" FZF_FILES_FZF_OPTS="--prompt 'File(vim)> '" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3-" FZF_FILES_PROMPT="File(vim)" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
   ravy::zle::fzf::files::vim::last () {
-    FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3- | head -1" FZF_FILES_FZF_OPTS="--prompt 'File(vim)> ' --select-1" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3- | head -1" FZF_FILES_OPTS="--select-1" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
   # open session matched by query, create a new one if there is no match
