@@ -29,7 +29,7 @@ awk '
     {
         # highlight executable permission & diminish permissions for directory
         if ($1 ~ /^d/) { color = 234 }
-        else if ($1 ~ /^-..x[^[:space:]]+/) { color = 166 }
+        else if ($1 ~ /^-..x[^[:space:]]+/) { color = 208 }
         else { color = 238 }
         $1 = c($1, color)
 
