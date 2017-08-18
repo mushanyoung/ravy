@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Run given command only if there is not one running.
+singleton-command () { pgrep -f "(^| |/)$@( |\$)" > /dev/null || eval "$@"; }
+singleton-command-background () { (singleton-command "$@" &) &>/dev/null; }
+
+# Launch open-remote-monitor before ssh.
+[[ $OSTYPE =~ ^darwin ]] && singleton-command-background open-remote-monitor
+
+ssh-stay "$@"

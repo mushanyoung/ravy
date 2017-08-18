@@ -991,19 +991,6 @@ fi
 
 # }}}
 
-# Background Singleton Process {{{
-
-# Run given command only if there is not one running.
-singleton-command () { pgrep -f "(^| |/)$@( |\$)" > /dev/null || eval "$@"; }
-
-# Run singleton-command in background.
-singleton-command-background () { (singleton-command "$@" &!) &>/dev/null; }
-
-# clipboard monitor
-[[ $OSTYPE =~ ^darwin ]] && singleton-command-background open-remote-monitor
-
-# }}}
-
 # Custom {{{
 
 [[ -f $RAVY_CUSTOM_HOME/zshrc ]] && source "$RAVY_CUSTOM_HOME/zshrc"

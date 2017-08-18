@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
-_getpaste () { pbpaste; }
-
-content=$(_getpaste)
+content=$(pbpaste)
 
 pattern=$'^(open)\x0d(.*)$'
 
