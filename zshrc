@@ -57,32 +57,13 @@ if [[ $- == *i* ]]; then
   bindkey "\em" copy-earlier-word
   bindkey "\e." insert-last-word
 
-  # C-B / C-F to move, C-W to kill by word
-  # M-b / M-f to move, M-w to kill by word with bash style
-  autoload -U select-word-style
-  autoload -U forward-word-match
-  autoload -U backward-word-match
-  zle -N forward-word-match
-  zle -N backward-word-match
+  # M-b / M-f to move forward and back by word
+  bindkey "\ef" forward-word
+  bindkey "\eb" backward-word
 
-  ravy::zle::forward_word_shell () {
-    select-word-style shell
-    zle forward-word-match
-  }
-  ravy::zle::backward_word_shell () {
-    select-word-style shell
-    zle backward-word-match
-  }
-
-  zle -N ravy::zle::forward_word_shell
-  zle -N ravy::zle::backward_word_shell
-  bindkey "\ef" ravy::zle::forward_word_shell
-  bindkey "\eb" ravy::zle::backward_word_shell
-
-  bindkey "^F" forward-word
-  bindkey "^B" backward-word
-  bindkey "^D" kill-word
+  # C-W to kill by word, C-D to kill forward word
   bindkey "^W" backward-kill-word
+  bindkey "^D" kill-word
 
   # ranger file explorer
   ravy::zle::ranger_cd () {

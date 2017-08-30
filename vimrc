@@ -179,9 +179,15 @@ inoremap jk <ESC>
 " <CR>: close popup and save indent.
 inoremap <expr><CR> pumvisible() ? "\<C-Y>" : "\<CR>"
 
-" c-j / c-k works just like c-n and c-p in completion
-inoremap <expr><C-J> pumvisible() ? "\<C-N>" : "\<C-J>"
-inoremap <expr><C-K> pumvisible() ? "\<C-P>" : "\<C-K>"
+" c-j / c-k map to c-n / c-p
+inoremap <C-J> <C-N>
+inoremap <C-K> <C-P>
+
+" emacs style arrow keys
+inoremap <C-B> <LEFT>
+inoremap <C-F> <RIGHT>
+inoremap <C-N> <DOWN>
+inoremap <C-P> <UP>
 
 " insert current opened buffer's directory in command line
 cnoremap <expr> %% getcmdtype() == ':' ? expand('%:h').'/' : '%%'
@@ -365,9 +371,9 @@ let g:easytags_always_enabled=1
 
 let g:AutoPairsFlyMode = 0
 let g:AutoPairsShortcutToggle=''
-let g:AutoPairsShortcutBackInsert = '<C-b>'
 let g:AutoPairsShortcutFastWrap = '<C-e>'
 let g:AutoPairsShortcutJump = ''
+" let g:AutoPairsShortcutBackInsert = '<C-b>'
 
 nnoremap n :call AutoPairsJump()<CR>
 
