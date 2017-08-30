@@ -12,9 +12,9 @@
                 },
                 "rules": [
                     {
+                        "description": "Change left_control to command+control+option+shift.",
                         "manipulators": [
                             {
-                                "description": "Change left_control to command+control+option+shift.",
                                 "from": {
                                     "key_code": "left_control"
                                 },
@@ -59,7 +59,7 @@
                         ]
                     },
                     {
-                        "description": "Change left_shift to ( if pressed alone.",
+                        "description": "Change left_shift / right_shift to ( / ) if pressed alone.",
                         "manipulators": [
                             {
                                 "from": {
@@ -79,17 +79,11 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "Change right_shift to ) if pressed alone.",
-                        "manipulators": [
+                            },
                             {
                                 "from": {
                                     "key_code": "right_shift"
                                 },
-
                                 "to": [
                                     {
                                         "key_code": "right_shift"
@@ -101,6 +95,83 @@
                                         "modifiers": [
                                             "right_shift"
                                         ]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Launch Applications with left_control.",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "c",
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_shift",
+                                            "left_command",
+                                            "left_control",
+                                            "left_option"
+                                        ]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "shell_command": "open -a 'Google Chrome.app'"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "t",
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "left_shift",
+                                            "left_command",
+                                            "left_control",
+                                            "left_option"
+                                        ]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "shell_command": "open -a 'iTerm.app'"
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Disable command + Q in web browser",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^org\\.mozilla\\.firefox$",
+                                            "^com\\.google\\.Chrome$",
+                                            "^com\\.apple\\.Safari$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "q",
+                                    "modifiers": {
+                                        "mandatory": [
+                                            "command"
+                                        ],
+                                        "optional": [
+                                            "caps_lock"
+                                        ]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "vk_none"
                                     }
                                 ],
                                 "type": "basic"
