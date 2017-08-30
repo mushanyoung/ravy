@@ -13,6 +13,7 @@ A OSX to Unix remote working environment.
   - [**coreutils**](https://www.gnu.org/software/coreutils)
   - [**fzf**](https://github.com/junegunn/fzf)
   - [**ag**](https://github.com/ggreer/the_silver_searcher)
+  - [**reattach-to-user-namespace**](https://github.com/ChrisJohnsen/tmux-MacOSX-pasteboard)
   - [**terminal-notifier**](https://github.com/julienXX/terminal-notifier)
 
 ### Remote Unix Host
