@@ -16,12 +16,7 @@
                             {
                                 "description": "Change left_control to command+control+option+shift.",
                                 "from": {
-                                    "key_code": "left_control",
-                                    "modifiers": {
-                                        "optional": [
-                                            "any"
-                                        ]
-                                    }
+                                    "key_code": "left_control"
                                 },
                                 "to": [
                                     {
@@ -68,12 +63,7 @@
                         "manipulators": [
                             {
                                 "from": {
-                                    "key_code": "left_shift",
-                                    "modifiers": {
-                                        "optional": [
-                                            "any"
-                                        ]
-                                    }
+                                    "key_code": "left_shift"
                                 },
                                 "to": [
                                     {
@@ -97,13 +87,9 @@
                         "manipulators": [
                             {
                                 "from": {
-                                    "key_code": "right_shift",
-                                    "modifiers": {
-                                        "optional": [
-                                            "any"
-                                        ]
-                                    }
+                                    "key_code": "right_shift"
                                 },
+
                                 "to": [
                                     {
                                         "key_code": "right_shift"
