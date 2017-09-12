@@ -690,6 +690,12 @@ _git-df(){ _git-diff; }
 _git-di(){ _git-diff; }
 _git-de(){ _git-diff; }
 
+# Pipe command with --help output and ignore rest of the line.
+alias -g -- -help="-help | less; true "
+alias -g -- --help="--help | less; true "
+alias -g -- --helpshort="--helpshort | less; true "
+alias -g -- --helpfull="--helpfull | less; true "
+
 # change directory to the farest folder containing all changed files
 gd () {
   local dpath
