@@ -919,11 +919,14 @@ add-zsh-hook precmd ravy::prompt::command_ret
 # Terminal title {{{
 
 if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
+  ravyname () { RAVY_SESSION_TITLE="$@"; }
+  ravyunname () { unset RAVY_SESSION_TITLE; }
 
   # Set the terminal or terminal multiplexer title.
   ravy::termtitle::settitle () {
-    local formatted
-    zformat -f formatted "%s" "s:$argv"
+    local formatted title
+    title=${RAVY_SESSION_TITLE:-$argv}
+    zformat -f formatted "%s" "s:$title"
 
     if [[ $TERM =~ ^screen || -n $TMUX ]]; then
       printf "\ek%s\e\\" "${(V%)formatted}"
