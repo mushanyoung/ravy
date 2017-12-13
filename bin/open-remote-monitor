@@ -1,7 +1,7 @@
 #!/usr/bin/env swift
 import AppKit
 
-let pasteboard = NSPasteboard.general()
+let pasteboard = NSPasteboard.general
 
 var previousChangeCount: Int = pasteboard.changeCount
 var previousCstring: String = ""
@@ -13,7 +13,7 @@ while true {
     previousChangeCount = currentChangeCount
     var cstring: String = ""
     for element in pasteboard.pasteboardItems! {
-      if let str = element.string(forType: "public.utf8-plain-text") {
+      if let str = element.string(forType: NSPasteboard.PasteboardType.string) {
         cstring = str
         break
       }
