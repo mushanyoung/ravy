@@ -15,19 +15,20 @@ prepand_to_path "$RAVY_CUSTOM_HOME/bin"
 append_to_fpath "$RAVY_HOME/zsh-functions"
 append_to_fpath "$RAVY_CUSTOM_HOME/zsh-functions"
 
-local BREW_PREFIX="$HOME/.brew"
-if [[ -d "$BREW_PREFIX" ]]; then
-  prepand_to_path "$BREW_PREFIX/bin"
-  prepand_to_path "$BREW_PREFIX/sbin"
-  append_to_fpath "$BREW_PREFIX/completions/zsh"
-  if [[ $MANPATH != *$BREW_PREFIX/share/man* ]]; then
-    export MANPATH="$BREW_PREFIX/share/man:$MANPATH"
+local brew_prefixes=("$HOME/.brew" "$HOME/.linuxbrew")
+for brew_prefix in $brew_prefixes; do
+  if [[ -f "$brew_prefix/bin/brew" ]]; then
+    prepand_to_path "$brew_prefix/bin"
+    prepand_to_path "$brew_prefix/sbin"
+    append_to_fpath "$brew_prefix/completions/zsh"
+    if [[ $MANPATH != *$brew_prefix/share/man* ]]; then
+      export MANPATH="$brew_prefix/share/man:$MANPATH"
+    fi
+    if [[ $INFOPATH != *$brew_prefix/share/info* ]]; then
+      export INFOPATH="$brew_prefix/share/info:$INFOPATH"
+    fi
+    if [[ $XDG_DATA_DIRS != *$brew_prefix/share* ]]; then
+      export XDG_DATA_DIRS="$brew_prefix/share:$XDG_DATA_DIRS"
+    fi
   fi
-  if [[ $INFOPATH != *$BREW_PREFIX/share/info* ]]; then
-    export INFOPATH="$BREW_PREFIX/share/info:$INFOPATH"
-  fi
-  if [[ $XDG_DATA_DIRS != *$BREW_PREFIX/share* ]]; then
-    export XDG_DATA_DIRS="$BREW_PREFIX/share:$XDG_DATA_DIRS"
-  fi
-fi
-
+done
