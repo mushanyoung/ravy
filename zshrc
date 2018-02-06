@@ -42,11 +42,6 @@ if [[ $- == *i* ]]; then
   # autosuggestion
   bindkey "\ek" autosuggest-clear
 
-  # Use C-x C-e to edit the current command line in editor
-  autoload -U edit-command-line
-  zle -N edit-command-line
-  bindkey "\C-x\C-e" edit-command-line
-
   # Smart URLs
   autoload -Uz url-quote-magic
   zle -N self-insert url-quote-magic
@@ -275,6 +270,11 @@ if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
   zstyle :zplug:tag depth 1
 
   # plugins
+  zplug "modules/environment", from:prezto
+  zplug "modules/history", from:prezto
+  zplug "modules/completion", from:prezto
+  zplug "modules/archive", from:prezto
+
   zplug "marzocchi/zsh-notify"
   zplug "chrissicool/zsh-256color"
   zplug "supercrabtree/k"
@@ -344,9 +344,10 @@ fi
 # General
 setopt PIPE_FAIL              # Piped command fails for precedents.
 setopt BRACE_CCL              # Allow brace character class list expansion.
-setopt COMBINING_CHARS        # Combine zero-length punctuation characters (accents) with the base character.
-setopt RC_QUOTES              # Allow 'Henry''s Garage' instead of 'Henry'\''s Garage'.
-unsetopt MAIL_WARNING         # Do not print a warning message if a mail file has been accessed.
+
+# Auto correcting
+unsetopt CORRECT_ALL          # Do not auto correct arguments.
+unsetopt CORRECT              # Do not auto correct commands.
 
 # Directory
 setopt AUTO_CD              # Auto changes to a directory without typing cd.
@@ -360,33 +361,7 @@ setopt MULTIOS              # Write to multiple descriptors.
 unsetopt CLOBBER            # Do not overwrite existing files with > and >>.
                             # Use >! and >>! to bypass.
 
-# Jobs
-setopt LONG_LIST_JOBS         # List jobs in the long format by default.
-setopt AUTO_RESUME            # Attempt to resume existing job before creating a new process.
-setopt NOTIFY                 # Report status of background jobs immediately.
-unsetopt BG_NICE              # Do not run all background jobs at a lower priority.
-unsetopt HUP                  # Do not kill jobs on shell exit.
-unsetopt CHECK_JOBS           # Do not report on jobs when shell exit.
-
-# Auto correcting
-unsetopt CORRECT_ALL          # Do not auto correct arguments.
-unsetopt CORRECT              # Do not auto correct commands.
-
 # History
-setopt BANG_HIST              # Treat the '!' character specially during expansion.
-setopt EXTENDED_HISTORY       # Write the history file in the ':start:elapsed;command' format.
-setopt INC_APPEND_HISTORY     # Write to the history file immediately, not when the shell exits.
-setopt SHARE_HISTORY          # Share history between all sessions.
-setopt HIST_EXPIRE_DUPS_FIRST # Expire a duplicate event first when trimming history.
-setopt HIST_IGNORE_DUPS       # Do not record an event that was just recorded again.
-setopt HIST_IGNORE_ALL_DUPS   # Delete an old recorded event if a new event is a duplicate.
-setopt HIST_FIND_NO_DUPS      # Do not display a previously found event.
-setopt HIST_SAVE_NO_DUPS      # Do not write a duplicate event to the history file.
-setopt HIST_IGNORE_SPACE      # Do not record an event starting with a space.
-setopt HIST_VERIFY            # Do not execute immediately upon history expansion.
-setopt HIST_BEEP              # Beep when accessing non-existent history.
-
-export HISTFILE=~/.zhistory   # The path to the history file.
 export HISTSIZE=100000        # The maximum number of events to be kept in a session.
 export SAVEHIST=100000        # The maximum number of events to save in the history file.
 
@@ -417,135 +392,6 @@ hash dircolors &>/dev/null && dircolor_cmd=dircolors
 hash gdircolors &>/dev/null && dircolor_cmd=gdircolors
 [[ -n $dircolor_cmd ]] && eval "$($dircolor_cmd -b "$RAVY_HOME/LS_COLORS")"
 unset dircolor_cmd
-
-# }}}
-
-# Completions {{{
-
-# Options
-setopt COMPLETE_IN_WORD    # Complete from both ends of a word.
-setopt ALWAYS_TO_END       # Move cursor to the end of a completed word.
-setopt PATH_DIRS           # Perform path search even on command names with slashes.
-setopt AUTO_MENU           # Show completion menu on a successive tab press.
-setopt AUTO_LIST           # Automatically list choices on ambiguous completion.
-setopt AUTO_PARAM_SLASH    # If completed parameter is a directory, add a trailing slash.
-setopt EXTENDED_GLOB       # Needed for file modification glob modifiers with compinit
-unsetopt MENU_COMPLETE     # Do not autoselect the first completion entry.
-unsetopt FLOW_CONTROL      # Disable start/stop characters in shell editor.
-
-# Styles
-
-# Use caching to make completion for commands such as dpkg and apt usable.
-zstyle ":completion::complete:*" use-cache on
-zstyle ":completion::complete:*" cache-path "${HOME}/.zcompcache"
-
-# Case-insensitive (all), partial-word, and then substring completion.
-#
-zstyle ":completion:*" matcher-list "m:{a-zA-Z}={A-Za-z}" "r:|[._-]=* r:|=*" "l:|=* r:|=*"
-unsetopt CASE_GLOB
-
-# Group matches and describe.
-zstyle ":completion:*:*:*:*:*" menu select
-zstyle ":completion:*:matches" group "yes"
-zstyle ":completion:*:options" description "yes"
-zstyle ":completion:*:options" auto-description '%d'
-zstyle ":completion:*:corrections" format ' %F{green}-- %d (errors: %e) --%f'
-zstyle ":completion:*:descriptions" format ' %F{yellow}-- %d --%f'
-zstyle ":completion:*:messages" format ' %F{purple} -- %d --%f'
-zstyle ":completion:*:warnings" format ' %F{red}-- no matches found --%f'
-zstyle ":completion:*:default" list-prompt '%S%M matches%s'
-zstyle ":completion:*" format ' %F{yellow}-- %d --%f'
-zstyle ":completion:*" group-name ''
-zstyle ":completion:*" verbose yes
-
-# Fuzzy match mistyped completions.
-zstyle ":completion:*" completer _complete _match _approximate
-zstyle ":completion:*:match:*" original only
-zstyle ":completion:*:approximate:*" max-errors 1 numeric
-
-# Increase the number of errors based on the length of the typed word.
-# But make sure to cap (at 7) the max-errors to avoid hanging.
-zstyle -e ':completion:*:approximate:*' max-errors 'reply=($((($#PREFIX+$#SUFFIX)/3>7?7:($#PREFIX+$#SUFFIX)/3))numeric)'
-
-# Don"t complete unavailable commands.
-zstyle ":completion:*:functions" ignored-patterns "(_*|pre(cmd|exec))"
-
-# Array completion element sorting.
-zstyle ":completion:*:*:-subscript-:*" tag-order indexes parameters
-
-# Directories
-zstyle ":completion:*:default" list-colors "${(s.:.)LS_COLORS}"
-zstyle ":completion:*:*:cd:*" tag-order local-directories directory-stack path-directories
-zstyle ":completion:*:*:cd:*:directory-stack" menu yes select
-zstyle ":completion:*:-tilde-:*" group-order "named-directories" "path-directories" "users" "expand"
-zstyle ":completion:*" squeeze-slashes true
-
-# History
-zstyle ":completion:*:history-words" stop yes
-zstyle ":completion:*:history-words" remove-all-dups yes
-zstyle ":completion:*:history-words" list false
-zstyle ":completion:*:history-words" menu yes
-
-# Environmental Variables
-zstyle ':completion::*:(-command-|export):*' fake-parameters ${${${_comps[(I)-value-*]#*,}%%,*}:#-*-}
-
-# Populate hostname completion. But allow ignoring custom entries from static
-# */etc/hosts* which might be uninteresting.
-zstyle -a ':prezto:module:completion:*:hosts' etc-host-ignores '_etc_host_ignores'
-
-zstyle -e ':completion:*:hosts' hosts 'reply=(
-  ${=${=${=${${(f)"$(cat {/etc/ssh_,~/.ssh/known_}hosts(|2)(N) 2>/dev/null)"}%%[#| ]*}//\]:[0-9]*/ }//,/ }//\[/ }
-  ${=${(f)"$(cat /etc/hosts(|)(N) <<(ypcat hosts 2>/dev/null))"}%%(\#${_etc_host_ignores:+|${(j:|:)~_etc_host_ignores}})*}
-  ${=${${${${(@M)${(f)"$(cat ~/.ssh/config 2>/dev/null)"}:#Host *}#Host }:#*\**}:#*\?*}}
-)'
-
-# Don't complete uninteresting users...
-zstyle ":completion:*:*:*:users" ignored-patterns \
-  adm amanda apache avahi beaglidx bin cacti canna clamav daemon \
-  dbus distcache dovecot fax ftp games gdm gkrellmd gopher \
-  hacluster haldaemon halt hsqldb ident junkbust ldap lp mail \
-  mailman mailnull mldonkey mysql nagios \
-  named netdump news nfsnobody nobody nscd ntp nut nx openvpn \
-  operator pcap postfix postgres privoxy pulse pvm quagga radvd \
-  rpc rpcuser rpm shutdown squid sshd sync uucp vcsa xfs "_*"
-
-# ... unless we really want to.
-zstyle "*" single-ignored show
-
-# Ignore multiple entries.
-zstyle ":completion:*:(rm|kill|diff):*" ignore-line other
-zstyle ":completion:*:rm:*" file-patterns "*:all-files"
-
-# Kill
-zstyle ":completion:*:*:*:*:processes" command "ps -u \$LOGNAME -o pid,user,command -w"
-zstyle ":completion:*:*:kill:*:processes" list-colors "=(#b) #([0-9]#) ([0-9a-z-]#)*=01;36=0=01"
-zstyle ":completion:*:*:kill:*" menu yes select
-zstyle ":completion:*:*:kill:*" force-list always
-zstyle ":completion:*:*:kill:*" insert-ids single
-
-# Man
-zstyle ":completion:*:manuals" separate-sections true
-zstyle ":completion:*:manuals.(^1*)" insert-sections true
-
-# Media Players
-zstyle ':completion:*:*:mpg123:*' file-patterns '*.(mp3|MP3):mp3\ files *(-/):directories'
-zstyle ':completion:*:*:mpg321:*' file-patterns '*.(mp3|MP3):mp3\ files *(-/):directories'
-zstyle ':completion:*:*:ogg123:*' file-patterns '*.(ogg|OGG|flac):ogg\ files *(-/):directories'
-zstyle ':completion:*:*:mocp:*' file-patterns '*.(wav|WAV|mp3|MP3|ogg|OGG|flac):ogg\ files *(-/):directories'
-
-# Mutt
-if [[ -s "$HOME/.mutt/aliases" ]]; then
-  zstyle ':completion:*:*:mutt:*' menu yes select
-  zstyle ':completion:*:mutt:*' users ${${${(f)"$(<"$HOME/.mutt/aliases")"}#alias[[:space:]]}%%[[:space:]]*}
-fi
-
-# SSH/SCP/RSYNC
-zstyle ':completion:*:(ssh|scp|rsync):*' tag-order 'hosts:-host:host hosts:-domain:domain hosts:-ipaddr:ip\ address *'
-zstyle ':completion:*:(scp|rsync):*' group-order users files all-files hosts-domain hosts-host hosts-ipaddr
-zstyle ':completion:*:ssh:*' group-order users hosts-domain hosts-host users hosts-ipaddr
-zstyle ':completion:*:(ssh|scp|rsync):*:hosts-host' ignored-patterns '*(.|:)*' loopback ip6-loopback localhost ip6-localhost broadcasthost
-zstyle ':completion:*:(ssh|scp|rsync):*:hosts-domain' ignored-patterns '<->.<->.<->.<->' '^[-[:alnum:]]##(.[-[:alnum:]]##)##' '*@*'
-zstyle ':completion:*:(ssh|scp|rsync):*:hosts-ipaddr' ignored-patterns '^(<->.<->.<->.<->|(|::)([[:xdigit:].]##:(#c,2))##(|%*))' '127.0.0.<->' '255.255.255.255' '::1' 'fe80::*'
 
 # }}}
 
@@ -763,11 +609,6 @@ pip3-update-all () {
 
 # http serve current working dir in a given port (8000 in default)
 alias serve="python -m SimpleHTTPServer"
-
-# Lists the ten most used commands.
-history-stat () {
-  history 0 | awk "{print \$2}" | sort | uniq -c | sort -n -r | head
-}
 
 # grep with default options
 alias grep="grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}"
