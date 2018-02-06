@@ -15,6 +15,86 @@ _RAVY_PROMPT_TIMER=$(perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*
 
 # }}}
 
+# zplug {{{
+
+ZPLUG_HOME=${ZPLUG_HOME:-${HOME}/.zplug}
+
+if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
+  source "$ZPLUG_HOME/init.zsh"
+
+  # zplug env
+  zstyle :zplug:tag depth 1
+
+  # plugins
+  zplug "modules/environment", from:prezto
+  zplug "modules/history", from:prezto
+  zplug "modules/completion", from:prezto
+  zplug "modules/archive", from:prezto
+
+  zplug "marzocchi/zsh-notify"
+  zplug "chrissicool/zsh-256color"
+  zplug "supercrabtree/k"
+  zplug "hlissner/zsh-autopair"
+  zplug "zsh-users/zsh-completions"
+  zplug "ymattw/cdiff", as:command, use:cdiff
+  zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
+
+  zplug "zsh-users/zsh-syntax-highlighting", defer:2
+  zplug "zsh-users/zsh-history-substring-search", defer:2
+  zplug "zsh-users/zsh-autosuggestions", defer:3
+
+  # load plugins
+  if ! zplug check --verbose; then
+    printf "Install? [y/N]: "
+    if read -q; then
+        echo; zplug install
+    fi
+  fi
+
+  zplug load
+
+  # zsh syntax highlighting
+  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+  ZSH_HIGHLIGHT_STYLES=(
+  "precommand"                    "fg=magenta"
+  "command"                       "fg=231"
+  "hashed-command"                "fg=231"
+  "builtin"                       "fg=28"
+  "function"                      "fg=46"
+  "alias"                         "fg=85"
+  "reserved-word"                 "fg=214"
+  "unknown-token"                 "fg=196"
+  "suffix-alias"                  "fg=85,underline"
+  "path_prefix"                   "fg=23"
+  "path"                          "fg=30"
+  "commandseparator"              "fg=blue"
+  "redirection"                   "fg=blue"
+  "globbing"                      "fg=blue"
+  "history-expansion"             "fg=yellow"
+  "single-hyphen-option"          "fg=yellow"
+  "double-hyphen-option"          "fg=yellow"
+  "single-quoted-argument"        "fg=yellow"
+  "dollar-quoted-argument"        "fg=yellow"
+  "double-quoted-argument"        "fg=yellow"
+  "back-quoted-argument"          "fg=yellow"
+  "dollar-double-quoted-argument" "fg=magenta"
+  "back-double-quoted-argument"   "fg=magenta"
+  "back-dollar-quoted-argument"   "fg=magenta"
+  "assign"                        "fg=magenta"
+  "comment"                       "fg=black"
+  "cursor-matchingbracket"        "fg=black,bg=blue"
+  "default"                       "none"
+  )
+
+  # zsh auto suggestions
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
+  ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
+  "backward-delete-char" "complete-menu" "expand-or-complete"
+  )
+fi
+
+# }}}
+
 # ZLE & FZF {{{
 
 if [[ $- == *i* ]]; then
@@ -256,89 +336,6 @@ fi
 
 # }}}
 
-# Zplug {{{
-
-ZPLUG_HOME=${ZPLUG_HOME:-~/.zplug}
-
-if [[ -f "$ZPLUG_HOME/init.zsh" && -z $ZPLUG_LOADED ]]; then
-  ZPLUG_LOADED=true
-
-  # load zplug
-  source "$ZPLUG_HOME/init.zsh"
-
-  # zplug env
-  zstyle :zplug:tag depth 1
-
-  # plugins
-  zplug "modules/environment", from:prezto
-  zplug "modules/history", from:prezto
-  zplug "modules/completion", from:prezto
-  zplug "modules/archive", from:prezto
-
-  zplug "marzocchi/zsh-notify"
-  zplug "chrissicool/zsh-256color"
-  zplug "supercrabtree/k"
-  zplug "hlissner/zsh-autopair"
-  zplug "zsh-users/zsh-completions"
-  zplug "ymattw/cdiff", as:command, use:cdiff
-  zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
-
-  zplug "zsh-users/zsh-syntax-highlighting", defer:2
-  zplug "zsh-users/zsh-history-substring-search", defer:2
-  zplug "zsh-users/zsh-autosuggestions", defer:3
-
-  # load plugins
-  if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -q; then
-        echo; zplug install
-    fi
-  fi
-
-  zplug load
-
-  # zsh syntax highlighting
-  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
-  ZSH_HIGHLIGHT_STYLES=(
-  "precommand"                    "fg=magenta"
-  "command"                       "fg=231"
-  "hashed-command"                "fg=231"
-  "builtin"                       "fg=28"
-  "function"                      "fg=46"
-  "alias"                         "fg=85"
-  "reserved-word"                 "fg=214"
-  "unknown-token"                 "fg=196"
-  "suffix-alias"                  "fg=85,underline"
-  "path_prefix"                   "fg=23"
-  "path"                          "fg=30"
-  "commandseparator"              "fg=blue"
-  "redirection"                   "fg=blue"
-  "globbing"                      "fg=blue"
-  "history-expansion"             "fg=yellow"
-  "single-hyphen-option"          "fg=yellow"
-  "double-hyphen-option"          "fg=yellow"
-  "single-quoted-argument"        "fg=yellow"
-  "dollar-quoted-argument"        "fg=yellow"
-  "double-quoted-argument"        "fg=yellow"
-  "back-quoted-argument"          "fg=yellow"
-  "dollar-double-quoted-argument" "fg=magenta"
-  "back-double-quoted-argument"   "fg=magenta"
-  "back-dollar-quoted-argument"   "fg=magenta"
-  "assign"                        "fg=magenta"
-  "comment"                       "fg=black"
-  "cursor-matchingbracket"        "fg=black,bg=blue"
-  "default"                       "none"
-  )
-
-  # zsh auto suggestions
-  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
-  ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
-  "backward-delete-char" "complete-menu" "expand-or-complete"
-  )
-fi
-
-# }}}
-
 # Environment {{{
 
 # General
@@ -384,7 +381,7 @@ export LESS_TERMCAP_se=$'\E[0m'           # end standout-mode
 export LESS_TERMCAP_us=$'\E[04;38;5;146m' # begin underline
 export LESS_TERMCAP_ue=$'\E[0m'           # end underline
 
-# MANPATH should always have a leading colon to search by executables
+# MANPATH should always have a leading colon to search with executables
 [[ ! $MANPATH =~ ^: ]] && MANPATH=":$MANPATH"
 
 # ls color evaluations
@@ -427,7 +424,7 @@ d () {
   local arg i parents parent folder_depth dest
   arg="${1:-1}"
   # example: $PWD == /home/arash/abc ==> $folder_depth == 3
-  folder_depth=${#${(ps:/:)${PWD}}}
+  folder_depth=${#${(ps:/:)${PWD}}#}
   dest="./"
 
   # First try to find a folder with matching name (could potentially be a number)
@@ -467,7 +464,7 @@ d () {
 _d () {
   # Get parents (in reverse order)
   local i folder_depth
-  folder_depth=${#${(ps:/:)${PWD}}}
+  folder_depth=${#${(ps:/:)${PWD}}#}
   for i in {$((folder_depth+1))..2}; do
     reply=($reply "`echo $PWD | cut -d'/' -f$i`")
   done
@@ -513,19 +510,6 @@ nice_exit_code () {
 
   echo "${exit_status}:${sig_name:-$exit_status}"
   return $exit_status
-}
-
-# Codi: launch an interactive repl scratchpad within vim
-# Usage: codi [filetype] [filename]
-codi() {
-  local syntax="${1:-python}"
-  shift
-  vim -c "let g:startify_disable_at_vimenter = 1 |\
-          set bt=nofile ls=0 noru nonu nornu |\
-          hi ColorColumn ctermbg=NONE |\
-          hi VertSplit ctermbg=NONE |\
-          hi NonText ctermfg=0 |\
-          Codi $syntax" "$@"
 }
 
 # git completion function for git aliases

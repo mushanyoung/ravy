@@ -605,7 +605,6 @@ Plug 'junegunn/fzf.vim'                " provide utility commands to fzf in a li
 Plug 'junegunn/vim-easy-align'         " ga to align a region of text on a key (<C-X> to use a regex)
 Plug 'junegunn/vim-peekaboo'           " extends \", @, i:<C-R> to list the contents registers
 Plug 'justinmk/vim-sneak'              " s: motion to match 2 characters
-Plug 'metakirby5/codi.vim'             " Interactive scratchpad
 Plug 'moll/vim-bbye'                   " sane Bdelete
 Plug 'mushanyoung/vim-windflower'
 Plug 'nathanaelkane/vim-indent-guides' " visually displaying indent levels
