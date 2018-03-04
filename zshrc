@@ -563,27 +563,26 @@ alias rd="rmdir"
 alias rb="ruby"
 
 # python
+alias py="python"
+alias py3="python3"
+alias ipy="ipython"
+alias ipy3="ipython3"
+
 if hash python2 2>/dev/null; then
   alias py="python2"
   alias py2="python2"
-else
-  alias py="python"
-  alias py2="python"
 fi
 if hash ipython2 2>/dev/null; then
   alias ipy="ipython2"
   alias ipy2="ipython2"
-else
-  alias ipy="ipython"
-  alias ipy2="ipython"
 fi
 if hash pip2 2>/dev/null; then
   alias pip="pip2"
 fi
 
-alias py3="python3"
-alias ipy3="ipython3"
-
+pip-update-all () {
+  pip list --outdated --format=legacy | awk "!/Could not|ignored/ {print \$1}" | xargs pip install -U
+}
 pip2-update-all () {
   pip2 list --outdated --format=legacy | awk "!/Could not|ignored/ {print \$1}" | xargs pip2 install -U
 }
