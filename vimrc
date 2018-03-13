@@ -285,8 +285,8 @@ nnoremap \w :write<CR>
 " forward yanked text to clip when in remote
 if $SSH_CONNECTION != "" || has('nvim')
   vnoremap <silent> y y:call RavyClip(@0)<BAR>echo 'Yanked and Sent'<CR>
-  nnoremap <silent> \y :call RavyClip(@0)<BAR>echo 'Yanked Sent'<CR>
-  vnoremap <silent> \y :call RavyClip(GetVisualSelection())<CR>
+  nnoremap <silent> \yy :call RavyClip(@0)<BAR>echo 'Yanked Sent'<CR>
+  vnoremap <silent> \yy :call RavyClip(GetVisualSelection())<CR>
 endif
 
 " toggle auto zz when scrolling
