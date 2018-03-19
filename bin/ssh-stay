@@ -11,6 +11,7 @@ ssh_default_opts="-t -oCompression=yes -oCheckHostIP=no -oServerAliveInterval=${
 ssh_opts="$*"
 
 while true; do
+  echo "Connecting..."
   eval "${ssh_command} ${ssh_default_opts} ${ssh_opts} ${execute_command:+-- ${execute_command}}" \
     && break
   echo "SSH connection lost, reconnecting in ${reconnect_interval} seconds..."
