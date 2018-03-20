@@ -38,7 +38,7 @@ set splitright splitbelow      " split window: vertical to the right and horizon
 set hidden                     " hidden buffers
 set nospell                    " no spell check
 set nobomb                     " no Byte Order Mark
-set synmaxcol=255              " max columnlength for syntax parsing
+set synmaxcol=4096             " max columnlength for syntax parsing
 set switchbuf=useopen          " when switching to a buffer, jump to a window with it opened
 set nostartofline              " does not move the cursor to start of line for some commands
 
