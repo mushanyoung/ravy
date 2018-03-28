@@ -39,7 +39,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "ymattw/cdiff", as:command, use:cdiff
   zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
 
-  zplug "zsh-users/zsh-syntax-highlighting", defer:2
+  zplug "zsh-users/zsh-syntax-highlighting", defer:1
   zplug "zsh-users/zsh-history-substring-search", defer:2
   zplug "zsh-users/zsh-autosuggestions", defer:3
 
