@@ -597,7 +597,6 @@ Plug 'ap/vim-css-color'                " show css color in code
 Plug 'christoomey/vim-tmux-navigator'  " pane navigate integration with tmux
 Plug 'easymotion/vim-easymotion'       " choose from positions which repeated motions would reach
 Plug 'google/vim-searchindex'          " search: show match index and total match count
-Plug 'honza/vim-snippets'              " snippets
 Plug 'ivanov/vim-ipython'              " ipython integration
 Plug 'jiangmiao/auto-pairs'            " Insert or delete brackets, parens, quotes in pair
 Plug 'junegunn/fzf'                    " fzf integration
