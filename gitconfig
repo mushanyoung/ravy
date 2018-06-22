@@ -74,8 +74,8 @@
   ls = log --decorate --stat
 
   # diffs
-  df = !cdiff -c auto --
-  di = !cdiff -c auto -s -w 0 --
+  df = !ydiff -c auto --
+  di = !ydiff -c auto -s -w 0 --
   ds = diff --stat
   dn = diff --name-only
   de = !DIFF_EXEC_CMD=vim DIFF_EXEC_VIM_LCS_DIR=1 git diff-exec
