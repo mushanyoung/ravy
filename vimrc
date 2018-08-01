@@ -4,12 +4,6 @@
 
 " Settings {{
 
-" An workaround of python3 deprecation warning.
-" https://github.com/vim/vim/issues/3117
-if has('python3')
-  silent! python3 1
-endif
-
 " make directory if necessary
 if !isdirectory(expand("~/.vim/tmp")) || !isdirectory(expand("~/.vim/bundle"))
   call system("mkdir -p ~/.vim/tmp ~/.vim/bundle")
