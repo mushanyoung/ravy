@@ -581,13 +581,13 @@ if hash pip2 2>/dev/null; then
 fi
 
 pip-update-all () {
-  pip list --outdated --format=legacy | awk "!/Could not|ignored/ {print \$1}" | xargs pip install -U
+  pip list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip install -U
 }
 pip2-update-all () {
-  pip2 list --outdated --format=legacy | awk "!/Could not|ignored/ {print \$1}" | xargs pip2 install -U
+  pip2 list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip install -U
 }
 pip3-update-all () {
-  pip3 list --outdated  --format=legacy| awk "!/Could not|ignored/ {print \$1}" | xargs pip3 install -U
+  pip3 list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip install -U
 }
 
 # http serve current working dir in a given port (8000 in default)
