@@ -526,6 +526,15 @@ alias -g -- --help="--help | less; true "
 alias -g -- --helpshort="--helpshort | less; true "
 alias -g -- --helpfull="--helpfull | less; true "
 
+# change directory to a nearest possible folder
+cd () {
+  file="$@"
+  while [[ ! -d "$file" ]]; do
+    file="${file:h}"
+  done
+  builtin cd -- "$file"
+}
+
 # change directory to the farest folder containing all changed files
 gd () {
   local dpath
