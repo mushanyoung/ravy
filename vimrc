@@ -173,9 +173,6 @@ nnoremap ^ 0
 
 " imap / cmap {{
 
-" jk to exit insert mode
-inoremap jk <ESC>
-
 " <CR>: close popup and save indent.
 inoremap <expr><CR> pumvisible() ? "\<C-Y>" : "\<CR>"
 
