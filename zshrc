@@ -532,7 +532,10 @@ cd () {
   while [[ ! -d "$file" ]]; do
     file="${file:h}"
   done
-  builtin cd -- "$file"
+  if [[ "$file" == "." ]]; then
+    file="$@"
+  fi
+  builtin cd -- $file
 }
 
 # change directory to the farest folder containing all changed files
