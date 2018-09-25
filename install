@@ -12,7 +12,6 @@ RAVY="${0:A:h}"
 echo "dotfiles"
 append_content_if_absent ~/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
 append_content_if_absent ~/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
-append_content_if_absent ~/.tmux.conf "source -q $RAVY/tmux.conf"
 append_content_if_absent ~/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
 append_content_if_absent ~/.ignore "RAVY_TMP" "$RAVY/ignore"
 
@@ -32,10 +31,9 @@ append_content_if_absent ~/.config/nvim/init.vim "if filereadable(\"$RAVY/vimrc\
 echo "vim plugins"
 vim '+PlugUpdate' '+qall'
 
-echo "tmux plugins"
-mkdir -p ~/.tmux ~/.tmux/plugins
-[ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-~/.tmux/plugins/tpm/scripts/install_plugins.sh
+echo "tmux"
+ln -s -f $RAVY/tmux.conf ~/.tmux.conf
+ln -s -f $RAVY/tmux.conf.local ~/.tmux.conf.local
 
 echo "custom configs"
 mkdir -p "$RAVY/custom" "$RAVY/custom/bin" "$RAVY/custom/zsh-functions"
