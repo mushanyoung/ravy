@@ -9,6 +9,9 @@ typeset -U fpath
 prepand_to_path () { [[ -d "$1" ]] && path[1,0]="$1"; }
 append_to_fpath () { [[ -d "$1" ]] && fpath+="$1"; }
 
+# source custom
+[[ -f "$RAVY_CUSTOM_HOME/zshenv" ]] && source "$RAVY_CUSTOM_HOME/zshenv"
+
 prepand_to_path "$RAVY_HOME/bin"
 prepand_to_path "$RAVY_CUSTOM_HOME/bin"
 
@@ -33,4 +36,3 @@ for brew_prefix in $brew_prefixes; do
   fi
 done
 
-[[ -f "$RAVY_CUSTOM_HOME/zshenv" ]] && source "$RAVY_CUSTOM_HOME/zshenv"
