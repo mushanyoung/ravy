@@ -26,22 +26,22 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zstyle :zplug:tag depth 1
 
   # plugins
-  zplug "modules/environment", from:prezto
-  zplug "modules/history", from:prezto
-  zplug "modules/completion", from:prezto
-  zplug "modules/archive", from:prezto
+  zplug "modules/environment", from:prezto, as:plugin
+  zplug "modules/history", from:prezto, as:plugin
+  zplug "modules/completion", from:prezto, as:plugin
+  zplug "modules/archive", from:prezto, as:plugin
 
-  zplug "marzocchi/zsh-notify"
-  zplug "chrissicool/zsh-256color"
-  zplug "supercrabtree/k"
-  zplug "hlissner/zsh-autopair"
-  zplug "zsh-users/zsh-completions"
+  zplug "marzocchi/zsh-notify", as:plugin
+  zplug "chrissicool/zsh-256color", as:plugin
+  zplug "supercrabtree/k", as:plugin
+  zplug "hlissner/zsh-autopair", as:plugin
+  zplug "zsh-users/zsh-completions", as:plugin
   zplug "ymattw/cdiff", as:command, use:cdiff
   zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
 
-  zplug "zsh-users/zsh-syntax-highlighting", defer:1
-  zplug "zsh-users/zsh-history-substring-search", defer:2
-  zplug "zsh-users/zsh-autosuggestions", defer:3
+  zplug "zsh-users/zsh-syntax-highlighting", defer:1, as:plugin
+  zplug "zsh-users/zsh-history-substring-search", defer:2, as:plugin
+  zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin
 
   # load plugins
   if ! zplug check --verbose; then
