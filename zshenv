@@ -32,3 +32,5 @@ for brew_prefix in $brew_prefixes; do
     fi
   fi
 done
+
+source $RAVY_CUSTOM_HOME/zshenv
