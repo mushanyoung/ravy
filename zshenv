@@ -33,4 +33,4 @@ for brew_prefix in $brew_prefixes; do
   fi
 done
 
-source $RAVY_CUSTOM_HOME/zshenv
+[[ -f "$RAVY_CUSTOM_HOME/zshenv" ]] && source "$RAVY_CUSTOM_HOME/zshenv"
