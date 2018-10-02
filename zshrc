@@ -528,7 +528,7 @@ alias -g -- --helpfull="--helpfull | less; true "
 
 # change directory to a nearest possible folder
 cd () {
-  file="$@"
+  local file="$@"
   while [[ ! -d "$file" ]]; do
     file="${file:h}"
   done
