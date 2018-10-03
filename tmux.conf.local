@@ -3,6 +3,7 @@
 # use C-Space as tmux prefix
 unbind C-b
 set -g prefix C-Space
+set -g prefix2 C-Space
 
 # copy mode
 bind Space copy-mode
