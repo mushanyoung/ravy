@@ -155,12 +155,6 @@ endfunction
 
 " basic key remap {{
 
-" disable arrow keys
-noremap <UP> <NOP>
-noremap <DOWN> <NOP>
-noremap <LEFT> <NOP>
-noremap <RIGHT> <NOP>
-
 " scroll the view port faster
 nnoremap <C-E> 3<C-E>
 nnoremap <C-Y> 3<C-Y>
