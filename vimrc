@@ -33,6 +33,7 @@ set shell=bash
 set mouse=a
 set formatoptions=nmMcroql
 set iskeyword+=-
+set updatetime=100
 set notimeout                  " no timeout for key map sequence
 set splitright splitbelow      " split window: vertical to the right and horizontal to the below
 set hidden                     " hidden buffers
