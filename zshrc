@@ -485,10 +485,14 @@ nice_exit_code () {
     -1  FATAL
     1   WARN          # Miscellaneous errors, such as "divide by zero"
     2   BUILTINMISUSE # misuse of shell builtins (pretty rare)
+    19  STOP
+    20  TSTP
+    21  TTIN
+    22  TTOU
     126 CCANNOTINVOKE # cannot invoke requested command (ex : source script_with_syntax_error)
     127 CNOTFOUND     # command not found (ex : source script_not_existing)
     129 HUP
-    130 INT
+    130 INT           # Interrupt
     131 QUIT
     132 ILL
     134 ABRT
@@ -497,13 +501,6 @@ nice_exit_code () {
     139 SEGV
     141 PIPE
     143 TERM
-    # assuming we are on an x86 system here
-    # this MIGHT get annoying since those are in a range of exit codes
-    # programs sometimes use.... we'll see.
-    19  STOP
-    20  TSTP
-    21  TTIN
-    22  TTOU
   )
 
   sig_name=$ref[$exit_status]
