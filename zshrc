@@ -223,7 +223,7 @@ if [[ $- == *i* ]]; then
       elif [[ $key =~ [Dd]$ ]]; then
         file_str="${file_list[1]/#\~/$HOME}"
         [[ -d $file_str ]] || file_str="${file_str:h}"
-        cd -- "$file_str" || return
+        cd "$file_str" || return
         zle_clear_cmd="reset-prompt"
       elif [[ $key =~ [Ee]$ ]]; then
         BUFFER="${EDITOR:-vim} -- $file_str"
