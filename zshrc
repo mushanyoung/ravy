@@ -564,8 +564,8 @@ alias dd="d"
 take () { mkdir -p "$1" && cd -- "$1" || return; }
 
 # abbreviations
-alias g="git"
-alias t="tmux"
+alias g="command git"
+alias t="command tmux"
 alias hs="history"
 alias tf="tail -f"
 alias rd="rmdir"
