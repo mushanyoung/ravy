@@ -89,7 +89,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   # zsh auto suggestions
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
-  "backward-delete-char" "complete-menu" "expand-or-complete"
+  "vi-cmd-mode" "backward-delete-char" "complete-menu" "expand-or-complete"
   )
 fi
 
@@ -104,71 +104,74 @@ if [[ $- == *i* ]]; then
 
   export KEYTIMEOUT=1
 
-  # use emacs mode for command line
-  bindkey -e
+  # vi mode
+  bindkey -v
 
-  # ctrl-a and ctrl-e
-  bindkey "^A" beginning-of-line
-  bindkey "^E" end-of-line
-
-  # undo and redo
-  bindkey "^_" undo
-  bindkey "\e-" redo
-
-  # zsh-history-substring-search: bind ^P and ^N to it
-  bindkey "^P" history-substring-search-up
-  bindkey "^N" history-substring-search-down
-
-  # autosuggestion
-  bindkey "\ek" autosuggest-clear
+  function zle-keymap-select {
+    zle reset-prompt
+  }
+  zle -N zle-keymap-select
 
   # Smart URLs
   autoload -Uz url-quote-magic
   zle -N self-insert url-quote-magic
 
-  # M-. and M-m to insert word in previous lines
-  autoload -Uz copy-earlier-word
-  zle -N copy-earlier-word
-  bindkey "\em" copy-earlier-word
-  bindkey "\e." insert-last-word
+  # Home key variants
+  bindkey '\e[1~' vi-beginning-of-line
+  bindkey '\eOH' vi-beginning-of-line
 
-  # M-b / M-f to move forward and back by word
-  bindkey "\ef" forward-word
-  bindkey "\eb" backward-word
+  # End key variants
+  bindkey '\e[4~' vi-end-of-line
+  bindkey '\eOF' vi-end-of-line
 
   # C-W to kill by word, C-D to kill forward word
-  bindkey "^W" backward-kill-word
-  bindkey "^D" kill-word
+  bindkey -M viins '^W' vi-backward-kill-word
 
-  # ranger file explorer
-  ravy::zle::ranger_cd () {
-    local tempfile=$(mktemp)
-    ranger --choosedir="$tempfile" "${@:-$(pwd)}" < "$TTY"
-    if [[ -f "$tempfile" && "$(cat -- "$tempfile")" != "$(pwd)" ]]; then
-      cd -- "$(cat "$tempfile")" || return
-    fi
-    rm -f -- "$tempfile"
-    zle redisplay
-    zle -M ""
-  }
-  zle -N ravy::zle::ranger_cd
-  bindkey "^K" ravy::zle::ranger_cd
+  bindkey -M vicmd 'yy' vi-yank-whole-line
+  bindkey -M vicmd 'Y' vi-yank-eol
 
-  # toggle glob for current command line
-  ravy::zle::glob_toggle () {
+  bindkey -M vicmd 'y.' vi-yank-whole-line
+  bindkey -M vicmd 'c.' vi-change-whole-line
+  bindkey -M vicmd 'd.' kill-whole-line
+
+  bindkey -M vicmd 'H' run-help
+  bindkey -M viins "\eh" run-help
+
+  bindkey -M viins '^a' beginning-of-line
+  bindkey -M viins '^e' end-of-line
+
+  # zsh-history-substring-search: bind ^P / ^N in viins and k / j in vicmd
+  bindkey -M viins "^P" history-substring-search-up
+  bindkey -M viins "^N" history-substring-search-down
+  bindkey -M vicmd 'k' history-substring-search-up
+  bindkey -M vicmd 'j' history-substring-search-down
+
+  # autosuggestion
+  bindkey "\ek" autosuggest-clear
+
+  # M-. and M-, to insert word in previous lines
+  autoload -Uz copy-earlier-word
+  zle -N copy-earlier-word
+  bindkey -M viins "\e." insert-last-word
+  bindkey -M viins "\e," copy-earlier-word
+
+  # M-b / M-f to move forward and back by word
+  bindkey -M viins "\ef" forward-word
+  bindkey -M viins "\eb" backward-word
+
+  # toggle prefix for current (if any) or last command line
+  ravy::zle::prefix_toggle () {
+    local prefix=$1
     [[ -n $BUFFER ]] || zle up-history
-    [[ $BUFFER =~ ^noglob ]] && LBUFFER="${LBUFFER#noglob }" || LBUFFER="noglob $LBUFFER"
+    [[ $BUFFER =~ "^$prefix" ]] && LBUFFER="${LBUFFER#${prefix} }" || LBUFFER="${prefix} ${LBUFFER}"
   }
-  zle -N ravy::zle::glob_toggle
-  bindkey "^R" ravy::zle::glob_toggle
+  ravy::zle::prefix_toggle_noglob () { ravy::zle::prefix_toggle noglob }
+  ravy::zle::prefix_toggle_sudo () { ravy::zle::prefix_toggle sudo }
 
-  # toggle sudo for current command line
-  ravy::zle::sudo_toggle () {
-    [[ -n $BUFFER ]] || zle up-history
-    [[ $BUFFER =~ ^sudo ]] && LBUFFER="${LBUFFER#sudo }" || LBUFFER="sudo $LBUFFER"
-  }
-  zle -N ravy::zle::sudo_toggle
-  bindkey "^S" ravy::zle::sudo_toggle
+  zle -N ravy::zle::prefix_toggle_noglob
+  bindkey -M viins "^R" ravy::zle::prefix_toggle_noglob
+  zle -N ravy::zle::prefix_toggle_sudo
+  bindkey -M viins "^S" ravy::zle::prefix_toggle_sudo
 
   # menu select and completion
   bindkey "^I" expand-or-complete
@@ -719,10 +722,21 @@ ravy::prompt::git () {
   fi
 }
 
+# export VIKEYMAP_DOTS="."
+ravy::prompt::vikeymap () {
+  local CMD_INDICATOR="%K{190}%F{17} NORM %F{190}%K{234} %E"
+  local INS_INDICATOR="%K{240}%F{17}      %F{240}%K{234} %E"
+  if [[ $KEYMAP == "vicmd" ]]; then
+    echo "$CMD_INDICATOR"
+  else
+    echo "$INS_INDICATOR"
+  fi
+}
+
 setopt PROMPT_SUBST
 
 RAVY_PROMPT_CMD_RET="%F{240}\${_RAVY_PROMPT_TIMER_READ} %(?..%F{160}\$(nice_exit_code))"
-RAVY_PROMPT_SYMBOL="%K{238} %K{237} %K{236} %K{235} %K{234}%E"
+RAVY_PROMPT_VIKEYMAP="\$(ravy::prompt::vikeymap)"
 RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{103\}%n }
 RAVY_PROMPT_PATH="%F{30}%~ "
 RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ}%F{172}\${_RAVY_PROMPT_GIT_READ:+\$_RAVY_PROMPT_GIT_ST_READ }"
@@ -736,7 +750,7 @@ ravy::prompt::command_ret () {
   print -nP "${_RAVY_PROMPT_TIMER_READ:+$RAVY_PROMPT_CMD_RET\n}"
 }
 
-export PROMPT="\${RAVY_PROMPT_SYMBOL}\${RAVY_PROMPT_USER}\${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_X}\${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}"$'\n'"\${RAVY_PROMPT_CMD}"
+export PROMPT="${RAVY_PROMPT_VIKEYMAP}\${RAVY_PROMPT_USER}\${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_X}\${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}"$'\n'"\${RAVY_PROMPT_CMD}"
 export PROMPT2="\${RAVY_PROMPT_CMD}"
 unset RPROMPT RPROMPT2
 
