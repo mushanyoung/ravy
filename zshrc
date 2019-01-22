@@ -116,6 +116,9 @@ if [[ $- == *i* ]]; then
   autoload -Uz url-quote-magic
   zle -N self-insert url-quote-magic
 
+  # Normal mode
+  bindkey '^k' vi-cmd-mode
+
   # Home key variants
   bindkey '\e[1~' vi-beginning-of-line
   bindkey '\eOH' vi-beginning-of-line
