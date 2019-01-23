@@ -112,8 +112,8 @@ endfunction
 function! RavyOpenLink(url)
   let t:url = substitute(a:url, "[\x0d\x0a].*", "", "")
   let t:url = substitute(t:url, '^\s\+', "", "")
-  let t:url = (t:url =~ '.*://' ? '' : 'http://') . t:url
-  call RavyClip("open\x0d" . t:url)
+  let t:url = (t:url =~ '.*://' ? '' : 'https://www.google.com/search?q=') . t:url
+  call RavyClip("RAVY\x0dopen\x0d" . t:url)
 endfunction
 
 " Move to a window in the given direction, if can't move, create a new one
