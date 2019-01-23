@@ -250,13 +250,13 @@ nnoremap \fd :Bdelete!<CR>
 
 " \h*: GitGutter
 
-nnoremap <silent> \l :call RavyOpenLink(@0)<BAR>echo 'Link Sent'<CR>
+nnoremap <silent> \l :call RavyOpenLink(@")<BAR>echo 'Link Sent'<CR>
 vnoremap <silent> \l :call RavyOpenLink(GetVisualSelection())<CR>
 
 " toggle mouse
 nnoremap <silent> \m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"set mouse=a<BAR>echo 'Mouse Enabled.'"<CR>
 
-" toggle quick fix window
+" toggle quickfix window
 nnoremap <silent> \q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
 
 " \s*: vim-session
@@ -276,8 +276,8 @@ nnoremap \w :write<CR>
 
 " forward yanked text to clip when in remote
 if $SSH_CONNECTION != "" || has('nvim')
-  vnoremap <silent> y y:call RavyClip(@0)<BAR>echo 'Yanked and Sent'<CR>
-  nnoremap <silent> \yy :call RavyClip(@0)<BAR>echo 'Yanked Sent'<CR>
+  vnoremap <silent> y y:call RavyClip(@")<BAR>echo 'Yanked and Sent'<CR>
+  nnoremap <silent> \yy :call RavyClip(@")<BAR>echo 'Yanked Sent'<CR>
   vnoremap <silent> \yy :call RavyClip(GetVisualSelection())<CR>
 endif
 
