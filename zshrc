@@ -91,6 +91,10 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
   "vi-cmd-mode" "backward-delete-char" "complete-menu" "expand-or-complete"
   )
+
+  # Terminal notifier
+  zstyle ':notify:*' success-title "Succeeded in #{time_elapsed}s"
+  zstyle ':notify:*' error-title "Failed in #{time_elapsed}s"
 fi
 
 # }}}
