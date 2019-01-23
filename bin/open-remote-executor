@@ -2,7 +2,7 @@
 
 content=$(pbpaste)
 
-pattern=$'^(open)\x0d(.*)$'
+pattern=$'RAVY\x0d^(open)\x0d(.*)$'
 
 if [[ $content =~ $pattern ]]; then
   op=${BASH_REMATCH[1]}
