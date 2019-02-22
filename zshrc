@@ -635,7 +635,7 @@ alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
 # Rsync commands
 if hash rsync 2>/dev/null; then
-  _rsync_cmd="rsync --verbose --progress --human-readable --compress --archive --hard-links --one-file-system"
+  _rsync_cmd="rsync --verbose --progress --human-readable --archive --hard-links --one-file-system"
 
   if grep -q "xattrs" <(rsync --help 2>&1); then
     _rsync_cmd="${_rsync_cmd} --acls --xattrs"
