@@ -27,9 +27,8 @@ awk '
         return "\033[38;5;" color "m" s "\033(B\033[m"
     }
     {
-        # highlight executable permission & diminish permissions for directory
-        if ($1 ~ /^d/) { color = 234 }
-        else if ($1 ~ /^-..x[^[:space:]]+/) { color = 208 }
+        # highlight executable permission
+        if ($1 ~ /^-..x[^[:space:]]+/) { color = 208 }
         else { color = 238 }
         $1 = c($1, color)
 
