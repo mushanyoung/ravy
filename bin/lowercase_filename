@@ -1,0 +1,11 @@
+#!/bin/bash
+
+filename="$1"
+filename_lowercase=$(echo "$filename" | sed -r "s/(.*)\$/\L\1/");
+if [ "$filename" != "$filename_lowercase" ]; then
+  if [ ! -e $"filename_lowercase" ]; then
+    mv "$filename" "$filename_lowercase"
+  else
+    echo "$filename_lowercase already exists"
+  fi
+fi
