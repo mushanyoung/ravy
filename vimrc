@@ -580,6 +580,10 @@ let g:UltiSnipsEditSplit="vertical"
 
 call plug#begin('~/.vim/bundle')
 
+if filereadable($RAVY_CUSTOM_HOME."/vimrc")
+  source $RAVY_CUSTOM_HOME/vimrc
+endif
+
 Plug 'ConradIrwin/vim-bracketed-paste' " auto paste mode when pasting from terminal
 Plug 'PeterRincker/vim-argumentative'  " argument: [, ], to jump & <, >, to shift & a, i, is text-object
 Plug 'SirVer/ultisnips'                " snippets manager
@@ -616,18 +620,14 @@ Plug 'vim-jp/vim-cpp'
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
 Plug 'xolox/vim-misc'                  " vim plugin util
 Plug 'xolox/vim-session'               " session manager
+Plug 'majutsushi/tagbar'             " tag explorer
 
 if !has('nvim')
   Plug 'tpope/vim-sensible'            " default settings
 endif
 
-if executable('ctags')
-  Plug 'xolox/vim-easytags'            " auto generate tags
-  Plug 'majutsushi/tagbar'             " tag explorer
-endif
-
-if filereadable($RAVY_CUSTOM_HOME."/vimrc")
-  source $RAVY_CUSTOM_HOME/vimrc
+if !exists('g:ravy_disable_easytags') && executable('ctags')
+  Plug 'xolox/vim-easytags'            " auto generate tags by ctags
 endif
 
 call plug#end()
