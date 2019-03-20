@@ -88,7 +88,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   # zsh auto suggestions
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
-  "vi-cmd-mode" "backward-delete-char" "complete-menu" "expand-or-complete"
+  "backward-delete-char" "complete-menu" "expand-or-complete"
   )
 
   # Terminal notifier
@@ -107,50 +107,18 @@ if [[ $- == *i* ]]; then
 
   export KEYTIMEOUT=1
 
-  # vi mode
-  bindkey -v
-
-  function zle-keymap-select {
-    zle reset-prompt
-  }
-  zle -N zle-keymap-select
+  bindkey -e
 
   # Smart URLs
   autoload -Uz url-quote-magic
   zle -N self-insert url-quote-magic
 
-  # Normal mode
-  bindkey '^k' vi-cmd-mode
+  # ^P / ^N: zsh-history-substring-search
+  bindkey "^P" history-substring-search-up
+  bindkey "^N" history-substring-search-down
 
-  # Home key variants
-  bindkey '\e[1~' vi-beginning-of-line
-  bindkey '\eOH' vi-beginning-of-line
-
-  # End key variants
-  bindkey '\e[4~' vi-end-of-line
-  bindkey '\eOF' vi-end-of-line
-
-  # C-W to kill by word, C-D to kill forward word
-  bindkey -M viins '^W' vi-backward-kill-word
-
-  bindkey -M vicmd 'yy' vi-yank-whole-line
-  bindkey -M vicmd 'Y' vi-yank-eol
-
-  bindkey -M vicmd 'y.' vi-yank-whole-line
-  bindkey -M vicmd 'c.' vi-change-whole-line
-  bindkey -M vicmd 'd.' kill-whole-line
-
-  bindkey -M vicmd 'H' run-help
-  bindkey -M viins "\eh" run-help
-
-  bindkey -M viins '^a' beginning-of-line
-  bindkey -M viins '^e' end-of-line
-
-  # zsh-history-substring-search: bind ^P / ^N in viins and k / j in vicmd
-  bindkey -M viins "^P" history-substring-search-up
-  bindkey -M viins "^N" history-substring-search-down
-  bindkey -M vicmd 'k' history-substring-search-up
-  bindkey -M vicmd 'j' history-substring-search-down
+  # M-h to run-help
+  bindkey "\eh" run-help
 
   # autosuggestion
   bindkey "\ek" autosuggest-clear
@@ -158,28 +126,10 @@ if [[ $- == *i* ]]; then
   # M-. and M-, to insert word in previous lines
   autoload -Uz copy-earlier-word
   zle -N copy-earlier-word
-  bindkey -M viins "\e." insert-last-word
-  bindkey -M viins "\e," copy-earlier-word
+  bindkey "\e." insert-last-word
+  bindkey "\e," copy-earlier-word
 
-  # M-b / M-f to move forward and back by word
-  bindkey -M viins "\ef" forward-word
-  bindkey -M viins "\eb" backward-word
-
-  # toggle prefix for current (if any) or last command line
-  ravy::zle::prefix_toggle () {
-    local prefix=$1
-    [[ -n $BUFFER ]] || zle up-history
-    [[ $BUFFER =~ "^$prefix" ]] && LBUFFER="${LBUFFER#${prefix} }" || LBUFFER="${prefix} ${LBUFFER}"
-  }
-  ravy::zle::prefix_toggle_noglob () { ravy::zle::prefix_toggle noglob }
-  ravy::zle::prefix_toggle_sudo () { ravy::zle::prefix_toggle sudo }
-
-  zle -N ravy::zle::prefix_toggle_noglob
-  bindkey -M viins "^R" ravy::zle::prefix_toggle_noglob
-  zle -N ravy::zle::prefix_toggle_sudo
-  bindkey -M viins "^S" ravy::zle::prefix_toggle_sudo
-
-  # menu select and completion
+  # completion and its menu
   bindkey "^I" expand-or-complete
 
   zmodload zsh/complist
@@ -750,21 +700,10 @@ ravy::prompt::git () {
   fi
 }
 
-# export VIKEYMAP_DOTS="."
-ravy::prompt::vikeymap () {
-  local CMD_INDICATOR="%K{190}%F{17} NORM %F{190}%K{234} %E"
-  local INS_INDICATOR="%K{240}%F{17}      %F{240}%K{234} %E"
-  if [[ $KEYMAP == "vicmd" ]]; then
-    echo "$CMD_INDICATOR"
-  else
-    echo "$INS_INDICATOR"
-  fi
-}
-
 setopt PROMPT_SUBST
 
+RAVY_PROMPT_INDICATOR="%K{234}  %E"
 RAVY_PROMPT_CMD_RET="%F{240}\${_RAVY_PROMPT_TIMER_READ} %(?..%F{160}\$(nice_exit_code))"
-RAVY_PROMPT_VIKEYMAP="\$(ravy::prompt::vikeymap)"
 RAVY_PROMPT_USER=${SSH_CONNECTION:+%F\{103\}%n }
 RAVY_PROMPT_PATH="%F{30}%~ "
 RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ}%F{172}\${_RAVY_PROMPT_GIT_READ:+\$_RAVY_PROMPT_GIT_ST_READ }"
@@ -778,7 +717,7 @@ ravy::prompt::command_ret () {
   print -nP "${_RAVY_PROMPT_TIMER_READ:+$RAVY_PROMPT_CMD_RET\n}"
 }
 
-export PROMPT="${RAVY_PROMPT_VIKEYMAP}\${RAVY_PROMPT_USER}\${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_X}\${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}"$'\n'"\${RAVY_PROMPT_CMD}"
+export PROMPT="${RAVY_PROMPT_INDICATOR}\${RAVY_PROMPT_USER}\${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_X}\${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}"$'\n'"\${RAVY_PROMPT_CMD}"
 export PROMPT2="\${RAVY_PROMPT_CMD}"
 unset RPROMPT RPROMPT2
 
