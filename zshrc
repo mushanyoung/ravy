@@ -628,41 +628,6 @@ fi
 
 # Prompt {{{
 
-# current millseconds
-ravy::prompt::timer_now () {
-  perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)'
-}
-
-# get human readable representation of time
-ravy::prompt::timer_format () {
-  local ms="$1" s repre
-  if ((ms < 10000)) then
-    repre=${ms}ms
-  else
-    s=$((ms / 1000))
-    ((s > 3600)) && repre+=$((s / 3600))h
-    ((s > 60)) && repre+=$((s / 60 % 60))m
-    repre+=$((s % 60))s
-  fi
-  echo $repre
-}
-
-# start timer
-ravy::prompt::timer_start () {
-  [[ -n $_RAVY_PROMPT_TIMER ]] || _RAVY_PROMPT_TIMER=$(ravy::prompt::timer_now)
-}
-
-# get elapsed time without stopping timer
-ravy::prompt::timer_get () {
-  [[ -n $_RAVY_PROMPT_TIMER ]] && ravy::prompt::timer_format $(($(ravy::prompt::timer_now) - _RAVY_PROMPT_TIMER))
-}
-
-# get elapsed time and stop timer
-ravy::prompt::timer_stop () {
-  _RAVY_PROMPT_TIMER_READ=$(ravy::prompt::timer_get)
-  unset _RAVY_PROMPT_TIMER
-}
-
 # generate git prompt to _RAVY_PROMPT_GIT_READ
 ravy::prompt::git () {
   local ref k git_st st_str st_count
@@ -700,6 +665,44 @@ ravy::prompt::git () {
   fi
 }
 
+# current millseconds
+ravy::prompt::timer_now () {
+  perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)'
+}
+
+# get human readable representation of time
+ravy::prompt::timer_format () {
+  local ms="$1" s repre
+  if ((ms < 10000)) then
+    repre=${ms}ms
+  else
+    s=$((ms / 1000))
+    ((s > 3600)) && repre+=$((s / 3600))h
+    ((s > 60)) && repre+=$((s / 60 % 60))m
+    repre+=$((s % 60))s
+  fi
+  echo $repre
+}
+
+# start timer
+ravy::prompt::timer_start () {
+  _RAVY_PROMPT_TIMER=$(ravy::prompt::timer_now)
+}
+
+# get elapsed time without stopping timer
+ravy::prompt::timer_read () {
+  if [[ -n $_RAVY_PROMPT_TIMER ]]; then
+    _RAVY_PROMPT_TIMER_READ=$(ravy::prompt::timer_format $(($(ravy::prompt::timer_now) - _RAVY_PROMPT_TIMER)))
+  else
+    _RAVY_PROMPT_TIMER_READ=''
+  fi
+}
+
+# stop timer
+ravy::prompt::timer_stop () {
+  unset _RAVY_PROMPT_TIMER
+}
+
 setopt PROMPT_SUBST
 
 RAVY_PROMPT_INDICATOR="%K{234}  %E"
@@ -713,20 +716,29 @@ RAVY_PROMPT_CUSTOMIZE=""
 RAVY_PROMPT_CMD="%F{239}%k%_❯%f "
 
 # render status for last command
-ravy::prompt::command_ret () {
+ravy::prompt::timer_print_command_execution () {
+  ravy::prompt::timer_read
+  ravy::prompt::timer_stop
+  print -nP "${_RAVY_PROMPT_TIMER_READ:+$RAVY_PROMPT_CMD_RET\n}"
+  [[ -n $RAVY_PROMPT_PROFILE_ENABLE ]] && ravy::prompt::timer_start
+}
+
+# set RAVY_PROMPT_PROFILE_ENABLE to enable prompt profiling
+ravy::prompt::timer_print_prompt_profile () {
+  [[ -z $RAVY_PROMPT_PROFILE_ENABLE ]] && return
+  ravy::prompt::timer_read
   print -nP "${_RAVY_PROMPT_TIMER_READ:+$RAVY_PROMPT_CMD_RET\n}"
 }
 
-export PROMPT="${RAVY_PROMPT_INDICATOR}${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_USER}${RAVY_PROMPT_X}${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}"$'\n'"${RAVY_PROMPT_CMD}"
+export PROMPT="${RAVY_PROMPT_INDICATOR}${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_USER}${RAVY_PROMPT_X}${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}\$(ravy::prompt::timer_print_prompt_profile)"$'\n'"${RAVY_PROMPT_CMD}"
 export PROMPT2="${RAVY_PROMPT_CMD}"
 unset RPROMPT RPROMPT2
 
 autoload -Uz add-zsh-hook
 
 add-zsh-hook preexec ravy::prompt::timer_start
-add-zsh-hook precmd ravy::prompt::timer_stop
+add-zsh-hook precmd ravy::prompt::timer_print_command_execution
 add-zsh-hook precmd ravy::prompt::git
-add-zsh-hook precmd ravy::prompt::command_ret
 
 # }}}
 
