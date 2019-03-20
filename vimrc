@@ -489,16 +489,9 @@ xmap ac <PLUG>GitGutterTextObjectOuterVisual
 
 " vim-indent-guides {{
 
+let g:indent_guides_enable_on_vim_startup = 1
+let g:indent_guides_start_level = 3
 let g:indent_guides_auto_colors = 0
-let g:indent_guides_start_level = 2
-
-augroup indentguides
-  autocmd!
-  autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=grey
-  autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=darkgrey
-augroup END
-
-nnoremap \p :IndentGuidesToggle<CR>
 
 " }}
 
