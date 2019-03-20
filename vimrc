@@ -171,21 +171,21 @@ nnoremap ^ 0
 " <CR>: close popup and save indent.
 inoremap <expr><CR> pumvisible() ? "\<C-Y>" : "\<CR>"
 
-" c-j / c-k map to c-n / c-p
+" C-J / C-J map to C-N / C-P
 inoremap <C-J> <C-N>
 inoremap <C-K> <C-P>
 
-" insert current opened buffer's directory in command line
+" %% to insert current opened buffer's directory path in command mode
 cnoremap <expr> %% getcmdtype() == ':' ? expand('%:h').'/' : '%%'
 
-" C-P, C-N to prefix search in history
+" w!! to force write to a RO file in command mode
+cnoremap w!! w !sudo tee % >/dev/null
+
+" C-P, C-N to prefix search in history in command mode
 cnoremap <C-P> <UP>
 cnoremap <C-N> <DOWN>
 cnoremap <UP> <C-P>
 cnoremap <DOWN> <C-N>
-
-" type w!! in command line mode to force write to a RO file
-cnoremap w!! w !sudo tee % >/dev/null
 
 " }}
 
