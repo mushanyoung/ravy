@@ -1,3 +1,6 @@
+# prevent from loading more than once
+[[ -n $RAVY_ENV_LOADED ]] && return 0 || RAVY_ENV_LOADED=true
+
 export RAVY_HOME="${0:A:h}"
 export RAVY_CUSTOM_HOME="$RAVY_HOME/custom"
 
