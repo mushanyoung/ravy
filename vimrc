@@ -175,12 +175,6 @@ inoremap <expr><CR> pumvisible() ? "\<C-Y>" : "\<CR>"
 inoremap <C-J> <C-N>
 inoremap <C-K> <C-P>
 
-" emacs style arrow keys
-inoremap <C-B> <LEFT>
-inoremap <C-F> <RIGHT>
-inoremap <C-N> <DOWN>
-inoremap <C-P> <UP>
-
 " insert current opened buffer's directory in command line
 cnoremap <expr> %% getcmdtype() == ':' ? expand('%:h').'/' : '%%'
 
@@ -363,7 +357,7 @@ let g:easytags_always_enabled=1
 
 let g:AutoPairsFlyMode = 0
 let g:AutoPairsShortcutToggle=''
-let g:AutoPairsShortcutFastWrap = '<C-e>'
+let g:AutoPairsShortcutFastWrap = ''
 let g:AutoPairsShortcutJump = ''
 " let g:AutoPairsShortcutBackInsert = '<C-b>'
 
@@ -578,26 +572,24 @@ if filereadable($RAVY_CUSTOM_HOME."/vimrc")
 endif
 
 Plug 'ConradIrwin/vim-bracketed-paste' " auto paste mode when pasting from terminal
-Plug 'PeterRincker/vim-argumentative'  " argument: [, ], to jump & <, >, to shift & a, i, is text-object
+Plug 'PeterRincker/vim-argumentative'  " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
 Plug 'SirVer/ultisnips'                " snippets manager
 Plug 'Valloric/MatchTagAlways'         " always highlight matching markup language tags
 Plug 'airblade/vim-gitgutter'          " git: hunks operation indicator
 Plug 'ap/vim-css-color'                " show css color in code
 Plug 'christoomey/vim-tmux-navigator'  " pane navigate integration with tmux
 Plug 'easymotion/vim-easymotion'       " choose from positions which repeated motions would reach
-Plug 'google/vim-searchindex'          " search: show match index and total match count
-Plug 'ivanov/vim-ipython'              " ipython integration
+Plug 'henrik/vim-indexed-search'       " search: show match index and total match count
 Plug 'jiangmiao/auto-pairs'            " Insert or delete brackets, parens, quotes in pair
 Plug 'junegunn/fzf'                    " fzf integration
 Plug 'junegunn/fzf.vim'                " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/vim-easy-align'         " ga to align a region of text on a key (<C-X> to use a regex)
-Plug 'junegunn/vim-peekaboo'           " extends \", @, i:<C-R> to list the contents registers
+Plug 'junegunn/vim-peekaboo'           " list the content of registers when \", @ in normal mode and <C-R> in insert mode
 Plug 'justinmk/vim-sneak'              " s: motion to match 2 characters
 Plug 'moll/vim-bbye'                   " sane Bdelete
-Plug 'mushanyoung/vim-windflower'
+Plug 'mushanyoung/vim-windflower'      " theme
 Plug 'nathanaelkane/vim-indent-guides' " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'  " highlight trailing blanks and provide StripWhitespace function
-Plug 'octol/vim-cpp-enhanced-highlight'
 Plug 'sbdchd/neoformat'                " Auto format
 Plug 'scrooloose/syntastic'            " check code syntax
 Plug 'sheerun/vim-polyglot'            " a set of filetype plugins
@@ -606,14 +598,15 @@ Plug 'terryma/vim-expand-region'       " +, - to expand and shrink selection
 Plug 'terryma/vim-multiple-cursors'    " multiple cursors and multiple modifications
 Plug 'tpope/vim-commentary'            " gc to comment codes
 Plug 'tpope/vim-repeat'                " `.` supports to repeat mapped key sequence
+Plug 'tpope/vim-rsi'                   " Readline style insertion
+Plug 'tpope/vim-speeddating'           " use CTRL-A/CTRL-X to increment dates, times, and more
 Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / texts
 Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'         " status line with powerline fonts
-Plug 'vim-jp/vim-cpp'
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
 Plug 'xolox/vim-misc'                  " vim plugin util
 Plug 'xolox/vim-session'               " session manager
-Plug 'majutsushi/tagbar'             " tag explorer
+Plug 'majutsushi/tagbar'               " tag explorer
 
 if !has('nvim')
   Plug 'tpope/vim-sensible'            " default settings
