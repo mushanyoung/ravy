@@ -32,6 +32,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "modules/completion", from:prezto, as:plugin
   zplug "modules/archive", from:prezto, as:plugin
 
+  zplug "romkatv/gitstatus", as:plugin
   zplug "marzocchi/zsh-notify", as:plugin
   zplug "chrissicool/zsh-256color", as:plugin
   zplug "supercrabtree/k", as:plugin
@@ -636,39 +637,68 @@ fi
 # Prompt {{{
 
 # generate git prompt to _RAVY_PROMPT_GIT_READ
+# ravy::prompt::git () {
+#   local ref k git_st st_str st_count
+#   # test if current directory is not a git repo
+#   if ref=$(command git symbolic-ref --short HEAD 2>/dev/null \
+#         || command git rev-parse --short HEAD 2>/dev/null); then
+#     git_st=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
+#     st_parser=(
+#     "^## .*ahead"         "${RAVY_PROMPT_GIT_AHEAD->}"
+#     "^## .*behind"        "${RAVY_PROMPT_GIT_BEHIND-<}"
+#     "^## .*diverged"      "${RAVY_PROMPT_GIT_DIVERGED-x}"
+#     "^A. "                "${RAVY_PROMPT_GIT_ADDED-+}"
+#     "^R. "                "${RAVY_PROMPT_GIT_RENAMED-~}"
+#     "^C. "                "${RAVY_PROMPT_GIT_COPIED-c}"
+#     "^.D |^D. "           "${RAVY_PROMPT_GIT_DELETED--}"
+#     "^M. "                "${RAVY_PROMPT_GIT_MODIFIED-.}"
+#     "^.M "                "${RAVY_PROMPT_GIT_TREE_CHANGED-*}"
+#     "^U. |^.U |^AA |^DD " "${RAVY_PROMPT_GIT_UNMERGED-^}"
+#     "^\?\? "              "${RAVY_PROMPT_GIT_UNTRACKED-#}"
+#     )
+#     for (( k = 1; k <= $#st_parser; k += 2 )) do
+#       if st_count=$(grep -E -c "${st_parser[k]}" <<< "$git_st" 2>/dev/null); then
+#         st_str+="${st_parser[k+1]}"
+#         if (( st_count > 2 )); then
+#           st_str+=$st_count
+#         elif (( st_count == 2 )); then
+#           st_str+="${st_parser[k+1]}"
+#         fi
+#       fi
+#     done
+#     export _RAVY_PROMPT_GIT_READ="${ref}"
+#     export _RAVY_PROMPT_GIT_ST_READ="${st_str}"
+#   else
+#     unset _RAVY_PROMPT_GIT_READ _RAVY_PROMPT_GIT_ST_READ
+#   fi
+# }
+
+gitstatus_start ravy
+
+# generate git prompt to _RAVY_PROMPT_GIT_READ
 ravy::prompt::git () {
-  local ref k git_st st_str st_count
-  # exit if current directory is not a git repo
-  if ref=$(command git symbolic-ref --short HEAD 2>/dev/null \
-        || command git rev-parse --short HEAD 2>/dev/null); then
-    git_st=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
-    st_parser=(
-    "^## .*ahead"         "${RAVY_PROMPT_GIT_AHEAD->}"
-    "^## .*behind"        "${RAVY_PROMPT_GIT_BEHIND-<}"
-    "^## .*diverged"      "${RAVY_PROMPT_GIT_DIVERGED-x}"
-    "^A. "                "${RAVY_PROMPT_GIT_ADDED-+}"
-    "^R. "                "${RAVY_PROMPT_GIT_RENAMED-~}"
-    "^C. "                "${RAVY_PROMPT_GIT_COPIED-c}"
-    "^.D |^D. "           "${RAVY_PROMPT_GIT_DELETED--}"
-    "^M. "                "${RAVY_PROMPT_GIT_MODIFIED-.}"
-    "^.M "                "${RAVY_PROMPT_GIT_TREE_CHANGED-*}"
-    "^U. |^.U |^AA |^DD " "${RAVY_PROMPT_GIT_UNMERGED-^}"
-    "^\?\? "              "${RAVY_PROMPT_GIT_UNTRACKED-#}"
-    )
-    for (( k = 1; k <= $#st_parser; k += 2 )) do
-      if st_count=$(grep -E -c "${st_parser[k]}" <<< "$git_st" 2>/dev/null); then
-        st_str+="${st_parser[k+1]}"
-        if (( st_count > 2 )); then
-          st_str+=$st_count
-        elif (( st_count == 2 )); then
-          st_str+="${st_parser[k+1]}"
-        fi
-      fi
-    done
-    export _RAVY_PROMPT_GIT_READ="${ref}"
-    export _RAVY_PROMPT_GIT_ST_READ="${st_str}"
-  else
+  local st
+  gitstatus_query ravy
+  if [[ $VCS_STATUS_RESULT == "ok-sync" ]]; then
+    # "^## .*diverged"      "${RAVY_PROMPT_GIT_DIVERGED-x}"
+    # "^A. "                "${RAVY_PROMPT_GIT_ADDED-+}"
+    # "^R. "                "${RAVY_PROMPT_GIT_RENAMED-~}"
+    # "^C. "                "${RAVY_PROMPT_GIT_COPIED-c}"
+    # "^.D |^D. "           "${RAVY_PROMPT_GIT_DELETED--}"
+    # "^U. |^.U |^AA |^DD " "${RAVY_PROMPT_GIT_UNMERGED-^}"
+    (( $VCS_STATUS_COMMITS_AHEAD > 0 )) && st+=">"
+    (( $VCS_STATUS_COMMITS_BEHIND > 0 )) && st+="<"
+    [[ $VCS_STATUS_HAS_STAGED == '1' ]] && st+="."
+    [[ $VCS_STATUS_HAS_UNSTAGED == '1' ]] && st+="*"
+    [[ $VCS_STATUS_HAS_UNTRACKED == '1' ]] && st+="#"
+    export _RAVY_PROMPT_GIT_READ="${VCS_STATUS_LOCAL_BRANCH}"
+    export _RAVY_PROMPT_GIT_ST_READ="${st}"
+  elif [[ $VCS_STATUS_RESULT == "norepo-sync" ]]; then
     unset _RAVY_PROMPT_GIT_READ _RAVY_PROMPT_GIT_ST_READ
+  elif [[ $VCS_STATUS_RESULT == "tout" ]]; then
+    export _RAVY_PROMPT_GIT_READ="gitstatus-timeout"
+  else
+    export _RAVY_PROMPT_GIT_READ="gitstatus-error"
   fi
 }
 
@@ -723,18 +753,18 @@ add-zsh-hook preexec ravy::prompt::timer_start
 add-zsh-hook precmd ravy::prompt::timer_read
 add-zsh-hook precmd ravy::prompt::timer_stop
 add-zsh-hook precmd ravy::prompt::lastcmd_status
-add-zsh-hook precmd ravy::prompt::git # benchmark: 16ms, 178ms in git folder
+add-zsh-hook precmd ravy::prompt::git
 
 # PROMPT text
 
 setopt PROMPT_SUBST
 
-RAVY_PROMPT_INDICATOR="%K{234}  %E"
+RAVY_PROMPT_INDICATOR="%K{234}%E  "
 RAVY_PROMPT_PATH="%F{30}%~ "
-RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ}%F{172}\${_RAVY_PROMPT_GIT_READ:+\$_RAVY_PROMPT_GIT_ST_READ }"
+RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ:+\${_RAVY_PROMPT_GIT_READ}}%F{172}\${_RAVY_PROMPT_GIT_READ:+\${_RAVY_PROMPT_GIT_ST_READ} }"
 RAVY_PROMPT_USER="%F{103}%n "
 RAVY_PROMPT_X="%F{166}\${DISPLAY:+X }"
-RAVY_PROMPT_JOBS="%F{163}%(1j.&%j .)"
+RAVY_PROMPT_JOBS="%F{163}%(1j.&%j .) "
 RAVY_PROMPT_CUSTOMIZE=""
 RAVY_PROMPT_CMD="%F{239}%k%_❯%f "
 
