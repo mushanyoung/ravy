@@ -11,8 +11,10 @@ source "${0:A:h}/zshenv"
 [[ -n $RAVY_PROFILE ]] && zmodload zsh/zprof
 
 # Record time to initialize shell environment.
-_RAVY_PROMPT_TIMER=$(perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)')
+zmodload zsh/datetime
+export _RAVY_PROMPT_TIMER=$EPOCHREALTIME
 
+# benchmark: base 17ms
 # }}}
 
 # zplug {{{
@@ -40,7 +42,12 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
 
   zplug "zsh-users/zsh-syntax-highlighting", defer:1, as:plugin
   zplug "zsh-users/zsh-history-substring-search", defer:2, as:plugin
-  zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin
+  zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin  # benchmark: 17ms
+
+  if [[ -n $RAVY_PROFILE ]]; then
+    zplug "romkatv/zsh-prompt-benchmark", as:plugin
+    zplug "agkozak/zhooks", as:plugin
+  fi
 
   # load plugins
   if ! zplug check --verbose; then
@@ -665,36 +672,31 @@ ravy::prompt::git () {
   fi
 }
 
-# current millseconds
-ravy::prompt::timer_now () {
-  perl -MTime::HiRes -e 'printf("%.0f\n",Time::HiRes::time()*1000)'
-}
-
 # get human readable representation of time
 ravy::prompt::timer_format () {
-  local ms="$1" s repre
-  if ((ms < 10000)) then
-    repre=${ms}ms
+  local s="$1" repre=''
+  if ((s < 10)) then
+    printf "%dms" "$((s * 1000))"
   else
-    s=$((ms / 1000))
-    ((s > 3600)) && repre+=$((s / 3600))h
-    ((s > 60)) && repre+=$((s / 60 % 60))m
-    repre+=$((s % 60))s
+    ((s > 86400)) && repre+=$(([#10] s / 86400))d
+    ((s > 3600)) && repre+=$(([#10] s / 3600 % 24))h
+    ((s > 60)) && repre+=$(([#10] s / 60 % 60))m
+    repre+=$(printf '%.1fs' $((s % 60)))
+    print "$repre"
   fi
-  echo $repre
 }
 
 # start timer
 ravy::prompt::timer_start () {
-  _RAVY_PROMPT_TIMER=$(ravy::prompt::timer_now)
+  _RAVY_PROMPT_TIMER=$EPOCHREALTIME
 }
 
 # get elapsed time without stopping timer
 ravy::prompt::timer_read () {
   if [[ -n $_RAVY_PROMPT_TIMER ]]; then
-    _RAVY_PROMPT_TIMER_READ=$(ravy::prompt::timer_format $(($(ravy::prompt::timer_now) - _RAVY_PROMPT_TIMER)))
+    _RAVY_PROMPT_TIMER_READ=$(ravy::prompt::timer_format $(($EPOCHREALTIME - _RAVY_PROMPT_TIMER)))
   else
-    _RAVY_PROMPT_TIMER_READ=''
+    unset _RAVY_PROMPT_TIMER_READ
   fi
 }
 
@@ -703,42 +705,42 @@ ravy::prompt::timer_stop () {
   unset _RAVY_PROMPT_TIMER
 }
 
+# render status for last command
+ravy::prompt::lastcmd_status () {
+  local nec_output=$(nice_exit_code)
+  if [[ -n ${_RAVY_PROMPT_TIMER_READ} ]]; then
+    RAVY_PROMPT_LASTCMD_RUNTIME="%F{240}${_RAVY_PROMPT_TIMER_READ} "
+    RAVY_PROMPT_LASTCMD_RET="%(?..%F{160}$nec_output)"$'\n'
+  else
+    unset RAVY_PROMPT_LASTCMD_RUNTIME
+    unset RAVY_PROMPT_LASTCMD_RET
+  fi
+}
+
+# zsh hooks
+autoload -Uz add-zsh-hook
+add-zsh-hook preexec ravy::prompt::timer_start
+add-zsh-hook precmd ravy::prompt::timer_read
+add-zsh-hook precmd ravy::prompt::timer_stop
+add-zsh-hook precmd ravy::prompt::lastcmd_status
+add-zsh-hook precmd ravy::prompt::git # benchmark: 16ms, 178ms in git folder
+
+# PROMPT text
+
 setopt PROMPT_SUBST
 
 RAVY_PROMPT_INDICATOR="%K{234}  %E"
-RAVY_PROMPT_CMD_RET="%F{240}\${_RAVY_PROMPT_TIMER_READ} %(?..%F{160}\$(nice_exit_code))"
-RAVY_PROMPT_USER="%F{103}%n "
 RAVY_PROMPT_PATH="%F{30}%~ "
 RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ}%F{172}\${_RAVY_PROMPT_GIT_READ:+\$_RAVY_PROMPT_GIT_ST_READ }"
+RAVY_PROMPT_USER="%F{103}%n "
 RAVY_PROMPT_X="%F{166}\${DISPLAY:+X }"
 RAVY_PROMPT_JOBS="%F{163}%(1j.&%j .)"
 RAVY_PROMPT_CUSTOMIZE=""
 RAVY_PROMPT_CMD="%F{239}%k%_❯%f "
 
-# render status for last command
-ravy::prompt::timer_print_command_execution () {
-  ravy::prompt::timer_read
-  ravy::prompt::timer_stop
-  print -nP "${_RAVY_PROMPT_TIMER_READ:+$RAVY_PROMPT_CMD_RET\n}"
-  [[ -n $RAVY_PROMPT_PROFILE_ENABLE ]] && ravy::prompt::timer_start
-}
-
-# set RAVY_PROMPT_PROFILE_ENABLE to enable prompt profiling
-ravy::prompt::timer_print_prompt_profile () {
-  [[ -z $RAVY_PROMPT_PROFILE_ENABLE ]] && return
-  ravy::prompt::timer_read
-  print -nP "${_RAVY_PROMPT_TIMER_READ:+$RAVY_PROMPT_CMD_RET\n}"
-}
-
-export PROMPT="${RAVY_PROMPT_INDICATOR}${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_USER}${RAVY_PROMPT_X}${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}\$(ravy::prompt::timer_print_prompt_profile)"$'\n'"${RAVY_PROMPT_CMD}"
+export PROMPT="\${RAVY_PROMPT_LASTCMD_RUNTIME}\${RAVY_PROMPT_LASTCMD_RET}${RAVY_PROMPT_INDICATOR}${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_USER}${RAVY_PROMPT_X}${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}"$'\n'"${RAVY_PROMPT_CMD}" # benchmark: 1ms
 export PROMPT2="${RAVY_PROMPT_CMD}"
 unset RPROMPT RPROMPT2
-
-autoload -Uz add-zsh-hook
-
-add-zsh-hook preexec ravy::prompt::timer_start
-add-zsh-hook precmd ravy::prompt::timer_print_command_execution
-add-zsh-hook precmd ravy::prompt::git
 
 # }}}
 
@@ -798,11 +800,10 @@ for _ in range(3): print((random.randint(0,255)+255)/2)"))
   }
 
   ravy::termtitle::iterm_tab_color_path
-  autoload -U add-zsh-hook
 
   add-zsh-hook chpwd ravy::termtitle::iterm_tab_color_path
+  add-zsh-hook chpwd ravy::termtitle::path   # benchmark: 5ms
   add-zsh-hook preexec ravy::termtitle::command
-  add-zsh-hook precmd ravy::termtitle::path
 fi
 
 # }}}
