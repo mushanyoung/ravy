@@ -191,6 +191,13 @@ cnoremap <DOWN> <C-N>
 
 " nmap / vmap {{
 
+" 'Cut' motion
+nnoremap m d
+xnoremap m d
+
+nnoremap mm dd
+nnoremap M D
+
 " cycle in buffers
 nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
@@ -430,14 +437,16 @@ nmap ga <PLUG>(EasyAlign)
 
 " }}
 
-" vim-easyclip {{
+" vim-yoink {{
 
-let g:EasyClipUsePasteToggleDefaults = 0
+nmap <C-J> <PLUG>(YoinkPostPasteSwapBack)
+nmap <C-K> <PLUG>(YoinkPostPasteSwapForward)
 
-nmap <C-J> <PLUG>EasyClipSwapPasteForward
-nmap <C-K> <PLUG>EasyClipSwapPasteBackwards
+nmap p <PLUG>(YoinkPaste_p)
+nmap P <PLUG>(YoinkPaste_P)
 
-nmap M <Plug>MoveMotionEndOfLinePlug
+let g:yoinkSyncNumberedRegisters = 1
+let g:yoinkIncludeDeleteOperations = 1
 
 " }}
 
@@ -593,9 +602,11 @@ Plug 'ntpeters/vim-better-whitespace'  " highlight trailing blanks and provide S
 Plug 'sbdchd/neoformat'                " Auto format
 Plug 'scrooloose/syntastic'            " check code syntax
 Plug 'sheerun/vim-polyglot'            " a set of filetype plugins
-Plug 'svermeulen/vim-easyclip'         " better clipboard of vim
+Plug 'svermeulen/vim-cutlass'          " plugin that adds a 'cut' operation separate from 'delete'
+Plug 'svermeulen/vim-yoink'            " maintains a yank history to cycle between when pasting
 Plug 'terryma/vim-expand-region'       " +, - to expand and shrink selection
 Plug 'terryma/vim-multiple-cursors'    " multiple cursors and multiple modifications
+Plug 'tpope/vim-abolish'               " deal with multiple variants of a word
 Plug 'tpope/vim-commentary'            " gc to comment codes
 Plug 'tpope/vim-repeat'                " `.` supports to repeat mapped key sequence
 Plug 'tpope/vim-rsi'                   " Readline style insertion
