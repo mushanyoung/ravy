@@ -677,21 +677,25 @@ gitstatus_start ravy
 
 # generate git prompt to _RAVY_PROMPT_GIT_READ
 ravy::prompt::git () {
-  local st
+  local st st_parser k v
   gitstatus_query ravy
   if [[ $VCS_STATUS_RESULT == "ok-sync" ]]; then
-    # "^## .*diverged"      "${RAVY_PROMPT_GIT_DIVERGED-x}"
-    # "^A. "                "${RAVY_PROMPT_GIT_ADDED-+}"
-    # "^R. "                "${RAVY_PROMPT_GIT_RENAMED-~}"
-    # "^C. "                "${RAVY_PROMPT_GIT_COPIED-c}"
-    # "^.D |^D. "           "${RAVY_PROMPT_GIT_DELETED--}"
-    # "^U. |^.U |^AA |^DD " "${RAVY_PROMPT_GIT_UNMERGED-^}"
-    (( $VCS_STATUS_COMMITS_AHEAD > 0 )) && st+=">"
-    (( $VCS_STATUS_COMMITS_BEHIND > 0 )) && st+="<"
-    [[ $VCS_STATUS_HAS_STAGED == '1' ]] && st+="."
-    [[ $VCS_STATUS_HAS_UNSTAGED == '1' ]] && st+="*"
-    [[ $VCS_STATUS_HAS_UNTRACKED == '1' ]] && st+="#"
-    export _RAVY_PROMPT_GIT_READ="${VCS_STATUS_LOCAL_BRANCH}"
+    st_parser=(
+      "VCS_STATUS_COMMITS_AHEAD"  ">"
+      "VCS_STATUS_COMMITS_BEHIND" "<"
+      "VCS_STATUS_HAS_STAGED"     "."
+      "VCS_STATUS_HAS_UNSTAGED"   "*"
+      "VCS_STATUS_HAS_UNTRACKED"  "#"
+    )
+    st="${VCS_STATUS_ACTION:+ ${VCS_STATUS_ACTION}}"
+    for (( k = 1; k <= $#st_parser; k += 2 )) do
+      ((${(P)st_parser[k]} > 0)) && st+="$st_parser[k+1]"
+    done
+    if [[ -n ${VCS_STATUS_LOCAL_BRANCH} ]]; then
+      export _RAVY_PROMPT_GIT_READ="${VCS_STATUS_LOCAL_BRANCH}"
+    else
+      export _RAVY_PROMPT_GIT_READ="${VCS_STATUS_COMMIT:0:7}"
+    fi
     export _RAVY_PROMPT_GIT_ST_READ="${st}"
   elif [[ $VCS_STATUS_RESULT == "norepo-sync" ]]; then
     unset _RAVY_PROMPT_GIT_READ _RAVY_PROMPT_GIT_ST_READ
