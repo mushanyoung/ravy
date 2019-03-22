@@ -739,30 +739,20 @@ ravy::prompt::timer_stop () {
   unset _RAVY_PROMPT_TIMER
 }
 
-# render status for last command
-ravy::prompt::lastcmd_status () {
-  local nec_output=$(nice_exit_code)
-  if [[ -n ${_RAVY_PROMPT_TIMER_READ} ]]; then
-    RAVY_PROMPT_LASTCMD_RUNTIME="%F{240}${_RAVY_PROMPT_TIMER_READ} "
-    RAVY_PROMPT_LASTCMD_RET="%(?..%F{160}$nec_output)"$'\n'
-  else
-    unset RAVY_PROMPT_LASTCMD_RUNTIME
-    unset RAVY_PROMPT_LASTCMD_RET
-  fi
-}
-
 # zsh hooks
 autoload -Uz add-zsh-hook
 add-zsh-hook preexec ravy::prompt::timer_start
 add-zsh-hook precmd ravy::prompt::timer_read
 add-zsh-hook precmd ravy::prompt::timer_stop
-add-zsh-hook precmd ravy::prompt::lastcmd_status
 add-zsh-hook precmd ravy::prompt::git
 
 # PROMPT text
 
 setopt PROMPT_SUBST
 
+LF=$'\n'
+RAVY_PROMPT_LASTCMD_RUNTIME="%F{240}\${_RAVY_PROMPT_TIMER_READ:+\${_RAVY_PROMPT_TIMER_READ} }"
+RAVY_PROMPT_LASTCMD_RET="%F{160}\${_RAVY_PROMPT_TIMER_READ:+%(?..\$(nice_exit_code))${LF}}"
 RAVY_PROMPT_INDICATOR="%K{234}%E  "
 RAVY_PROMPT_PATH="%F{30}%~ "
 RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ:+\${_RAVY_PROMPT_GIT_READ}}%F{172}\${_RAVY_PROMPT_GIT_READ:+\${_RAVY_PROMPT_GIT_ST_READ} }"
@@ -772,7 +762,7 @@ RAVY_PROMPT_JOBS="%F{163}%(1j.&%j .) "
 RAVY_PROMPT_CUSTOMIZE=""
 RAVY_PROMPT_CMD="%F{239}%k%_❯%f "
 
-export PROMPT="\${RAVY_PROMPT_LASTCMD_RUNTIME}\${RAVY_PROMPT_LASTCMD_RET}${RAVY_PROMPT_INDICATOR}${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_USER}${RAVY_PROMPT_X}${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}"$'\n'"${RAVY_PROMPT_CMD}" # benchmark: 1ms
+export PROMPT="${RAVY_PROMPT_LASTCMD_RUNTIME}${RAVY_PROMPT_LASTCMD_RET}${RAVY_PROMPT_INDICATOR}${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_USER}${RAVY_PROMPT_X}${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}${LF}${RAVY_PROMPT_CMD}"
 export PROMPT2="${RAVY_PROMPT_CMD}"
 unset RPROMPT RPROMPT2
 
