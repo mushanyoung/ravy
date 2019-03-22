@@ -54,7 +54,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   if ! zplug check --verbose; then
     printf "Install? [y/N]: "
     if read -q; then
-        echo; zplug install
+        print; zplug install
     fi
   fi
 
@@ -179,7 +179,7 @@ if [[ $- == *i* ]]; then
     file_list=("${(f)$(tail -n +2 <<< $out)}")
     if [[ -n $file_list ]]; then
       # escape space, unescape break line
-      file_str="${$(echo ${(q)file_list[*]})/\\\~\//~/}"
+      file_str="${$(print ${(q)file_list[*]})/\\\~\//~/}"
       key="${key:-$default_action}"
       if [[ $key =~ [Qq]$ ]]; then
         zle -R "$file_str" "(A)ppend, (E)dit, enter (D)irectory, (O)pen, (Esc):"
@@ -419,7 +419,7 @@ d () {
   # First try to find a folder with matching name (could potentially be a number)
   # Get parents (in reverse order)
   for i in {$((folder_depth+1))..2}; do
-    parents=($parents "$(echo $PWD | cut -d'/' -f$i)")
+    parents=($parents "$(print $PWD | cut -d'/' -f$i)")
   done
   parents=($parents "/")
   # Build dest and 'cd' to it
@@ -455,7 +455,7 @@ _d () {
   local i folder_depth
   folder_depth=${#${(ps:/:)${PWD}}#}
   for i in {$((folder_depth+1))..2}; do
-    reply=($reply "`echo $PWD | cut -d'/' -f$i`")
+    reply=($reply "`print $PWD | cut -d'/' -f$i`")
   done
   reply=($reply "/")
 }
@@ -494,7 +494,7 @@ nice_exit_code () {
 
   sig_name=$ref[$exit_status]
 
-  echo "${exit_status}:${sig_name:-$exit_status}"
+  print "${exit_status}:${sig_name:-$exit_status}"
   return $exit_status
 }
 
@@ -757,15 +757,15 @@ LF=$'\n'
 RAVY_PROMPT_LASTCMD_RUNTIME="%F{240}\${_RAVY_PROMPT_TIMER_READ:+\${_RAVY_PROMPT_TIMER_READ} }"
 RAVY_PROMPT_LASTCMD_RET="%F{160}\${_RAVY_PROMPT_TIMER_READ:+%(?..\$(nice_exit_code))${LF}}"
 RAVY_PROMPT_INDICATOR="%K{234}%E  "
-RAVY_PROMPT_PATH="%F{30}%~ "
+RAVY_PROMPT_PATH="%F{\$([ ! -w \$PWD ] && print '160' || print '30')}%~ "
 RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ:+\${_RAVY_PROMPT_GIT_READ}}%F{172}\${_RAVY_PROMPT_GIT_READ:+\${_RAVY_PROMPT_GIT_ST_READ} }"
-RAVY_PROMPT_USER="%F{103}%n "
-RAVY_PROMPT_X="%F{166}\${DISPLAY:+X }"
-RAVY_PROMPT_JOBS="%F{163}%(1j.&%j .) "
+RAVY_PROMPT_USER="%F{\$([ \$EUID = 0 ] && print '160' || print '103')}%n "
+RAVY_PROMPT_REMOTE="\$([[ -n \$SSH_CLIENT || -n \$SSH_TTY ]] && print '%F{166}<> ')"
+RAVY_PROMPT_JOBS="%F{163}%(1j.&%j .)"
 RAVY_PROMPT_CUSTOMIZE=""
-RAVY_PROMPT_CMD="%F{239}%k%_❯%f "
+RAVY_PROMPT_CMD="%F{239}%k%_❯\$([ \$EUID = 0 ] && print '!')%f "
 
-export PROMPT="${RAVY_PROMPT_LASTCMD_RUNTIME}${RAVY_PROMPT_LASTCMD_RET}${RAVY_PROMPT_INDICATOR}${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_USER}${RAVY_PROMPT_X}${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}${LF}${RAVY_PROMPT_CMD}"
+export PROMPT="${RAVY_PROMPT_LASTCMD_RUNTIME}${RAVY_PROMPT_LASTCMD_RET}${RAVY_PROMPT_INDICATOR}${RAVY_PROMPT_PATH}${RAVY_PROMPT_GIT}${RAVY_PROMPT_USER}${RAVY_PROMPT_REMOTE}${RAVY_PROMPT_JOBS}\${RAVY_PROMPT_CUSTOMIZE}${LF}${RAVY_PROMPT_CMD}"
 export PROMPT2="${RAVY_PROMPT_CMD}"
 unset RPROMPT RPROMPT2
 
