@@ -586,6 +586,7 @@ Plug 'SirVer/ultisnips'                " snippets manager
 Plug 'Valloric/MatchTagAlways'         " always highlight matching markup language tags
 Plug 'airblade/vim-gitgutter'          " git: hunks operation indicator
 Plug 'ap/vim-css-color'                " show css color in code
+Plug 'chrisbra/unicode.vim'            " Search unicode
 Plug 'christoomey/vim-tmux-navigator'  " pane navigate integration with tmux
 Plug 'easymotion/vim-easymotion'       " choose from positions which repeated motions would reach
 Plug 'henrik/vim-indexed-search'       " search: show match index and total match count
