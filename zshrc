@@ -41,6 +41,8 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "ymattw/cdiff", as:command, use:cdiff
   zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
 
+  zplug "trapd00r/LS_COLORS", as:command, use:LS_COLORS
+
   zplug "zsh-users/zsh-syntax-highlighting", defer:1, as:plugin
   zplug "zsh-users/zsh-history-substring-search", defer:2, as:plugin
   zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin  # benchmark: 17ms
@@ -376,7 +378,7 @@ export LESS_TERMCAP_ue=$'\E[0m'           # end underline
 # ls color evaluations
 hash dircolors &>/dev/null && dircolor_cmd=dircolors
 hash gdircolors &>/dev/null && dircolor_cmd=gdircolors
-[[ -n $dircolor_cmd ]] && eval "$($dircolor_cmd -b "$RAVY_HOME/LS_COLORS")"
+[[ -n $dircolor_cmd ]] && eval "$($dircolor_cmd -b "${ZPLUG_BIN}/LS_COLORS")"
 unset dircolor_cmd
 
 # }}}
