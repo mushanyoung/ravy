@@ -229,11 +229,11 @@ if [[ $- == *i* ]]; then
 
   # recent files of vim
   ravy::zle::fzf::files::vim () {
-    FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3-" FZF_FILES_PROMPT="File(vim)" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="grep '^>' $HOME/.viminfo | cut -b3-" FZF_FILES_PROMPT="File(vim)" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
   ravy::zle::fzf::files::vim::last () {
-    FZF_FILES_COMMAND="grep '^>' ~/.viminfo | cut -b3- | head -1" FZF_FILES_OPTS="--select-1" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="grep '^>' $HOME/.viminfo | cut -b3- | head -1" FZF_FILES_OPTS="--select-1" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
   # open session matched by query, create a new one if there is no match
@@ -316,32 +316,31 @@ unsetopt CORRECT_ALL          # Do not auto correct arguments.
 unsetopt CORRECT              # Do not auto correct commands.
 
 # Directory
-setopt AUTO_CD              # Auto changes to a directory without typing cd.
-setopt AUTO_PUSHD           # Push the old directory onto the stack on cd.
-setopt PUSHD_IGNORE_DUPS    # Do not store duplicates in the stack.
-setopt PUSHD_SILENT         # Do not print the directory stack after pushd or popd.
-setopt PUSHD_TO_HOME        # Push to home directory when no argument is given.
-setopt CDABLE_VARS          # Change directory to a path stored in a variable.
-setopt AUTO_NAME_DIRS       # Auto add variable-stored paths to ~ list.
-setopt MULTIOS              # Write to multiple descriptors.
-unsetopt CLOBBER            # Do not overwrite existing files with > and >>.
-                            # Use >! and >>! to bypass.
-# History
-HISTSIZE=10000                   # The maximum number of events to save in the internal history.
-SAVEHIST=10000                   # The maximum number of events to save in the history file.
-HISTFILE="${HOME}/.zhistory"  # The path to the history file.
+setopt AUTO_CD                # Auto changes to a directory without typing cd.
+setopt AUTO_PUSHD             # Push the old directory onto the stack on cd.
+setopt PUSHD_IGNORE_DUPS      # Do not store duplicates in the stack.
+setopt PUSHD_SILENT           # Do not print the directory stack after pushd or popd.
+setopt PUSHD_TO_HOME          # Push to home directory when no argument is given.
+setopt CDABLE_VARS            # Change directory to a path stored in a variable.
+setopt AUTO_NAME_DIRS         # Auto add variable-stored paths to ~ list.
+setopt MULTIOS                # Write to multiple descriptors.
+unsetopt CLOBBER              # Do not overwrite existing files with > and >>, Use >! and >>! to bypass.
 
-setopt BANG_HIST                 # Treat the '!' character specially during expansion.
-setopt EXTENDED_HISTORY          # Write the history file in the ':start:elapsed;command' format.
-setopt SHARE_HISTORY             # Share history between all sessions.
-setopt HIST_EXPIRE_DUPS_FIRST    # Expire a duplicate event first when trimming history.
-setopt HIST_IGNORE_DUPS          # Do not record an event that was just recorded again.
-setopt HIST_IGNORE_ALL_DUPS      # Delete an old recorded event if a new event is a duplicate.
-setopt HIST_FIND_NO_DUPS         # Do not display a previously found event.
-setopt HIST_IGNORE_SPACE         # Do not record an event starting with a space.
-setopt HIST_SAVE_NO_DUPS         # Do not write a duplicate event to the history file.
-setopt HIST_VERIFY               # Do not execute immediately upon history expansion.
-setopt HIST_BEEP                 # Beep when accessing non-existent history.
+# History
+setopt BANG_HIST              # Treat the '!' character specially during expansion.
+setopt EXTENDED_HISTORY       # Write the history file in the ':start:elapsed;command' format.
+setopt SHARE_HISTORY          # Share history between all sessions.
+setopt HIST_EXPIRE_DUPS_FIRST # Expire a duplicate event first when trimming history.
+setopt HIST_IGNORE_DUPS       # Do not record an event that was just recorded again.
+setopt HIST_IGNORE_ALL_DUPS   # Delete an old recorded event if a new event is a duplicate.
+setopt HIST_FIND_NO_DUPS      # Do not display a previously found event.
+setopt HIST_IGNORE_SPACE      # Do not record an event starting with a space.
+setopt HIST_SAVE_NO_DUPS      # Do not write a duplicate event to the history file.
+setopt HIST_VERIFY            # Do not execute immediately upon history expansion.
+setopt HIST_BEEP              # Beep when accessing non-existent history.
+export HISTSIZE=100000        # The maximum number of events to keep in a session.
+export SAVEHIST=100000        # The maximum number of events to save in the history file.
+HISTFILE="${HOME}/.zhistory"  # The path to the history file.
 
 #
 # Aliases
@@ -349,9 +348,6 @@ setopt HIST_BEEP                 # Beep when accessing non-existent history.
 
 # Lists the ten most used commands.
 alias history-stat="history 0 | awk '{print \$2}' | sort | uniq -c | sort -n -r | head"
-
-export HISTSIZE=100000        # The maximum number of events to be kept in a session.
-export SAVEHIST=100000        # The maximum number of events to save in the history file.
 
 # lang
 export LANG=en_US.UTF-8
