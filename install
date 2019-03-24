@@ -32,7 +32,8 @@ echo "vim plugins"
 vim '+PlugUpdate' '+qall'
 
 echo "tmux"
-ln -s -f $RAVY/tmux.conf ~/.tmux.conf
+curl -sfLo ~/.tmux.conf \
+  https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
 ln -s -f $RAVY/tmux.conf.local ~/.tmux.conf.local
 
 echo "custom configs"
