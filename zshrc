@@ -815,8 +815,13 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
   }
 
   ravy::termtitle::iterm_tab_color_keyword () {
-    local value=($(python -c "import random; random.seed('$1');
-for _ in range(3): print((random.randint(0,255)+255)/2)"))
+    local value=($(perl -le  '
+      my $input = "'"$1"'";
+      my $seed = length($input);
+      foreach $char (split //, $a) { $seed += ord($char) };
+      srand($seed);
+      for (1..3) { print int(rand(128)+128) };
+    '))
     ravy::termtitle::iterm_tab_color "${value[@]}"
   }
 
