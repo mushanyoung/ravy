@@ -10,31 +10,31 @@ append_content_if_absent () {
 RAVY="${0:A:h}"
 
 echo "dotfiles"
-append_content_if_absent ~/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
-append_content_if_absent ~/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
-append_content_if_absent ~/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
-append_content_if_absent ~/.ignore "RAVY_TMP" "$RAVY/ignore"
+append_content_if_absent $HOME/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
+append_content_if_absent $HOME/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
+append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
+append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
 
 echo "zplug"
-[ -d ~/.zplug ] || git clone https://github.com/zplug/zplug ~/.zplug
+[ -d $HOME/.zplug ] || git clone https://github.com/zplug/zplug $HOME/.zplug
 
 echo "vim/neovim"
-mkdir -p ~/.vim ~/.vim/bundle ~/.vim/tmp ~/.vim/autoload ~/.config
-[ -d ~/.config/nvim ] || ln -s -f ~/.vim ~/.config/nvim
+mkdir -p $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload $HOME/.config
+[ -d $HOME/.config/nvim ] || ln -s -f $HOME/.vim $HOME/.config/nvim
 
-append_content_if_absent ~/.vimrc "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
-append_content_if_absent ~/.config/nvim/init.vim "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
+append_content_if_absent $HOME/.vimrc "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
+append_content_if_absent $HOME/.config/nvim/init.vim "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
 
-[ -e ~/.vim/autoload/plug.vim ] || curl -sfLo ~/.vim/autoload/plug.vim \
+[ -e $HOME/.vim/autoload/plug.vim ] || curl -sfLo $HOME/.vim/autoload/plug.vim \
   https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 echo "vim plugins"
 vim '+PlugUpdate' '+qall'
 
 echo "tmux"
-curl -sfLo ~/.tmux.conf \
+curl -sfLo $HOME/.tmux.conf \
   https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
-ln -s -f $RAVY/tmux.conf.local ~/.tmux.conf.local
+ln -s -f $RAVY/tmux.conf.local $HOME/.tmux.conf.local
 
 echo "custom configs"
 mkdir -p "$RAVY/custom" "$RAVY/custom/bin" "$RAVY/custom/zsh-functions"
