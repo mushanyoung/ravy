@@ -28,6 +28,7 @@ local brew_prefixes=(
 "$HOME/.brew"
 "$HOME/.linuxbrew"
 "/home/linuxbrew/.linuxbrew"
+"/usr/local"
 )
 
 for brew in $brew_prefixes; do
