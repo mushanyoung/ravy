@@ -727,8 +727,7 @@ ravy::prompt::timer_start () {
 ravy::prompt::timer_read () {
   if [[ -n $_RAVY_PROMPT_TIMER ]]; then
     _RAVY_PROMPT_TIMER_READ=$(
-      # -10ms timer overhead
-      ravy::prompt::timer_format $(($EPOCHREALTIME - _RAVY_PROMPT_TIMER - 0.01))
+      ravy::prompt::timer_format $(($EPOCHREALTIME - _RAVY_PROMPT_TIMER))
     )
   else
     unset _RAVY_PROMPT_TIMER_READ
