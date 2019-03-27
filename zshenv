@@ -1,12 +1,17 @@
 export RAVY_HOME="${0:A:h}"
 export RAVY_CUSTOM_HOME="$RAVY_HOME/custom"
 
-# make elements in path and fpath unique
+# make elements in path, fpath and manpath unique
 typeset -U path
 typeset -U fpath
+typeset -U manpath
+export PATH
+export FPATH
+export MANPATH
 
 # generates path
 prepend_to_path () { [[ -d "$1" ]] && path[1,0]="$1"; }
+prepend_to_manpath () { [[ -d "$1" ]] && manpath[1,0]="$1"; }
 append_to_path () { [[ -d "$1" ]] && path+="$1"; }
 append_to_fpath () { [[ -d "$1" ]] && fpath+="$1"; }
 
@@ -19,20 +24,24 @@ prepend_to_path "$RAVY_CUSTOM_HOME/bin"
 append_to_fpath "$RAVY_HOME/zsh-functions"
 append_to_fpath "$RAVY_CUSTOM_HOME/zsh-functions"
 
-local brew_prefixes=("$HOME/.brew" "$HOME/.linuxbrew")
-for brew_prefix in $brew_prefixes; do
-  if [[ -f "$brew_prefix/bin/brew" ]]; then
-    prepend_to_path "$brew_prefix/bin"
-    prepend_to_path "$brew_prefix/sbin"
-    append_to_fpath "$brew_prefix/completions/zsh"
-    if [[ $MANPATH != *$brew_prefix/share/man* ]]; then
-      export MANPATH="$brew_prefix/share/man:$MANPATH"
-    fi
-    if [[ $INFOPATH != *$brew_prefix/share/info* ]]; then
-      export INFOPATH="$brew_prefix/share/info:$INFOPATH"
-    fi
-    if [[ $XDG_DATA_DIRS != *$brew_prefix/share* ]]; then
-      export XDG_DATA_DIRS="$brew_prefix/share:$XDG_DATA_DIRS"
+local brew_prefixes=(
+"$HOME/.brew"
+"$HOME/.linuxbrew"
+"/home/linuxbrew/.linuxbrew"
+)
+
+for brew in $brew_prefixes; do
+  if [[ -f "$brew/bin/brew" && -d "$brew/Cellar" ]]; then
+    export HOMEBREW_PREFIX="$brew"
+    export HOMEBREW_CELLAR="$brew/Cellar"
+    export HOMEBREW_REPOSITORY="$brew"
+
+    prepend_to_path "$brew/bin"
+    prepend_to_path "$brew/sbin"
+    prepend_to_manpath "$brew/share/man"
+    append_to_fpath "$brew/completions/zsh"
+    if [[ $INFOPATH != *$brew/share/info* ]]; then
+      export INFOPATH="$brew/share/info:$INFOPATH"
     fi
   fi
 done
