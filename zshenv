@@ -1,7 +1,7 @@
 export RAVY_HOME="${0:A:h}"
 export RAVY_CUSTOM_HOME="$RAVY_HOME/custom"
 
-# make elements in path, fpath and manpath unique
+# path, fpath and manpath are exported unique sets
 typeset -U path
 typeset -U fpath
 typeset -U manpath
@@ -9,11 +9,11 @@ export PATH
 export FPATH
 export MANPATH
 
-# generates path
-prepend_to_path () { [[ -d "$1" ]] && path[1,0]="$1"; }
+# paths operations
+prepend_to_path    () { [[ -d "$1" ]] && path[1,0]="$1";    }
 prepend_to_manpath () { [[ -d "$1" ]] && manpath[1,0]="$1"; }
-append_to_path () { [[ -d "$1" ]] && path+="$1"; }
-append_to_fpath () { [[ -d "$1" ]] && fpath+="$1"; }
+append_to_path     () { [[ -d "$1" ]] && path+="$1";        }
+append_to_fpath    () { [[ -d "$1" ]] && fpath+="$1";       }
 
 # source custom
 [[ -f "$RAVY_CUSTOM_HOME/zshenv" ]] && source "$RAVY_CUSTOM_HOME/zshenv"
