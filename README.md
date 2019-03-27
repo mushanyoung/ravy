@@ -1,26 +1,24 @@
 # Ravy
 
-A OSX to Unix remote working environment.
+A macOS to Linux remote working environment.
 
 ## Prerequisites
 
-### OSX Frontend
+### macOS Frontend
 - [**iTerm**](https://www.iterm2.com/) >= 3.0
 - [**powerline-fonts**](https://github.com/powerline/fonts)
 - [**Homebrew**](http://brew.sh/): install to $HOME/.brew
-  - [**Zsh**](http://www.zsh.org/) >= 5.3
-  - [**git**](https://git-scm.com/)
+  - [**zsh**](http://www.zsh.org/) >= 5.3
   - [**coreutils**](https://www.gnu.org/software/coreutils)
   - [**fzf**](https://github.com/junegunn/fzf)
   - [**ag**](https://github.com/ggreer/the_silver_searcher)
   - [**terminal-notifier**](https://github.com/julienXX/terminal-notifier)
 
-### Remote Unix Host
+### Remote Linux Host
 - [**Linuxbrew**](http://linuxbrew.sh/): install to $HOME/.brew
-  - [**Zsh**](http://www.zsh.org/) >= 5.3
-  - [**git**](https://git-scm.com/)
+  - [**zsh**](http://www.zsh.org/) >= 5.3
   - [**tmux**](https://tmux.github.io/) >= 2.4
-  - [**Vim**](http://www.vim.org/) >= 8.0
+  - [**vim**](http://www.vim.org/) >= 8.0
   - [**fzf**](https://github.com/junegunn/fzf)
   - [**ag**](https://github.com/ggreer/the_silver_searcher)
 
@@ -29,6 +27,6 @@ A OSX to Unix remote working environment.
 Run following script in both frontend and host machine.
 
 ```
-git clone https://github.com/mushanyoung/ravy.git ~/.ravy
-~/.ravy/install
+git clone https://github.com/mushanyoung/ravy.git $HOME/.ravy
+$HOME/.ravy/install
 ```
