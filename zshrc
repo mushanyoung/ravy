@@ -384,6 +384,9 @@ unset dircolor_cmd
 # zmv
 autoload -Uz zmv
 
+# example: mmv *.c.orig orig/*.c
+alias mmv='noglob zmv -W'
+
 # interactive mv
 imv () {
   local src dst
