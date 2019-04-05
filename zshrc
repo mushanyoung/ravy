@@ -538,6 +538,13 @@ alias gd1="gd HEAD~ HEAD"
 alias gd2="gd HEAD~2 HEAD"
 alias gdc="gd --cached"
 
+# Example:
+# ffmpeg_cut a.mp4 00:01:00 02:00:00
+ffmpeg_cut () {
+  local input="$0" start="$1" duration="$2"
+  ffmpeg -ss "$start" -i "$input" -to "$duration" -c copy "cut.${input:t:e}"
+}
+
 # vim
 alias vi=vim
 alias v=vim
