@@ -713,10 +713,10 @@ ravy::prompt::timer_format () {
   if ((s < 10)) then
     printf "%dms" "$((s * 1000))"
   else
-    ((s > 86400)) && repre+=$(([#10] s / 86400))d
-    ((s > 3600)) && repre+=$(([#10] s / 3600 % 24))h
-    ((s > 60)) && repre+=$(([#10] s / 60 % 60))m
-    repre+=$(printf '%.1fs' $((s % 60)))
+    ((s > 86400)) && repre+="$(([#10] s / 86400))d"
+    ((s > 3600)) && repre+="$(([#10] s / 3600 % 24))h"
+    ((s > 60)) && repre+="$(([#10] s / 60 % 60))m"
+    repre+="$(([#10] s % 60))s"
     print "$repre"
   fi
 }
