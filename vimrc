@@ -445,7 +445,7 @@ nmap <C-K> <PLUG>(YoinkPostPasteSwapForward)
 nmap p <PLUG>(YoinkPaste_p)
 nmap P <PLUG>(YoinkPaste_P)
 
-let g:yoinkSyncNumberedRegisters = 1
+let g:yoinkSyncNumberedRegisters = 0
 let g:yoinkIncludeDeleteOperations = 1
 
 " }}
