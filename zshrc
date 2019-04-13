@@ -817,7 +817,13 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
   }
 
   # Set the terminal title with current path.
-  ravy::termtitle::path () { ravy::termtitle::settitle "%18<...<%~"; }
+  ravy::termtitle::path () {
+    if [[ -n $RAVY_TERMTITLE ]]; then
+      ravy::termtitle::settitle "$RAVY_TERMTITLE"
+    else
+      ravy::termtitle::settitle "%18<...<%~";
+    fi
+  }
 
   ravy::termtitle::iterm_tab_color () {
     printf "\033]6;1;bg;red;brightness;$1\a"
