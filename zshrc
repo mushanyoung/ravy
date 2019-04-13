@@ -790,7 +790,9 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
     title=${RAVY_SESSION_TITLE:-$argv}
     zformat -f formatted "%s" "s:$title"
 
-    if [[ $TERM =~ ^screen || -n $TMUX ]]; then
+    if [[ -n $TMUX ]] && hash tmux 2>/dev/null; then
+      tmux rename-window "${(V%)formatted}"
+    elif [[ $TERM =~ ^screen ]]; then
       printf "\ek%s\e\\" "${(V%)formatted}"
     elif [[ $TERM =~ ^rxvt-unicode ]]; then
       printf '\33]2;%s\007' ${(V%)formatted}
