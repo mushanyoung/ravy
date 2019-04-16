@@ -160,6 +160,9 @@ if [[ $- == *i* ]]; then
 
   # FZF
 
+  # Enable fzf completion
+  source "$(brew --prefix)/opt/fzf/shell/completion.zsh" 2> /dev/null
+
   export FZF_DEFAULT_OPTS="--height=50% --min-height=9 --bind=ctrl-f:page-down,ctrl-b:page-up"
   export FZF_DEFAULT_COMMAND="ag -g ''"
 
