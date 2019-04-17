@@ -139,17 +139,7 @@ if [[ $- == *i* ]]; then
   bindkey "\e." insert-last-word
   bindkey "\e," copy-earlier-word
 
-  # completion and its menu
-  bindkey "^I" expand-or-complete
-
   zmodload zsh/complist
-  zle -C complete-menu menu-select _generic
-  ravy::zle::complete_menu () {
-    setopt localoptions alwayslastprompt
-    zle complete-menu
-  }
-  zle -N ravy::zle::complete_menu
-  bindkey "^T" ravy::zle::complete_menu
   bindkey -M menuselect "^F" forward-word
   bindkey -M menuselect "^B" backward-word
   bindkey -M menuselect "^J" forward-char
@@ -162,6 +152,16 @@ if [[ $- == *i* ]]; then
 
   # Enable fzf completion
   source "$(brew --prefix)/opt/fzf/shell/completion.zsh" 2> /dev/null
+
+  # kill -9 <C-U>
+  # ssh <C-U>
+  # telnet <C-U>
+  # unset <C-U>
+  bindkey "^U" fzf-completion
+  export FZF_COMPLETION_TRIGGER=""
+
+  # TAB to use zsh default completion and its menu
+  bindkey "^I" expand-or-complete
 
   export FZF_DEFAULT_OPTS="--height=50% --min-height=9 --bind=ctrl-f:page-down,ctrl-b:page-up"
   export FZF_DEFAULT_COMMAND="ag -g ''"
