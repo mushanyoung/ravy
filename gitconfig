@@ -50,14 +50,11 @@
   pp = !git pm && git push
   root = rev-parse --show-toplevel
 
-  # execute shell command on the top level of the repo
-  exec = "!exec "
-
-  # swap last two commits
+  ; swap last two commits
   swaplast = "!GIT_SEQUENCE_EDITOR=\"sed -i -n 'h;1n;2p;g;p'\" git rebase -i HEAD~2"
   droplast = reset --hard HEAD~
 
-  # logs
+  ; logs
   l = "!gl() { \
     git log --color=always --pretty='tformat:%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s' $@ | \
     perl -pe 's/(\\(\\d+ \\w+)[^<)]*ago\\)/\\1)/' | \
@@ -70,14 +67,13 @@
   ld = log --decorate
   ls = log --decorate --stat
 
-  # diffs
+  ; diffs
   df = !ydiff -c auto --
   di = !ydiff -c auto -s -w 0 --
   ds = diff --stat
   dn = diff --name-only
   de = !DIFF_EXEC_CMD=vim DIFF_EXEC_VIM_LCS_DIR=1 git diff-exec
-
-  # print the farest folder containing all changed files
+  ; print the farest folder containing all changed files
   dd = "!gdd(){ git diff --name-only \"$@\" | sed -e 'N;s/^\\(.*\\).*\\n\\1.*$/\\1\\n\\1/;D'; }; gdd"
 
   dfc = !git df --cached
