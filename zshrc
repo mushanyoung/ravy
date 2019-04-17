@@ -160,6 +160,24 @@ if [[ $- == *i* ]]; then
   bindkey "^U" fzf-completion
   export FZF_COMPLETION_TRIGGER=""
 
+  _fzf_complete_git() {
+    ARGS="$@"
+    echo $ARGS >> /tmp/he
+    if [[ $ARGS =~ ' (checkout|co|cherry-pick|cp)' ]]; then
+        _fzf_complete "--reverse --multi" "$@" < <(
+          git branch -vv # --all
+        )
+    else
+        eval "zle ${fzf_default_completion:-expand-or-complete}"
+    fi
+  }
+
+  _fzf_complete_git_post() {
+    cut -c 3- | awk '{print $1}'
+  }
+
+  _fzf_complete_g() { _fzf_complete_git "$@"; }
+
   # TAB to use zsh default completion and its menu
   bindkey "^I" expand-or-complete
 
@@ -502,14 +520,6 @@ nice_exit_code () {
   return $exit_status
 }
 
-# git completion function for git aliases
-_git-co(){ _git-checkout; }
-_git-l(){ _git-log; }
-_git-lg(){ _git-log; }
-_git-df(){ _git-diff; }
-_git-di(){ _git-diff; }
-_git-de(){ _git-diff; }
-
 # Pipe command with --help output and ignore rest of the line.
 alias -g -- -help="-help | less; true "
 alias -g -- --help="--help | less; true "
@@ -527,6 +537,13 @@ cd () {
   fi
   builtin cd -- $file
 }
+
+# git completion function for git aliases
+_git-l(){ _git-log; }
+_git-lg(){ _git-log; }
+_git-df(){ _git-diff; }
+_git-di(){ _git-diff; }
+_git-de(){ _git-diff; }
 
 # change directory to the farest folder containing all changed files
 gd () {
