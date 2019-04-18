@@ -181,7 +181,7 @@ if [[ $- == *i* ]]; then
   # TAB to use zsh default completion and its menu
   bindkey "^I" expand-or-complete
 
-  export FZF_DEFAULT_OPTS="--height=50% --min-height=9 --bind=ctrl-f:page-down,ctrl-b:page-up"
+  export FZF_DEFAULT_OPTS="--reverse --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up"
   export FZF_DEFAULT_COMMAND="ag -g ''"
 
   # C-A to append selected files into buffer
