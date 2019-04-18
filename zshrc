@@ -256,24 +256,6 @@ if [[ $- == *i* ]]; then
   ravy::zle::fzf::files::vim::last () {
     FZF_FILES_COMMAND="grep '^>' $HOME/.viminfo | cut -b3- | head -1" FZF_FILES_OPTS="--select-1" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
-
-  # open session matched by query, create a new one if there is no match
-  ravy::zle::fzf::vim_sessions () {
-    local session
-    session=$(cd ~/.vim/sessions && find . \
-      | cut -b3- | sed -e "1d" -e 's/\.vim$//' | fzf --prompt='Session> ' --reverse)
-    if [[ -n $session ]]; then
-      cd -- ${$(grep '^cd' ~/.vim/sessions/"$session".vim \
-        | head -1 \
-        | cut -d" " -f2-)/#\~/$HOME}
-      BUFFER="vim '+OpenSession $session'"
-      zle reset-prompt
-      zle accept-line
-    else
-      zle redisplay
-    fi
-  }
-
   # Paste the selected command from history into the command line
   ravy::zle::fzf::history () {
     local selected num
@@ -311,7 +293,6 @@ if [[ $- == *i* ]]; then
   zle -N ravy::zle::fzf::files::dirs::hidden
   zle -N ravy::zle::fzf::files::vim
   zle -N ravy::zle::fzf::files::vim::last
-  zle -N ravy::zle::fzf::vim_sessions
   zle -N ravy::zle::fzf::history
 
   bindkey "\eo" ravy::zle::fzf::files::files
@@ -320,7 +301,6 @@ if [[ $- == *i* ]]; then
   bindkey "\eD" ravy::zle::fzf::files::dirs::hidden
   bindkey "\ev" ravy::zle::fzf::files::vim
   bindkey "\eV" ravy::zle::fzf::files::vim::last
-  bindkey "\es" ravy::zle::fzf::vim_sessions
   bindkey "\er" ravy::zle::fzf::history
 fi
 

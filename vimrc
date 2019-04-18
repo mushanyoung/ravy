@@ -616,16 +616,14 @@ Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / te
 Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'         " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
-Plug 'xolox/vim-misc'                  " vim plugin util
-Plug 'xolox/vim-session'               " session manager
 Plug 'majutsushi/tagbar'               " tag explorer
 
 if !has('nvim')
   Plug 'tpope/vim-sensible'            " default settings
 endif
 
-if !exists('g:ravy_disable_easytags') && executable('ctags')
-  Plug 'xolox/vim-easytags'            " auto generate tags by ctags
+if !exists('g:ravy_disable_ctags') && executable('ctags')
+  Plug 'ludovicchabant/vim-gutentags'
 endif
 
 call plug#end()
