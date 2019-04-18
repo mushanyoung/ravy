@@ -162,7 +162,6 @@ if [[ $- == *i* ]]; then
 
   _fzf_complete_git() {
     ARGS="$@"
-    echo $ARGS >> /tmp/he
     if [[ $ARGS =~ ' (checkout|co|cherry-pick|cp)' ]]; then
         _fzf_complete "--reverse --multi" "$@" < <(
           git branch -vv # --all
