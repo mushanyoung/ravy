@@ -568,35 +568,20 @@ alias rd="rmdir"
 alias rb="ruby"
 
 # python
-alias py="python"
+alias py="python3"
 alias py3="python3"
-alias ipy="ipython"
+alias ipy="ipython3"
 alias ipy3="ipython3"
 
-if hash python2 2>/dev/null; then
-  alias py="python2"
-  alias py2="python2"
-fi
-if hash ipython2 2>/dev/null; then
-  alias ipy="ipython2"
-  alias ipy2="ipython2"
-fi
-if hash pip2 2>/dev/null; then
-  alias pip="pip2"
-fi
-
-pip-update-all () {
-  pip list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip install -U
-}
 pip2-update-all () {
   pip2 list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip install -U
 }
 pip3-update-all () {
-  pip3 list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip install -U
+  pip3 list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip3 install -U
 }
 
 # http serve current working dir in a given port (8000 in default)
-alias serve="python -m SimpleHTTPServer"
+alias serve="python3 -m http.server"
 
 # grep with default options
 alias grep="grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}"
