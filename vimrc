@@ -558,18 +558,6 @@ let g:surround_36="$(\r)"      " $
 
 " }}
 
-" ultisnips {{
-
-let g:UltiSnipsExpandTrigger="<C-D>"
-let g:UltiSnipsListSnippets="<C-U>"
-let g:UltiSnipsJumpForwardTrigger="<C-B>"
-let g:UltiSnipsJumpBackwardTrigger="<C-Z>"
-
-" If you want :UltiSnipsEdit to split your window.
-let g:UltiSnipsEditSplit="vertical"
-
-" }}
-
 " }}
 
 " Plugins & Custom Settings {{
@@ -582,7 +570,8 @@ endif
 
 Plug 'ConradIrwin/vim-bracketed-paste' " auto paste mode when pasting from terminal
 Plug 'PeterRincker/vim-argumentative'  " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
-Plug 'SirVer/ultisnips'                " snippets manager
+Plug 'SirVer/ultisnips'                " snippets engine
+Plug 'honza/vim-snippets'              " snippets
 Plug 'airblade/vim-gitgutter'          " git: hunks operation indicator
 Plug 'andymass/vim-matchup'            " even better % navigate and highlight matching words
 Plug 'ap/vim-css-color'                " show css color in code
