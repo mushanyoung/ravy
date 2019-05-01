@@ -401,6 +401,15 @@ imv () {
   done
 }
 
+# cat into lines
+lcat () {
+  if [[ -p /dev/stdin ]]; then
+    xargs -n1
+  else
+    xargs -n1 <<< "$@"
+  fi
+}
+
 # bc
 = () { bc -l <<< "$@"; }
 
