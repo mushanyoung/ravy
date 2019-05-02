@@ -401,8 +401,8 @@ imv () {
   done
 }
 
-# cat into lines
-lcat () {
+# output into lines
+lines () {
   if [[ -p /dev/stdin ]]; then
     xargs -n1
   else
