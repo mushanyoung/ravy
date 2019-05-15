@@ -38,7 +38,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "supercrabtree/k", as:plugin
   zplug "hlissner/zsh-autopair", as:plugin
   zplug "zsh-users/zsh-completions", as:plugin
-  zplug "ymattw/cdiff", as:command, use:cdiff
+  zplug "ymattw/ydiff", as:command, use:ydiff
   zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
 
   zplug "trapd00r/LS_COLORS", as:command, use:LS_COLORS
@@ -96,6 +96,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   )
 
   # zsh auto suggestions
+  ZSH_AUTOSUGGEST_USE_ASYNC=1
   ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
   ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
   "backward-delete-char" "complete-menu" "expand-or-complete"
