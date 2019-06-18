@@ -614,6 +614,12 @@ alias ravy="cd \$RAVY_HOME"
 alias ravycustom="cd \$RAVY_CUSTOM_HOME"
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 
+if [[ $OSTYPE =~ ^darwin ]]; then
+  alias free='command top -l 1 -s 0 | grep PhysMem'
+else
+  alias free='command free -h'
+fi
+
 # Rsync commands
 if hash rsync 2>/dev/null; then
   _rsync_cmd="rsync --verbose --progress --human-readable --archive --hard-links --one-file-system"
