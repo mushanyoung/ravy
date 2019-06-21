@@ -49,12 +49,15 @@ bind -n M-k if-shell "$_pane_is_vim" "send-keys M-k" "select-pane -U"
 bind -n M-l if-shell "$_pane_is_vim" "send-keys M-l" "select-pane -R"
 bind -n M-p if-shell "$_pane_is_vim" "send-keys M-p" "select-pane -l"
 
+# kill pane
+bind -n M-c if-shell "$_pane_is_vim" "send-keys M-c" "confirm-before -p 'kill-pane #P? (y/N)' kill-pane"
+
 # open and kill window
 bind -n M-t new-window
 bind -n M-w kill-window
 
-# kill pane
-bind -n M-c if-shell "$_pane_is_vim" "send-keys M-c" "confirm-before -p 'kill-pane #P? (y/N)' kill-pane"
+bind -n M-- previous-window
+bind -n M-= next-window
 
 bind -n M-1 select-window -t 1
 bind -n M-2 select-window -t 2
