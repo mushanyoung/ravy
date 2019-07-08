@@ -372,6 +372,12 @@ nnoremap n :call AutoPairsJump()<CR>
 
 " }}
 
+" rainbow {{
+
+let g:rainbow_active = 1
+
+" }}
+
 " syntastic {{
 
 let g:syntastic_always_populate_loc_list = 1
@@ -473,8 +479,7 @@ let g:peekaboo_window = 'vertical leftabove 40new'
 
 " vim-polyglot {{
 
-" disable jsx syntax for .js file
-let g:jsx_ext_required = 1
+let g:polyglot_disabled = ['csv', 'jsx']
 
 " }}
 
@@ -553,6 +558,7 @@ Plug 'christoomey/vim-tmux-navigator'  " pane navigate integration with tmux
 Plug 'easymotion/vim-easymotion'       " choose from positions which repeated motions would reach
 Plug 'henrik/vim-indexed-search'       " search: show match index and total match count
 Plug 'jiangmiao/auto-pairs'            " Insert or delete brackets, parens, quotes in pair
+Plug 'luochen1990/rainbow'             " Decorate brackets, parens and pairs with pairing colors
 Plug 'junegunn/fzf'                    " fzf integration
 Plug 'junegunn/fzf.vim'                " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/vim-easy-align'         " ga to align a region of text on a key (<C-X> to use a regex)
