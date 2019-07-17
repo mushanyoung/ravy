@@ -527,6 +527,8 @@ cd () {
   builtin cd -- $file
 }
 
+alias cdp='builtin cd -- $PWD'
+
 # git completion function for git aliases
 _git-l(){ _git-log; }
 _git-lg(){ _git-log; }
@@ -612,7 +614,9 @@ alias bi="brew install --force-bottle"
 # Ravy commands
 alias ravy="cd \$RAVY_HOME"
 alias ravycustom="cd \$RAVY_CUSTOM_HOME"
+alias ravyc=ravycustom
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
+alias ravys=ravysource
 
 if [[ $OSTYPE =~ ^darwin ]]; then
   alias free='command top -l 1 -s 0 | grep PhysMem'
