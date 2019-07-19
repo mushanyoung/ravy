@@ -417,6 +417,9 @@ lines () {
 # ping handles url
 ping () { sed -E -e 's#.*://##' -e 's#/.*$##' <<< "$@" | xargs ping; }
 
+# reset terminal buffer
+alias reset='command reset; stty sane; tput reset; echo -e "\033c"; clear; builtin cd -- $PWD'
+
 # cd up, default 1 level
 # usage: $0 <name-of-any-parent-directory>
 #        $0 <number-of-folders>
@@ -526,8 +529,6 @@ cd () {
   fi
   builtin cd -- $file
 }
-
-alias cdp='builtin cd -- $PWD'
 
 # git completion function for git aliases
 _git-l(){ _git-log; }
