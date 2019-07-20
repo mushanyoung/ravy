@@ -856,7 +856,7 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
   add-zsh-hook chpwd ravy::termtitle::iterm_tab_color_path
   add-zsh-hook chpwd ravy::termtitle::path   # benchmark: 5ms
   add-zsh-hook precmd ravy::termtitle::path   # benchmark: 5ms
-  add-zsh-hook preexec ravy::termtitle::command
+  # add-zsh-hook preexec ravy::termtitle::command
 fi
 
 # }}}
