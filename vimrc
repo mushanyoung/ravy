@@ -438,6 +438,7 @@ let g:EasyMotion_smartcase = 1
 let g:gitgutter_map_keys = 0
 
 function! GitGutterDiffBase()
+  GitGutter
   echo "GitGutter diff base: " . g:gitgutter_diff_base
 endfunction
 
@@ -449,10 +450,10 @@ nmap \hs <PLUG>GitGutterStageHunk
 nmap \hv <PLUG>GitGutterPreviewHunk
 
 nnoremap <silent> \hc :call GitGutterDiffBase()<CR>
-nnoremap <silent> \hr :let g:gitgutter_diff_base=''<BAR>silent write<BAR>call GitGutterDiffBase()<CR>
+nnoremap <silent> \hr :let g:gitgutter_diff_base=''<BAR>call GitGutterDiffBase()<CR>
 nnoremap \hb :let g:gitgutter_diff_base=''<LEFT>
 for i in range(0, 9)
-  exec 'nmap <silent> \h' . i . ' :let g:gitgutter_diff_base="HEAD~' . i . '"<BAR>silent write<BAR>call GitGutterDiffBase()<CR>'
+  exec 'nnoremap <silent> \h' . i . ' :let g:gitgutter_diff_base="HEAD~' . i . '"<BAR>call GitGutterDiffBase()<CR>'
 endfor
 
 " text objects
