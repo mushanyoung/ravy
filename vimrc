@@ -271,6 +271,9 @@ nnoremap \vs :source $MYVIMRC<CR>
 " print key maps in a new buffer
 nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent imap<BAR>silent cmap<BAR>redir END<BAR>put =kms<CR>
 
+" Install & Update plugins
+nnoremap \vu :PlugUpdate<CR>
+
 " write
 nnoremap \w :write<CR>
 
