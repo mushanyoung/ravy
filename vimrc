@@ -69,7 +69,6 @@ set shortmess+=filmnrxoOtTI             " Abbreviation of file messages: try <C-
 set winwidth=79 winheight=5 winminheight=5
 
 if &term =~ "screen*" | set t_ts=k t_fs=\ | endif " escape string for window name of screen
-highlight clear SignColumn                            " Sign Column should match background
 scriptencoding utf-8
 filetype plugin indent on
 
@@ -341,6 +340,7 @@ nnoremap \j <NOP>
 nnoremap \k <NOP>
 nnoremap \n <NOP>
 nnoremap \o <NOP>
+nnoremap \p <NOP>
 nnoremap \r <NOP>
 nnoremap \t <NOP>
 nnoremap \x <NOP>
@@ -448,6 +448,8 @@ nmap \hp <PLUG>GitGutterPrevHunk
 nmap \hu <PLUG>GitGutterUndoHunk
 nmap \hs <PLUG>GitGutterStageHunk
 nmap \hv <PLUG>GitGutterPreviewHunk
+
+nnoremap <silent> \hl :GitGutterLineHighlightsToggle<CR>
 
 nnoremap <silent> \hc :call GitGutterDiffBase()<CR>
 nnoremap <silent> \hr :let g:gitgutter_diff_base=''<BAR>call GitGutterDiffBase()<CR>
