@@ -370,9 +370,6 @@ let g:AutoPairsFlyMode = 0
 let g:AutoPairsShortcutToggle=''
 let g:AutoPairsShortcutFastWrap = ''
 let g:AutoPairsShortcutJump = ''
-" let g:AutoPairsShortcutBackInsert = '<C-b>'
-
-nnoremap n :call AutoPairsJump()<CR>
 
 " }}
 
