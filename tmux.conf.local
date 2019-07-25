@@ -88,7 +88,7 @@ tmux_conf_theme_24b_colour=true
 #     - #{hostname_ssh}
 #     - #{username}
 #     - #{username_ssh}
-tmux_conf_theme_terminal_title='#W ❐ #I @ #S'
+tmux_conf_theme_terminal_title='#T ❐ #I @ #S'
 
 # window status style
 #   - built-in variables are:
@@ -101,7 +101,7 @@ tmux_conf_theme_terminal_title='#W ❐ #I @ #S'
 tmux_conf_theme_window_status_fg='#8a8a8a'              # light gray
 tmux_conf_theme_window_status_bg='#080808'              # dark gray
 tmux_conf_theme_window_status_attr='none'
-tmux_conf_theme_window_status_format='#I #W'
+tmux_conf_theme_window_status_format='#I #T'
 # tmux_conf_theme_window_status_format='#{circled_window_index} #W'
 #tmux_conf_theme_window_status_format='#I #W#{?window_bell_flag,🔔,}#{?window_zoomed_flag,🔍,}'
 
@@ -116,7 +116,7 @@ tmux_conf_theme_window_status_format='#I #W'
 tmux_conf_theme_window_status_current_fg='#000000'      # black
 tmux_conf_theme_window_status_current_bg='#00afff'      # light blue
 tmux_conf_theme_window_status_current_attr='bold'
-tmux_conf_theme_window_status_current_format='#I #W'
+tmux_conf_theme_window_status_current_format='#I #T'
 #tmux_conf_theme_window_status_current_format='#{circled_window_index} #W'
 #tmux_conf_theme_window_status_current_format='#I #W#{?window_zoomed_flag,🔍,}'
 
@@ -208,7 +208,6 @@ tmux_conf_theme_synchronized_attr='none'
 # clock style
 tmux_conf_theme_clock_colour='#00afff'  # light blue
 tmux_conf_theme_clock_style='24'
-
 
 # -- clipboard -----------------------------------------------------------------
 

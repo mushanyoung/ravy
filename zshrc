@@ -796,7 +796,8 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
     zformat -f formatted "%s" "s:$title"
 
     if [[ -n $TMUX ]] && hash tmux 2>/dev/null; then
-      tmux rename-window "${(V%)formatted}"
+      # Set tmux pane title
+      printf "\e]2;%s\e\\" "${(V%)formatted}"
     elif [[ $TERM =~ ^screen ]]; then
       printf "\ek%s\e\\" "${(V%)formatted}"
     elif [[ $TERM =~ ^rxvt-unicode ]]; then
