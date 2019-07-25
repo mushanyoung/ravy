@@ -303,7 +303,8 @@ nnoremap <silent> b :Buffers<CR>
 nnoremap d :call RavyDirectories()<CR>
 nnoremap <silent> m :Marks<CR>
 nnoremap <silent> e :Lines<CR>
-nnoremap <silent> o :Files<CR>
+nnoremap <silent> o :Files %:p:h<CR>
+nnoremap <silent> O :Files<CR>
 nnoremap <silent> q :Snippets<CR>
 nnoremap <silent> t :Filetypes<CR>
 nnoremap <silent> v :History<CR>
