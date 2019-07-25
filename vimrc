@@ -592,6 +592,7 @@ Plug 'vim-airline/vim-airline'         " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
 Plug 'majutsushi/tagbar'               " tag explorer
 Plug 'prettier/vim-prettier'           " auto format by prettier
+Plug 'airblade/vim-rooter'             " set proper working directory
 
 if !has('nvim')
   Plug 'tpope/vim-sensible'            " default settings
