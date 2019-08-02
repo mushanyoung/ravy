@@ -90,7 +90,7 @@ set -g mouse on
 tmux_conf_theme_24b_colour=true
 
 # terminal title
-tmux_conf_theme_terminal_title='#T ❐ #I @ #S'
+tmux_conf_theme_terminal_title='❐ #S'
 
 # window status style
 tmux_conf_theme_window_status_fg='colour220'         # set in the format
