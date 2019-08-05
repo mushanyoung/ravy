@@ -831,30 +831,6 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
     fi
   }
 
-  ravy::termtitle::iterm_tab_color () {
-    printf "\033]6;1;bg;red;brightness;$1\a"
-    printf "\033]6;1;bg;green;brightness;$2\a"
-    printf "\033]6;1;bg;blue;brightness;$3\a"
-  }
-
-  ravy::termtitle::iterm_tab_color_keyword () {
-    local value=($(perl -le  '
-      my $input = "'"$1"'";
-      my $seed = length($input);
-      foreach $char (split //, $a) { $seed += ord($char) };
-      srand($seed);
-      for (1..3) { print int(rand(128)+128) };
-    '))
-    ravy::termtitle::iterm_tab_color "${value[@]}"
-  }
-
-  ravy::termtitle::iterm_tab_color_path () {
-    ravy::termtitle::iterm_tab_color_keyword $PWD
-  }
-
-  ravy::termtitle::iterm_tab_color_path
-
-  add-zsh-hook chpwd ravy::termtitle::iterm_tab_color_path
   add-zsh-hook chpwd ravy::termtitle::path   # benchmark: 5ms
   add-zsh-hook precmd ravy::termtitle::path   # benchmark: 5ms
   # add-zsh-hook preexec ravy::termtitle::command
