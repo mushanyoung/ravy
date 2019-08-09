@@ -197,6 +197,9 @@ xnoremap m d
 nnoremap mm dd
 nnoremap M D
 
+" p in visual mode does not yank
+vnoremap p "_dP
+
 " cycle in buffers
 nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
