@@ -604,10 +604,12 @@ alias pa="ps-color"
 alias pc="HIGH_CPU_MEM_ONLY=1 pa"
 
 # brew commands
-alias bubo="brew update && brew outdated"
-alias bubc="brew upgrade && brew cleanup"
-alias bubu="bubo && bubc"
+alias bubu="brew update && brew outdated && brew upgrade && brew cleanup"
 alias bi="brew install --force-bottle"
+
+# apt commands
+alias au="sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
+alias auau="sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean"
 
 # open-remote
 [[ -n $SSH_CONNECTION ]] && alias open="open-remote"
