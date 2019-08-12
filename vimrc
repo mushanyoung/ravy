@@ -94,11 +94,14 @@ augroup END
 
 " Get visual selection text
 function! GetVisualSelection()
-  let [lnum1, col1] = getpos("'<")[1:2]
-  let [lnum2, col2] = getpos("'>")[1:2]
-  let lines = getline(lnum1, lnum2)
-  let lines[-1] = lines[-1][: col2 - (&selection == 'inclusive' ? 1 : 2)]
-  let lines[0] = lines[0][col1 - 1:]
+  let [line_start, column_start] = getpos("'<")[1:2]
+  let [line_end, column_end] = getpos("'>")[1:2]
+  let lines = getline(line_start, line_end)
+  if len(lines) == 0
+    return ''
+  endif
+  let lines[-1] = lines[-1][: column_end - (&selection == 'inclusive' ? 1 : 2)]
+  let lines[0] = lines[0][column_start - 1:]
   return join(lines, "\n")
 endfunction
 
@@ -125,18 +128,8 @@ function! RavyWinMove(direction)
   endif
 endfunction
 
-" diff current buffer to its original (saved) version
-function! RavyDiffOrig()
-  diffthis
-  vnew %:p.orig
-  set bt=nofile
-  r ++edit #
-  0d_
-  diffthis
-endfunction
-
 " fzf to select a directory to change to
-function! RavyDirectories()
+function! s:FZFDirectories()
   function! DirectorySink(line)
     exec "cd " . a:line
     pwd
@@ -148,6 +141,43 @@ function! RavyDirectories()
         \ 'options': '+m --prompt="Dir> "',
         \ 'down': '~40%'})
 endfunction
+
+" repl-visual-no-reg-overwrite.vim {{
+
+function! RestoreRegister()
+  if &clipboard == 'unnamed'
+    let @* = s:restore_reg
+  elseif &clipboard == 'unnamedplus'
+    let @+ = s:restore_reg
+  else
+    let @" = s:restore_reg
+  endif
+  return ''
+endfunction
+
+function! s:Repl()
+    let s:restore_reg = @"
+    return "p@=RestoreRegister()\<cr>"
+endfunction
+
+function! s:ReplSelect()
+    echo "Register to paste over selection? (<cr> => default register: ".strtrans(@").")"
+    let c = nr2char(getchar())
+    let reg = c =~ '^[0-9a-z:.%#/*+~]$'
+                \ ? '"'.c
+                \ : ''
+    return "\<C-G>".reg.s:Repl()
+endfunction
+
+" This supports "rp that permits to replace the visual selection with the
+" contents of @r
+xnoremap <silent> <expr> p <sid>Repl()
+
+" Mappings on <s-insert>, that'll also work in select mode!
+xnoremap <silent> <expr> <S-Insert> <sid>Repl()
+snoremap <silent> <expr> <S-Insert> <sid>ReplSelect()
+
+" }}
 
 " }}
 
@@ -197,9 +227,6 @@ xnoremap m d
 nnoremap mm dd
 nnoremap M D
 
-" p in visual mode does not yank
-vnoremap p "_dP
-
 " cycle in buffers
 nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
@@ -233,7 +260,6 @@ vnoremap \c :s/
 nnoremap \c :%s/
 
 " diff
-nnoremap \do :call RavyDiffOrig()<CR>
 nnoremap <silent> \de :bdelete!<BAR>diffoff<CR>
 nnoremap <silent> \dl :diffget 1<BAR>diffupdate<CR>
 nnoremap <silent> \db :diffget 2<BAR>diffupdate<CR>
@@ -261,8 +287,6 @@ nnoremap <silent> \m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"s
 
 " toggle quickfix window
 nnoremap <silent> \q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
-
-" \s*: vim-session
 
 " toggle foldenable
 nnoremap <silent> \u :set invfoldenable<BAR>echo &foldenable?'Fold enabled.':'Fold disabled.'<CR>
@@ -302,8 +326,8 @@ nmap \\<CR> <PLUG>unimpairedBlankUp
 
 " FZF
 nnoremap a :Ag<SPACE>
+nnoremap <silent> <expr> d <sid>FZFDirectories()
 nnoremap <silent> b :Buffers<CR>
-nnoremap d :call RavyDirectories()<CR>
 nnoremap <silent> m :Marks<CR>
 nnoremap <silent> e :Lines<CR>
 nnoremap <silent> o :Files %:p:h<CR>
@@ -349,6 +373,7 @@ nnoremap \n <NOP>
 nnoremap \o <NOP>
 nnoremap \p <NOP>
 nnoremap \r <NOP>
+nnoremap \s <NOP>
 nnoremap \t <NOP>
 nnoremap \x <NOP>
 
@@ -441,7 +466,7 @@ let g:EasyMotion_smartcase = 1
 
 let g:gitgutter_map_keys = 0
 
-function! GitGutterDiffBase()
+function! s:GitGutterDiffBase()
   GitGutter
   echo "GitGutter diff base: " . g:gitgutter_diff_base
 endfunction
@@ -455,7 +480,7 @@ nmap \hv <PLUG>GitGutterPreviewHunk
 
 nnoremap <silent> \hl :GitGutterLineHighlightsToggle<CR>
 
-nnoremap <silent> \hc :call GitGutterDiffBase()<CR>
+nnoremap <silent> <expr> \hc <sid>GitGutterDiffBase()
 nnoremap <silent> \hr :let g:gitgutter_diff_base=''<BAR>call GitGutterDiffBase()<CR>
 nnoremap \hb :let g:gitgutter_diff_base=''<LEFT>
 for i in range(0, 9)
@@ -493,36 +518,6 @@ let g:polyglot_disabled = ['csv', 'jsx']
 " vim-prettier {{
 
 noremap \fm :Prettier<CR>
-
-" }}
-
-" vim-session {{
-
-let g:session_autosave = 'yes'
-let g:session_autoload = 'no'
-
-function! OpenSessionFZF()
-  function! SessionSink(line)
-    return xolox#session#open_cmd(a:line, '', 'OpenSession')
-  endfunction
-
-  return fzf#run({
-        \ 'source': xolox#session#get_names(0),
-        \ 'sink': function('SessionSink'),
-        \ 'options': '+m --prompt="Session> "',
-        \ 'down': '~40%'})
-endfunction
-
-nnoremap <silent> s :call OpenSessionFZF()<CR>
-nnoremap \so :call OpenSessionFZF()<CR>
-
-nnoremap \sn :SaveSession<SPACE>
-nnoremap \sd :DeleteSession<SPACE>
-nnoremap \ss :SaveSession<CR>
-nnoremap \sc :CloseSession<CR>
-nnoremap \sv :ViewSession<CR>
-
-nnoremap \sf :echo 'Current Session: ' . xolox#session#find_current_session()<CR>
 
 " }}
 
