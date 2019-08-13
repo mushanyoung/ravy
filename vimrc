@@ -9,14 +9,6 @@ if !isdirectory(expand("~/.vim/tmp")) || !isdirectory(expand("~/.vim/bundle"))
   call system("mkdir -p ~/.vim/tmp ~/.vim/bundle")
 end
 
-" neovim settings
-if has('nvim')
-  set inccommand=nosplit
-  set clipboard=
-else
-  set clipboard=unnamed
-end
-
 " General
 set directory=~/.vim/tmp//,. swapfile
 set backupdir=~/.vim/tmp//,. nobackup writebackup
@@ -34,6 +26,7 @@ set mouse=a
 set formatoptions=nmMcroql
 set iskeyword+=-
 set updatetime=100
+set clipboard=unnamed          " access system clipboard
 set notimeout                  " no timeout for key map sequence
 set splitright splitbelow      " split window: vertical to the right and horizontal to the below
 set hidden                     " hidden buffers
@@ -105,7 +98,7 @@ function! GetVisualSelection()
   return join(lines, "\n")
 endfunction
 
-" send text to [remote] clipboard
+" send text to remote or system clipboard
 function! RavyClip(text)
   silent call system('pbcopy >/dev/tty', a:text)
 endfunction
@@ -305,7 +298,7 @@ nnoremap \vu :PlugUpdate<CR>
 nnoremap \w :write<CR>
 
 " forward yanked text to clip when in remote
-if $SSH_CONNECTION != "" || has('nvim')
+if $SSH_CONNECTION != ""
   vnoremap <silent> y y:call RavyClip(@")<BAR>echo 'Yanked and Sent'<CR>
   nnoremap <silent> \yy :call RavyClip(@")<BAR>echo 'Yanked Sent'<CR>
   vnoremap <silent> \yy :call RavyClip(GetVisualSelection())<CR>
@@ -580,6 +573,7 @@ Plug 'tpope/vim-abolish'               " deal with multiple variants of a word
 Plug 'tpope/vim-commentary'            " gc to comment codes
 Plug 'tpope/vim-repeat'                " `.` supports to repeat mapped key sequence
 Plug 'tpope/vim-rsi'                   " Readline style insertion
+Plug 'tpope/vim-sensible'              " default settings
 Plug 'tpope/vim-speeddating'           " use CTRL-A/CTRL-X to increment dates, times, and more
 Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / texts
 Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
@@ -588,10 +582,6 @@ Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
 Plug 'majutsushi/tagbar'               " tag explorer
 Plug 'prettier/vim-prettier'           " auto format by prettier
 Plug 'airblade/vim-rooter'             " set proper working directory
-
-if !has('nvim')
-  Plug 'tpope/vim-sensible'            " default settings
-endif
 
 if !exists('g:ravy_disable_ctags') && executable('ctags')
   Plug 'ludovicchabant/vim-gutentags'

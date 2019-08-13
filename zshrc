@@ -39,13 +39,16 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "hlissner/zsh-autopair", as:plugin
   zplug "zsh-users/zsh-completions", as:plugin
   zplug "ymattw/ydiff", as:command, use:ydiff
-  zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
 
   zplug "trapd00r/LS_COLORS", as:command, use:LS_COLORS
 
   zplug "zsh-users/zsh-syntax-highlighting", defer:1, as:plugin
   zplug "zsh-users/zsh-history-substring-search", defer:2, as:plugin
   zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin  # benchmark: 17ms
+
+  if [[ -n $SSH_CONNECTION ]]; then
+    zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
+  fi
 
   if [[ -n $RAVY_PROFILE ]]; then
     zplug "romkatv/zsh-prompt-benchmark", as:plugin
