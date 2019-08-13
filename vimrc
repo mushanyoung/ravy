@@ -26,7 +26,6 @@ set mouse=a
 set formatoptions=nmMcroql
 set iskeyword+=-
 set updatetime=100
-set clipboard=unnamed          " access system clipboard
 set notimeout                  " no timeout for key map sequence
 set splitright splitbelow      " split window: vertical to the right and horizontal to the below
 set hidden                     " hidden buffers
@@ -99,17 +98,29 @@ function! GetVisualSelection()
 endfunction
 
 " send text to remote or system clipboard
-function! RavyClip(text)
+function! RavyRemoteClip(text)
   silent call system('pbcopy >/dev/tty', a:text)
 endfunction
 
 " open a link remotely
-function! RavyOpenLink(url)
+function! RavyRemoteOpenLink(url)
   let t:url = substitute(a:url, "[\x0d\x0a].*", "", "")
   let t:url = substitute(t:url, '^\s\+', "", "")
   let t:url = (t:url =~ '.*://' ? '' : 'https://www.google.com/search?q=') . t:url
-  call RavyClip("RAVY\x0dopen\x0d" . t:url)
+  call RavyRemoteClip("RAVY\x0dopen\x0d" . t:url)
 endfunction
+
+" forward remote yanked text
+if $SSH_CONNECTION != ""
+  augroup RavyRemoteClip
+    autocmd!
+    autocmd TextYankPost * if v:event.operator ==# 'y' | call RavyRemoteClip(@") | endif
+  augroup END
+  set clipboard=
+else
+  " access system clipboard if not remote
+  set clipboard=unnamed
+endif
 
 " Move to a window in the given direction, if can't move, create a new one
 function! RavyWinMove(direction)
@@ -272,8 +283,8 @@ nnoremap \fd :Bdelete!<CR>
 
 " \h*: GitGutter
 
-nnoremap <silent> \l :call RavyOpenLink(@")<BAR>echo 'Link Sent'<CR>
-vnoremap <silent> \l :call RavyOpenLink(GetVisualSelection())<CR>
+nnoremap <silent> \l :call RavyRemoteOpenLink(@")<CR>
+vnoremap <silent> \l :call RavyRemoteOpenLink(GetVisualSelection())<CR>
 
 " toggle mouse
 nnoremap <silent> \m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"set mouse=a<BAR>echo 'Mouse Enabled.'"<CR>
@@ -296,13 +307,6 @@ nnoremap \vu :PlugUpdate<CR>
 
 " write
 nnoremap \w :write<CR>
-
-" forward yanked text to clip when in remote
-if $SSH_CONNECTION != ""
-  vnoremap <silent> y y:call RavyClip(@")<BAR>echo 'Yanked and Sent'<CR>
-  nnoremap <silent> \yy :call RavyClip(@")<BAR>echo 'Yanked Sent'<CR>
-  vnoremap <silent> \yy :call RavyClip(GetVisualSelection())<CR>
-endif
 
 " toggle auto zz when scrolling
 nnoremap <silent> \z :let &scrolloff=999-&scrolloff<BAR>echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
