@@ -60,6 +60,12 @@ set sidescrolloff=10 sidescroll=1       " 10 columns away from margins to scroll
 set shortmess+=filmnrxoOtTI             " Abbreviation of file messages: try <C-G>
 set winwidth=79 winheight=5 winminheight=5
 
+" make cursor a vertical line in insert mode
+let &t_ti.="\e[1 q"
+let &t_SI.="\e[5 q"
+let &t_EI.="\e[1 q"
+let &t_te.="\e[0 q"
+
 if &term =~ "screen*" | set t_ts=k t_fs=\ | endif " escape string for window name of screen
 scriptencoding utf-8
 filetype plugin indent on
