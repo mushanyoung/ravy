@@ -104,8 +104,8 @@ function! GetVisualSelection()
 endfunction
 
 " send text to remote or system clipboard
-function! RavyRemoteClip(text)
-  silent call system('pbcopy >/dev/tty', a:text)
+function! SendViaOSC52(text)
+  silent call system('osc52.sh >/dev/tty', a:text)
 endfunction
 
 " open a link remotely
@@ -113,14 +113,14 @@ function! RavyRemoteOpenLink(url)
   let t:url = substitute(a:url, "[\x0d\x0a].*", "", "")
   let t:url = substitute(t:url, '^\s\+', "", "")
   let t:url = (t:url =~ '.*://' ? '' : 'https://www.google.com/search?q=') . t:url
-  call RavyRemoteClip("RAVY\x0dopen\x0d" . t:url)
+  call SendViaOSC52("RAVY\x0dopen\x0d" . t:url)
 endfunction
 
 " forward remote yanked text
 if $SSH_CONNECTION != ""
-  augroup RavyRemoteClip
+  augroup RemoteClip
     autocmd!
-    autocmd TextYankPost * if v:event.operator ==# 'y' | call RavyRemoteClip(@") | endif
+    autocmd TextYankPost * if v:event.operator ==# 'y' | call SendViaOSC52(getreg('"')) | endif
   augroup END
   set clipboard=
 else
@@ -156,22 +156,22 @@ endfunction
 
 function! RestoreRegister()
   if &clipboard == 'unnamed'
-    let @* = s:restore_reg
+    call setreg('*', s:restore_reg)
   elseif &clipboard == 'unnamedplus'
-    let @+ = s:restore_reg
+    call setreg('+', s:restore_reg)
   else
-    let @" = s:restore_reg
+    call setreg('"', s:restore_reg)
   endif
   return ''
 endfunction
 
 function! s:Repl()
-    let s:restore_reg = @"
+    let s:restore_reg = getreg('"')
     return "p@=RestoreRegister()\<cr>"
 endfunction
 
 function! s:ReplSelect()
-    echo "Register to paste over selection? (<cr> => default register: ".strtrans(@").")"
+    echo "Register to paste over selection? (<cr> => default register: ".strtrans(getreg('"')).")"
     let c = nr2char(getchar())
     let reg = c =~ '^[0-9a-z:.%#/*+~]$'
                 \ ? '"'.c
@@ -289,7 +289,7 @@ nnoremap \fd :Bdelete!<CR>
 
 " \h*: GitGutter
 
-nnoremap <silent> \l :call RavyRemoteOpenLink(@")<CR>
+nnoremap <silent> \l :call RavyRemoteOpenLink(getreg('"'))<CR>
 vnoremap <silent> \l :call RavyRemoteOpenLink(GetVisualSelection())<CR>
 
 " toggle mouse

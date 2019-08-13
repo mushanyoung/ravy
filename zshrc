@@ -46,10 +46,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "zsh-users/zsh-history-substring-search", defer:2, as:plugin
   zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin  # benchmark: 17ms
 
-  if [[ -n $SSH_CONNECTION ]]; then
-    zplug "skaji/remote-pbcopy-iterm2", as:command, use:pbcopy
-  fi
-
   if [[ -n $RAVY_PROFILE ]]; then
     zplug "romkatv/zsh-prompt-benchmark", as:plugin
     zplug "agkozak/zhooks", as:plugin
