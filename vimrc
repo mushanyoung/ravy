@@ -74,7 +74,7 @@ filetype plugin indent on
 
 " Autocmds {{
 
-augroup buffer_editing
+augroup BufferEdit
   autocmd!
 
   autocmd BufWritePre * StripWhitespace
@@ -85,6 +85,20 @@ augroup buffer_editing
   " set the cursor position to the beginning when editing commit message
   autocmd BufReadPost COMMIT_EDITMSG normal gg0
 augroup END
+
+if $SSH_CONNECTION != ""
+  augroup RemoteClip
+    autocmd!
+
+    " forward remote yanked text
+    autocmd TextYankPost * if v:event.operator ==# 'y' | call SendViaOSC52(getreg('"')) | endif
+  augroup END
+  set clipboard=
+else
+  " access system clipboard if local
+  set clipboard=unnamed
+endif
+
 
 " }}
 
@@ -115,18 +129,6 @@ function! RavyRemoteOpenLink(url)
   let t:url = (t:url =~ '.*://' ? '' : 'https://www.google.com/search?q=') . t:url
   call SendViaOSC52("RAVY\x0dopen\x0d" . t:url)
 endfunction
-
-" forward remote yanked text
-if $SSH_CONNECTION != ""
-  augroup RemoteClip
-    autocmd!
-    autocmd TextYankPost * if v:event.operator ==# 'y' | call SendViaOSC52(getreg('"')) | endif
-  augroup END
-  set clipboard=
-else
-  " access system clipboard if not remote
-  set clipboard=unnamed
-endif
 
 " Move to a window in the given direction, if can't move, create a new one
 function! RavyWinMove(direction)
