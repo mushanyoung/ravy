@@ -336,7 +336,7 @@ nnoremap <silent> b :Buffers<CR>
 nnoremap <silent> m :Marks<CR>
 nnoremap <silent> e :Lines<CR>
 nnoremap <silent> o :Files %:p:h<CR>
-nnoremap <silent> O :Files<CR>
+nnoremap <silent> f :Files<CR>
 nnoremap <silent> q :Snippets<CR>
 nnoremap <silent> t :Filetypes<CR>
 nnoremap <silent> v :History<CR>
@@ -358,7 +358,6 @@ nnoremap <silent> c :close<CR>
 nnoremap <silent> C :close<CR>
 
 " key pool
-nnoremap f <NOP>
 nnoremap g <NOP>
 nnoremap i <NOP>
 nnoremap r <NOP>
