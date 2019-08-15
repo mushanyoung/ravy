@@ -41,7 +41,7 @@ set nofoldenable foldmethod=indent foldlevel=0 foldnestmax=3
 set list listchars=tab:›\ ,trail:•,extends:>,precedes:<,nbsp:.
 set showmatch matchpairs+=<:>
 set viewoptions=folds,options,cursor,unix,slash
-set title titlestring=#%t%(\ %a%)%(\ %r%)%(\ %m%)
+set title titlestring=!%t:%l%(\ %m%r%h%w%)
 set linebreak
 set background=dark
 set noshowmode
