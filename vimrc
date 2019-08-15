@@ -66,7 +66,7 @@ let &t_SI.="\e[5 q"
 let &t_EI.="\e[1 q"
 let &t_te.="\e[0 q"
 
-if &term =~ "screen*" | set t_ts=k t_fs=\ | endif " escape string for window name of screen
+if &term =~ "screen*" | set t_ts=<ESC>k t_fs=<ESC>\ | endif " escape string for window name of screen
 scriptencoding utf-8
 filetype plugin indent on
 
@@ -130,18 +130,8 @@ function! RavyRemoteOpenLink(url)
   call SendViaOSC52("RAVY\x0dopen\x0d" . t:url)
 endfunction
 
-" Move to a window in the given direction, if can't move, create a new one
-function! RavyWinMove(direction)
-  let t:curwin = winnr()
-  exec "wincmd ".a:direction
-  if (t:curwin == winnr())
-    exec "wincmd ".(match(a:direction,'[jk]') ? 'v' : 's')
-    exec "wincmd ".a:direction
-  endif
-endfunction
-
 " fzf to select a directory to change to
-function! s:FZFDirectories()
+function! FZFDirectories()
   function! DirectorySink(line)
     exec "cd " . a:line
     pwd
@@ -153,6 +143,10 @@ function! s:FZFDirectories()
         \ 'options': '+m --prompt="Dir> "',
         \ 'down': '~40%'})
 endfunction
+
+function! s:AltMapKey(key)
+  return has('nvim')?  "<A-". a:key . ">" : "<ESC>". a:key
+endfun
 
 " repl-visual-no-reg-overwrite.vim {{
 
@@ -330,43 +324,41 @@ nmap \<CR> <PLUG>unimpairedBlankDown
 nmap \\<CR> <PLUG>unimpairedBlankUp
 
 " FZF
-nnoremap a :Ag<SPACE>
-nnoremap <silent> <expr> d <sid>FZFDirectories()
-nnoremap <silent> b :Buffers<CR>
-nnoremap <silent> m :Marks<CR>
-nnoremap <silent> e :Lines<CR>
-nnoremap <silent> o :Files %:p:h<CR>
-nnoremap <silent> f :Files<CR>
-nnoremap <silent> q :Snippets<CR>
-nnoremap <silent> t :Filetypes<CR>
-nnoremap <silent> v :History<CR>
-nnoremap <silent> ; :History:<CR>
-nnoremap <silent> / :History/<CR>
+exec 'nnoremap          ' . s:AltMapKey('a') . ' :Ag<SPACE>'
+exec 'nnoremap <silent> ' . s:AltMapKey('d') . ' :call FZFDirectories()<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('b') . ' :Buffers<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('m') . ' :Marks<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('e') . ' :Lines<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('f') . ' :Files<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('q') . ' :Snippets<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('t') . ' :Filetypes<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('v') . ' :History<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey(';') . ' :History:<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('/') . ' :History/<CR>'
 
 " tmux navigator, window move & split
 let g:tmux_navigator_no_mappings = 1
-nnoremap <silent> h :TmuxNavigateLeft<CR>
-nnoremap <silent> j :TmuxNavigateDown<CR>
-nnoremap <silent> k :TmuxNavigateUp<CR>
-nnoremap <silent> l :TmuxNavigateRight<CR>
-nnoremap <silent> p :TmuxNavigatePrevious<CR>
-nnoremap <silent> H :call RavyWinMove('h')<CR>
-nnoremap <silent> J :call RavyWinMove('j')<CR>
-nnoremap <silent> K :call RavyWinMove('k')<CR>
-nnoremap <silent> L :call RavyWinMove('l')<CR>
-nnoremap <silent> c :close<CR>
-nnoremap <silent> C :close<CR>
+exec 'nnoremap <silent> ' . s:AltMapKey('h') . ' :TmuxNavigateLeft<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('j') . ' :TmuxNavigateDown<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('k') . ' :TmuxNavigateUp<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('l') . ' :TmuxNavigateRight<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('p') . ' :TmuxNavigatePrevious<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('c') . ' :close<CR>'
 
 " key pool
-nnoremap g <NOP>
-nnoremap i <NOP>
-nnoremap r <NOP>
-nnoremap u <NOP>
-nnoremap w <NOP>
-nnoremap x <NOP>
-nnoremap y <NOP>
-nnoremap z <NOP>
-nnoremap  <NOP>
+exec 'nnoremap          ' . s:AltMapKey('g') . ' <NOP>'
+exec 'nnoremap          ' . s:AltMapKey('i') . ' <NOP>'
+exec 'nnoremap          ' . s:AltMapKey('n') . ' <NOP>'
+exec 'nnoremap          ' . s:AltMapKey('r') . ' <NOP>'
+exec 'nnoremap          ' . s:AltMapKey('u') . ' <NOP>'
+exec 'nnoremap          ' . s:AltMapKey('w') . ' <NOP>'
+exec 'nnoremap          ' . s:AltMapKey('x') . ' <NOP>'
+exec 'nnoremap          ' . s:AltMapKey('y') . ' <NOP>'
+exec 'nnoremap          ' . s:AltMapKey('z') . ' <NOP>'
+
+" nnoremap <ESC><ESC> <NOP>
+
 nnoremap \b <NOP>
 nnoremap \e <NOP>
 nnoremap \g <NOP>
