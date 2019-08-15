@@ -28,6 +28,8 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zstyle :zplug:tag depth 1
 
   # plugins
+  zplug 'zplug/zplug', hook-build:'zplug --self-manage'
+
   zplug "modules/environment", from:prezto, as:plugin
   zplug "modules/completion", from:prezto, as:plugin
   zplug "modules/archive", from:prezto, as:plugin
