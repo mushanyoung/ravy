@@ -66,7 +66,11 @@ let &t_SI.="\e[5 q"
 let &t_EI.="\e[1 q"
 let &t_te.="\e[0 q"
 
-if &term =~ "screen*" | set t_ts=<ESC>k t_fs=<ESC>\ | endif " escape string for window name of screen
+" title string set to tmux pane
+if $TMUX != ""
+  set t_ts=]2 t_fs=\\
+endif
+
 scriptencoding utf-8
 filetype plugin indent on
 
