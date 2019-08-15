@@ -103,7 +103,6 @@ else
   set clipboard=unnamed
 endif
 
-
 " }}
 
 " Functions {{
