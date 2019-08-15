@@ -47,8 +47,8 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin  # benchmark: 17ms
 
   # ls color evaluations
-  hash dircolors &>/dev/null && DIRCOLORS_CMD=dircolors
-  hash gdircolors &>/dev/null && DIRCOLORS_CMD=gdircolors
+  type dircolors &>/dev/null && DIRCOLORS_CMD=dircolors
+  type gdircolors &>/dev/null && DIRCOLORS_CMD=gdircolors
   zplug "trapd00r/LS_COLORS", as:command, lazy:false, hook-load:"\$($DIRCOLORS_CMD -b \${ZPLUG_REPOS}/trapd00r/LS_COLORS/LS_COLORS)"
   unset DIRCOLORS_CMD
 
@@ -620,7 +620,7 @@ else
 fi
 
 # Rsync commands
-if hash rsync 2>/dev/null; then
+if type rsync &>/dev/null; then
   _rsync_cmd="rsync --verbose --progress --human-readable --archive --hard-links --one-file-system"
 
   if grep -q "xattrs" <(rsync --help 2>&1); then
@@ -789,7 +789,7 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
     title=${RAVY_SESSION_TITLE:-$argv}
     zformat -f formatted "%s" "s:$title"
 
-    if [[ -n $TMUX ]] && hash tmux 2>/dev/null; then
+    if [[ -n $TMUX ]] && type tmux &>/dev/null; then
       # Set tmux pane title
       printf "\e]2;%s\e\\" "${(V%)formatted}"
     elif [[ $TERM =~ ^screen ]]; then
