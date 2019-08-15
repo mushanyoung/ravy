@@ -47,3 +47,5 @@ for brew in $brew_prefixes; do
   fi
 done
 
+# MANPATH should always have a leading colon to search with executables
+[[ ! $MANPATH =~ ^: ]] && MANPATH=":$MANPATH"

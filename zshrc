@@ -40,11 +40,15 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "zsh-users/zsh-completions", as:plugin
   zplug "ymattw/ydiff", as:command, use:ydiff
 
-  zplug "trapd00r/LS_COLORS", as:command, use:LS_COLORS
-
   zplug "zsh-users/zsh-syntax-highlighting", defer:1, as:plugin
   zplug "zsh-users/zsh-history-substring-search", defer:2, as:plugin
   zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin  # benchmark: 17ms
+
+  # ls color evaluations
+  hash dircolors &>/dev/null && DIRCOLORS_CMD=dircolors
+  hash gdircolors &>/dev/null && DIRCOLORS_CMD=gdircolors
+  zplug "trapd00r/LS_COLORS", as:command, lazy:false, hook-load:"\$($DIRCOLORS_CMD -b \${ZPLUG_REPOS}/trapd00r/LS_COLORS/LS_COLORS)"
+  unset DIRCOLORS_CMD
 
   if [[ -n $RAVY_PROFILE ]]; then
     zplug "romkatv/zsh-prompt-benchmark", as:plugin
@@ -342,13 +346,6 @@ export HISTSIZE=100000        # The maximum number of events to keep in a sessio
 export SAVEHIST=100000        # The maximum number of events to save in the history file.
 HISTFILE="${HOME}/.zhistory"  # The path to the history file.
 
-#
-# Aliases
-#
-
-# Lists the ten most used commands.
-alias history-stat="history 0 | awk '{print \$2}' | sort | uniq -c | sort -n -r | head"
-
 # lang
 export LANG=en_US.UTF-8
 export LANGUAGE=$LANG
@@ -368,15 +365,6 @@ export LESS_TERMCAP_se=$'\E[0m'           # end standout-mode
 export LESS_TERMCAP_us=$'\E[04;38;5;146m' # begin underline
 export LESS_TERMCAP_ue=$'\E[0m'           # end underline
 
-# MANPATH should always have a leading colon to search with executables
-[[ ! $MANPATH =~ ^: ]] && MANPATH=":$MANPATH"
-
-# ls color evaluations
-hash dircolors &>/dev/null && dircolor_cmd=dircolors
-hash gdircolors &>/dev/null && dircolor_cmd=gdircolors
-[[ -n $dircolor_cmd ]] && eval "$($dircolor_cmd -b "${ZPLUG_BIN}/LS_COLORS")"
-unset dircolor_cmd
-
 # }}}
 
 # Util Functions & Aliases {{{
@@ -386,6 +374,9 @@ autoload -Uz zmv
 
 # example: mmv *.c.orig orig/*.c
 alias mmv='noglob zmv -W'
+
+# Lists the ten most used commands.
+alias history-stat="history 0 | awk '{print \$2}' | sort | uniq -c | sort -n -r | head"
 
 # interactive mv
 imv () {
