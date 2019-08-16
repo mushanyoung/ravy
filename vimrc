@@ -66,9 +66,13 @@ let &t_SI.="\e[5 q"
 let &t_EI.="\e[1 q"
 let &t_te.="\e[0 q"
 
-" title string set to tmux pane
+" title string reporting
 if $TMUX != ""
+  " tmux pane title
   set t_ts=]2 t_fs=\\
+elseif $ITERM_SESSION_ID != ""
+  " iterm window title
+  set t_ts=]; t_fs=
 endif
 
 scriptencoding utf-8
