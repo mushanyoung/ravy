@@ -236,7 +236,6 @@ cnoremap <DOWN> <C-N>
 " 'Cut' motion
 nnoremap m d
 xnoremap m d
-
 nnoremap mm dd
 nnoremap M D
 
@@ -248,7 +247,7 @@ nnoremap gB :bnext<CR>
 nnoremap gw :let mycurf=expand("<cfile>")<BAR>exec("vsplit ".mycurf)<CR>
 
 " Visually select the text that was last edited/pasted
-noremap gV `[v`]
+nnoremap gV `[v`]
 
 " window resize & split
 noremap <C-W>0 :resize +5<CR>
@@ -295,9 +294,6 @@ nnoremap \fd :Bdelete!<CR>
 nnoremap <silent> \l :call RavyRemoteOpenLink(getreg('"'))<CR>
 vnoremap <silent> \l :call RavyRemoteOpenLink(GetVisualSelection())<CR>
 
-" toggle mouse
-nnoremap <silent> \m :exec &mouse!=''?"set mouse=<BAR>echo 'Mouse Disabled.'":"set mouse=a<BAR>echo 'Mouse Enabled.'"<CR>
-
 " toggle quickfix window
 nnoremap <silent> \q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
 
@@ -309,7 +305,7 @@ nnoremap \ve :edit $MYVIMRC<CR>
 nnoremap \vs :source $MYVIMRC<CR>
 
 " print key maps in a new buffer
-nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent imap<BAR>silent cmap<BAR>redir END<BAR>put =kms<CR>
+nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent map!<BAR>redir END<BAR>put =kms<CR>
 
 " Install & Update plugins
 nnoremap \vu :PlugUpdate<CR>
@@ -372,6 +368,7 @@ nnoremap \g <NOP>
 nnoremap \i <NOP>
 nnoremap \j <NOP>
 nnoremap \k <NOP>
+nnoremap \m <NOP>
 nnoremap \n <NOP>
 nnoremap \o <NOP>
 nnoremap \p <NOP>
@@ -469,7 +466,7 @@ let g:EasyMotion_smartcase = 1
 
 let g:gitgutter_map_keys = 0
 
-function! s:GitGutterDiffBase()
+function! GitGutterDiffBase()
   GitGutter
   echo "GitGutter diff base: " . g:gitgutter_diff_base
 endfunction
@@ -482,8 +479,7 @@ nmap \hs <PLUG>GitGutterStageHunk
 nmap \hv <PLUG>GitGutterPreviewHunk
 
 nnoremap <silent> \hl :GitGutterLineHighlightsToggle<CR>
-
-nnoremap <silent> <expr> \hc <sid>GitGutterDiffBase()
+nnoremap <silent> \hc :call GitGutterDiffBase()<CR>
 nnoremap <silent> \hr :let g:gitgutter_diff_base=''<BAR>call GitGutterDiffBase()<CR>
 nnoremap \hb :let g:gitgutter_diff_base=''<LEFT>
 for i in range(0, 9)
