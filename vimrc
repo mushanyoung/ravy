@@ -1,5 +1,5 @@
 " Modeline {{
-" vim: set foldmarker={{,}} foldlevel=0 foldmethod=marker filetype=vim:
+" vim: set foldmarker={{,}} foldlevel=0 foldmethod=marker:
 " }}
 
 " Settings {{
@@ -244,7 +244,7 @@ nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
 
 " similar to gf, open file path under cursor, but in a split window in right
-nnoremap gw :let mycurf=expand("<cfile>")<BAR>exec("vsplit ".mycurf)<CR>
+nnoremap gw :exec("vsplit ".expand("<cfile>"))<CR>
 
 " Visually select the text that was last edited/pasted
 nnoremap gV `[v`]
@@ -267,9 +267,8 @@ map <SPACE><SPACE> \\
 " select ALL
 nnoremap \a ggVG
 
-" substitute
-vnoremap \c :s/
-nnoremap \c :%s/
+" close current buffer
+nnoremap \c :Bdelete!<CR>
 
 " diff
 nnoremap <silent> \de :bdelete!<BAR>diffoff<CR>
@@ -277,25 +276,28 @@ nnoremap <silent> \dl :diffget 1<BAR>diffupdate<CR>
 nnoremap <silent> \db :diffget 2<BAR>diffupdate<CR>
 nnoremap <silent> \dr :diffget 3<BAR>diffupdate<CR>
 
-" file, buffer, working directory
+" current working directory
 " print current working directory and path of current buffer
 nnoremap \ff :echo getcwd().' > '. expand('%')<CR>
-" change working directory
+" change current working directory
 nnoremap \f. :lcd ..<BAR>pwd<CR>
 nnoremap \fh :lcd %:p:h<BAR>pwd<CR>
 nnoremap \fe :lcd<SPACE>
-" new buffer
-nnoremap \fn :enew<CR>
-" close current buffer
-nnoremap \fd :Bdelete!<CR>
 
 " \h*: GitGutter
 
 nnoremap <silent> \l :call RavyRemoteOpenLink(getreg('"'))<CR>
 vnoremap <silent> \l :call RavyRemoteOpenLink(GetVisualSelection())<CR>
 
+" new buffer
+nnoremap \n :enew<CR>
+
 " toggle quickfix window
 nnoremap <silent> \q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
+
+" substitute
+vnoremap \s :s/
+nnoremap \s :%s/
 
 " toggle foldenable
 nnoremap <silent> \u :set invfoldenable<BAR>echo &foldenable?'Fold enabled.':'Fold disabled.'<CR>
@@ -309,6 +311,9 @@ nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent map!<BAR>redir END<B
 
 " Install & Update plugins
 nnoremap \vu :PlugUpdate<CR>
+
+" Clean plugins
+nnoremap \vc :PlugClean!<CR>
 
 " write
 nnoremap \w :write<CR>
@@ -349,12 +354,14 @@ exec 'nnoremap <silent> ' . s:AltMapKey('l') . ' :TmuxNavigateRight<CR>'
 exec 'nnoremap <silent> ' . s:AltMapKey('p') . ' :TmuxNavigatePrevious<CR>'
 exec 'nnoremap <silent> ' . s:AltMapKey('c') . ' :close<CR>'
 
+" Show unicode names
+exec 'nnoremap <silent> ' . s:AltMapKey('u') . ' :UnicodeName<CR>'
+
 " key pool
 exec 'nnoremap          ' . s:AltMapKey('g') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('i') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('n') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('r') . ' <NOP>'
-exec 'nnoremap          ' . s:AltMapKey('u') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('w') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('x') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('y') . ' <NOP>'
@@ -369,11 +376,9 @@ nnoremap \i <NOP>
 nnoremap \j <NOP>
 nnoremap \k <NOP>
 nnoremap \m <NOP>
-nnoremap \n <NOP>
 nnoremap \o <NOP>
 nnoremap \p <NOP>
 nnoremap \r <NOP>
-nnoremap \s <NOP>
 nnoremap \t <NOP>
 nnoremap \x <NOP>
 
@@ -383,12 +388,9 @@ nnoremap \x <NOP>
 
 " Plugin Settings {{
 
-" Tags {{
+" tagbar {{
 
 nnoremap <C-T> :TagbarToggle<CR>
-
-let g:easytags_async=1
-let g:easytags_always_enabled=1
 
 " }}
 
@@ -425,10 +427,9 @@ let g:bracketed_paste_tmux_wrap = 0
 
 " }}
 
-" vim-cpp-enhanced-highlight {{
+" vim-cool {{
 
-let g:cpp_class_scope_highlight = 1
-let g:cpp_experimental_template_highlight = 1
+let g:CoolTotalMatches = 1
 
 " }}
 
@@ -449,16 +450,6 @@ nmap P <PLUG>(YoinkPaste_P)
 
 let g:yoinkSyncNumberedRegisters = 0
 let g:yoinkIncludeDeleteOperations = 1
-
-" }}
-
-" vim-easymotion {{
-
-" use \\ as the prefix
-nmap \\ <PLUG>(easymotion-prefix)
-
-" Turn on case insensitive feature
-let g:EasyMotion_smartcase = 1
 
 " }}
 
@@ -537,38 +528,51 @@ let g:surround_36="$(\r)"      " $
 
 " }}
 
+" vim-scroll-position {{
+
+let g:scroll_position_marker         = '❯'
+let g:scroll_position_visual_begin   = '-'
+let g:scroll_position_visual_middle  = '|'
+let g:scroll_position_visual_end     = '-'
+let g:scroll_position_visual_overlap = '❮❯'
+
+" }}
+
 " }}
 
 " Plugins & Custom Settings {{
 
-call plug#begin('~/.vim/bundle')
+call plug#begin(expand('~/.vim/bundle'))
 
-if filereadable($RAVY_CUSTOM_HOME."/vimrc")
-  source $RAVY_CUSTOM_HOME/vimrc
+let s:custom_vimrc = expand('<sfile>:p:h') . '/' . 'custom/vimrc'
+if filereadable(s:custom_vimrc)
+  exec 'source ' . s:custom_vimrc
 endif
 
 Plug 'ConradIrwin/vim-bracketed-paste' " auto paste mode when pasting from terminal
 Plug 'PeterRincker/vim-argumentative'  " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
 Plug 'SirVer/ultisnips'                " snippets engine
-Plug 'honza/vim-snippets'              " snippets
 Plug 'airblade/vim-gitgutter'          " git: hunks operation indicator
+Plug 'airblade/vim-rooter'             " set proper working directory
 Plug 'andymass/vim-matchup'            " even better % navigate and highlight matching words
 Plug 'ap/vim-css-color'                " show css color in code
 Plug 'chrisbra/unicode.vim'            " Search unicode
 Plug 'christoomey/vim-tmux-navigator'  " pane navigate integration with tmux
-Plug 'easymotion/vim-easymotion'       " choose from positions which repeated motions would reach
-Plug 'henrik/vim-indexed-search'       " search: show match index and total match count
+Plug 'honza/vim-snippets'              " snippets
 Plug 'jiangmiao/auto-pairs'            " Insert or delete brackets, parens, quotes in pair
-Plug 'luochen1990/rainbow'             " Decorate brackets, parens and pairs with pairing colors
 Plug 'junegunn/fzf'                    " fzf integration
 Plug 'junegunn/fzf.vim'                " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/vim-easy-align'         " ga to align a region of text on a key (<C-X> to use a regex)
 Plug 'junegunn/vim-peekaboo'           " list the content of registers when \", @ in normal mode and <C-R> in insert mode
 Plug 'justinmk/vim-sneak'              " s: motion to match 2 characters
+Plug 'luochen1990/rainbow'             " Decorate brackets, parens and pairs with pairing colors
+Plug 'majutsushi/tagbar'               " tag explorer
 Plug 'moll/vim-bbye'                   " sane Bdelete
 Plug 'mushanyoung/vim-windflower'      " theme
 Plug 'nathanaelkane/vim-indent-guides' " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'  " highlight trailing blanks and provide StripWhitespace function
+Plug 'prettier/vim-prettier'           " auto format by prettier
+Plug 'romainl/vim-cool'                " show match index during search and cancel highlight afterwards
 Plug 'scrooloose/syntastic'            " check code syntax
 Plug 'sheerun/vim-polyglot'            " a set of filetype plugins
 Plug 'svermeulen/vim-cutlass'          " plugin that adds a 'cut' operation separate from 'delete'
@@ -585,11 +589,8 @@ Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / te
 Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'         " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
-Plug 'majutsushi/tagbar'               " tag explorer
-Plug 'prettier/vim-prettier'           " auto format by prettier
-Plug 'airblade/vim-rooter'             " set proper working directory
 
-if !exists('g:ravy_disable_ctags') && executable('ctags')
+if !exists('g:disable_ctags') && executable('ctags')
   Plug 'ludovicchabant/vim-gutentags'
 endif
 
