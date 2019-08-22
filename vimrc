@@ -13,27 +13,30 @@ end
 set directory=~/.vim/tmp//,. swapfile
 set backupdir=~/.vim/tmp//,. nobackup writebackup
 set undodir=~/.vim/tmp//,. undofile undolevels=1000 undoreload=10000
-set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
 set wildignore+=*.png,*.jpg,*.gif,*.ico,*.mp3,*.mp4,*.avi,*.mkv,*.o,*.obj,*.pyc,*.swf,*.fla,*.git*,*.hg*,*.svn*,*sass-cache*,log/**,tmp/**,*~,*~orig,*.DS_Store,tags,.tags,.tags_sorted_by_file,node_modules
 set encoding=utf-8 termencoding=utf-8 fileencoding=utf-8 fileencodings=utf-8,big5,gbk,euc-jp,euc-kr,iso8859-1,utf-16le,latin1
+set formatoptions=nmMcroql
+set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
 set tabstop=8 softtabstop=2 shiftwidth=2 expandtab smarttab
-set ignorecase smartcase hlsearch incsearch
 set copyindent smartindent nocindent
+set ignorecase smartcase
+set hlsearch incsearch
 set modeline modelines=9
 set history=10000
 set shell=bash
 set mouse=a
-set formatoptions=nmMcroql
 set iskeyword+=-
 set updatetime=100
-set notimeout                  " no timeout for key map sequence
-set splitright splitbelow      " split window: vertical to the right and horizontal to the below
-set hidden                     " hidden buffers
-set nospell                    " no spell check
-set nobomb                     " no Byte Order Mark
-set synmaxcol=4096             " max columnlength for syntax parsing
-set switchbuf=useopen          " when switching to a buffer, jump to a window with it opened
-set nostartofline              " does not move the cursor to start of line for some commands
+set notimeout                    " no timeout for key map sequence
+set splitright splitbelow        " split window: vertical to the right and horizontal to the below
+set hidden                       " hidden buffers
+set nospell                      " no spell check
+set nobomb                       " no Byte Order Mark
+set synmaxcol=4096               " max columnlength for syntax parsing
+set switchbuf=useopen            " when switching to a buffer, jump to a window with it opened
+set nostartofline                " does not move the cursor to start of line for some commands
+set scrolloff=3 scrolljump=1     " 3 lines away from margins to scroll 1 line
+set sidescrolloff=8 sidescroll=2 " 8 columns away from margins to scroll 2 column
 
 " UI
 set number numberwidth=4
@@ -42,23 +45,21 @@ set list listchars=tab:›\ ,trail:•,extends:>,precedes:<,nbsp:.
 set showmatch matchpairs+=<:>
 set viewoptions=folds,options,cursor,unix,slash
 set title titlestring=!%t:%l%(\ %m%r%h%w%)
-set linebreak
+set textwidth=80
+set winwidth=79 winheight=5 winminheight=5
+set linebreak breakindent showbreak=>>
 set background=dark
 set noshowmode
 set showcmd
 set lazyredraw
 set cursorline
-set textwidth=80
 set visualbell noerrorbells
 set wildmenu wildmode=list:longest,full " completions: list matches, then longest common part, then all.
 set wrap whichwrap=b,s,h,l,<,>,[,]      " Backspace and cursor keys wrap too
 set showtabline=1                       " show tab when multi tabs exist
-set virtualedit=onemore                 " cursor beyond last character
 set colorcolumn=+1                      " highlight over width boundary
-set scrolloff=3 scrolljump=1            " 3 lines away from margins to scroll 1 line
-set sidescrolloff=10 sidescroll=1       " 10 columns away from margins to scroll 1 column
+set virtualedit=onemore                 " cursor beyond last character
 set shortmess+=filmnrxoOtTI             " Abbreviation of file messages: try <C-G>
-set winwidth=79 winheight=5 winminheight=5
 
 " make cursor a vertical line in insert mode
 let &t_ti.="\e[1 q"
