@@ -421,12 +421,6 @@ let g:airline_powerline_fonts=1
 
 " }}
 
-" vim-bracketed-paste {{
-
-let g:bracketed_paste_tmux_wrap = 0
-
-" }}
-
 " vim-cool {{
 
 let g:CoolTotalMatches = 1
