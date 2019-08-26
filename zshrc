@@ -233,23 +233,18 @@ if [[ $- == *i* ]]; then
     return 0
   }
 
-  # hidden files
+  # files
   ravy::zle::fzf::files::files() {
     FZF_FILES_COMMAND="ag -a -g ''" FZF_FILES_PROMPT="File" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
-  # hidden files
+  # files, including hidden
   ravy::zle::fzf::files::files::hidden() {
     FZF_FILES_COMMAND="ag -a --hidden -g ''" FZF_FILES_PROMPT=".File" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
   # directories
   ravy::zle::fzf::files::dirs() {
-    FZF_FILES_COMMAND="find . -type d -not -path '*/\.*' | sed 1d | cut -b3-" FZF_FILES_PROMPT="Dir" FZF_FILES_DEFAULT_ACTION="d" ravy::zle::fzf::files
-  }
-
-  # hidden directories
-  ravy::zle::fzf::files::dirs::hidden() {
     FZF_FILES_COMMAND="find . -type d | sed 1d | cut -b3-" FZF_FILES_PROMPT=".Dir" FZF_FILES_DEFAULT_ACTION="d" ravy::zle::fzf::files
   }
 
@@ -258,9 +253,6 @@ if [[ $- == *i* ]]; then
     FZF_FILES_COMMAND="grep '^>' $HOME/.viminfo | cut -b3-" FZF_FILES_PROMPT="File(vim)" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
-  ravy::zle::fzf::files::vim::last () {
-    FZF_FILES_COMMAND="grep '^>' $HOME/.viminfo | cut -b3- | head -1" FZF_FILES_OPTS="--select-1" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
-  }
   # Paste the selected command from history into the command line
   ravy::zle::fzf::history () {
     local selected num
@@ -295,17 +287,13 @@ if [[ $- == *i* ]]; then
   zle -N ravy::zle::fzf::files::files
   zle -N ravy::zle::fzf::files::files::hidden
   zle -N ravy::zle::fzf::files::dirs
-  zle -N ravy::zle::fzf::files::dirs::hidden
   zle -N ravy::zle::fzf::files::vim
-  zle -N ravy::zle::fzf::files::vim::last
   zle -N ravy::zle::fzf::history
 
   bindkey "\eo" ravy::zle::fzf::files::files
-  bindkey "\eO" ravy::zle::fzf::files::files::hidden
+  bindkey "\ef" ravy::zle::fzf::files::files::hidden
   bindkey "\ed" ravy::zle::fzf::files::dirs
-  bindkey "\eD" ravy::zle::fzf::files::dirs::hidden
   bindkey "\ev" ravy::zle::fzf::files::vim
-  bindkey "\eV" ravy::zle::fzf::files::vim::last
   bindkey "\er" ravy::zle::fzf::history
 fi
 
