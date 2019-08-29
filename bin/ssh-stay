@@ -15,7 +15,7 @@ while true; do
   eval "${ssh_command} ${ssh_default_opts} ${ssh_opts} ${execute_command:+-- ${execute_command}}"
   exit_code=$?
   echo "SSH exits with code $exit_code"
-  if [[ $exit_code == 0 || $exit_code > 127 ]]; then
+  if [[ $exit_code == 0 ]]; then
     break
   fi
   echo "SSH connection lost, reconnecting in ${reconnect_interval} seconds..."
