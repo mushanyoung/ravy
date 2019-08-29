@@ -678,19 +678,21 @@ ravy::prompt::git () {
     st_parser=(
       "VCS_STATUS_COMMITS_AHEAD"  ">"
       "VCS_STATUS_COMMITS_BEHIND" "<"
-      "VCS_STATUS_HAS_STAGED"     "."
-      "VCS_STATUS_HAS_UNSTAGED"   "*"
-      "VCS_STATUS_HAS_UNTRACKED"  "#"
+      "VCS_STATUS_NUM_STAGED"     "."
+      "VCS_STATUS_NUM_UNSTAGED"   "*"
+      "VCS_STATUS_NUM_CONFLICTED" "!"
+      "VCS_STATUS_NUM_UNTRACKED"  "#"
     )
-    st="${VCS_STATUS_ACTION:+ ${VCS_STATUS_ACTION}}"
+    st=""
     for (( k = 1; k <= $#st_parser; k += 2 )) do
-      ((${(P)st_parser[k]} > 0)) && st+="$st_parser[k+1]"
+      if ((${(P)st_parser[k]} > 1)); then
+        st+="${(P)st_parser[k]}$st_parser[k+1]"
+      elif ((${(P)st_parser[k]} > 0)); then
+        st+="$st_parser[k+1]"
+      fi
     done
-    if [[ -n ${VCS_STATUS_LOCAL_BRANCH} ]]; then
-      export _RAVY_PROMPT_GIT_READ="${VCS_STATUS_LOCAL_BRANCH}"
-    else
-      export _RAVY_PROMPT_GIT_READ="${VCS_STATUS_COMMIT:0:7}"
-    fi
+    st+="${VCS_STATUS_ACTION:+ ${VCS_STATUS_ACTION}}"
+    export _RAVY_PROMPT_GIT_READ="${VCS_STATUS_LOCAL_BRANCH-${VCS_STATUS_COMMIT:0:7}}${VCS_STATUS_TAG:+^${VCS_STATUS_TAG}}"
     export _RAVY_PROMPT_GIT_ST_READ="${st}"
   elif [[ $VCS_STATUS_RESULT == "norepo-sync" ]]; then
     unset _RAVY_PROMPT_GIT_READ _RAVY_PROMPT_GIT_ST_READ
