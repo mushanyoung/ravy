@@ -541,10 +541,16 @@ ffmpeg_cut () {
 alias vi=vim
 alias v=vim
 
-# list files, do not record in history
-alias l="ls-color"
-alias la="ls-color -A"
-alias ll="ls -lFh"
+# ls, or colorls if available
+if type colorls &> /dev/null; then
+  alias ls="colorls"
+  alias l="colorls -l"
+  alias la="colorls -lA"
+else
+  alias l="ls-color"
+  alias la="ls-color -A"
+fi
+alias ll="command ls -lFh"
 
 # change directory, do not record in history
 alias pu="pushd"
