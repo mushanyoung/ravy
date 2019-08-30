@@ -3,7 +3,6 @@ zshenv:             shell
 zcompdump:          shell
 vimrc:              vim
 viminfo:            vim
-docker-compose.yml: docker
 lock:               env
 
 h:                  c
