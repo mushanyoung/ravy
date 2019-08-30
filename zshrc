@@ -37,7 +37,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "romkatv/gitstatus", as:plugin
   zplug "marzocchi/zsh-notify", as:plugin
   zplug "chrissicool/zsh-256color", as:plugin
-  zplug "supercrabtree/k", as:plugin
   zplug "hlissner/zsh-autopair", as:plugin
   zplug "zsh-users/zsh-completions", as:plugin
   zplug "ymattw/ydiff", as:command, use:ydiff
@@ -45,12 +44,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "zsh-users/zsh-syntax-highlighting", defer:1, as:plugin
   zplug "zsh-users/zsh-history-substring-search", defer:2, as:plugin
   zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin  # benchmark: 17ms
-
-  # ls color evaluations
-  type dircolors &>/dev/null && DIRCOLORS_CMD=dircolors
-  type gdircolors &>/dev/null && DIRCOLORS_CMD=gdircolors
-  zplug "trapd00r/LS_COLORS", as:command, lazy:false, hook-load:"\$($DIRCOLORS_CMD -b \${ZPLUG_REPOS}/trapd00r/LS_COLORS/LS_COLORS)"
-  unset DIRCOLORS_CMD
 
   if [[ -n $RAVY_PROFILE ]]; then
     zplug "romkatv/zsh-prompt-benchmark", as:plugin
@@ -541,16 +534,13 @@ ffmpeg_cut () {
 alias vi=vim
 alias v=vim
 
-# ls, or colorls if available
+# colorls if available
 if type colorls &> /dev/null; then
-  alias ls="colorls"
-  alias l="colorls -l"
-  alias la="colorls -lA"
-else
-  alias l="ls-color"
-  alias la="ls-color -A"
+  alias ls="colorls --gs --sd --color=always --dark"
 fi
-alias ll="command ls -lFh"
+alias l="ls -l"
+alias la="ls -lA"
+alias ll="l"
 
 # change directory, do not record in history
 alias pu="pushd"
@@ -698,7 +688,7 @@ ravy::prompt::git () {
       fi
     done
     st+="${VCS_STATUS_ACTION:+ ${VCS_STATUS_ACTION}}"
-    export _RAVY_PROMPT_GIT_READ="${VCS_STATUS_LOCAL_BRANCH-${VCS_STATUS_COMMIT:0:7}}${VCS_STATUS_TAG:+^${VCS_STATUS_TAG}}"
+    export _RAVY_PROMPT_GIT_READ="${VCS_STATUS_LOCAL_BRANCH-${VCS_STATUS_COMMIT:0:7}}${VCS_STATUS_TAG:+:${VCS_STATUS_TAG}}"
     export _RAVY_PROMPT_GIT_ST_READ="${st}"
   elif [[ $VCS_STATUS_RESULT == "norepo-sync" ]]; then
     unset _RAVY_PROMPT_GIT_READ _RAVY_PROMPT_GIT_ST_READ
@@ -762,7 +752,7 @@ RAVY_PROMPT_INDICATOR="%K{234}%E  "
 RAVY_PROMPT_PATH="%F{\$([ ! -w \$PWD ] && print '160' || print '30')}%~ "
 RAVY_PROMPT_GIT="%F{64}\${_RAVY_PROMPT_GIT_READ:+\${_RAVY_PROMPT_GIT_READ}}%F{172}\${_RAVY_PROMPT_GIT_READ:+\${_RAVY_PROMPT_GIT_ST_READ} }"
 RAVY_PROMPT_USER="%F{\$([ \$EUID = 0 ] && print '160' || print '103')}%n "
-RAVY_PROMPT_REMOTE="\$([[ -n \$SSH_CLIENT || -n \$SSH_TTY ]] && print '%F{166}<> ')"
+RAVY_PROMPT_REMOTE="\$([[ -n \$SSH_CLIENT || -n \$SSH_TTY ]] && print '%F{166}易 ')"
 RAVY_PROMPT_JOBS="%F{163}%(1j.&%j .)"
 RAVY_PROMPT_CUSTOMIZE=""
 RAVY_PROMPT_CMD="%F{239}%k%_❯\$([ \$EUID = 0 ] && print '!')%f "

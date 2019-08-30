@@ -1,0 +1,22 @@
+zhistory:           shell
+zshenv:             shell
+zcompdump:          shell
+vimrc:              vim
+viminfo:            vim
+docker-compose.yml: docker
+lock:               env
+
+h:                  c
+cc:                 c
+swig:               c
+
+build:              info
+metadata:           info
+owners:             info
+blueprint:          env
+proto:              conf
+pbtxt:              txt
+schema:             db
+sql:                db
+sqlm:               db
+sqlt:               test

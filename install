@@ -18,8 +18,13 @@ append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
 echo "zplug"
 [ -d $HOME/.zplug ] || git clone https://github.com/zplug/zplug $HOME/.zplug
 
+echo "colorls"
+mkdir -p $HOME/.config
+rm -rf $HOME/.config/colorls
+ln -s -f $RAVY/colorls $HOME/.config/colorls
+
 echo "vim/neovim"
-mkdir -p $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload $HOME/.config
+mkdir -p $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
 [ -d $HOME/.config/nvim ] || ln -s -f $HOME/.vim $HOME/.config/nvim
 
 append_content_if_absent $HOME/.vimrc "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"

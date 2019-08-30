@@ -1,0 +1,14 @@
+.tmp:      tmp
+temp:      tmp
+
+.ssh:      conf
+conf.d:    conf
+configs:   conf
+tools:     conf
+proto:     conf
+
+.java:     java
+
+testing:   data
+
+Downloads: downloads
