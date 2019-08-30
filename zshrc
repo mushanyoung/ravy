@@ -30,7 +30,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   # plugins
   zplug 'zplug/zplug', hook-build:'zplug --self-manage'
 
-  zplug "modules/environment", from:prezto, as:plugin
   zplug "modules/completion", from:prezto, as:plugin
   zplug "modules/archive", from:prezto, as:plugin
 
@@ -39,6 +38,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "chrissicool/zsh-256color", as:plugin
   zplug "hlissner/zsh-autopair", as:plugin
   zplug "zsh-users/zsh-completions", as:plugin
+  zplug "skywind3000/z.lua", as:plugin
   zplug "ymattw/ydiff", as:command, use:ydiff
 
   zplug "zsh-users/zsh-syntax-highlighting", defer:1, as:plugin
@@ -119,8 +119,8 @@ if [[ $- == *i* ]]; then
   bindkey -e
 
   # Smart URLs
-  autoload -Uz url-quote-magic
-  zle -N self-insert url-quote-magic
+  autoload -Uz bracketed-paste-url-magic
+  zle -N bracketed-paste bracketed-paste-url-magic
 
   # ^P / ^N: zsh-history-substring-search
   bindkey "^P" history-substring-search-up
@@ -295,12 +295,23 @@ fi
 # Environment {{{
 
 # General
+setopt PROMPT_SUBST           # The prompt string is first subjected to expansion.
 setopt PIPE_FAIL              # Piped command fails for precedents.
 setopt BRACE_CCL              # Allow brace character class list expansion.
-
-# Auto correcting
+setopt COMBINING_CHARS        # Combine zero-length punctuation characters (accents) with the base character.
+setopt INTERACTIVE_COMMENTS   # Enable comments in interactive shell.
+setopt RC_QUOTES              # Allow 'Henry''s Garage' instead of 'Henry'\''s Garage'.
+unsetopt MAIL_WARNING         # Don't print a warning message if a mail file has been accessed.
 unsetopt CORRECT_ALL          # Do not auto correct arguments.
 unsetopt CORRECT              # Do not auto correct commands.
+
+# Jobs
+setopt LONG_LIST_JOBS         # List jobs in the long format by default.
+setopt AUTO_RESUME            # Attempt to resume existing job before creating a new process.
+setopt NOTIFY                 # Report status of background jobs immediately.
+unsetopt BG_NICE              # Don't run all background jobs at a lower priority.
+unsetopt HUP                  # Don't kill jobs on shell exit.
+unsetopt CHECK_JOBS           # Don't report on jobs when shell exit.
 
 # Directory
 setopt AUTO_CD                # Auto changes to a directory without typing cd.
@@ -345,7 +356,7 @@ export LESS_TERMCAP_md=$'\E[01;38;5;74m'  # begin bold
 export LESS_TERMCAP_me=$'\E[0m'           # end mode
 export LESS_TERMCAP_so=$'\E[7;40;33m'     # begin standout-mode - info box
 export LESS_TERMCAP_se=$'\E[0m'           # end standout-mode
-export LESS_TERMCAP_us=$'\E[04;38;5;146m' # begin underline
+export LESS_TERMCAP_us=$'\E[04;38;5;178m' # begin underline
 export LESS_TERMCAP_ue=$'\E[0m'           # end underline
 
 # }}}
@@ -627,43 +638,6 @@ fi
 
 # Prompt {{{
 
-# generate git prompt to _RAVY_PROMPT_GIT_READ
-# ravy::prompt::git () {
-#   local ref k git_st st_str st_count
-#   # test if current directory is not a git repo
-#   if ref=$(command git symbolic-ref --short HEAD 2>/dev/null \
-#         || command git rev-parse --short HEAD 2>/dev/null); then
-#     git_st=$(command git status --ignore-submodules=dirty -unormal --porcelain -b 2>/dev/null)
-#     st_parser=(
-#     "^## .*ahead"         "${RAVY_PROMPT_GIT_AHEAD->}"
-#     "^## .*behind"        "${RAVY_PROMPT_GIT_BEHIND-<}"
-#     "^## .*diverged"      "${RAVY_PROMPT_GIT_DIVERGED-x}"
-#     "^A. "                "${RAVY_PROMPT_GIT_ADDED-+}"
-#     "^R. "                "${RAVY_PROMPT_GIT_RENAMED-~}"
-#     "^C. "                "${RAVY_PROMPT_GIT_COPIED-c}"
-#     "^.D |^D. "           "${RAVY_PROMPT_GIT_DELETED--}"
-#     "^M. "                "${RAVY_PROMPT_GIT_MODIFIED-.}"
-#     "^.M "                "${RAVY_PROMPT_GIT_TREE_CHANGED-*}"
-#     "^U. |^.U |^AA |^DD " "${RAVY_PROMPT_GIT_UNMERGED-^}"
-#     "^\?\? "              "${RAVY_PROMPT_GIT_UNTRACKED-#}"
-#     )
-#     for (( k = 1; k <= $#st_parser; k += 2 )) do
-#       if st_count=$(grep -E -c "${st_parser[k]}" <<< "$git_st" 2>/dev/null); then
-#         st_str+="${st_parser[k+1]}"
-#         if (( st_count > 2 )); then
-#           st_str+=$st_count
-#         elif (( st_count == 2 )); then
-#           st_str+="${st_parser[k+1]}"
-#         fi
-#       fi
-#     done
-#     export _RAVY_PROMPT_GIT_READ="${ref}"
-#     export _RAVY_PROMPT_GIT_ST_READ="${st_str}"
-#   else
-#     unset _RAVY_PROMPT_GIT_READ _RAVY_PROMPT_GIT_ST_READ
-#   fi
-# }
-
 gitstatus_start ravy
 
 # generate git prompt to _RAVY_PROMPT_GIT_READ
@@ -743,8 +717,6 @@ add-zsh-hook precmd ravy::prompt::git
 
 # PROMPT text
 
-setopt PROMPT_SUBST
-
 LF=$'\n'
 RAVY_PROMPT_LASTCMD_RUNTIME="%F{240}\${_RAVY_PROMPT_TIMER_READ:+\${_RAVY_PROMPT_TIMER_READ} }"
 RAVY_PROMPT_LASTCMD_RET="%F{160}\${_RAVY_PROMPT_TIMER_READ:+%(?..\$(nice_exit_code))${LF}}"
@@ -787,21 +759,6 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
     fi
   }
 
-  # Set the terminal title with current command.
-  ravy::termtitle::command () {
-    local -a cmd
-
-    # Re-parse the command line
-    cmd=(${(z)${1//\\/\\\\\\\\}})
-
-    case $cmd[1] in
-      fg) cmd=(${(z)jobtexts[${(Q)cmd[2]:-%+}]}) ;;
-      %*) cmd=(${(z)jobtexts[${(Q)cmd[1]:-%+}]}) ;;
-    esac
-
-    ravy::termtitle::settitle "!$cmd[1]"
-  }
-
   # Set the terminal title with current path.
   ravy::termtitle::path () {
     if [[ -n $RAVY_TERMTITLE ]]; then
@@ -813,7 +770,6 @@ if [[ ! $TERM =~ ^(dumb|linux|.*bsd.*|eterm.*)$ ]]; then
 
   add-zsh-hook chpwd ravy::termtitle::path   # benchmark: 5ms
   add-zsh-hook precmd ravy::termtitle::path   # benchmark: 5ms
-  # add-zsh-hook preexec ravy::termtitle::command
 fi
 
 # }}}
