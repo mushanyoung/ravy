@@ -103,6 +103,10 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   # Terminal notifier
   zstyle ':notify:*' success-title "Succeeded in #{time_elapsed}s"
   zstyle ':notify:*' error-title "Failed in #{time_elapsed}s"
+
+  # z.lua variables
+  ZLUA_SCRIPT="$ZPLUG_REPOS/skywind3000/z.lua/z.lua"
+  ZLUA_LUAEXE==lua
 fi
 
 # }}}
