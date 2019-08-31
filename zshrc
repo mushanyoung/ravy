@@ -72,7 +72,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   "reserved-word"                 "fg=214"
   "unknown-token"                 "fg=196"
   "suffix-alias"                  "fg=85,underline"
-  "path_prefix"                   "fg=23"
+  "path_prefix"                   "fg=28"
   "path"                          "fg=30"
   "commandseparator"              "fg=blue"
   "redirection"                   "fg=blue"
@@ -80,10 +80,10 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   "history-expansion"             "fg=yellow"
   "single-hyphen-option"          "fg=yellow"
   "double-hyphen-option"          "fg=yellow"
-  "single-quoted-argument"        "fg=yellow"
-  "dollar-quoted-argument"        "fg=yellow"
-  "double-quoted-argument"        "fg=yellow"
-  "back-quoted-argument"          "fg=yellow"
+  "single-quoted-argument"        "fg=107"
+  "dollar-quoted-argument"        "fg=107"
+  "double-quoted-argument"        "fg=107"
+  "back-quoted-argument"          "fg=110"
   "dollar-double-quoted-argument" "fg=magenta"
   "back-double-quoted-argument"   "fg=magenta"
   "back-dollar-quoted-argument"   "fg=magenta"
@@ -367,15 +367,6 @@ export LESS_TERMCAP_ue=$'\E[0m'           # end underline
 
 # Util Functions & Aliases {{{
 
-# zmv
-autoload -Uz zmv
-
-# example: mmv *.c.orig orig/*.c
-alias mmv='noglob zmv -W'
-
-# Lists the ten most used commands.
-alias history-stat="history 0 | awk '{print \$2}' | sort | uniq -c | sort -n -r | head"
-
 # interactive mv
 imv () {
   local src dst
@@ -404,9 +395,6 @@ lines () {
 
 # ping handles url
 ping () { sed -E -e 's#.*://##' -e 's#/.*$##' <<< "$@" | xargs ping; }
-
-# reset terminal buffer
-alias reset='command reset; stty sane; tput reset; echo -e "\033c"; clear; builtin cd -- $PWD'
 
 # cd up, default 1 level
 # usage: $0 <name-of-any-parent-directory>
@@ -451,6 +439,11 @@ d () {
   print -- "bd: Error: No parent directory named '$arg'"
   return 1
 }
+
+alias dd="d"
+
+# change directory, do not record in history
+take () { mkdir -p "$1" && cd -- "$1" || return; }
 
 _d () {
   # Get parents (in reverse order)
@@ -500,12 +493,6 @@ nice_exit_code () {
   return $exit_status
 }
 
-# Pipe command with --help output and ignore rest of the line.
-alias -g -- -help="-help | less; true "
-alias -g -- --help="--help | less; true "
-alias -g -- --helpshort="--helpshort | less; true "
-alias -g -- --helpfull="--helpfull | less; true "
-
 # change directory to a nearest possible folder
 cd () {
   local file="$@"
@@ -538,16 +525,12 @@ alias gd1="gd HEAD~ HEAD"
 alias gd2="gd HEAD~2 HEAD"
 alias gdc="gd --cached"
 
-# Example:
-# ffmpeg_cut a.mp4 00:01:00 02:00:00
-ffmpeg_cut () {
-  local input="$0" start="$1" duration="$2"
-  ffmpeg -ss "$start" -i "$input" -to "$duration" -c copy "cut.${input:t:e}"
-}
+# example: mmv *.c.orig orig/*.c
+autoload -Uz zmv
+alias mmv='noglob zmv -W'
 
-# vim
-alias vi=vim
-alias v=vim
+# Lists the ten most used commands.
+alias history-stat="history 0 | awk '{print \$2}' | sort | uniq -c | sort -n -r | head"
 
 # colorls if available
 if type colorls &> /dev/null; then
@@ -557,19 +540,16 @@ alias l="ls -l"
 alias la="ls -lA"
 alias ll="l"
 
-# change directory, do not record in history
-alias pu="pushd"
-alias po="popd"
-alias dd="d"
-take () { mkdir -p "$1" && cd -- "$1" || return; }
-
 # abbreviations
+alias dc="docker-compose"
 alias g="command git"
 alias t="command tmux"
 alias hs="history"
 alias tf="tail -f"
 alias rd="rmdir"
 alias rb="ruby"
+alias vi="vim"
+alias v="vim"
 
 # python
 alias py="python3"
@@ -577,15 +557,12 @@ alias py3="python3"
 alias ipy="ipython3"
 alias ipy3="ipython3"
 
-pip2-update-all () {
-  pip2 list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip install -U
-}
-pip3-update-all () {
-  pip3 list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip3 install -U
-}
-
 # http serve current working dir in a given port (8000 in default)
-alias serve="python3 -m http.server"
+alias pyserv="python3 -m http.server"
+
+pip-update-all () {
+  ${PIP_COMMAND:-pip3} list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip3 install -U
+}
 
 # grep with default options
 alias grep="grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}"
@@ -602,6 +579,9 @@ alias bi="brew install --force-bottle"
 alias au="sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
 alias auau="sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean"
 
+# reset terminal buffer
+alias reset='command reset; stty sane; tput reset; echo -e "\033c"; clear; builtin cd -- $PWD'
+
 # open-remote
 [[ -n $SSH_CONNECTION ]] && alias open="open-remote"
 
@@ -612,31 +592,18 @@ alias ravyc=ravycustom
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 alias ravys=ravysource
 
+# free
 if [[ $OSTYPE =~ ^darwin ]]; then
   alias free='command top -l 1 -s 0 | grep PhysMem'
 else
   alias free='command free -h'
 fi
 
-# Rsync commands
-if type rsync &>/dev/null; then
-  _rsync_cmd="rsync --verbose --progress --human-readable --archive --hard-links --one-file-system"
-
-  if grep -q "xattrs" <(rsync --help 2>&1); then
-    _rsync_cmd="${_rsync_cmd} --acls --xattrs"
-  fi
-
-  if [[ $OSTYPE =~ ^darwin ]] && grep -q "file-flags" <(rsync --help 2>&1); then
-    _rsync_cmd="${_rsync_cmd} --crtimes --fileflags --protect-decmpfs --force-change"
-  fi
-
-  alias rsync-copy="${_rsync_cmd}"
-  alias rsync-move="${_rsync_cmd} --remove-source-files"
-  alias rsync-update="${_rsync_cmd} --update"
-  alias rsync-synchronize="${_rsync_cmd} --update --delete"
-
-  unset _rsync_cmd
-fi
+# Pipe command with --help output and ignore rest of the line.
+alias -g -- -help="-help | less; true "
+alias -g -- --help="--help | less; true "
+alias -g -- --helpshort="--helpshort | less; true "
+alias -g -- --helpfull="--helpfull | less; true "
 
 # }}}
 
