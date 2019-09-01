@@ -4,6 +4,12 @@ zcompdump: shell
 vimrc:     vim
 viminfo:   vim
 lock:      env
+toml:      yml
+m3u:       video
+dat:       db
+pid:       id
+7z:        zip
+tgz:       zip
 
 h:         c
 cc:        c
