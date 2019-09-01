@@ -541,7 +541,6 @@ alias la="ls -lA"
 alias ll="l"
 
 # abbreviations
-alias dc="docker-compose"
 alias g="command git"
 alias t="command tmux"
 alias hs="history"
@@ -578,6 +577,13 @@ alias bi="brew install --force-bottle"
 # apt commands
 alias au="sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
 alias auau="sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean"
+
+# docker commands
+alias dc="docker-compose"
+alias dp="docker-compose pull"
+alias dud="docker-compose up -d"
+alias dpdu="docker-compose pull && docker-compose up -d"
+alias dudp="dpdu"
 
 # reset terminal buffer
 alias reset='command reset; stty sane; tput reset; echo -e "\033c"; clear; builtin cd -- $PWD'
