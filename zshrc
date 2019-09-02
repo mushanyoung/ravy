@@ -584,6 +584,8 @@ alias dp="docker-compose pull"
 alias dud="docker-compose up -d"
 alias dpdu="docker-compose pull && docker-compose up -d"
 alias dudp="dpdu"
+alias drc="docker rm \$(docker ps -f status=exit -q)"
+alias dri="docker rmi \$(docker images | grep '^<none>' | awk '{print \$3}')"
 
 # reset terminal buffer
 alias reset='command reset; stty sane; tput reset; echo -e "\033c"; clear; builtin cd -- $PWD'
