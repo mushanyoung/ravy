@@ -573,6 +573,7 @@ alias pc="HIGH_CPU_MEM_ONLY=1 pa"
 # brew commands
 alias bubu="brew update && brew outdated && brew upgrade && brew cleanup"
 alias bi="brew install --force-bottle"
+alias brewleaf=$'brew list | xargs -n1 -I{} sh -c \'if [ -z $(brew uses {} --installed) ]; then echo {}; fi\''
 
 # apt commands
 alias au="sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
