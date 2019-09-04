@@ -24,11 +24,11 @@ prepend_to_path "$RAVY_CUSTOM_HOME/bin"
 append_to_fpath "$RAVY_HOME/zsh-functions"
 append_to_fpath "$RAVY_CUSTOM_HOME/zsh-functions"
 
-local brew_prefixes=(
-"$HOME/.brew"
-"$HOME/.linuxbrew"
-"/home/linuxbrew/.linuxbrew"
-"/usr/local"
+brew_prefixes=(
+  "$HOME/.brew"
+  "$HOME/.linuxbrew"
+  "/home/linuxbrew/.linuxbrew"
+  "/usr/local"
 )
 
 for brew in $brew_prefixes; do
@@ -37,8 +37,8 @@ for brew in $brew_prefixes; do
     export HOMEBREW_CELLAR="$brew/Cellar"
     export HOMEBREW_REPOSITORY="$brew"
 
-    prepend_to_path "$brew/bin"
     prepend_to_path "$brew/sbin"
+    prepend_to_path "$brew/bin"
     prepend_to_manpath "$brew/share/man"
     append_to_fpath "$brew/completions/zsh"
     if [[ $INFOPATH != *$brew/share/info* ]]; then
@@ -46,6 +46,8 @@ for brew in $brew_prefixes; do
     fi
   fi
 done
+
+unset brew_prefixes brew
 
 # MANPATH should always have a leading colon to search with executables
 [[ ! $MANPATH =~ ^: ]] && MANPATH=":$MANPATH"
