@@ -33,6 +33,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "modules/completion", from:prezto, as:plugin
   zplug "modules/archive", from:prezto, as:plugin
 
+  zplug "mushanyoung/brew-compose", as:command
   zplug "romkatv/gitstatus", as:plugin
   zplug "marzocchi/zsh-notify", as:plugin
   zplug "chrissicool/zsh-256color", as:plugin
@@ -571,8 +572,9 @@ alias pa="ps-color"
 alias pc="HIGH_CPU_MEM_ONLY=1 pa"
 
 # brew commands
-alias bubu="brew update && brew outdated && brew upgrade && brew cleanup"
+alias bc="brew-compose"
 alias bi="brew install --force-bottle"
+alias bubu="brew update && brew outdated && brew upgrade && brew cleanup"
 alias brewleaf=$'brew list | xargs -n1 -I{} sh -c \'if [ -z "$(brew uses {} --installed)" ]; then echo {}; fi\''
 
 # apt commands
