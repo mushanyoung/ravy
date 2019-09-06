@@ -107,7 +107,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
 
   # z.lua variables
   ZLUA_SCRIPT="$ZPLUG_REPOS/skywind3000/z.lua/z.lua"
-  ZLUA_LUAEXE==lua
+  ZLUA_LUAEXE="$(command -v lua)"
 fi
 
 # }}}
