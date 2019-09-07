@@ -1,10 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # vim: set filetype=ruby:
-# b - browse Chrome bookmarks with fzf
+# browse Chrome bookmarks with fzf
 
-[[ $OSTYPE =~ ^darwin ]] || exit 1
+[ $(uname) = Darwin ] || exit 1
 
-/usr/bin/env ruby -x "$0"                               |
+/usr/bin/env ruby -x "$0"                           |
   fzf --ansi --multi --no-hscroll --tiebreak=begin  |
   awk 'BEGIN { FS = "\t" } { print $2 }'            |
   xargs open
