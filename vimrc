@@ -457,12 +457,12 @@ function! GitGutterDiffBase()
   echo "GitGutter diff base: " . g:gitgutter_diff_base
 endfunction
 
-nmap \hn <PLUG>GitGutterNextHunk
-nmap \hp <PLUG>GitGutterPrevHunk
+nmap \hn <PLUG>(GitGutterNextHunk)
+nmap \hp <PLUG>(GitGutterPrevHunk)
 
-nmap \hu <PLUG>GitGutterUndoHunk
-nmap \hs <PLUG>GitGutterStageHunk
-nmap \hv <PLUG>GitGutterPreviewHunk
+nmap \hu <PLUG>(GitGutterUndoHunk)
+nmap \hs <PLUG>(GitGutterStageHunk)
+nmap \hv <PLUG>(GitGutterPreviewHunk)
 
 nnoremap <silent> \hl :GitGutterLineHighlightsToggle<CR>
 nnoremap <silent> \hc :call GitGutterDiffBase()<CR>
@@ -473,10 +473,10 @@ for i in range(0, 9)
 endfor
 
 " text objects
-omap ic <PLUG>GitGutterTextObjectInnerPending
-omap ac <PLUG>GitGutterTextObjectOuterPending
-xmap ic <PLUG>GitGutterTextObjectInnerVisual
-xmap ac <PLUG>GitGutterTextObjectOuterVisual
+omap ic <PLUG>(GitGutterTextObjectInnerPending)
+omap ac <PLUG>(GitGutterTextObjectOuterPending)
+xmap ic <PLUG>(GitGutterTextObjectInnerVisual)
+xmap ac <PLUG>(GitGutterTextObjectOuterVisual)
 
 " }}
 
