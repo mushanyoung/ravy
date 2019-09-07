@@ -566,7 +566,6 @@ Plug 'moll/vim-bbye'                   " sane Bdelete
 Plug 'mushanyoung/vim-windflower'      " theme
 Plug 'nathanaelkane/vim-indent-guides' " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'  " highlight trailing blanks and provide StripWhitespace function
-Plug 'prettier/vim-prettier'           " auto format by prettier
 Plug 'romainl/vim-cool'                " show match index during search and cancel highlight afterwards
 Plug 'scrooloose/syntastic'            " check code syntax
 Plug 'sheerun/vim-polyglot'            " a set of filetype plugins
@@ -584,6 +583,12 @@ Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / te
 Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'         " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
+
+" auto format by prettier
+Plug 'prettier/vim-prettier', {
+  \ 'do': 'npm install',
+  \ 'branch': 'release/1.x',
+  \ 'for': [ 'javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue', 'lua', 'php', 'python', 'ruby', 'html', 'swift' ] }
 
 if !exists('g:disable_ctags') && executable('ctags')
   Plug 'ludovicchabant/vim-gutentags'
