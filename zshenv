@@ -33,7 +33,7 @@ for brew in $brew_prefixes; do
     export HOMEBREW_CELLAR="$brew/Cellar"
     export HOMEBREW_REPOSITORY="$brew"
 
-    if [[ -f $brew/opt/ruby/bin/ruby ]]; then
+    if [[ -f "$brew/opt/ruby/bin/ruby" ]]; then
       prepend_to_path "$brew/opt/ruby/bin"
     fi
     prepend_to_path "$brew/sbin"

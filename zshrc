@@ -759,6 +759,6 @@ fi
 
 # Custom {{{
 
-[[ -f $RAVY_HOME/custom/zshrc ]] && source "$RAVY_HOME/custom/zshrc"
+[[ -f "$RAVY_HOME/custom/zshrc" ]] && source "$RAVY_HOME/custom/zshrc"
 
 # }}}
