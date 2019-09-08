@@ -1,5 +1,4 @@
 export RAVY_HOME="${0:A:h}"
-export RAVY_CUSTOM_HOME="$RAVY_HOME/custom"
 
 # path, fpath and manpath are exported unique sets
 typeset -U path
@@ -16,13 +15,10 @@ append_to_path     () { [[ -d "$1" ]] && path+="$1";        }
 append_to_fpath    () { [[ -d "$1" ]] && fpath+="$1";       }
 
 # source custom
-[[ -f "$RAVY_CUSTOM_HOME/zshenv" ]] && source "$RAVY_CUSTOM_HOME/zshenv"
+[[ -f "$RAVY_HOME/custom/zshenv" ]] && source "$RAVY_HOME/custom/zshenv"
 
 prepend_to_path "$RAVY_HOME/bin"
-prepend_to_path "$RAVY_CUSTOM_HOME/bin"
-
 append_to_fpath "$RAVY_HOME/zsh-functions"
-append_to_fpath "$RAVY_CUSTOM_HOME/zsh-functions"
 
 brew_prefixes=(
   "$HOME/.brew"

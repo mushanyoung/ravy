@@ -599,7 +599,7 @@ alias reset='command reset; stty sane; tput reset; echo -e "\033c"; clear; built
 
 # Ravy commands
 alias ravy="cd \$RAVY_HOME"
-alias ravycustom="cd \$RAVY_CUSTOM_HOME"
+alias ravycustom="cd \$RAVY_HOME/custom"
 alias ravyc=ravycustom
 alias ravysource="unset RAVY_LOADED; source ${0:A}"
 alias ravys=ravysource
@@ -759,6 +759,6 @@ fi
 
 # Custom {{{
 
-[[ -f $RAVY_CUSTOM_HOME/zshrc ]] && source "$RAVY_CUSTOM_HOME/zshrc"
+[[ -f $RAVY_HOME/custom/zshrc ]] && source "$RAVY_HOME/custom/zshrc"
 
 # }}}
