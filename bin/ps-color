@@ -1,8 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-if [[ ! -t 1 ]]; then
-    piping=true
-fi
+[ -t 1 ] || piping=true
+
 ps -a -x -o "user,pid,%cpu,%mem,tt,start,time,command" |
 awk '
     NR>1 {
@@ -27,7 +26,7 @@ awk '
 ' |
 column -t -s '	' |
 sed 's/  |/|/g' |
-if [[ $piping != 'true' ]]; then cut -c -"$(tput cols)"; else cat; fi |
+if [ $piping = true ]; then cat; else cut -c -"$(tput cols)"; fi |
 awk '
     BEGIN {
         FS="|"
