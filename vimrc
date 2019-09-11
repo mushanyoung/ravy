@@ -584,11 +584,13 @@ Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'         " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
 
-" auto format by prettier
-Plug 'prettier/vim-prettier', {
-  \ 'do': 'npm install',
-  \ 'branch': 'release/1.x',
-  \ 'for': [ 'javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue', 'lua', 'php', 'python', 'ruby', 'html', 'swift' ] }
+if !exists('g:disable_prettier')
+  " auto format by prettier
+  Plug 'prettier/vim-prettier', {
+    \ 'do': 'npm install',
+    \ 'branch': 'release/1.x',
+    \ 'for': [ 'javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue', 'lua', 'php', 'python', 'ruby', 'html', 'swift' ] }
+endif
 
 if !exists('g:disable_ctags') && executable('ctags')
   Plug 'ludovicchabant/vim-gutentags'
