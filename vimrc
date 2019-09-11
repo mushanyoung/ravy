@@ -52,7 +52,7 @@ set background=dark
 set noshowmode
 set showcmd
 set lazyredraw
-set cursorline
+set cursorline cursorcolumn
 set visualbell noerrorbells
 set wildmenu wildmode=list:longest,full " completions: list matches, then longest common part, then all.
 set wrap whichwrap=b,s,h,l,<,>,[,]      " Backspace and cursor keys wrap too
