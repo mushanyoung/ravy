@@ -155,7 +155,9 @@ if [[ $- == *i* ]]; then
   # FZF
 
   # Enable fzf completion
-  source "$(brew --prefix)/opt/fzf/shell/completion.zsh" 2> /dev/null
+  if type brew &>/dev/null; then
+    source "$(brew --prefix)/opt/fzf/shell/completion.zsh" 2> /dev/null
+  fi
 
   # kill -9 <C-U>
   # ssh <C-U>
