@@ -117,7 +117,7 @@ fi
 if [[ $- == *i* ]]; then
 
   # chars treated as a part of a word
-  export WORDCHARS=""
+  export WORDCHARS='*?_-.[]~=\&:;!#$%^(){}<>'
 
   export KEYTIMEOUT=1
 
