@@ -7,12 +7,12 @@ ssh_command=${SSH_COMMAND:-ssh}
 execute_command=${EXECUTE_COMMAND:-tmux new-session -A -s tmux}
 reconnect_interval=${RECONNECT_INTERVAL:-10}
 alive_interval=${ALIVE_INTERVAL:-10}
-ssh_default_opts="-t -oCompression=yes -oCheckHostIP=no -oServerAliveInterval=${alive_interval}"
-ssh_opts="$*"
+ssh_default_opts=("-t" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${alive_interval}")
+ssh_opts=("$@" "${execute_command:+--}" "${execute_command}")
 
 while true; do
-  echo "Connecting..."
-  eval "${ssh_command} ${ssh_default_opts} ${ssh_opts} ${execute_command:+-- ${execute_command}}"
+  echo ${ssh_command} "${ssh_default_opts[@]}" "${ssh_opts[@]}"
+  ${ssh_command} "${ssh_default_opts[@]}" "${ssh_opts[@]}"
   exit_code=$?
   echo "SSH exits with code $exit_code"
   [ $exit_code = 0 ] && break
