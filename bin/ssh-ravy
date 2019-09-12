@@ -7,4 +7,4 @@ singleton_command_background () { (singleton_command "$@" &) &>/dev/null; }
 # Launch open-remote-monitor before ssh.
 [ $(uname) = Darwin ] && singleton_command_background open-remote-monitor
 
-ssh-stay "$@"
+exec ssh-stay "$@"
