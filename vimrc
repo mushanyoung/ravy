@@ -567,7 +567,6 @@ Plug 'mushanyoung/vim-windflower'      " theme
 Plug 'nathanaelkane/vim-indent-guides' " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'  " highlight trailing blanks and provide StripWhitespace function
 Plug 'romainl/vim-cool'                " show match index during search and cancel highlight afterwards
-Plug 'scrooloose/syntastic'            " check code syntax
 Plug 'sheerun/vim-polyglot'            " a set of filetype plugins
 Plug 'svermeulen/vim-cutlass'          " plugin that adds a 'cut' operation separate from 'delete'
 Plug 'svermeulen/vim-yoink'            " maintains a yank history to cycle between when pasting
@@ -583,6 +582,7 @@ Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / te
 Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'         " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
+Plug 'vim-syntastic/syntastic'         " check code syntax
 
 if !exists('g:disable_prettier')
   " auto format by prettier
