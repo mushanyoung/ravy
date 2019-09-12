@@ -11,7 +11,7 @@ A macOS to Linux remote working environment.
   - [**zsh**](http://www.zsh.org/) >= 5.3
   - [**coreutils**](https://www.gnu.org/software/coreutils)
   - [**fzf**](https://github.com/junegunn/fzf)
-  - [**ag**](https://github.com/ggreer/the_silver_searcher)
+  - [**fd**](https://github.com/sharkdp/fd)
   - [**terminal-notifier**](https://github.com/julienXX/terminal-notifier)
 
 ### Remote Linux Host
@@ -20,7 +20,7 @@ A macOS to Linux remote working environment.
   - [**tmux**](https://tmux.github.io/) >= 2.4
   - [**vim**](http://www.vim.org/) >= 8.0
   - [**fzf**](https://github.com/junegunn/fzf)
-  - [**ag**](https://github.com/ggreer/the_silver_searcher)
+  - [**fd**](https://github.com/sharkdp/fd)
 
 ## Install
 

@@ -187,7 +187,7 @@ if [[ $- == *i* ]]; then
   bindkey "^I" expand-or-complete
 
   export FZF_DEFAULT_OPTS="--reverse --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up"
-  export FZF_DEFAULT_COMMAND="ag -g ''"
+  export FZF_DEFAULT_COMMAND="fd"
 
   # C-A to append selected files into buffer
   # C-E to edit selected files
@@ -195,7 +195,7 @@ if [[ $- == *i* ]]; then
   # C-O to open selected files
 
   ravy::zle::fzf::files () {
-    local cmd="${FZF_FILES_COMMAND:-ag -a -g ''}"
+    local cmd="${FZF_FILES_COMMAND:-fd}"
     local default_action="${FZF_FILES_DEFAULT_ACTION:-q}"
     local prompt_opt="--prompt '${FZF_FILES_PROMPT:-File}> '"
     local fzf_opts="${FZF_FILES_OPTS}"
@@ -235,17 +235,17 @@ if [[ $- == *i* ]]; then
 
   # files
   ravy::zle::fzf::files::files() {
-    FZF_FILES_COMMAND="ag -a -g ''" FZF_FILES_PROMPT="File" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="fd" FZF_FILES_PROMPT="File" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
   # files, including hidden
   ravy::zle::fzf::files::files::hidden() {
-    FZF_FILES_COMMAND="ag -a --hidden -g ''" FZF_FILES_PROMPT=".File" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="fd -H" FZF_FILES_PROMPT=".File" FZF_FILES_DEFAULT_ACTION="e" ravy::zle::fzf::files
   }
 
   # directories
   ravy::zle::fzf::files::dirs() {
-    FZF_FILES_COMMAND="find . -type d | sed 1d | cut -b3-" FZF_FILES_PROMPT=".Dir" FZF_FILES_DEFAULT_ACTION="d" ravy::zle::fzf::files
+    FZF_FILES_COMMAND="fd -t d | sed 1d | cut -b3-" FZF_FILES_PROMPT=".Dir" FZF_FILES_DEFAULT_ACTION="d" ravy::zle::fzf::files
   }
 
   # recent files of vim
