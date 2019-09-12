@@ -41,8 +41,5 @@ curl -sfLo $HOME/.tmux.conf \
   https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
 ln -s -f $RAVY/tmux.conf.local $HOME/.tmux.conf.local
 
-echo "custom configs"
-mkdir -p "$RAVY/custom" "$RAVY/custom/bin" "$RAVY/custom/zsh-functions"
-touch "$RAVY/custom/zshrc" "$RAVY/custom/vimrc" "$RAVY/custom/gitconfig"
-
+echo "custom install"
 command -v "$RAVY/custom/install" >/dev/null && "$RAVY/custom/install" || true
