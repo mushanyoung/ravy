@@ -52,7 +52,7 @@ set background=dark
 set noshowmode
 set showcmd
 set lazyredraw
-set cursorline
+set nocursorline
 set visualbell noerrorbells
 set wildmenu wildmode=list:longest,full " completions: list matches, then longest common part, then all.
 set wrap whichwrap=b,s,h,l,<,>,[,]      " Backspace and cursor keys wrap too
@@ -61,11 +61,11 @@ set colorcolumn=+1                      " highlight over width boundary
 set virtualedit=onemore                 " cursor beyond last character
 set shortmess+=filmnrxoOtTI             " Abbreviation of file messages: try <C-G>
 
-" make cursor a vertical line in insert mode
-let &t_ti.="\e[1 q"
-let &t_SI.="\e[5 q"
-let &t_EI.="\e[1 q"
-let &t_te.="\e[0 q"
+" make cursor a non-blinking vertical bar in insert mode and a non-blinking block elsewhere
+let &t_ti.="\e[2 q"
+let &t_te.="\e[2 q"
+let &t_SI="\e[6 q"
+let &t_EI="\e[2 q"
 
 " title string reporting
 if $TMUX != ""
@@ -93,6 +93,10 @@ augroup BufferEdit
 
   " set the cursor position to the beginning when editing commit message
   autocmd BufReadPost COMMIT_EDITMSG normal gg0
+
+  " highlight cursorline only in insert mode
+  autocmd InsertEnter * set cursorline
+  autocmd InsertLeave * set nocursorline
 augroup END
 
 if $SSH_CONNECTION != ""
@@ -214,9 +218,12 @@ nnoremap ^ 0
 " <CR>: close popup and save indent.
 inoremap <expr><CR> pumvisible() ? "\<C-Y>" : "\<CR>"
 
-" C-J / C-J map to C-N / C-P
+" C-J / C-K => C-N / C-P
 inoremap <C-J> <C-N>
 inoremap <C-K> <C-P>
+
+" C-C => ESC
+inoremap <C-C> <C-[>
 
 " %% to insert current opened buffer's directory path in command mode
 cnoremap <expr> %% getcmdtype() == ':' ? expand('%:h').'/' : '%%'
