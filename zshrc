@@ -34,6 +34,7 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "modules/archive", from:prezto, as:plugin
 
   zplug "mushanyoung/brew-compose", as:command
+  zplug "mushanyoung/ravy-exec-daemon", as:plugin
   zplug "romkatv/gitstatus", as:plugin
   zplug "marzocchi/zsh-notify", as:plugin
   zplug "chrissicool/zsh-256color", as:plugin
