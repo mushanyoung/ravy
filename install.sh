@@ -5,7 +5,7 @@ set -e
 # execute with log
 __el__() { echo "\$ $@" ; "$@" ; }
 
-__banner__ () { echo "\n===== $@"; }
+__banner__ () { echo; echo "===== $@"; }
 
 link_homebrew () {
   for brew in "$HOME/.brew" "$HOME/.linuxbrew" "/home/linuxbrew/.linuxbrew" "/usr/local"; do
@@ -80,7 +80,7 @@ __banner__ link dotfiles
 RAVY="$HOME/.ravy"
 append_content_if_absent $HOME/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
 append_content_if_absent $HOME/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
-append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
+append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig"
 append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
 
 __banner__ colorls
