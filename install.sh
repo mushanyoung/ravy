@@ -21,9 +21,6 @@ if ! type brew >/dev/null 2>&1; then
     echo "Installing Homebrew..."
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
   elif [ $(uname) = Linux ]; then
-    echo "Installing Linuxbrew..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
-
     echo "Installing Linuxbrew dependencies..."
     if type apt-get >/dev/null 2>&1; then
       sudo apt-get install build-essential curl file git
@@ -32,6 +29,9 @@ if ! type brew >/dev/null 2>&1; then
       sudo yum install curl file git
       sudo yum install libxcrypt-compat
     fi
+
+    echo "Installing Linuxbrew..."
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
   else
     echo "The system is not standard Linux or OSX."
     echo "Please manually install Homebrew / Linuxbrew and then rerun the script."
@@ -44,7 +44,7 @@ if ! type brew >/dev/null 2>&1; then
   fi
 fi
 
-for dep in "git" "vim" "zsh"; do
+for dep in "git" "vim" "zsh" "fzf" "fd"; do
   if ! type $dep >/dev/null 2>&1; then
     echo "Installing $dep by brew."
     brew install $dep
