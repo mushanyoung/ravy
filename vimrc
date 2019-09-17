@@ -606,7 +606,7 @@ endif
 call plug#end()
 
 if !exists('g:colors_name')
-  colorscheme windflower
+  silent! colorscheme windflower
 endif
 
 " }}
