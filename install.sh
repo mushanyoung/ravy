@@ -11,6 +11,7 @@ link_homebrew () {
   for brew in "$HOME/.brew" "$HOME/.linuxbrew" "/home/linuxbrew/.linuxbrew" "/usr/local"; do
     test -f "$brew/bin/brew" && eval "$($brew/bin/brew shellenv)"
   done
+  true
 }
 
 append_content_if_absent () {
@@ -48,6 +49,7 @@ if ! type brew >/dev/null 2>&1; then
     echo "Please manually install Homebrew / Linuxbrew and rerun the script."
     exit
   fi
+
   link_homebrew
   if ! type brew >/dev/null 2>&1; then
     echo "Homebrew / Linuxbrew can not be loaded. Exiting."
@@ -81,10 +83,12 @@ append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]\npat
 append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
 
 __banner__ colorls
-__el__ ln -s -f -h $RAVY/colorls $HOME/.config/colorls
+__el__ rm -rf $HOME/.config/colorls
+__el__ ln -s -f $RAVY/colorls $HOME/.config/colorls
 
 __banner__ vim/neovim
-__el__ ln -s -f -h $HOME/.vim $HOME/.config/nvim
+__el__ rm -rf $HOME/.config/nvim
+__el__ ln -s -f $HOME/.vim $HOME/.config/nvim
 
 append_content_if_absent $HOME/.vimrc "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
 append_content_if_absent $HOME/.config/nvim/init.vim "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
