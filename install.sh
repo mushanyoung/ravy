@@ -23,13 +23,28 @@ append_content_if_absent () {
 
 if [ $(uname) = Linux ]; then
   __banner__ Linux packages
-  echo "Installing Linuxbrew dependencies..."
   if type apt-get >/dev/null 2>&1; then
-    __el__ sudo apt-get update
-    __el__ sudo apt-get install -y build-essential curl file git zsh
+    deps_to_install=""
+    for dep in "build-essential" "curl" "file" "git" "zsh"; do
+      echo -n "Checking apt for $dep... "
+      if ! type apt >/dev/null 2>&1 || \
+         ! apt -qq list $dep 2>/dev/null | grep "installed" >/dev/null; then
+        deps_to_install=($deps_to_install $dep)
+        echo "to install"
+      else
+        echo "found"
+      fi
+    done
+    if [ -n "$deps_to_install" ]; then
+      __el__ sudo apt-get update
+      __el__ sudo apt-get install -y "${deps_to_install[@]}"
+    fi
   elif type yum >/dev/null 2>&1; then
     __el__ sudo yum groupinstall 'Development Tools'
     __el__ sudo yum install -y curl file git zsh libxcrypt-compat
+  else
+    echo "No supported package manager is found."
+    echo "Please manually install Linuxbrew dependencies."
   fi
 fi
 
@@ -80,7 +95,8 @@ __banner__ link dotfiles
 RAVY="$HOME/.ravy"
 append_content_if_absent $HOME/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
 append_content_if_absent $HOME/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
-append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig"
+append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]
+path=$RAVY/gitconfig"
 append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
 
 __banner__ colorls
