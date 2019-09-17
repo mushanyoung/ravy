@@ -8,14 +8,14 @@ link_homebrew () {
 
 append_content_if_absent () {
   local file="$1" text="$2" appending=${3:-$2}
-  if ! grep "$text" "$file" &>/dev/null; then
+  if ! grep "$text" "$file" >/dev/null 2>&1; then
     [ -f "$appending" ] && cat "$appending" >> "$file" || echo "$appending" >> "$file"
   fi
 }
 
 link_homebrew
 
-if ! type brew &>/dev/null; then
+if ! type brew >/dev/null 2>&1; then
   echo "Homebrew / Linuxbrew does not present."
   if [ $(uname) = Darwin ]; then
     echo "Installing Homebrew..."
@@ -29,17 +29,17 @@ if ! type brew &>/dev/null; then
     exit
   fi
   link_homebrew
-  if ! type brew &>/dev/null; then
+  if ! type brew >/dev/null 2>&1; then
     echo "Homebrew / Linuxbrew can not be loaded. Exiting."
     exit
   fi
 fi
 
 for dep in "git" "vim" "zsh"; do
-  if ! type $dep &>/dev/null; then
+  if ! type $dep >/dev/null 2>&1; then
     echo "Installing $dep by brew."
     brew install $dep
-    if [ $? != 0 ] || ! type $dep &>/dev/null; then
+    if [ $? != 0 ] || ! type $dep >/dev/null 2>&1; then
       echo "Failed to install git. Exiting."
     fi
   fi
