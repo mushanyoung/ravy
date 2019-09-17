@@ -7,7 +7,7 @@ link_homebrew () {
 }
 
 append_content_if_absent () {
-  local file="$1" text="$2" appending=${3:-$2}
+  file="$1" text="$2" appending=${3:-$2}
   if ! grep "$text" "$file" >/dev/null 2>&1; then
     [ -f "$appending" ] && cat "$appending" >> "$file" || echo "$appending" >> "$file"
   fi
@@ -35,12 +35,13 @@ if ! type brew >/dev/null 2>&1; then
   fi
 fi
 
-for dep in "git" "vim" "zsh"; do
+for dep in "gcc" "git" "vim" "zsh"; do
   if ! type $dep >/dev/null 2>&1; then
     echo "Installing $dep by brew."
     brew install $dep
     if [ $? != 0 ] || ! type $dep >/dev/null 2>&1; then
       echo "Failed to install git. Exiting."
+      exit
     fi
   fi
 done
