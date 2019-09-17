@@ -2,6 +2,14 @@
 
 A macOS to Linux remote working environment.
 
+## Install
+
+Paste at a terminal prompt:
+
+```
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh)"
+```
+
 ## Prerequisites
 
 ### macOS Frontend
@@ -22,11 +30,3 @@ A macOS to Linux remote working environment.
   - [**fzf**](https://github.com/junegunn/fzf)
   - [**fd**](https://github.com/sharkdp/fd)
 
-## Install
-
-Run following script in both frontend and host machine.
-
-```
-git clone https://github.com/mushanyoung/ravy.git $HOME/.ravy
-$HOME/.ravy/install
-```
