@@ -25,6 +25,7 @@ if [ $(uname) = Linux ]; then
   __banner__ Linux packages
   echo "Installing Linuxbrew dependencies..."
   if type apt-get >/dev/null 2>&1; then
+    __el__ sudo apt-get update
     __el__ sudo apt-get install -y build-essential curl file git zsh
   elif type yum >/dev/null 2>&1; then
     __el__ sudo yum groupinstall 'Development Tools'
