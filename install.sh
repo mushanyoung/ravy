@@ -20,6 +20,17 @@ append_content_if_absent () {
   fi
 }
 
+if [ $(uname) = Linux ]; then
+  __banner__ Linux packages
+  echo "Installing Linuxbrew dependencies..."
+  if type apt-get >/dev/null 2>&1; then
+    __el__ sudo apt-get install -y build-essential curl file git zsh
+  elif type yum >/dev/null 2>&1; then
+    __el__ sudo yum groupinstall 'Development Tools'
+    __el__ sudo yum install -y curl file git zsh libxcrypt-compat
+  fi
+fi
+
 __banner__ Homebrew
 
 link_homebrew
@@ -30,14 +41,6 @@ if ! type brew >/dev/null 2>&1; then
     echo "Installing Homebrew..."
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
   elif [ $(uname) = Linux ]; then
-    echo "Installing Linuxbrew dependencies..."
-    if type apt-get >/dev/null 2>&1; then
-      __el__ sudo apt-get install -y build-essential curl file git
-    elif type yum >/dev/null 2>&1; then
-      __el__ sudo yum groupinstall 'Development Tools'
-      __el__ sudo yum install -y curl file git libxcrypt-compat
-    fi
-
     echo "Installing Linuxbrew..."
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
   else
@@ -54,7 +57,7 @@ fi
 
 __banner__ Homebrew formulae
 
-for dep in "git" "vim" "zsh" "fzf" "fd"; do
+for dep in "git" "vim" "fzf" "fd"; do
   if ! type $dep >/dev/null 2>&1; then
     __el__ brew install $dep
   fi
