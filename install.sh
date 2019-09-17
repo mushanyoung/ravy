@@ -1,5 +1,12 @@
 #!/bin/sh
 
+set -e
+
+# execute with log
+__el__() { echo "\$ $@" ; "$@" ; }
+
+__banner__ () { echo "\n===== $@"; }
+
 link_homebrew () {
   for brew in "$HOME/.brew" "$HOME/.linuxbrew" "/home/linuxbrew/.linuxbrew" "/usr/local"; do
     test -f "$brew/bin/brew" && eval "$($brew/bin/brew shellenv)"
@@ -13,28 +20,29 @@ append_content_if_absent () {
   fi
 }
 
+__banner__ Homebrew
+
 link_homebrew
 
 if ! type brew >/dev/null 2>&1; then
-  echo "Homebrew / Linuxbrew does not present."
+  echo "Homebrew / Linuxbrew is not present."
   if [ $(uname) = Darwin ]; then
     echo "Installing Homebrew..."
     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
   elif [ $(uname) = Linux ]; then
     echo "Installing Linuxbrew dependencies..."
     if type apt-get >/dev/null 2>&1; then
-      sudo apt-get install build-essential curl file git
+      __el__ sudo apt-get install -y build-essential curl file git
     elif type yum >/dev/null 2>&1; then
-      sudo yum groupinstall 'Development Tools'
-      sudo yum install curl file git
-      sudo yum install libxcrypt-compat
+      __el__ sudo yum groupinstall 'Development Tools'
+      __el__ sudo yum install -y curl file git libxcrypt-compat
     fi
 
     echo "Installing Linuxbrew..."
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
   else
     echo "The system is not standard Linux or OSX."
-    echo "Please manually install Homebrew / Linuxbrew and then rerun the script."
+    echo "Please manually install Homebrew / Linuxbrew and rerun the script."
     exit
   fi
   link_homebrew
@@ -44,71 +52,65 @@ if ! type brew >/dev/null 2>&1; then
   fi
 fi
 
+__banner__ Homebrew formulae
+
 for dep in "git" "vim" "zsh" "fzf" "fd"; do
   if ! type $dep >/dev/null 2>&1; then
-    echo "Installing $dep by brew."
-    brew install $dep
-    if [ $? != 0 ] || ! type $dep >/dev/null 2>&1; then
-      echo "Failed to install git. Exiting."
-      exit
-    fi
+    __el__ brew install $dep
   fi
 done
 
-echo "mkdir"
-mkdir -p $HOME/.config $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
+__banner__ mkdir
+__el__ mkdir -p $HOME/.config $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
 
-echo "ravy"
+__banner__ ~/.ravy
 if [ -d "$HOME/.ravy" ]; then
-  git -C "$HOME/.ravy" pull --rebase
+  __el__ git -C "$HOME/.ravy" pull --rebase
 else
-  git clone https://github.com/mushanyoung/ravy $HOME/.ravy
+  __el__ git clone https://github.com/mushanyoung/ravy $HOME/.ravy
 fi
 
-echo "zplug"
-if [ -d "$HOME/.zplug" ]; then
-  git -C "$HOME/.zplug" pull --rebase
-else
-  git clone https://github.com/zplug/zplug $HOME/.zplug
-fi
-
-echo "dotfiles"
+__banner__ link dotfiles
 RAVY="$HOME/.ravy"
 append_content_if_absent $HOME/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
 append_content_if_absent $HOME/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
 append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]\npath=$RAVY/gitconfig\npath=$RAVY/custom/gitconfig"
 append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
 
-echo "colorls"
-rm -rf $HOME/.config/colorls
-ln -s -f $RAVY/colorls $HOME/.config/colorls
+__banner__ colorls
+__el__ ln -s -f -h $RAVY/colorls $HOME/.config/colorls
 
-echo "vim/neovim"
-[ -d $HOME/.config/nvim ] || ln -s -f $HOME/.vim $HOME/.config/nvim
+__banner__ vim/neovim
+__el__ ln -s -f -h $HOME/.vim $HOME/.config/nvim
 
 append_content_if_absent $HOME/.vimrc "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
 append_content_if_absent $HOME/.config/nvim/init.vim "if filereadable(\"$RAVY/vimrc\") | source $RAVY/vimrc | endif"
 
-[ -e $HOME/.vim/autoload/plug.vim ] || curl -sfLo $HOME/.vim/autoload/plug.vim \
-  https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+__banner__ vim plugins
+if [ ! -e $HOME/.vim/autoload/plug.vim ]; then
+  __el__ curl -sfLo $HOME/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+fi
 
-echo "vim plugins"
-vim '+PlugUpdate' '+qall'
+__el__ vim '+PlugUpdate' '+qall'
 
-echo "tmux"
-curl -sfLo $HOME/.tmux.conf \
-  https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
-ln -s -f $RAVY/tmux.conf.local $HOME/.tmux.conf.local
+__banner__ tmux
+__el__ curl -sfLo $HOME/.tmux.conf https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
+__el__ ln -s -f $RAVY/tmux.conf.local $HOME/.tmux.conf.local
 
+__banner__ ~/.zplug
+if [ -d "$HOME/.zplug" ]; then
+  __el__ git -C "$HOME/.zplug" pull --rebase
+else
+  __el__ git clone https://github.com/zplug/zplug $HOME/.zplug
+fi
+zsh -c 'source ~/.ravy/zplugrc'
+
+__banner__ custom
 if command -v "$RAVY/custom/install" >/dev/null; then
-  echo "$RAVY/custom/install"
   "$RAVY/custom/install" || true
 fi
 
-echo "zplug"
-zsh -c 'source ~/.ravy/zplugrc'
-
-echo "Install complete."
+__banner__ complete
 if ! echo $SHELL | grep zsh >/dev/null 2>&1; then
   echo "Please chsh to zsh."
   type zsh
