@@ -59,10 +59,18 @@ echo "mkdir"
 mkdir -p $HOME/.config $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
 
 echo "ravy"
-[ -d $HOME/.ravy ] || git clone https://github.com/mushanyoung/ravy $HOME/.ravy
+if [ -d "$HOME/.ravy" ]; then
+  git -C "$HOME/.ravy" pull --rebase
+else
+  git clone https://github.com/mushanyoung/ravy $HOME/.ravy
+fi
 
 echo "zplug"
-[ -d $HOME/.zplug ] || git clone https://github.com/zplug/zplug $HOME/.zplug
+if [ -d "$HOME/.zplug" ]; then
+  git -C "$HOME/.zplug" pull --rebase
+else
+  git clone https://github.com/zplug/zplug $HOME/.zplug
+fi
 
 echo "dotfiles"
 RAVY="$HOME/.ravy"
@@ -96,6 +104,9 @@ if command -v "$RAVY/custom/install" >/dev/null; then
   echo "$RAVY/custom/install"
   "$RAVY/custom/install" || true
 fi
+
+echo "zplug"
+zsh -c 'source ~/.ravy/zplugrc'
 
 echo "Install complete."
 if ! echo $SHELL | grep zsh >/dev/null 2>&1; then
