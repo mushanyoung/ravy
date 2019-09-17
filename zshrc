@@ -34,7 +34,6 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "modules/archive", from:prezto, as:plugin
 
   zplug "mushanyoung/brew-compose", as:command
-  zplug "mushanyoung/ravy-exec-daemon", as:plugin
   zplug "romkatv/gitstatus", as:plugin
   zplug "marzocchi/zsh-notify", as:plugin
   zplug "chrissicool/zsh-256color", as:plugin
@@ -46,6 +45,10 @@ if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
   zplug "zsh-users/zsh-syntax-highlighting", defer:1, as:plugin
   zplug "zsh-users/zsh-history-substring-search", defer:2, as:plugin
   zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin  # benchmark: 17ms
+
+  if [ $(uname) = Darwin ]; then
+    zplug "mushanyoung/ravy-exec-daemon", as:plugin
+  fi
 
   if [[ -n $RAVY_PROFILE ]]; then
     zplug "romkatv/zsh-prompt-benchmark", as:plugin
@@ -608,7 +611,7 @@ alias ravysource="unset RAVY_LOADED; source ${0:A}"
 alias ravys=ravysource
 
 # free
-if [[ $OSTYPE =~ ^darwin ]]; then
+if [ $(uname) = Darwin ]; then
   alias free='command top -l 1 -s 0 | grep PhysMem'
 else
   alias free='command free -h'

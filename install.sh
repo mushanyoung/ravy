@@ -98,7 +98,7 @@ if command -v "$RAVY/custom/install" >/dev/null; then
 fi
 
 echo "Install complete."
-if [ -z "$ZSH_VERSION" ]; then
+if ! echo $SHELL | grep zsh >/dev/null 2>&1; then
   echo "Please chsh to zsh."
   type zsh
 fi
