@@ -40,7 +40,7 @@ if [ $(uname) = Linux ]; then
       __el sudo apt-get install -y ${deps_to_install}
     fi
   elif type yum >/dev/null 2>&1; then
-    __el sudo yum groupinstall 'Development Tools'
+    __el sudo yum groupinstall -y 'Development Tools'
     __el sudo yum install -y curl file git zsh libxcrypt-compat
   else
     echo "No supported package manager is found."
