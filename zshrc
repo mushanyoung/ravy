@@ -200,7 +200,7 @@ if [[ $- == *i* ]]; then
   zle -N ravy::zle::fzf::history
 
   bindkey "\eo" ravy::zle::fzf::files::files
-  bindkey "\ef" ravy::zle::fzf::files::files::hidden
+  bindkey "\eO" ravy::zle::fzf::files::files::hidden
   bindkey "\ed" ravy::zle::fzf::files::dirs
   bindkey "\ev" ravy::zle::fzf::files::vim
   bindkey "\er" ravy::zle::fzf::history
