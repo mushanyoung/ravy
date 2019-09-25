@@ -21,7 +21,9 @@ for brew in "$HOME/.brew" "/home/linuxbrew/.linuxbrew" "/usr/local"; do
   if [ -f "$brew/bin/brew" ] && [ -e "$brew/Cellar" ]; then
     eval "$($brew/bin/brew shellenv)"
     if [ -f "$brew/opt/ruby/bin/ruby" ]; then
+      setopt +o nomatch
       prepend_to_path "$brew"/lib/ruby/gems/*/bin
+      setopt -o nomatch
       prepend_to_path "$brew/opt/ruby/bin"
     fi
     append_to_fpath "$brew/completions/zsh"
