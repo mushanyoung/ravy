@@ -472,7 +472,10 @@ alias ipy3="ipython3"
 alias pyserv="python3 -m http.server"
 
 pip-update-all () {
-  ${PIP_COMMAND:-pip3} list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs pip3 install -U
+  ${PIP_COMMAND:-pip3} list --outdated --format=columns |\
+    tail -n +3 |\
+    cut -f1 -d' ' |\
+    xargs ${PIP_COMMAND:-pip3} install -U
 }
 
 # grep with default options
