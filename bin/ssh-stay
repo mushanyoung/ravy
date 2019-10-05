@@ -15,7 +15,7 @@ while true; do
   ${ssh_command} "${ssh_default_opts[@]}" "${ssh_opts[@]}"
   exit_code=$?
   echo "SSH exits with code $exit_code"
-  [ $exit_code = 0 ] && break
+  [ $exit_code = 0 ] || [ $exit_code = 255 ] && break
   echo "SSH connection lost, reconnecting in ${reconnect_interval} seconds..."
   sleep "${reconnect_interval}"
 done
