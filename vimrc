@@ -272,6 +272,12 @@ let g:mapleader = '>'
 map <SPACE> \
 map <SPACE><SPACE> \\
 
+" search & substitute very magically
+nnoremap / /\v
+vnoremap / /\v
+vnoremap \/ :s/\v
+nnoremap \/ :%s/\v
+
 " select ALL
 nnoremap \a ggVG
 
@@ -302,10 +308,6 @@ nnoremap \n :enew<CR>
 
 " toggle quickfix window
 nnoremap <silent> \q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
-
-" substitute
-vnoremap \s :s/
-nnoremap \s :%s/
 
 " toggle foldenable
 nnoremap <silent> \u :set invfoldenable<BAR>echo &foldenable?'Fold enabled.':'Fold disabled.'<CR>
@@ -387,6 +389,7 @@ nnoremap \m <NOP>
 nnoremap \o <NOP>
 nnoremap \p <NOP>
 nnoremap \r <NOP>
+nnoremap \s <NOP>
 nnoremap \t <NOP>
 nnoremap \x <NOP>
 
