@@ -17,8 +17,8 @@ append_to_fpath () { for arg in "$@"; do [ -d "$arg" ] && fpath+="$arg";    done
 prepend_to_path "$RAVY_HOME/bin"
 append_to_fpath "$RAVY_HOME/zsh-functions"
 
-for brew in "$HOME/.brew" "/home/linuxbrew/.linuxbrew" "/usr/local"; do
-  if [ -f "$brew/bin/brew" ] && [ -e "$brew/Cellar" ]; then
+for brew ("$HOME/.brew" "$HOME/.linuxbrew" "/home/linuxbrew/.linuxbrew" "/usr/local"); do
+  if [ -f "$brew/bin/brew" ]; then
     eval "$($brew/bin/brew shellenv)"
     if [ -f "$brew/opt/ruby/bin/ruby" ]; then
       setopt +o nomatch
@@ -26,7 +26,7 @@ for brew in "$HOME/.brew" "/home/linuxbrew/.linuxbrew" "/usr/local"; do
       setopt -o nomatch
       prepend_to_path "$brew/opt/ruby/bin"
     fi
-    append_to_fpath "$brew/completions/zsh"
+    append_to_fpath "$brew/share/zsh/site-functions"
     break
   fi
 done
