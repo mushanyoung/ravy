@@ -26,7 +26,7 @@ source "${0:A:h}/zplugrc"
 if [[ $- == *i* ]]; then
 
   # chars treated as a part of a word
-  export WORDCHARS='*?_-.[]~=\&:;!#$%^(){}<>'
+  export WORDCHARS='*?_-.[]~=\&:;!#$%^(){}<>+'
 
   export KEYTIMEOUT=1
 
@@ -39,6 +39,10 @@ if [[ $- == *i* ]]; then
   # ^P / ^N: zsh-history-substring-search
   bindkey "^P" history-substring-search-up
   bindkey "^N" history-substring-search-down
+
+  # undo / redo
+  bindkey "^-" undo
+  bindkey "^R" redo
 
   # M-h to run-help
   bindkey "\eh" run-help
