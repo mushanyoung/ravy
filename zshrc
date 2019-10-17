@@ -41,7 +41,7 @@ if [[ $- == *i* ]]; then
   bindkey "^N" history-substring-search-down
 
   # undo / redo
-  bindkey "^-" undo
+  bindkey "^_" undo
   bindkey "^R" redo
 
   # M-h to run-help
