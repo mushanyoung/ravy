@@ -82,7 +82,7 @@ for dep in "git" "vim" "fzf" "fd"; do
 done
 
 __banner mkdir
-__el mkdir -p $HOME/.config $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
+__el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
 
 __banner ~/.ravy
 if [ -d "$HOME/.ravy" ]; then
@@ -98,6 +98,9 @@ append_content_if_absent $HOME/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshe
 append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]
 path=$RAVY/gitconfig"
 append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
+
+__banner fish
+append_content_if_absent $HOME/.config/fish/config.fish "test -f $RAVY/config.fish && source $RAVY/config.fish"
 
 __banner colorls
 __el rm -rf $HOME/.config/colorls
