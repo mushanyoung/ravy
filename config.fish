@@ -158,3 +158,6 @@ alias ravycustom "cd \$RAVY_HOME/custom"
 alias ravyc ravycustom
 alias ravysource "source "(status --current-filename)
 alias ravys ravysource
+
+test -f "$RAVY_HOME/custom/config.fish"
+and source "$RAVY_HOME/custom/config.fish"
