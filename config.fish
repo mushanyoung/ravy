@@ -14,8 +14,6 @@ function append_to_path
   end
 end
 
-# TODO: source custom
-
 prepend_to_path "$RAVY_HOME/bin"
 
 for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME/.linuxbrew"
@@ -192,17 +190,34 @@ end
 set fish_greeting
 
 function fish_prompt
-  set -l CMD_STATUS $status
-  if test $CMD_STATUS -le 0
-    set -e CMD_STATUS
+  set -l cmd_status $status
+  if test $cmd_status -le 0
+    set -e cmd_status
   end
-  # echo $CMD_STATUS
+
+  set -l user_color magenta
+  set -l cmd_indicator '❯'
+  switch $USER
+    case root toor
+      set user_color red
+      set cmd_indicator "$cmd_indicator""!"
+  end
+
+  set -l bg_jobs (count (jobs -c))
+
   if set -q CMD_DURATION
-    echo -s (set_color 666) (cmd_duration_format $CMD_DURATION)  ' ' (set_color red) (nice_exit_code $CMD_STATUS)
+    echo -n -s (set_color 666) (cmd_duration_format $CMD_DURATION)  ' ' (set_color red) (nice_exit_code $cmd_status)
     set -e CMD_DURATION
+    echo
   end
-  echo -s (set_color -b 222) '  ' (set_color green) (prompt_pwd) ' ' (set_color purple) "$USER" ' '
-  echo -n -s (set_color normal) (set_color 666) '❯ '
+
+  echo -n -s (set_color -b 222) '  ' (test -w $PWD; and set_color blue; or set_color red) (prompt_pwd) ' '
+  echo -n -s (set_color $user_color) $USER ' '
+  test -n "$SSH_CLIENT"; and echo -n -s (set_color red) '易 '
+  test $bg_jobs -gt 0; and echo -n -s (set_color yellow) "%$bg_jobs "
+  echo
+
+  echo -n -s (set_color normal) (set_color 666) "$cmd_indicator "
 end
 
 # CUSTOM
