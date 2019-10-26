@@ -152,12 +152,59 @@ alias reset 'command reset; stty sane; tput reset; echo -e "\033c"; clear; built
 test -n $SSH_CONNECTION
 and alias open "open-remote"
 
-# Ravy commands
+# ravy commands
 alias ravy "cd \$RAVY_HOME"
 alias ravycustom "cd \$RAVY_HOME/custom"
 alias ravyc ravycustom
 alias ravysource "source "(status --current-filename)
 alias ravys ravysource
 
-test -f "$RAVY_HOME/custom/config.fish"
-and source "$RAVY_HOME/custom/config.fish"
+# PROMPT
+function cmd_duration_format
+  set -l ms $argv[1]
+  if test $ms -lt 10000
+    echo -s $ms ms
+  else
+    set -l s (math -s0 $ms / 1000)
+    test $s -gt 86400; and set -l repre "$repre"(math -s0 $s / 86400)d
+    test $s -gt 3600; and set -l repre "$repre"(math -s0 $s / 3600)h
+    test $s -gt 60; and set -l repre "$repre"(math -s0 $s / 60 % 60)m
+    set -l repre "$repre"(math -s0 $s % 60)s
+    echo $repre
+  end
+end
+
+# print the exit status code with its associated signal name if it is not zero
+function nice_exit_code
+  set -l st $argv[1]
+  test -z $st; or test $st -le 0; and return
+
+  set -l keys 1 2 19 20 21 22 126 127 129 130 131 132 134 136 137 139 141 143
+  set -l values WARN BUILTINMISUSE STOP TSTP TTIN TTOU CCANNOTINVOKE CNOTFOUND HUP INT QUIT ILL ABRT FPE KILL SEGV PIPE TERM
+
+  echo -n $st
+  if set -l index (contains -i $st $keys)
+    echo :$values[$index]
+  end
+end
+
+# clear greeting message
+set fish_greeting
+
+function fish_prompt
+  set -l CMD_STATUS $status
+  if test $CMD_STATUS -le 0
+    set -e CMD_STATUS
+  end
+  # echo $CMD_STATUS
+  if set -q CMD_DURATION
+    echo -s (set_color 666) (cmd_duration_format $CMD_DURATION)  ' ' (set_color red) (nice_exit_code $CMD_STATUS)
+    set -e CMD_DURATION
+  end
+  echo -s (set_color -b 222) '  ' (set_color green) (prompt_pwd) ' ' (set_color purple) "$USER" ' '
+  echo -n -s (set_color normal) (set_color 666) '❯ '
+end
+
+# CUSTOM
+test -f "$RAVY_HOME/custom/config.fish"; and source "$RAVY_HOME/custom/config.fish"
+
