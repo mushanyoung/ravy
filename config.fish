@@ -66,10 +66,10 @@ end
 # change directory to a nearest possible folder
 function cd
   set -l file $argv
-  while ! test -d "$file"
+  while ! test -d $file && test -n $file
     set file (dirname $file)
   end
-  test $file = .
+  test "$file" = .
   and set file $argv
   builtin cd -- $file
 end
