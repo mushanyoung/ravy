@@ -275,8 +275,8 @@ map <SPACE><SPACE> \\
 " search & substitute very magically
 nnoremap / /\v
 vnoremap / /\v
-vnoremap \/ :s/\v
-nnoremap \/ :%s/\v
+vnoremap \/ :s/
+nnoremap \/ :%s/
 
 " select ALL
 nnoremap \a ggVG
