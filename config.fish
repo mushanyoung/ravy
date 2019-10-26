@@ -23,6 +23,9 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
     eval ($brewprefix/bin/brew shellenv)
     if test -f "$brewprefix/opt/ruby/bin/ruby"
       prepend_to_path "$brewprefix/opt/ruby/bin"
+      set -l gems_bin "$brewprefix"/lib/ruby/gems/*/bin 2>/dev/null
+      set -q gems_bin
+      and prepend_to_path $gems_bin
     end
     break
   end
