@@ -189,6 +189,66 @@ end
 # clear greeting message
 set fish_greeting
 
+function git_branch
+  command git rev-parse --abbrev-ref HEAD 2>/dev/null
+end
+
+function git_status
+  set -l PARSER_ADDED     A
+  set -l PARSER_UNSTAGED  '^.M'
+  set -l PARSER_STAGED    '^M'
+  set -l PARSER_RENAMED   R
+  set -l PARSER_DELETED   D
+  set -l PARSER_UNMERGED  U
+  set -l PARSER_UNTRACKED '\?\?'
+  set -l PARSER_AHEAD     ahead
+  set -l PARSER_BEHIND    behind
+  set -l INDICATOR_ADDED      +
+  set -l INDICATOR_UNSTAGED   \*
+  set -l INDICATOR_STAGED     .
+  set -l INDICATOR_RENAMED    »
+  set -l INDICATOR_DELETED    -
+  set -l INDICATOR_UNMERGED   !
+  set -l INDICATOR_UNTRACKED  \#
+  set -l INDICATOR_AHEAD      \>
+  set -l INDICATOR_BEHIND     \<
+  set -l PARSER_INDEX_TRIMMED ADDED UNSTAGED STAGED RENAMED DELETED UNMERGED UNTRACKED
+  set -l PARSER_INDEX AHEAD BEHIND
+
+  set -l git_status
+  set -l is_ahead
+  set -l is_behind
+
+  set -l index (command git status --porcelain 2>/dev/null -b)
+  set -l trimmed_index (string split \n $index | string sub --start 1 --length 2)
+
+  for suffix in $PARSER_INDEX_TRIMMED
+    set -l suffixed_parser "PARSER_$suffix"
+    set -l suffixed_indicator "INDICATOR_$suffix"
+    set -l parser "$$suffixed_parser"
+    set -l indicator "$$suffixed_indicator"
+    set -l matched_count (count (string match -r $parser $trimmed_index))
+    test $matched_count -gt 1
+    and set git_status "$git_status$matched_count"
+    test $matched_count -gt 0
+    and set git_status "$git_status$indicator"
+  end
+
+  for suffix in $PARSER_INDEX
+    set -l suffixed_parser "PARSER_$suffix"
+    set -l suffixed_indicator "INDICATOR_$suffix"
+    set -l parser "$$suffixed_parser"
+    set -l indicator "$$suffixed_indicator"
+    set -l matched_count (count (string match -r $parser $index))
+    test $matched_count -gt 1
+    and set git_status "$git_status$matched_count"
+    test $matched_count -gt 0
+    and set git_status "$git_status$indicator"
+  end
+
+  echo $git_status
+end
+
 function fish_prompt
   set -l cmd_status $status
   if test $cmd_status -le 0
@@ -205,18 +265,36 @@ function fish_prompt
 
   set -l bg_jobs (count (jobs -c))
 
+  # line 1
+  # last command duration and status
   if set -q CMD_DURATION
     echo -n -s (set_color 666) (cmd_duration_format $CMD_DURATION)  ' ' (set_color red) (nice_exit_code $cmd_status)
     set -e CMD_DURATION
     echo
   end
 
+  # line 2
+  # path
   echo -n -s (set_color -b 222) '  ' (test -w $PWD; and set_color blue; or set_color red) (prompt_pwd) ' '
+
+  # git
+  set -l gbranch (git_branch)
+  if test -n "$gbranch"
+    echo -n -s (set_color green) $gbranch (set_color yellow) (git_status) ' '
+  end
+
+  # user
   echo -n -s (set_color $user_color) $USER ' '
+
+  # ssh
   test -n "$SSH_CLIENT"; and echo -n -s (set_color red) '易 '
+
+  # jobs
   test $bg_jobs -gt 0; and echo -n -s (set_color yellow) "%$bg_jobs "
   echo
 
+  # line 3
+  # indicator
   echo -n -s (set_color normal) (set_color 666) "$cmd_indicator "
 end
 
