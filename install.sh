@@ -1,5 +1,7 @@
 #!/bin/sh
 
+SHELL=/bin/sh
+
 set -e
 
 # execute with log
@@ -82,7 +84,7 @@ for dep in "git" "vim" "fzf" "fd"; do
 done
 
 __banner mkdir
-__el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
+__el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
 
 __banner ~/.ravy
 if [ -d "$HOME/.ravy" ]; then
@@ -101,6 +103,7 @@ append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
 
 __banner fish
 append_content_if_absent $HOME/.config/fish/config.fish "test -f $RAVY/config.fish && source $RAVY/config.fish"
+curl https://raw.githubusercontent.com/danhper/fundle/master/functions/fundle.fish --create-dirs -sLo ~/.config/fish/functions/fundle.fish
 
 __banner colorls
 __el rm -rf $HOME/.config/colorls
