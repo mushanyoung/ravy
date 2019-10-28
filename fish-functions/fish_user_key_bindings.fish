@@ -13,4 +13,13 @@ function __fle_fg
   end
 end
 
+function __fle_type
+  set -l cmd (commandline)
+  if test -n "$cmd"
+    commandline "type -a $cmd"
+    commandline -f execute
+  end
+end
+
+bind \et __fle_type
 bind \ez __fle_fg
