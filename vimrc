@@ -367,6 +367,9 @@ exec 'nnoremap <silent> ' . s:AltMapKey('c') . ' :close<CR>'
 " Show unicode names
 exec 'nnoremap <silent> ' . s:AltMapKey('u') . ' :UnicodeName<CR>'
 
+" SIGTSTP alternate for fish
+exec 'nnoremap          ' . s:AltMapKey('z') . ' <C-Z>'
+
 " key pool
 exec 'nnoremap          ' . s:AltMapKey('g') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('i') . ' <NOP>'
@@ -375,7 +378,6 @@ exec 'nnoremap          ' . s:AltMapKey('r') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('w') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('x') . ' <NOP>'
 exec 'nnoremap          ' . s:AltMapKey('y') . ' <NOP>'
-exec 'nnoremap          ' . s:AltMapKey('z') . ' <NOP>'
 
 " nnoremap <ESC><ESC> <NOP>
 

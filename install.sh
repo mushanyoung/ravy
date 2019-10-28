@@ -88,7 +88,7 @@ __el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOM
 
 __banner ~/.ravy
 if [ -d "$HOME/.ravy" ]; then
-  __el git -C "$HOME/.ravy" pull --rebase
+  __el git -C "$HOME/.ravy" pull --rebase || true
 else
   __el git clone https://github.com/mushanyoung/ravy $HOME/.ravy
 fi
@@ -104,6 +104,7 @@ append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
 __banner fish
 append_content_if_absent $HOME/.config/fish/config.fish "test -f $RAVY/config.fish && source $RAVY/config.fish"
 curl https://raw.githubusercontent.com/danhper/fundle/master/functions/fundle.fish --create-dirs -sLo ~/.config/fish/functions/fundle.fish
+cp $RAVY/fish-functions/* $HOME/.config/fish/functions
 
 __banner colorls
 __el rm -rf $HOME/.config/colorls
@@ -121,7 +122,9 @@ if [ ! -e $HOME/.vim/autoload/plug.vim ]; then
   __el curl -sfLo $HOME/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 fi
 
-__el vim '+PlugUpdate' '+qall'
+if [ -z $NOUPDATE ]; then
+  __el vim '+PlugUpdate' '+qall'
+fi
 
 __banner tmux
 __el curl -sfLo $HOME/.tmux.conf https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
@@ -129,7 +132,7 @@ __el ln -s -f $RAVY/tmux.conf.local $HOME/.tmux.conf.local
 
 __banner ~/.zplug
 if [ -d "$HOME/.zplug" ]; then
-  __el git -C "$HOME/.zplug" pull --rebase
+  __el git -C "$HOME/.zplug" pull --rebase || true
 else
   __el git clone https://github.com/zplug/zplug $HOME/.zplug
 fi
