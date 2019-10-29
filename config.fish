@@ -45,6 +45,9 @@ set -x LESS_TERMCAP_se '[0m'           # end standout-mode
 set -x LESS_TERMCAP_us '[04;38;5;178m' # begin underline
 set -x LESS_TERMCAP_ue '[0m'           # end underline
 
+set -x FZF_DEFAULT_OPTS --reverse --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up
+set -x FZF_DEFAULT_COMMAND fd
+
 # functions
 function lines
   if test (count $argv) -gt 0

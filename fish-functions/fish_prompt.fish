@@ -89,6 +89,13 @@ function __prompt_git_status
   echo $git_status
 end
 
+function __prompt_pwd
+    # Replace $HOME with "~"
+    set realhome ~
+    set -l tmp (string replace -r '^'"$realhome"'($|/)' '~$1' $PWD)
+    echo $tmp
+end
+
 function fish_prompt
   set -l cmd_status $status
   if test $cmd_status -le 0
@@ -115,7 +122,7 @@ function fish_prompt
 
   # line 2
   # path
-  echo -n -s (set_color -b 222) '  ' (test -w $PWD; and set_color blue; or set_color red) (prompt_pwd) ' '
+  echo -n -s (set_color -b 222) '  ' (test -w $PWD; and set_color blue; or set_color red) (__prompt_pwd) ' '
 
   # git
   set -l gbranch (__prompt_git_branch)
