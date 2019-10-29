@@ -126,19 +126,22 @@ function fish_prompt
 
   # git
   set -l gbranch (__prompt_git_branch)
-  if test -n "$gbranch"
-    echo -n -s (set_color green) $gbranch (set_color yellow) (__prompt_git_status) ' '
-  end
+  test -n "$gbranch"
+  and echo -n -s (set_color green) $gbranch (set_color yellow) (__prompt_git_status) ' '
+
+  set -l pcustom (__prompt_customize)
+  test -n "$pcustom"
+  and echo -n -s (set_color white) $pcustom ' '
 
   # user
   echo -n -s (set_color $user_color) $USER ' '
 
-  # ssh
-  test -n "$SSH_CLIENT"; and echo -n -s (set_color red) '易 '
-
   # jobs
   test $bg_jobs -gt 0; and echo -n -s (set_color yellow) "%$bg_jobs "
   echo
+
+  # ssh
+  test -n "$SSH_CLIENT"; and echo -n -s (set_color red) '易 '
 
   # line 3
   # indicator
