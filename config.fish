@@ -147,7 +147,7 @@ alias dry "docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock monc
 alias reset 'command reset; stty sane; tput reset; echo -e "\033c"; clear; builtin cd -- $PWD'
 
 # open-remote
-test -n $SSH_CONNECTION
+test -n "$SSH_CONNECTION"
 and alias open "open-remote"
 
 # ravy commands
