@@ -29,6 +29,10 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
   end
 end
 
+# fundle
+fundle plugin jethrokuan/z
+fundle init
+
 # ENV
 set -x LANG en_US.UTF-8
 set -x LANGUAGE $LANG
