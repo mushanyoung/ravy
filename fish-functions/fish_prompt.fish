@@ -110,11 +110,11 @@ function fish_prompt
 
   set -l pcustom (type -q __prompt_customize; and __prompt_customize)
 
-  set -l user_color magenta
+  set -l user_color 8787af
   set -l cmd_indicator '❯'
   switch $USER
     case root toor
-      set user_color red
+      set user_color d70000
       set cmd_indicator "$cmd_indicator""!"
   end
 
@@ -123,32 +123,34 @@ function fish_prompt
   # line 1
   # last command duration and status
   if set -q CMD_DURATION
-    echo -n -s (set_color 666) (__prompt_cmd_duration $CMD_DURATION)  ' ' (set_color red) (__prompt_cmd_status $cmd_status)
+    echo -n -s (set_color 666) (__prompt_cmd_duration $CMD_DURATION)  ' ' (set_color d70000) (__prompt_cmd_status $cmd_status)
     set -e CMD_DURATION
   end
   echo
 
   # line 2
+  echo -n -s (set_color -b 222) '  '
+
   # path
-  echo -n -s (set_color -b 222) '  ' (test -w $PWD; and set_color blue; or set_color red) (__prompt_pwd) ' '
+  echo -n -s (test -w $PWD; and set_color 008787; or set_color d70000) (__prompt_pwd) ' '
 
   # git
   set -l gbranch (__prompt_git_branch)
   test -n "$gbranch"
-  and echo -n -s (set_color green) $gbranch (set_color yellow) (__prompt_git_status) ' '
+  and echo -n -s (set_color 5f8700) $gbranch (set_color d78700) (__prompt_git_status) ' '
 
   # custom
   test -n "$pcustom"
-  and echo -n -s (set_color white) $pcustom ' '
+  and echo -n -s (set_color 5f5f5f) $pcustom ' '
 
   # user
   echo -n -s (set_color $user_color) $USER ' '
 
   # jobs
-  test $bg_jobs -gt 0; and echo -n -s (set_color yellow) "%$bg_jobs "
+  test $bg_jobs -gt 0; and echo -n -s (set_color d700af) "%$bg_jobs "
 
   # ssh
-  test -n "$SSH_CLIENT"; and echo -n -s (set_color red) '易 '
+  test -n "$SSH_CLIENT"; and echo -n -s (set_color d75f00) '易 '
   echo
 
   # line 3
