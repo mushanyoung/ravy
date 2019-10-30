@@ -138,10 +138,10 @@ function fish_prompt
 
   # jobs
   test $bg_jobs -gt 0; and echo -n -s (set_color yellow) "%$bg_jobs "
-  echo
 
   # ssh
   test -n "$SSH_CLIENT"; and echo -n -s (set_color red) '易 '
+  echo
 
   # line 3
   # indicator
