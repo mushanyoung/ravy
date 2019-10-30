@@ -1,6 +1,8 @@
 # no greeting message
 set fish_greeting ''
 
+set -x PROMPT_PATH
+
 function __prompt_cmd_duration
   set -l ms $argv[1]
   if test $ms -lt 10000
@@ -90,10 +92,14 @@ function __prompt_git_status
 end
 
 function __prompt_pwd
+  if test -n "$PROMPT_PATH"
+    echo -s $PROMPT_PATH
+  else
     # Replace $HOME with "~"
     set realhome ~
     set -l tmp (string replace -r '^'"$realhome"'($|/)' '~$1' $PWD)
     echo $tmp
+  end
 end
 
 function fish_prompt
@@ -101,6 +107,8 @@ function fish_prompt
   if test $cmd_status -le 0
     set -e cmd_status
   end
+
+  set -l pcustom (type -q __prompt_customize; and __prompt_customize)
 
   set -l user_color magenta
   set -l cmd_indicator '❯'
@@ -129,7 +137,7 @@ function fish_prompt
   test -n "$gbranch"
   and echo -n -s (set_color green) $gbranch (set_color yellow) (__prompt_git_status) ' '
 
-  set -l pcustom (type -q __prompt_customize; and __prompt_customize)
+  # custom
   test -n "$pcustom"
   and echo -n -s (set_color white) $pcustom ' '
 
