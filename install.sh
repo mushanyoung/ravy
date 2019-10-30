@@ -136,7 +136,6 @@ if [ -d "$HOME/.zplug" ]; then
 else
   __el git clone https://github.com/zplug/zplug $HOME/.zplug
 fi
-zsh -c 'source ~/.ravy/zplugrc'
 
 __banner custom
 if command -v "$RAVY/custom/install" >/dev/null; then

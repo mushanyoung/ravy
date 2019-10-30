@@ -16,8 +16,102 @@ export _RAVY_PROMPT_TIMER=$EPOCHREALTIME
 # load zshenv to make sure paths are set correctly
 source "${0:A:h}/zshenv"
 
-# zplug
-source "${0:A:h}/zplugrc"
+# }}}
+
+# zplug {{{
+
+ZPLUG_HOME=${ZPLUG_HOME:-${HOME}/.zplug}
+
+if [[ -f "$ZPLUG_HOME/init.zsh" ]]; then
+  source "$ZPLUG_HOME/init.zsh"
+
+  # zplug env
+  zstyle :zplug:tag depth 1
+
+  # plugins
+  zplug "modules/completion", from:prezto, as:plugin
+  zplug "modules/archive", from:prezto, as:plugin
+
+  zplug "mushanyoung/brew-compose", as:command
+  zplug "romkatv/gitstatus", as:plugin
+  zplug "marzocchi/zsh-notify", as:plugin
+  zplug "chrissicool/zsh-256color", as:plugin
+  zplug "hlissner/zsh-autopair", as:plugin
+  zplug "zsh-users/zsh-completions", as:plugin
+  zplug "skywind3000/z.lua", as:plugin
+  zplug "ymattw/ydiff", as:command, use:ydiff
+
+  zplug "zsh-users/zsh-syntax-highlighting", defer:1, as:plugin
+  zplug "zsh-users/zsh-history-substring-search", defer:2, as:plugin
+  zplug "zsh-users/zsh-autosuggestions", defer:3, as:plugin  # benchmark: 17ms
+
+  if [ $(uname) = Darwin ]; then
+    zplug "mushanyoung/ravy-exec-daemon", as:plugin
+  fi
+
+  if [[ -n $RAVY_PROFILE ]]; then
+    zplug "romkatv/zsh-prompt-benchmark", as:plugin
+    zplug "agkozak/zhooks", as:plugin
+  fi
+
+  # load plugins
+  if ! zplug check --verbose; then
+    printf "Install? [y/N]: "
+    if read -q; then
+        print; zplug install
+    fi
+  fi
+
+  zplug load
+
+  # zsh syntax highlighting
+  ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+  ZSH_HIGHLIGHT_STYLES=(
+  "precommand"                    "fg=magenta"
+  "command"                       "fg=231"
+  "hashed-command"                "fg=231"
+  "builtin"                       "fg=28"
+  "function"                      "fg=46"
+  "alias"                         "fg=85"
+  "reserved-word"                 "fg=214"
+  "unknown-token"                 "fg=196"
+  "suffix-alias"                  "fg=85,underline"
+  "path_prefix"                   "fg=28"
+  "path"                          "fg=30"
+  "commandseparator"              "fg=blue"
+  "redirection"                   "fg=blue"
+  "globbing"                      "fg=blue"
+  "history-expansion"             "fg=yellow"
+  "single-hyphen-option"          "fg=yellow"
+  "double-hyphen-option"          "fg=yellow"
+  "single-quoted-argument"        "fg=107"
+  "dollar-quoted-argument"        "fg=107"
+  "double-quoted-argument"        "fg=107"
+  "back-quoted-argument"          "fg=110"
+  "dollar-double-quoted-argument" "fg=magenta"
+  "back-double-quoted-argument"   "fg=magenta"
+  "back-dollar-quoted-argument"   "fg=magenta"
+  "assign"                        "fg=magenta"
+  "comment"                       "fg=black"
+  "cursor-matchingbracket"        "fg=black,bg=blue"
+  "default"                       "none"
+  )
+
+  # zsh auto suggestions
+  ZSH_AUTOSUGGEST_USE_ASYNC=1
+  ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
+  ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(
+  "backward-delete-char" "complete-menu" "expand-or-complete"
+  )
+
+  # Terminal notifier
+  zstyle ':notify:*' success-title "Succeeded in #{time_elapsed}s"
+  zstyle ':notify:*' error-title "Failed in #{time_elapsed}s"
+
+  # z.lua variables
+  ZLUA_SCRIPT="$ZPLUG_REPOS/skywind3000/z.lua/z.lua"
+  ZLUA_LUAEXE="$(command -v lua)"
+fi
 
 # }}}
 
