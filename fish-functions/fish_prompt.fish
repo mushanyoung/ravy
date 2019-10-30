@@ -129,7 +129,7 @@ function fish_prompt
   test -n "$gbranch"
   and echo -n -s (set_color green) $gbranch (set_color yellow) (__prompt_git_status) ' '
 
-  set -l pcustom (__prompt_customize)
+  set -l pcustom (type -q __prompt_customize; and __prompt_customize)
   test -n "$pcustom"
   and echo -n -s (set_color white) $pcustom ' '
 
