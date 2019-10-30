@@ -32,6 +32,7 @@ function __fle_fzf_files
   set -l key (string trim $out[1])
   set -l file_list $out[2..-1]
   set -l escaped_list (string escape $file_list)
+  commandline -f repaint
   if test -n "$file_list"
     test -n "$key"; or set key $FZF_FILES_DEFAULT_ACTION
     test -n "$key"; or set key "q"
@@ -40,7 +41,6 @@ function __fle_fzf_files
       while not string match -r '(^|[AaDdEeVvOoQq])$' $key
         read -n1 -P "$escaped_list"\n"(A)ppend, (E)dit, enter (D)irectory, (O)pen, (Q)uit: " key >/dev/null 2>&1
       end
-      commandline -f repaint
     end
     if string match -rq '[Aa]$' $key
       test (commandline -C) -gt 0; and commandline -i ' '
@@ -60,8 +60,6 @@ function __fle_fzf_files
       commandline "open -- $escaped_list"
       commandline -f execute
     end
-  else
-    commandline -f repaint
   end
 end
 
@@ -107,3 +105,6 @@ bind \ez __fle_fg
 
 bind \e. history-token-search-backward
 bind \e, history-token-search-forward
+
+# sane <c-c>
+bind \cc 'commandline ""'
