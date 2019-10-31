@@ -21,16 +21,31 @@ function __fle_type
   end
 end
 
+function __fle_fzf_history
+  history -z |\
+  fzf $FZF_DEFAULT_OPTS -q (commandline) \
+    -e +m --read0 --print0 --height=45% \
+    --tiebreak=index --bind=ctrl-r:toggle-sort,ctrl-f:page-down,ctrl-b:page-up |\
+  read -lz result
+
+  commandline -f repaint
+  commandline -- $result
+end
+
 function __fle_fzf_files
   set -l cmd $FZF_FILES_COMMAND
   test -n "$cmd"; or set cmd fd
   set -l prompt $FZF_FILES_PROMPT
   test -n "$prompt"; or set prompt File
   set -l prompt_opt "--prompt=$prompt> "
-  set -l out ($cmd 2>/dev/null \
-    | fzf $FZF_DEFAULT_OPTS $prompt_opt --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q)
-  set -l key (string trim $out[1])
-  set -l file_list $out[2..-1]
+
+  $cmd 2>/dev/null |\
+  fzf $FZF_DEFAULT_OPTS $prompt_opt --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
+    --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q |\
+  read -lz result
+
+  set -l key (string trim $result[1])
+  set -l file_list $result[2..-1]
   set -l escaped_list (string escape $file_list)
   commandline -f repaint
   if test -n "$file_list"
@@ -95,6 +110,7 @@ function __fle_fzf_files_vim
   __fle_fzf_files
 end
 
+bind \er __fle_fzf_history
 bind \eo __fle_fzf_files_files
 bind \eO __fle_fzf_files_files_with_hidden
 bind \ed __fle_fzf_files_dirs
