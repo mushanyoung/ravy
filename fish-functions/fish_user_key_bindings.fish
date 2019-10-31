@@ -39,10 +39,9 @@ function __fle_fzf_files
   test -n "$prompt"; or set prompt File
   set -l prompt_opt "--prompt=$prompt> "
 
-  $cmd 2>/dev/null |\
+  set -l result ($cmd 2>/dev/null |\
   fzf $FZF_DEFAULT_OPTS $prompt_opt --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
-    --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q |\
-  read -lz result
+    --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q)
 
   set -l key (string trim $result[1])
   set -l file_list $result[2..-1]
