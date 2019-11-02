@@ -21,6 +21,19 @@ function __fle_type
   end
 end
 
+function __fle_sudo_toggle
+  set -l cmd (commandline)
+  if test -z "$cmd"
+    commandline "sudo $history[1]"
+  else
+    if string match -rq '^sudo ' $cmd
+      commandline (echo $cmd | sed -E 's/^sudo //')
+    else
+      commandline "sudo $cmd"
+    end
+  end
+end
+
 function __fle_fzf_history
   history -z |\
   fzf $FZF_DEFAULT_OPTS -q (commandline) \
@@ -120,6 +133,8 @@ bind \ez __fle_fg
 
 bind \e. history-token-search-backward
 bind \e, history-token-search-forward
+
+bind \cs __fle_sudo_toggle
 
 # sane <c-c>
 bind \cc 'commandline ""'
