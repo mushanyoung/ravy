@@ -141,7 +141,5 @@ if command -v "$RAVY/custom/install" >/dev/null; then
 fi
 
 __banner complete
-if ! echo $SHELL | grep fish >/dev/null 2>&1; then
-  echo "Please chsh to fish."
-  type fish
-fi
+echo "Please chsh to fish, if not yet."
+type fish
