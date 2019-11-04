@@ -27,7 +27,7 @@ if [ $(uname) = Linux ]; then
   __banner Linux packages
   if type apt-get >/dev/null 2>&1; then
     deps_to_install=""
-    for dep in "build-essential" "curl" "file" "git" "zsh"; do
+    for dep in "build-essential" "curl" "file" "git"; do
       echo -n "Checking apt for $dep... "
       if ! type apt >/dev/null 2>&1 || \
          ! apt -qq list $dep 2>/dev/null | grep "installed" >/dev/null; then
@@ -43,7 +43,7 @@ if [ $(uname) = Linux ]; then
     fi
   elif type yum >/dev/null 2>&1; then
     __el sudo yum groupinstall -y 'Development Tools'
-    __el sudo yum install -y curl file git zsh libxcrypt-compat
+    __el sudo yum install -y curl file git libxcrypt-compat
   else
     echo "No supported package manager is found."
     echo "Please manually install Linuxbrew dependencies."
@@ -95,8 +95,6 @@ fi
 
 __banner link dotfiles
 RAVY="$HOME/.ravy"
-append_content_if_absent $HOME/.zshrc "[ -f $RAVY/zshrc ] && source $RAVY/zshrc"
-append_content_if_absent $HOME/.zshenv "[ -f $RAVY/zshenv ] && source $RAVY/zshenv"
 append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]
 path=$RAVY/gitconfig"
 append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
@@ -143,7 +141,7 @@ if command -v "$RAVY/custom/install" >/dev/null; then
 fi
 
 __banner complete
-if ! echo $SHELL | grep zsh >/dev/null 2>&1; then
-  echo "Please chsh to zsh."
-  type zsh
+if ! echo $SHELL | grep fish >/dev/null 2>&1; then
+  echo "Please chsh to fish."
+  type fish
 fi

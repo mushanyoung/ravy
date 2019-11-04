@@ -1,6 +1,4 @@
-zhistory:  shell
-zshenv:    shell
-zcompdump: shell
+fish:      shell
 vimrc:     vim
 viminfo:   vim
 lock:      env
