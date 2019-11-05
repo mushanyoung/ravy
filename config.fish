@@ -18,7 +18,7 @@ prepend_to_path "$RAVY_HOME/bin"
 
 for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME/.linuxbrew"
   if test -f "$brewprefix/bin/brew"
-    eval ($brewprefix/bin/brew shellenv)
+    eval (env SHELL=/bin/fish $brewprefix/bin/brew shellenv)
     if test -f "$brewprefix/opt/ruby/bin/ruby"
       prepend_to_path "$brewprefix/opt/ruby/bin"
       set -l gems_bin "$brewprefix"/lib/ruby/gems/*/bin 2>/dev/null
