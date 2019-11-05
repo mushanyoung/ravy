@@ -30,7 +30,7 @@ if [ $(uname) = Linux ]; then
     for dep in "build-essential" "curl" "file" "git"; do
       echo -n "Checking apt for $dep... "
       if ! type apt >/dev/null 2>&1 || \
-         ! apt -qq list $dep 2>/dev/null | grep "installed" >/dev/null; then
+         ! apt -qq list $dep 2>/dev/null | grep -E "installed|upgradable" >/dev/null; then
         deps_to_install="$deps_to_install $dep"
         echo "to install"
       else
