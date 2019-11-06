@@ -128,13 +128,6 @@ __banner tmux
 __el curl -sfLo $HOME/.tmux.conf https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
 __el ln -s -f $RAVY/tmux.conf.local $HOME/.tmux.conf.local
 
-__banner ~/.zplug
-if [ -d "$HOME/.zplug" ]; then
-  __el git -C "$HOME/.zplug" pull --rebase || true
-else
-  __el git clone https://github.com/zplug/zplug $HOME/.zplug
-fi
-
 __banner custom
 if command -v "$RAVY/custom/install" >/dev/null; then
   "$RAVY/custom/install" || true
