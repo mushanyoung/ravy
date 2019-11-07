@@ -141,7 +141,7 @@ function fish_prompt
 
   # custom
   test -n "$pcustom"
-  and echo -n -s (set_color 5f5f5f) $pcustom ' '
+  and echo -n -s (set_color 5f5f5f) $pcustom (set_color -b 222) ' '
 
   # user
   echo -n -s (set_color $user_color) $USER ' '
