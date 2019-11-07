@@ -82,6 +82,15 @@ function cd
   builtin cd -- $file
 end
 
+# edit command in path
+function ep
+  if set -l exe (command -v $argv[1])
+    test -n "$EDITOR"; or set -l EDITOR vim
+    echo $EDITOR $exe
+    $EDITOR $exe
+  end
+end
+
 # history statistics
 function history-stat
   history | awk '{print $1}' | sort | uniq -c | sort -n -r | head
