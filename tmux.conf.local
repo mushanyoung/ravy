@@ -16,7 +16,7 @@ bind P command-prompt -p "save scrollback to file:" -I "~/.tmux/scrollback" "cap
 bind t swap-window -t 1
 
 # \ to split horizontally and - to split vertically at current path
-bind \ split-window -h -c "#{pane_current_path}"
+bind '\' split-window -h -c "#{pane_current_path}"
 bind - split-window -v -c "#{pane_current_path}"
 
 # swap current pane
