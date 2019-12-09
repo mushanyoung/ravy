@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Keep an active ssh connection, auto reconnect when the connection is
 # terminated by an error, or any non user initiated reson.
 

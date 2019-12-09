@@ -137,7 +137,7 @@ alias pyserv "python3 -m http.server"
 
 # ps-color
 alias pa "ps-color"
-alias pc "HIGH_CPU_MEM_ONLY=1 pa"
+alias pc "env HIGH_CPU_MEM_ONLY=1 ps-color"
 
 # brew commands
 alias bc "brew-compose"

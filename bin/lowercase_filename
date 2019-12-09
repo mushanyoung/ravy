@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 filename="$1"
 filename_lowercase="$(echo "$filename" | sed -r "s/(.*)\$/\L\1/")";

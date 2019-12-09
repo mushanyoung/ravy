@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # vim: set filetype=ruby:
 # browse Chrome bookmarks with fzf
 
