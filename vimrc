@@ -67,6 +67,15 @@ let &t_te.="\e[2 q"
 let &t_SI="\e[6 q"
 let &t_EI="\e[2 q"
 
+" Bracketed Paste Mode:
+" [Vim Control Sequence Examples](https://ttssh2.osdn.jp/manual/en/usage/tips/vim.html)
+if &term =~ "screen"
+  let &t_BE="\e[?2004h"
+  let &t_BD="\e[?2004l"
+  let &t_PS="\e[200~"
+  let &t_PE="\e[201~"
+endif
+
 " title string reporting
 if $TMUX != ""
   " tmux pane title
@@ -556,7 +565,6 @@ if filereadable(s:custom_vimrc)
   exec 'source ' . s:custom_vimrc
 endif
 
-Plug 'ConradIrwin/vim-bracketed-paste' " auto paste mode when pasting from terminal
 Plug 'PeterRincker/vim-argumentative'  " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
 Plug 'SirVer/ultisnips'                " snippets engine
 Plug 'airblade/vim-gitgutter'          " git: hunks operation indicator
