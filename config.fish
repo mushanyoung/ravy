@@ -53,6 +53,21 @@ set -x FZF_DEFAULT_OPTS --reverse --height=45% --bind=ctrl-f:page-down,ctrl-b:pa
 set -x FZF_DEFAULT_COMMAND fd
 
 # functions
+function imv
+  set -l src
+  for src in $argv
+    if test -e $src
+      set -g __imv__ $src
+      vared __imv__
+      test $src != "$__imv__"
+      and mkdir -p (dirname $__imv__)
+      and mv $src $__imv__
+    else
+      echo "$src does not exist"
+    end
+  end
+end
+
 function lines
   if test (count $argv) -gt 0
     echo $argv | xargs -n1
