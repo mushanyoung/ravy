@@ -158,11 +158,11 @@ function! FZFDirectories()
     pwd
   endfunction
 
-  return fzf#run({
+  return fzf#run(fzf#wrap({
         \ 'source': '(echo ./..; find . -type d -not -path "*/\.*" | sed 1d) | cut -b3-',
         \ 'sink': function('DirectorySink'),
-        \ 'options': '+m --prompt="Dir> "',
-        \ 'down': '~40%'})
+        \ 'options': ['+m', '--prompt', 'Dir> ', '--preview', 'ls {}'],
+        \ 'down': '~40%'}))
 endfunction
 
 function! s:AltMapKey(key)
