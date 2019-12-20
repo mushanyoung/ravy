@@ -36,7 +36,7 @@ end
 
 function __fle_fzf_history
   history -z |\
-  fzf $FZF_DEFAULT_OPTS -q (commandline) \
+  fzf -q (commandline) \
     -e +m --read0 --print0 --height=45% \
     --tiebreak=index --bind=ctrl-r:toggle-sort,ctrl-f:page-down,ctrl-b:page-up |\
   read -lz result
@@ -53,7 +53,8 @@ function __fle_fzf_files
   set -l prompt_opt "--prompt=$prompt> "
 
   set -l result ($cmd 2>/dev/null |\
-  fzf $FZF_DEFAULT_OPTS $prompt_opt --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
+  fzf $prompt_opt --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
+    --preview='bat --plain --color=always {}' \
     --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q)
 
   set -l key (string trim $result[1])
