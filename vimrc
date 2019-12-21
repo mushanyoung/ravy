@@ -161,7 +161,7 @@ function! FZFDirectories()
   return fzf#run(fzf#wrap({
         \ 'source': '(echo ./..; find . -type d -not -path "*/\.*" | sed 1d) | cut -b3-',
         \ 'sink': function('DirectorySink'),
-        \ 'options': ['+m', '--prompt', 'Dir> ', '--preview', 'ls {}'],
+        \ 'options': ['+m', '--prompt', 'Dir> ', '--preview', 'colorls --color=always {}'],
         \ 'down': '~40%'}))
 endfunction
 
