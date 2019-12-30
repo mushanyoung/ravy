@@ -38,6 +38,7 @@ function __fle_fzf_history
   history -z |\
   fzf -q (commandline) \
     -e +m --read0 --print0 --height=45% \
+    --preview 'fish_indent --ansi < {+sf}' --preview-window=right:wrap \
     --tiebreak=index --bind=ctrl-r:toggle-sort,ctrl-f:page-down,ctrl-b:page-up |\
   read -lz result
 
@@ -48,13 +49,15 @@ end
 function __fle_fzf_files
   set -l cmd $FZF_FILES_COMMAND
   test -n "$cmd"; or set cmd fd
+  set -l preview_cmd $FZF_FILES_PREVIEW_COMMAND
+  test -n "$preview_cmd"; or set preview_cmd 'set -l file (sed s#~#$HOME# {f}); if test -d $file; colorls $file; else if test -f $file; bat --plain --color=always $file; else; echo -e -s $file (set_color d70000) "\n: does not exist"; end'
   set -l prompt $FZF_FILES_PROMPT
   test -n "$prompt"; or set prompt File
   set -l prompt_opt "--prompt=$prompt> "
 
   set -l result ($cmd 2>/dev/null |\
   fzf $prompt_opt --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
-    --preview='bat --plain --color=always {}' \
+    --preview $preview_cmd \
     --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q)
 
   set -l key (string trim $result[1])
@@ -106,9 +109,18 @@ function __fle_fzf_files_files_with_hidden
 end
 
 function __fle_fzf_files_dirs
+  set -lx FZF_FILES_COMMAND fd -t d
+  set -lx FZF_FILES_PROMPT "Dir"
+  set -lx FZF_FILES_DEFAULT_ACTION "d"
+  set -lx FZF_FILES_PREVIEW_COMMAND "colorls {}"
+  __fle_fzf_files
+end
+
+function __fle_fzf_files_dirs_with_hidden
   set -lx FZF_FILES_COMMAND fd -H -t d
   set -lx FZF_FILES_PROMPT ".Dir"
   set -lx FZF_FILES_DEFAULT_ACTION "d"
+  set -lx FZF_FILES_PREVIEW_COMMAND "colorls {}"
   __fle_fzf_files
 end
 
@@ -127,6 +139,7 @@ bind \er __fle_fzf_history
 bind \eo __fle_fzf_files_files
 bind \eO __fle_fzf_files_files_with_hidden
 bind \ed __fle_fzf_files_dirs
+bind \eD __fle_fzf_files_dirs_with_hidden
 bind \ev __fle_fzf_files_vim
 
 bind \et __fle_type
