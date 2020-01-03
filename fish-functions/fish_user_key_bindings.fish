@@ -38,8 +38,11 @@ function __fle_fzf_history
   history -z |\
   fzf -q (commandline) \
     -e +m --read0 --print0 --height=45% \
-    --preview 'fish_indent --ansi < {+sf}' --preview-window=right:wrap \
-    --tiebreak=index --bind=ctrl-r:toggle-sort,ctrl-f:page-down,ctrl-b:page-up |\
+    --prompt="History> " \
+    --preview='fish_indent --ansi < {+sf}' \
+    --preview-window=right:wrap \
+    --tiebreak=index \
+    --bind=ctrl-r:toggle-sort,ctrl-f:page-down,ctrl-b:page-up |\
   read -lz result
 
   commandline -f repaint
@@ -49,15 +52,28 @@ end
 function __fle_fzf_files
   set -l cmd $FZF_FILES_COMMAND
   test -n "$cmd"; or set cmd fd
-  set -l preview_cmd $FZF_FILES_PREVIEW_COMMAND
-  test -n "$preview_cmd"; or set preview_cmd 'set -l file (sed s#~#$HOME# {f}); if test -d $file; colorls $file; else if test -f $file; bat --plain --color=always $file; else; echo -e -s $file (set_color d70000) "\n: does not exist"; end'
+
   set -l prompt $FZF_FILES_PROMPT
   test -n "$prompt"; or set prompt File
-  set -l prompt_opt "--prompt=$prompt> "
+
+  set -l preview_cmd $FZF_FILES_PREVIEW_COMMAND
+  test -n "$preview_cmd"; or set preview_cmd '\
+  fish -c \'\
+    set -l file (sed s#~#$HOME# {f})
+    if test -d $file
+      colorls $file
+    else if test -f $file
+      bat --plain --color=always $file
+    else
+      echo -e -s $file (set_color d70000) "\n: does not exist"
+    end\'
+  '
 
   set -l result ($cmd 2>/dev/null |\
-  fzf $prompt_opt --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
-    --preview $preview_cmd \
+  fzf --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
+    --prompt="$prompt> " \
+    --preview="$preview_cmd" \
+    --preview-window=right:wrap \
     --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q)
 
   set -l key (string trim $result[1])
