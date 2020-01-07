@@ -1,0 +1,13 @@
+#!/bin/sh
+
+file="$(sed "s#~#$HOME#" <<< "$@")"
+echo "$file"
+echo
+
+if test -d "$file"; then
+  colorls "$file"
+elif test -f "$file"; then
+  bat --plain --color=always "$file"
+else
+  echo ": does not exist"
+fi

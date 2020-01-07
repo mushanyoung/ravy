@@ -57,17 +57,7 @@ function __fle_fzf_files
   test -n "$prompt"; or set prompt File
 
   set -l preview_cmd $FZF_FILES_PREVIEW_COMMAND
-  test -n "$preview_cmd"; or set preview_cmd '\
-  fish -c \'\
-    set -l file (sed s#~#$HOME# {f})
-    if test -d $file
-      colorls $file
-    else if test -f $file
-      bat --plain --color=always $file
-    else
-      echo -e -s $file (set_color d70000) "\n: does not exist"
-    end\'
-  '
+  test -n "$preview_cmd"; or set preview_cmd 'ravy-file-preview {}'
 
   set -l result ($cmd 2>/dev/null |\
   fzf --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
