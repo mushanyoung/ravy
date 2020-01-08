@@ -213,12 +213,12 @@ nmap <silent> ym  :     call ForAllMatches('yank',   {})<CR>
 nmap <silent> YM  :     call ForAllMatches('yank',   {'inverse':1})<CR>
 nmap <silent> yim :     call ForAllMatches('yank',   {'match_only':1})<CR>
 
-xmap <silent> dm  :<C-U>call ForAllMatches('delete', {'visual':1})<CR>
-xmap <silent> dim :<C-U>call ForAllMatches('delete', {'visual':1, 'match_only':1})<CR>
-xmap <silent> DM  :<C-U>call ForAllMatches('delete', {'visual':1, 'inverse':1})<CR>
-xmap <silent> ym  :<C-U>call ForAllMatches('yank',   {'visual':1})<CR>
-xmap <silent> yim :<C-U>call ForAllMatches('yank',   {'visual':1, 'match_only':1})<CR>
-xmap <silent> YM  :<C-U>call ForAllMatches('yank',   {'visual':1, 'inverse':1})<CR>
+" xmap <silent> dm  :<C-U>call ForAllMatches('delete', {'visual':1})<CR>
+" xmap <silent> dim :<C-U>call ForAllMatches('delete', {'visual':1, 'match_only':1})<CR>
+" xmap <silent> DM  :<C-U>call ForAllMatches('delete', {'visual':1, 'inverse':1})<CR>
+" xmap <silent> ym  :<C-U>call ForAllMatches('yank',   {'visual':1})<CR>
+" xmap <silent> yim :<C-U>call ForAllMatches('yank',   {'visual':1, 'match_only':1})<CR>
+" xmap <silent> YM  :<C-U>call ForAllMatches('yank',   {'visual':1, 'inverse':1})<CR>
 
 function! ForAllMatches (command, options)
     " Remember where we parked...
