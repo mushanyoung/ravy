@@ -203,7 +203,7 @@ declare FORMAT=png     # ImageMagick decides the type from the extension
 declare -i QUALITY=92  # Output image quality (only affects the final
                               # image and obviously only in lossy formats)
 # Colours, see convert -list color to get the list
-declare BG_HEADING='#afcd7a'    # Background for meta info (size, codec...)
+declare BG_HEADING='#aaaaaa'    # Background for meta info (size, codec...)
 declare BG_SIGN=SlateGray #'#a2a9af'       # Background for signature
 declare BG_TITLE=White          # Background for the title (see -T)
 declare BG_CONTACT=White        # Background for the captures
@@ -809,7 +809,7 @@ parse_override() {
 	trace $@
 	local o="$1"
 	RESULT=''
-	
+
 	# bash 3.1 and 3.2 handle quoted eres differently, using a variable fixes this
 	local ERE="^[[:space:]]*[[:alpha:]_][[:alnum:]_]*[[:space:]]*=.*"
 
@@ -2232,7 +2232,7 @@ ffmpeg_capture() {
 	local f=$1
 	local ts=$2
 	local o=$3
-	
+
 	# XXX: It would be nice to show a message if it takes too long
 	# See wa_ss_* declarations at the start of the file for details
 	"$FFMPEG_BIN" -y ${wa_ss_be/ / $ts} -i "$f" ${wa_ss_af/ / $ts} -an \
@@ -2358,7 +2358,7 @@ randomize_look() {
 
 	# Older IM output was pretty different. Since this is a mode used for testing
 	# I don't believe it's worth the effort to get it always right
-	
+
 	# This used to be -list type. Was this an older IM version or a bug in vcs?
 	local nfonts=$(convert -list font | grep '^\s*Font:' | wc -l)
 	randfont() {
@@ -2765,7 +2765,7 @@ init_filt_film() {
 
 	# Create the film reel pattern...
 	local rw2=$(( $rw - 10 )) rh2=$(( $rh - 10 ))
-	# Instead, create a big enough strip and then resize 
+	# Instead, create a big enough strip and then resize
 	local must_rescale=0
 	if [[ ( $w -lt 240 ) || ( $h -lt 240 ) ]]; then
 		must_rescale=1
@@ -3215,7 +3215,7 @@ get_acodec_name() {
 translate_ffmpeg_acodec_id() {
 	local acid="$1"
 	local mpid=
-	
+
 	# ffmpeg -codecs | grep ^\ D.A
 	case "$acid" in
 		mp3)    mpid='85' ;;
@@ -3861,7 +3861,7 @@ process() {
 				error "Failed to apply transformations to the capture."
 				return $r
 			}
-	
+
 			capfiles=( "${capfiles[@]}" "$hlcapfile" )
 			(( ++n ))
 		done
@@ -4155,13 +4155,13 @@ process() {
 			-bordercolor "$BG_HEADING" -border 9 \
 		\) \
 		"$output" -append \
-		\( \
-			-size ${headwidth}x$signheight -gravity Center "xc:$BG_SIGN" \
-			-font "$FONT_SIGN" -pointsize "$PTS_SIGN" \
-			-fill "$FG_SIGN" -annotate 0 "$signature" \
-		\) \
-		-append \
 		"$output"
+		# \( \
+		# 	-size ${headwidth}x$signheight -gravity Center "xc:$BG_SIGN" \
+		# 	-font "$FONT_SIGN" -pointsize "$PTS_SIGN" \
+		# 	-fill "$FG_SIGN" -annotate 0 "$signature" \
+		# \) \
+		# -append \
 	unset signature meta2 headwidth headheight heading fn_font signheight signlh
 
 	local wanted_name=${OUTPUT_FILES[$FILEIDX]}
@@ -4289,7 +4289,7 @@ internal_integrity_test() {
 		"get_pretty_size 762650296 727.32%20MiB #Pretty-printed file size (MiB)"
 		"get_pretty_size 524810 512.51%20KiB #Pretty-printed file size (KiB)"
 	)
-	
+
 	for t in "${TESTS[@]}" ; do
 		comm=${t/#*#/} # 's/.*#//'
 		t=${t/%#*/}    # 's/#.*//'
@@ -4313,7 +4313,7 @@ internal_integrity_test() {
 		# Don't use anything with a RE meaning
 
 		# Floating point numeric "test"
-		"fptest 3 -eq 3 0 #FP test" 
+		"fptest 3 -eq 3 0 #FP test"
 		"fptest 3.2 -gt 1 0 #FP test"
 		"fptest 1/2 -le 2/3 0 #FP test"
 		"fptest 6.34 -gt 6.34 1 #FP test"
