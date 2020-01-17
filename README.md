@@ -1,6 +1,6 @@
 # Ravy
 
-A macOS to Linux remote working environment.
+A remote working environment with macOS frontend and Linux backend.
 
 ## Install
 
@@ -10,12 +10,12 @@ Paste at a terminal prompt:
 curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh | sh -s
 ```
 
-Run the vim command to install vim plugins:
+Run the following vim command to install vim plugins:
 ```
 :PlugUpdate
 ```
 
-## Prerequisites
+## Recommendation Setup
 
-- [**iTerm2**](https://www.iterm2.com/) >= 3.0
+- [**iTerm2**](https://www.iterm2.com/)
 - [**nerd-fonts**](https://github.com/ryanoasis/nerd-fonts)
