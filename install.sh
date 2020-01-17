@@ -120,10 +120,6 @@ if [ ! -e $HOME/.vim/autoload/plug.vim ]; then
   __el curl -sfLo $HOME/.vim/autoload/plug.vim https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 fi
 
-if [ -z $NOUPDATE ]; then
-  __el vim '+PlugUpdate' '+qall'
-fi
-
 __banner tmux
 __el curl -sfLo $HOME/.tmux.conf https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
 __el ln -s -f $RAVY/tmux.conf.local $HOME/.tmux.conf.local

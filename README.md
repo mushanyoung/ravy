@@ -7,7 +7,12 @@ A macOS to Linux remote working environment.
 Paste at a terminal prompt:
 
 ```
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh)"
+curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh | sh -s
+```
+
+Run the vim command to install vim plugins:
+```
+:PlugUpdate
 ```
 
 ## Prerequisites
