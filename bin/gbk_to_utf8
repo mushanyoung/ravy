@@ -1,0 +1,10 @@
+#!/bin/bash
+
+tmp="$(mktemp)"
+cp "$1" "$tmp"
+echo "$1 backed up to $tmp"
+tmp="$(mktemp)"
+echo "Converting"
+iconv -f GBK -t UTF-8 -o "$tmp" "$1"
+mv "$tmp" "$1"
+echo "Done"
