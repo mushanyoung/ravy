@@ -85,9 +85,11 @@ function __fle_fzf_files
       commandline "$sink_cmd $escaped_list"
       commandline -f execute
     else if string match -rq '[Aa]$' $key
+      # Append
       test (commandline -C) -gt 0; and commandline -i ' '
       commandline -i "$escaped_list "
     else if string match -rq '[Dd]$' $key
+      # change Directory
       set -l target $file_list[1]
       test -d $target; or set target (dirname $target)
       if test "$target" != .
@@ -95,10 +97,12 @@ function __fle_fzf_files
         commandline -f execute
       end
     else if string match -rq '[EeVv]$' $key
+      # Edit
       set -l editor (set -q EDITOR; and echo $EDITOR; or echo vim)
       commandline "$editor -- $escaped_list"
       commandline -f execute
     else if string match -rq '[Oo]$' $key
+      # Open
       commandline "open -- $escaped_list"
       commandline -f execute
     end
@@ -153,8 +157,8 @@ function __fle_fzf_files_rg
   end
   set -lx FZF_FILES_COMMAND rg -il $keyword
   set -lx FZF_FILES_PROMPT "Search: /$keyword/ "
-  set -lx FZF_FILES_DEFAULT_ACTION "custom:vim -c 'exe \"norm /$keyword\n\"'"
-  set -lx FZF_FILES_PREVIEW_COMMAND "cat {} | rg --pretty --context 2 '$keyword'"
+  set -lx FZF_FILES_DEFAULT_ACTION "custom:vim +'exe \"norm /$keyword\n\"' --"
+  set -lx FZF_FILES_PREVIEW_COMMAND "rg --pretty --context 2 '$keyword' {}"
   __fle_fzf_files
 end
 
