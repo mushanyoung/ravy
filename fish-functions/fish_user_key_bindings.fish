@@ -61,6 +61,7 @@ function __fle_fzf_files
 
   set -l result ($cmd 2>/dev/null |\
   fzf --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
+    --ansi \
     --prompt="$prompt> " \
     --preview="$preview_cmd" \
     --preview-window=right:wrap \
@@ -79,7 +80,11 @@ function __fle_fzf_files
         read -n1 -P "$escaped_list"\n"(A)ppend, (E)dit, enter (D)irectory, (O)pen, (Q)uit: " key >/dev/null 2>&1
       end
     end
-    if string match -rq '[Aa]$' $key
+    if string match -rq '^custom:' $key
+      set -l sink_cmd (string sub -s 8 $key)
+      commandline "$sink_cmd $escaped_list"
+      commandline -f execute
+    else if string match -rq '[Aa]$' $key
       test (commandline -C) -gt 0; and commandline -i ' '
       commandline -i "$escaped_list "
     else if string match -rq '[Dd]$' $key
@@ -141,12 +146,25 @@ function __fle_fzf_files_vim
   __fle_fzf_files
 end
 
+function __fle_fzf_files_rg
+  set -lx keyword (string lower (commandline))
+  if not test -n "$keyword"
+    return
+  end
+  set -lx FZF_FILES_COMMAND rg -il $keyword
+  set -lx FZF_FILES_PROMPT "Search: /$keyword/ "
+  set -lx FZF_FILES_DEFAULT_ACTION "custom:vim -c 'exe \"norm /$keyword\n\"'"
+  set -lx FZF_FILES_PREVIEW_COMMAND "cat {} | rg --pretty --context 2 '$keyword'"
+  __fle_fzf_files
+end
+
 bind \er __fle_fzf_history
 bind \eo __fle_fzf_files_files
 bind \eO __fle_fzf_files_files_with_hidden
 bind \ed __fle_fzf_files_dirs
 bind \eD __fle_fzf_files_dirs_with_hidden
 bind \ev __fle_fzf_files_vim
+bind \es __fle_fzf_files_rg
 
 bind \et __fle_type
 bind \ez __fle_fg
