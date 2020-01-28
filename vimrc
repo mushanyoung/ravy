@@ -394,14 +394,6 @@ nnoremap gw :exec("vsplit ".expand("<cfile>"))<CR>
 " Visually select the text that was last edited/pasted
 nnoremap gV `[v`]
 
-" window resize & split
-noremap <C-W>0 :resize +5<CR>
-noremap <C-W>9 :resize -5<CR>
-noremap <C-W>. :vertical resize +5<CR>
-noremap <C-W>, :vertical resize -5<CR>
-noremap <C-W>\ :vsplit<CR>
-noremap <C-W>- :split<CR>
-
 " map leader key to >
 let g:mapleader = '>'
 
