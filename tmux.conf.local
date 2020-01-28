@@ -15,10 +15,6 @@ bind P command-prompt -p "save scrollback to file:" -I "~/.tmux/scrollback" "cap
 # window navigation
 bind t swap-window -t 1
 
-# \ to split horizontally and - to split vertically at current path
-bind '\' split-window -h -c "#{pane_current_path}"
-bind - split-window -v -c "#{pane_current_path}"
-
 # swap current pane
 bind > swap-pane -D
 bind < swap-pane -U
@@ -39,25 +35,26 @@ _pane_is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
 # direct C-Space,w to vim
 bind w if-shell "$_pane_is_vim" "send-keys Space w"
 
-# use M-y to copy from xclipboard
-bind -n M-y run "xclip -o -selection clipboard | tmux load-buffer - ; tmux paste-buffer"
-
-# use M-<h,j,k,l> to navigate with vim
+# navigate within vim window or tmux pane
 bind -n M-h if-shell "$_pane_is_vim" "send-keys M-h" "select-pane -L"
 bind -n M-j if-shell "$_pane_is_vim" "send-keys M-j" "select-pane -D"
 bind -n M-k if-shell "$_pane_is_vim" "send-keys M-k" "select-pane -U"
 bind -n M-l if-shell "$_pane_is_vim" "send-keys M-l" "select-pane -R"
 bind -n M-p if-shell "$_pane_is_vim" "send-keys M-p" "select-pane -l"
 
-# kill pane
+# kill vim window or tmux pane
 bind -n M-c if-shell "$_pane_is_vim" "send-keys M-c" "confirm-before -p 'kill-pane #P? (y/N)' kill-pane"
+
+# split vim window or tmux pane
+bind -n M-\ if-shell "$_pane_is_vim" "send-keys M-\\" "split-window -h"
+bind -n M-- if-shell "$_pane_is_vim" "send-keys M--" "split-window -v"
 
 # open and kill window
 bind -n M-t new-window
 bind -n M-w kill-window
 
-bind -n M-- previous-window
-bind -n M-= next-window
+bind -n M-[ previous-window
+bind -n M-] next-window
 bind -n M-n last-window
 
 bind -n M-1 select-window -t 1

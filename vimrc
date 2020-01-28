@@ -501,6 +501,9 @@ exec 'nnoremap <silent> ' . s:AltMapKey('l') . ' :TmuxNavigateRight<CR>'
 exec 'nnoremap <silent> ' . s:AltMapKey('p') . ' :TmuxNavigatePrevious<CR>'
 exec 'nnoremap <silent> ' . s:AltMapKey('c') . ' :close<CR>'
 
+exec 'nnoremap <silent> ' . s:AltMapKey('\') . ' :vsplit<CR>'
+exec 'nnoremap <silent> ' . s:AltMapKey('-') . ' :split<CR>'
+
 " Show unicode names
 exec 'nnoremap <silent> ' . s:AltMapKey('u') . ' :UnicodeName<CR>'
 
