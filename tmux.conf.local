@@ -46,7 +46,7 @@ bind -n M-p if-shell "$_pane_is_vim" "send-keys M-p" "select-pane -l"
 bind -n M-c if-shell "$_pane_is_vim" "send-keys M-c" "confirm-before -p 'kill-pane #P? (y/N)' kill-pane"
 
 # split vim window or tmux pane
-bind -n M-\ if-shell "$_pane_is_vim" "send-keys M-\\" "split-window -h"
+bind -n M-\\ if-shell "$_pane_is_vim" "send-keys M-\\" "split-window -h"
 bind -n M-- if-shell "$_pane_is_vim" "send-keys M--" "split-window -v"
 
 # open and kill window
