@@ -419,7 +419,7 @@ nnoremap \/ :%s/
 nnoremap \a ggVG
 
 " close current buffer
-nnoremap \c :Bdelete!<CR>
+nnoremap \c :Sayonara<CR>
 
 " diff
 nnoremap <silent> \de :bdelete!<BAR>diffoff<CR>
@@ -693,44 +693,45 @@ if filereadable(s:custom_vimrc)
   exec 'source ' . s:custom_vimrc
 endif
 
-Plug 'PeterRincker/vim-argumentative'  " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
-Plug 'SirVer/ultisnips'                " snippets engine
-Plug 'airblade/vim-gitgutter'          " git: hunks operation indicator
-Plug 'airblade/vim-rooter'             " set proper working directory
-Plug 'andymass/vim-matchup'            " even better % navigate and highlight matching words
-Plug 'ap/vim-css-color'                " show css color in code
-Plug 'chrisbra/unicode.vim'            " Search unicode
-Plug 'christoomey/vim-tmux-navigator'  " pane navigate integration with tmux
-Plug 'honza/vim-snippets'              " snippets
-Plug 'jiangmiao/auto-pairs'            " Insert or delete brackets, parens, quotes in pair
-Plug 'junegunn/fzf'                    " fzf integration
-Plug 'junegunn/fzf.vim'                " provide utility commands to fzf in a list of certain targets
-Plug 'junegunn/vim-easy-align'         " ga to align a region of text on a key (<C-X> to use a regex)
-Plug 'junegunn/vim-peekaboo'           " list the content of registers when \", @ in normal mode and <C-R> in insert mode
-Plug 'justinmk/vim-sneak'              " s: motion to match 2 characters
-Plug 'luochen1990/rainbow'             " Decorate brackets, parens and pairs with pairing colors
-Plug 'majutsushi/tagbar'               " tag explorer
-Plug 'moll/vim-bbye'                   " sane Bdelete
-Plug 'mushanyoung/vim-windflower'      " theme
-Plug 'nathanaelkane/vim-indent-guides' " visually displaying indent levels
-Plug 'ntpeters/vim-better-whitespace'  " highlight trailing blanks and provide StripWhitespace function
-Plug 'romainl/vim-cool'                " show match index during search and cancel highlight afterwards
-Plug 'sheerun/vim-polyglot'            " a set of filetype plugins
-Plug 'svermeulen/vim-cutlass'          " plugin that adds a 'cut' operation separate from 'delete'
-Plug 'svermeulen/vim-yoink'            " maintains a yank history to cycle between when pasting
-Plug 'terryma/vim-expand-region'       " +, - to expand and shrink selection
-Plug 'terryma/vim-multiple-cursors'    " multiple cursors and multiple modifications
-Plug 'tpope/vim-abolish'               " deal with multiple variants of a word
-Plug 'tpope/vim-commentary'            " gc to comment codes
-Plug 'tpope/vim-repeat'                " `.` supports to repeat mapped key sequence
-Plug 'tpope/vim-rsi'                   " Readline style insertion
-Plug 'tpope/vim-sensible'              " default settings
-Plug 'tpope/vim-speeddating'           " use CTRL-A/CTRL-X to increment dates, times, and more
-Plug 'tpope/vim-surround'              " `s`: manipulate surrounded symbols / texts
-Plug 'tpope/vim-unimpaired'            " a bunch of useful [, ] key bindings
-Plug 'vim-airline/vim-airline'         " status line with powerline fonts
-Plug 'vim-scripts/vim-scroll-position' " simulated scroll bar using sign column
-Plug 'vim-syntastic/syntastic'         " check code syntax
+Plug 'PeterRincker/vim-argumentative'           " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
+Plug 'SirVer/ultisnips'                         " snippets engine
+Plug 'airblade/vim-gitgutter'                   " git: hunks operation indicator
+Plug 'airblade/vim-rooter'                      " set proper working directory
+Plug 'andymass/vim-matchup'                     " even better % navigate and highlight matching words
+Plug 'ap/vim-css-color'                         " show css color in code
+Plug 'chrisbra/unicode.vim'                     " Search unicode
+Plug 'christoomey/vim-tmux-navigator'           " pane navigate integration with tmux
+Plug 'honza/vim-snippets'                       " snippets
+Plug 'jiangmiao/auto-pairs'                     " Insert or delete brackets, parens, quotes in pair
+Plug 'junegunn/fzf'                             " fzf integration
+Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets
+Plug 'junegunn/vim-easy-align'                  " ga to align a region of text on a key (<C-X> to use a regex)
+Plug 'junegunn/vim-peekaboo'                    " list the content of registers when \", @ in normal mode and <C-R> in insert mode
+Plug 'justinmk/vim-sneak'                       " s: motion to match 2 characters
+Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and pairs with pairing colors
+Plug 'majutsushi/tagbar'                        " tag explorer
+Plug 'mushanyoung/vim-windflower'               " theme
+Plug 'nathanaelkane/vim-indent-guides'          " visually displaying indent levels
+Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function
+Plug 'romainl/vim-cool'                         " disables search highlighting when you are done searching
+Plug 'sheerun/vim-polyglot'                     " a set of filetype plugins
+Plug 'svermeulen/vim-cutlass'                   " plugin that adds a 'cut' operation separate from 'delete'
+Plug 'svermeulen/vim-yoink'                     " maintains a yank history to cycle between when pasting
+Plug 'terryma/vim-expand-region'                " +, - to expand and shrink selection
+Plug 'terryma/vim-multiple-cursors'             " multiple cursors and multiple modifications
+Plug 'tpope/vim-abolish'                        " deal with multiple variants of a word
+Plug 'tpope/vim-commentary'                     " gc to comment codes
+Plug 'tpope/vim-repeat'                         " `.` supports to repeat mapped key sequence
+Plug 'tpope/vim-rsi'                            " Readline style insertion
+Plug 'tpope/vim-sensible'                       " default settings
+Plug 'tpope/vim-speeddating'                    " use CTRL-A/CTRL-X to increment dates, times, and more
+Plug 'tpope/vim-surround'                       " `s`: manipulate surrounded symbols / texts
+Plug 'tpope/vim-unimpaired'                     " a bunch of useful [, ] key bindings
+Plug 'vim-airline/vim-airline'                  " status line with powerline fonts
+Plug 'vim-scripts/vim-scroll-position'          " simulated scroll bar using sign column
+Plug 'vim-syntastic/syntastic'                  " check code syntax
+
+Plug 'mhinz/vim-sayonara', { 'on': 'Sayonara' } " Deletes the current buffer smartly
 
 if !exists('g:disable_prettier')
   " auto format by prettier
