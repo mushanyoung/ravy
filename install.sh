@@ -84,7 +84,7 @@ for dep in "git" "vim" "fzf" "fd"; do
 done
 
 __banner mkdir
-__el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
+__el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOME/.config/alacritty $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
 
 __banner ~/.ravy
 if [ -d "$HOME/.ravy" ]; then
@@ -103,6 +103,10 @@ __banner fish
 append_content_if_absent $HOME/.config/fish/config.fish "test -f $RAVY/config.fish && source $RAVY/config.fish"
 curl https://raw.githubusercontent.com/danhper/fundle/master/functions/fundle.fish --create-dirs -sLo ~/.config/fish/functions/fundle.fish
 ln -sf $RAVY/fish-functions/* $HOME/.config/fish/functions
+
+__banner alacritty
+__el rm -rf $HOME/.config/alacritty/alacritty.yml
+__el ln -s -f $RAVY/alacritty.yml $HOME/.config/alacritty/alacritty.yml
 
 __banner colorls
 __el rm -rf $HOME/.config/colorls
