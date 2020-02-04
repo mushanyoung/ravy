@@ -471,45 +471,47 @@ nmap \<CR> <PLUG>unimpairedBlankDown
 nmap \\<CR> <PLUG>unimpairedBlankUp
 
 " FZF
-exec 'nnoremap          ' . s:AltMapKey('a') . ' :Ag<SPACE>'
-exec 'nnoremap <silent> ' . s:AltMapKey('d') . ' :call FZFDirectories()<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('b') . ' :Buffers<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('m') . ' :Marks<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('e') . ' :Lines<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('f') . ' :Files<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('q') . ' :Snippets<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('t') . ' :Filetypes<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('v') . ' :History<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey(';') . ' :History:<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('/') . ' :History/<CR>'
+exec 'nnoremap           ' . s:AltMapKey('a') . ' :Ag<SPACE>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('d') . ' :call FZFDirectories()<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('b') . ' :Buffers<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('m') . ' :Marks<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('e') . ' :Lines<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
+exec 'nnoremap <silent> 0' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
+exec 'nnoremap <silent> 1' . s:AltMapKey('o') . ' :Files %:p:h/..<CR>'
+exec 'nnoremap <silent> 2' . s:AltMapKey('o') . ' :Files %:p:h/../..<CR>'
+exec 'nnoremap <silent> 3' . s:AltMapKey('o') . ' :Files %:p:h/../../..<CR>'
+exec 'nnoremap <silent> 4' . s:AltMapKey('o') . ' :Files %:p:h/../../../..<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('f') . ' :Files<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('q') . ' :Snippets<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('t') . ' :Filetypes<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('v') . ' :History<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey(';') . ' :History:<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('/') . ' :History/<CR>'
 
 " tmux navigator, window move & split
 let g:tmux_navigator_no_mappings = 1
-exec 'nnoremap <silent> ' . s:AltMapKey('h') . ' :TmuxNavigateLeft<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('j') . ' :TmuxNavigateDown<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('k') . ' :TmuxNavigateUp<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('l') . ' :TmuxNavigateRight<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('p') . ' :TmuxNavigatePrevious<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('c') . ' :close<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('h') . ' :TmuxNavigateLeft<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('j') . ' :TmuxNavigateDown<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('k') . ' :TmuxNavigateUp<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('l') . ' :TmuxNavigateRight<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('p') . ' :TmuxNavigatePrevious<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('c') . ' :close<CR>'
 
-exec 'nnoremap <silent> ' . s:AltMapKey('\') . ' :vsplit<CR>'
-exec 'nnoremap <silent> ' . s:AltMapKey('-') . ' :split<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('\') . ' :vsplit<CR>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('-') . ' :split<CR>'
 
 " Show unicode names
-exec 'nnoremap <silent> ' . s:AltMapKey('u') . ' :UnicodeName<CR>'
-
-" SIGTSTP alternate for fish
-exec 'nnoremap          ' . s:AltMapKey('z') . ' <C-Z>'
+exec 'nnoremap <silent>  ' . s:AltMapKey('u') . ' :UnicodeName<CR>'
 
 " key pool
-exec 'nnoremap          ' . s:AltMapKey('g') . ' <NOP>'
-exec 'nnoremap          ' . s:AltMapKey('i') . ' <NOP>'
-exec 'nnoremap          ' . s:AltMapKey('n') . ' <NOP>'
-exec 'nnoremap          ' . s:AltMapKey('r') . ' <NOP>'
-exec 'nnoremap          ' . s:AltMapKey('w') . ' <NOP>'
-exec 'nnoremap          ' . s:AltMapKey('x') . ' <NOP>'
-exec 'nnoremap          ' . s:AltMapKey('y') . ' <NOP>'
+exec 'nnoremap           ' . s:AltMapKey('g') . ' <NOP>'
+exec 'nnoremap           ' . s:AltMapKey('i') . ' <NOP>'
+exec 'nnoremap           ' . s:AltMapKey('n') . ' <NOP>'
+exec 'nnoremap           ' . s:AltMapKey('r') . ' <NOP>'
+exec 'nnoremap           ' . s:AltMapKey('w') . ' <NOP>'
+exec 'nnoremap           ' . s:AltMapKey('x') . ' <NOP>'
+exec 'nnoremap           ' . s:AltMapKey('y') . ' <NOP>'
 
 " nnoremap <ESC><ESC> <NOP>
 
