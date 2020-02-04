@@ -208,17 +208,17 @@ snoremap <silent> <expr> <S-Insert> <sid>ReplSelect()
 " https://github.com/thoughtstream/Damian-Conway-s-Vim-Setup/blob/master/plugin/yankmatches.vim
 nmap <silent> dm  :     call ForAllMatches('delete', {})<CR>
 nmap <silent> dim :     call ForAllMatches('delete', {'match_only':1})<CR>
-nmap <silent> DM  :     call ForAllMatches('delete', {'inverse':1})<CR>
+nmap <silent> dvm :     call ForAllMatches('delete', {'inverse':1})<CR>
 nmap <silent> ym  :     call ForAllMatches('yank',   {})<CR>
-nmap <silent> YM  :     call ForAllMatches('yank',   {'inverse':1})<CR>
 nmap <silent> yim :     call ForAllMatches('yank',   {'match_only':1})<CR>
+nmap <silent> yvm :     call ForAllMatches('yank',   {'inverse':1})<CR>
 
 " xmap <silent> dm  :<C-U>call ForAllMatches('delete', {'visual':1})<CR>
 " xmap <silent> dim :<C-U>call ForAllMatches('delete', {'visual':1, 'match_only':1})<CR>
-" xmap <silent> DM  :<C-U>call ForAllMatches('delete', {'visual':1, 'inverse':1})<CR>
+" xmap <silent> dvm :<C-U>call ForAllMatches('delete', {'visual':1, 'inverse':1})<CR>
 " xmap <silent> ym  :<C-U>call ForAllMatches('yank',   {'visual':1})<CR>
 " xmap <silent> yim :<C-U>call ForAllMatches('yank',   {'visual':1, 'match_only':1})<CR>
-" xmap <silent> YM  :<C-U>call ForAllMatches('yank',   {'visual':1, 'inverse':1})<CR>
+" xmap <silent> yvm :<C-U>call ForAllMatches('yank',   {'visual':1, 'inverse':1})<CR>
 
 function! ForAllMatches (command, options)
     " Remember where we parked...
@@ -378,12 +378,6 @@ cnoremap <DOWN> <C-N>
 
 " nmap / vmap {{
 
-" 'Cut' motion
-nnoremap m d
-xnoremap m d
-nnoremap mm dd
-nnoremap M D
-
 " cycle in buffers
 nnoremap gb :bprevious<CR>
 nnoremap gB :bnext<CR>
@@ -393,6 +387,15 @@ nnoremap gw :exec("vsplit ".expand("<cfile>"))<CR>
 
 " Visually select the text that was last edited/pasted
 nnoremap gV `[v`]
+
+" 'Cut' motion
+nnoremap m d
+xnoremap m d
+nnoremap mm dd
+nnoremap M D
+
+" Y to copy to the end of the line
+nnoremap Y y$
 
 " map leader key to >
 let g:mapleader = '>'
