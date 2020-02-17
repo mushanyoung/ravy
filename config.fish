@@ -86,17 +86,6 @@ function d
   cd ..
 end
 
-# change directory to a nearest possible folder
-function cd
-  set -l file $argv
-  while ! test -d $file && test -n $file
-    set file (dirname $file)
-  end
-  test "$file" = .
-  and set file $argv
-  builtin cd -- $file
-end
-
 # edit command in path
 function ep
   if set -l exe (command -v $argv[1])
