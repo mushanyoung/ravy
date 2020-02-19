@@ -1,12 +1,18 @@
 # change directory to a nearest possible folder
 function cd
-  set -l file $argv
-  while ! test -d $file && test -n $file
-    set file (dirname $file)
+  if test (count $argv) -gt (test "$argv[1]" = "--" && echo 2 || echo 1)
+      printf "%s\n" (_ "Too many args for cd command")
+      return 1
   end
-  test "$file" = .
-  and set file $argv
-  __fish_cd $file
+  set -l target
+  test (count $argv) -gt 0
+  and set target $argv[(count $argv)]
+  while ! test -d $target && test -n $target
+    set target (dirname $target)
+  end
+  test "$target" = .
+  and set target $argv
+  __fish_cd $target
 end
 
 function __fish_cd --description 'Change directory'
