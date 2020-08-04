@@ -18,7 +18,13 @@ prepend_to_path "$RAVY_HOME/bin"
 
 for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME/.linuxbrew"
   if test -f "$brewprefix/bin/brew"
-    eval (env SHELL=/bin/fish $brewprefix/bin/brew shellenv)
+    set -gx HOMEBREW_PREFIX "$brewprefix"
+    set -gx HOMEBREW_CELLAR "$brewprefix/Cellar"
+    set -gx HOMEBREW_REPOSITORY "$brewprefix/Homebrew"
+    set -q PATH; or set PATH ''; set -gx PATH "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin" $PATH
+    set -q MANPATH; or set MANPATH ''; set -gx MANPATH "$HOMEBREW_PREFIX/share/man" $MANPATH
+    set -q INFOPATH; or set INFOPATH ''; set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
+
     if test -f "$brewprefix/opt/ruby/bin/ruby"
       prepend_to_path "$brewprefix/opt/ruby/bin"
       set -l gems_bin "$brewprefix"/lib/ruby/gems/*/bin 2>/dev/null
