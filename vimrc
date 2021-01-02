@@ -697,6 +697,7 @@ Plug 'majutsushi/tagbar'                        " tag explorer
 Plug 'mushanyoung/vim-windflower'               " theme
 Plug 'nathanaelkane/vim-indent-guides'          " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function
+Plug 'qpkorr/vim-renamer'                       " rename files in a folder
 Plug 'romainl/vim-cool'                         " disables search highlighting when you are done searching
 Plug 'sheerun/vim-polyglot'                     " a set of filetype plugins
 Plug 'svermeulen/vim-cutlass'                   " plugin that adds a 'cut' operation separate from 'delete'
