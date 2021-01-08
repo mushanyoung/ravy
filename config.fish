@@ -135,6 +135,8 @@ end
 alias l "ls -l"
 alias la "ls -lA"
 alias lt "ls -ltr"
+alias df "df -h"
+alias du "du -h"
 alias g "command git"
 alias t "command tmux"
 alias hs "history"
