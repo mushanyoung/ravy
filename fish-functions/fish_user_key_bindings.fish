@@ -176,6 +176,7 @@ bind \ez __fle_fg
 bind \e. history-token-search-backward
 bind \e, history-token-search-forward
 
+bind \cz __fle_fg
 bind \cs __fle_sudo_toggle
 
 # sane <c-c>
