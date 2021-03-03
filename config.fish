@@ -5,7 +5,7 @@ function prepend_to_path
   for arg in $argv
     if test (echo $FISH_VERSION | cut -d . -f 1-2) -ge "3.2"
       # fish_add_path only available after fish 3.2.0
-      fish_add_path -p -P $arg
+      fish_add_path -p -P -g $arg
     else
       set PATH $arg $PATH
     end
