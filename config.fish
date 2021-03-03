@@ -3,14 +3,12 @@ set -x RAVY_HOME (dirname (status --current-filename))
 # paths operations
 function prepend_to_path
   for arg in $argv
-    test -d $arg
-    and set PATH $arg $PATH
-  end
-end
-function append_to_path
-  for arg in $argv
-    test -d $arg
-    and set PATH $PATH $arg
+    if test (echo $FISH_VERSION | cut -d . -f 1-2) -ge "3.2"
+      # fish_add_path only available after fish 3.2.0
+      fish_add_path -p $arg
+    else
+      set PATH $arg $PATH
+    end
   end
 end
 
@@ -21,9 +19,10 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
     set -gx HOMEBREW_PREFIX "$brewprefix"
     set -gx HOMEBREW_CELLAR "$brewprefix/Cellar"
     set -gx HOMEBREW_REPOSITORY "$brewprefix/Homebrew"
-    set -q PATH; or set PATH ''; set -gx PATH "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin" $PATH
     set -q MANPATH; or set MANPATH ''; set -gx MANPATH "$HOMEBREW_PREFIX/share/man" $MANPATH
     set -q INFOPATH; or set INFOPATH ''; set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
+
+    prepend_to_path "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin"
 
     if test -f "$brewprefix/opt/ruby/bin/ruby"
       prepend_to_path "$brewprefix/opt/ruby/bin"
