@@ -21,19 +21,6 @@ function __fle_type
   end
 end
 
-function __fle_sudo_toggle
-  set -l cmd (commandline)
-  if test -z "$cmd"
-    commandline "sudo $history[1]"
-  else
-    if string match -rq '^sudo ' $cmd
-      commandline (echo $cmd | sed -E 's/^sudo //')
-    else
-      commandline "sudo $cmd"
-    end
-  end
-end
-
 function __fle_fzf_history
   history -z |\
   fzf -q (commandline) \
@@ -168,7 +155,7 @@ bind \eO __fle_fzf_files_files_with_hidden
 bind \ed __fle_fzf_files_dirs
 bind \eD __fle_fzf_files_dirs_with_hidden
 bind \ev __fle_fzf_files_vim
-bind \es __fle_fzf_files_rg
+bind \eg __fle_fzf_files_rg
 
 bind \et __fle_type
 bind \ez __fle_fg
@@ -177,7 +164,21 @@ bind \e. history-token-search-backward
 bind \e, history-token-search-forward
 
 bind \cz __fle_fg
-bind \cs __fle_sudo_toggle
 
 # sane <c-c>
 bind \cc 'commandline ""'
+
+# Deprecate for fish 3.3.0: bind --preset \es 'fish_commandline_prepend sudo'
+# bind \cs __fle_sudo_toggle
+# function __fle_sudo_toggle
+#   set -l cmd (commandline)
+#   if test -z "$cmd"
+#     commandline "sudo $history[1]"
+#   else
+#     if string match -rq '^sudo ' $cmd
+#       commandline (echo $cmd | sed -E 's/^sudo //')
+#     else
+#       commandline "sudo $cmd"
+#     end
+#   end
+# end
