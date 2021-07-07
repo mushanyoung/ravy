@@ -1,3 +1,7 @@
+if not status --is-interactive
+  exit
+end
+
 set -x RAVY_HOME (dirname (status --current-filename))
 
 # paths operations
