@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -12,13 +12,12 @@ import os
 import re
 import signal
 import subprocess
-import select
 import difflib
 
 META_INFO = {
-    'version'     : '1.1',
+    'version'     : '1.2',
     'license'     : 'BSD-3',
-    'author'      : 'Matthew Wang',
+    'author'      : 'Matt Wang',
     'email'       : 'mattwyl(@)gmail(.)com',
     'url'         : 'https://github.com/ymattw/ydiff',
     'keywords'    : 'colored incremental side-by-side diff',
@@ -59,7 +58,7 @@ COLORS = {
     'lightcyan'     : '\x1b[1;36m',
 }
 
-# Keys for revision control probe, diff and log with diff
+# Keys for revision control probe, diff and log (optional) with diff
 VCS_INFO = {
     'Git': {
         'probe': ['git', 'rev-parse'],
@@ -71,12 +70,37 @@ VCS_INFO = {
         'diff': ['hg', 'diff'],
         'log': ['hg', 'log', '--patch'],
     },
+    'Perforce': {
+        'probe': ['p4', 'dirs', '.'],
+        'diff': ['p4', 'diff'],
+        'log': None,
+    },
     'Svn': {
         'probe': ['svn', 'info'],
         'diff': ['svn', 'diff'],
         'log': ['svn', 'log', '--diff', '--use-merge-history'],
     },
 }
+
+
+def revision_control_probe():
+    """Returns version control name (key in VCS_INFO) or None."""
+    for vcs_name, ops in VCS_INFO.items():
+        if check_command_status(ops.get('probe')):
+            return vcs_name
+
+
+def revision_control_diff(vcs_name, args):
+    """Return diff from revision control system."""
+    cmd = VCS_INFO[vcs_name]['diff']
+    return subprocess.Popen(cmd + args, stdout=subprocess.PIPE).stdout
+
+
+def revision_control_log(vcs_name, args):
+    """Return log from revision control system or None."""
+    cmd = VCS_INFO[vcs_name].get('log')
+    if cmd is not None:
+        return subprocess.Popen(cmd + args, stdout=subprocess.PIPE).stdout
 
 
 def colorize(text, start_color, end_color='reset'):
@@ -96,21 +120,20 @@ def strsplit(text, width):
     """
     first = ''
     second = ''
-    found_colors = []
+    found_colors = ''
     chars_cnt = 0
     bytes_cnt = 0
     while text:
-        # First of all, check if current string begins with any escape
-        # sequence.
         append_len = 0
-        for color in COLORS:
-            if text.startswith(COLORS[color]):
-                if color == 'reset':
-                    found_colors = []
+        if text[0] == '\x1b':
+            color_end = text.find('m')
+            if color_end != -1:
+                color = text[:color_end + 1]
+                if color == COLORS['reset']:
+                    found_colors = ''
                 else:
-                    found_colors.append(color)
-                append_len = len(COLORS[color])
-                break
+                    found_colors += color
+                append_len = len(color)
 
         if append_len == 0:
             # Current string does not start with any escape sequence, so,
@@ -130,9 +153,7 @@ def strsplit(text, width):
     # If the first string has some active colors at the splitting point,
     # reset it and append the same colors to the second string
     if found_colors:
-        first += COLORS['reset']
-        for color in found_colors:
-            second = COLORS[color] + second
+        return first + COLORS['reset'], found_colors + second, chars_cnt
 
     return (first, second, chars_cnt)
 
@@ -286,97 +307,20 @@ class PatchStream(object):
     def is_empty(self):
         return self._is_empty
 
-    def read_stream_header(self, stream_header_size):
-        """Returns a small chunk for patch type detect, suppose to call once"""
-        for i in range(1, stream_header_size):
-            line = self._diff_hdl.readline()
-            if not line:
-                break
-            self._stream_header.append(line)
-            self._stream_header_size += 1
-        return self._stream_header
-
     def __iter__(self):
         for line in self._stream_header:
             yield line
-        for line in self._diff_hdl:
-            yield line
-
-
-class PatchStreamForwarder(object):
-    """A blocking stream forwarder use `select` and line buffered mode.  Feed
-    input stream to a diff format translator and read output stream from it.
-    Note input stream is non-seekable, and upstream has eaten some lines.
-    """
-    def __init__(self, istream, translator):
-        assert isinstance(istream, PatchStream)
-        assert isinstance(translator, subprocess.Popen)
-        self._istream = iter(istream)
-        self._in = translator.stdin
-        self._out = translator.stdout
-
-    def _can_read(self, timeout=0):
-        return select.select([self._out.fileno()], [], [], timeout)[0]
-
-    def _forward_line(self):
         try:
-            line = next(self._istream)
-            self._in.write(line)
-        except StopIteration:
-            self._in.close()
-
-    def __iter__(self):
-        while True:
-            if self._can_read():
-                line = self._out.readline()
-                if line:
-                    yield line
-                else:
-                    return
-            elif not self._in.closed:
-                self._forward_line()
+            for line in self._diff_hdl:
+                yield line
+        except RuntimeError:
+            return
 
 
 class DiffParser(object):
 
     def __init__(self, stream):
-
-        header = [decode(line) for line in stream.read_stream_header(100)]
-        size = len(header)
-
-        if size >= 4 and (header[0].startswith('*** ') and
-                          header[1].startswith('--- ') and
-                          header[2].rstrip() == '***************' and
-                          header[3].startswith('*** ') and
-                          header[3].rstrip().endswith(' ****')):
-            # For context diff, try use `filterdiff` to translate it to unified
-            # format and provide a new stream
-            #
-            self._type = 'context'
-            try:
-                # Use line buffered mode so that to readline() in block mode
-                self._translator = subprocess.Popen(
-                    ['filterdiff', '--format=unified'], stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE, bufsize=1)
-            except OSError:
-                raise SystemExit('*** Context diff support depends on '
-                                 'filterdiff')
-            self._stream = PatchStreamForwarder(stream, self._translator)
-            return
-
-        for n in range(size):
-            if (header[n].startswith('--- ') and (n < size - 1) and
-                    header[n + 1].startswith('+++ ')):
-                self._type = 'unified'
-                self._stream = stream
-                break
-        else:
-            # `filterdiff` translates unknown diff to nothing, fall through to
-            # unified diff give ydiff a chance to show everything as headers
-            #
-            sys.stderr.write("*** unknown format, fall through to 'unified'\n")
-            self._type = 'unified'
-            self._stream = stream
+        self._stream = stream
 
     def get_diff_generator(self):
         """parse all diff lines, construct a list of UnifiedDiff objects"""
@@ -512,8 +456,18 @@ class DiffMarker(object):
         """Returns a generator"""
 
         def _normalize(line):
+            index = 0
+            while True:
+                index = line.find('\t', index)
+                if (index == -1):
+                    break
+                # ignore special codes
+                offset = (line.count('\x00', 0, index) * 2 +
+                          line.count('\x01', 0, index))
+                # next stop modulo tab width
+                width = self._tab_width - (index - offset) % self._tab_width
+                line = line[:index] + ' ' * width + line[(index + 1):]
             return (line
-                    .replace('\t', ' ' * self._tab_width)
                     .replace('\n', '')
                     .replace('\r', ''))
 
@@ -704,21 +658,21 @@ class DiffMarker(object):
 
 
 def markup_to_pager(stream, opts):
-    """Pipe unified diff stream to pager (less).
+    """Pipe unified diff stream to pager (less)."""
+    pager_cmd = [opts.pager]
+    pager_opts = (opts.pager_options.split(' ')
+                  if opts.pager_options is not None
+                  else None)
 
-    Note: have to create pager Popen object before the translator Popen object
-    in PatchStreamForwarder, otherwise the `stdin=subprocess.PIPE` would cause
-    trouble to the translator pipe (select() never see EOF after input stream
-    ended), most likely python bug 12607 (http://bugs.python.org/issue12607)
-    which was fixed in python 2.7.3.
+    if opts.pager is None:
+        pager_cmd = ['less']
+        if not os.getenv('LESS') and not opts.pager_options:
+            # Args stolen from git source:
+            # github.com/git/git/blob/master/pager.c
+            pager_opts = ['-FRSX', '--shift 1']
 
-    See issue #30 (https://github.com/ymattw/ydiff/issues/30) for more
-    information.
-    """
-    pager_cmd = ['less']
-    if not os.getenv('LESS'):
-        # Args stolen from git source: github.com/git/git/blob/master/pager.c
-        pager_cmd.extend(['-FRSX', '--shift 1'])
+    pager_opts = pager_opts if pager_opts is not None else []
+    pager_cmd.extend(pager_opts)
     pager = subprocess.Popen(
         pager_cmd, stdin=subprocess.PIPE, stdout=sys.stdout)
 
@@ -741,22 +695,6 @@ def check_command_status(arguments):
             arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
     except OSError:
         return False
-
-
-def revision_control_diff(args):
-    """Return diff from revision control system."""
-    for _, ops in VCS_INFO.items():
-        if check_command_status(ops['probe']):
-            return subprocess.Popen(
-                ops['diff'] + args, stdout=subprocess.PIPE).stdout
-
-
-def revision_control_log(args):
-    """Return log from revision control system."""
-    for _, ops in VCS_INFO.items():
-        if check_command_status(ops['probe']):
-            return subprocess.Popen(
-                ops['log'] + args, stdout=subprocess.PIPE).stdout
 
 
 def decode(line):
@@ -790,10 +728,26 @@ def terminal_size():
     return width, height
 
 
-def main():
-    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
+def trap_interrupts(entry_fn):
+    def entry_wrapper():
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        if sys.platform != 'win32':
+            signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+            return entry_fn()
+        else:
+            import errno
+            try:
+                rc = entry_fn()
+            except IOError as e:
+                if e.errno not in [errno.EPIPE, errno.EINVAL]:
+                    raise
+                rc = 0
+            return rc
+    return entry_wrapper
 
+
+@trap_interrupts
+def main():
     from optparse import (OptionParser, BadOptionError, AmbiguousOptionError,
                           OptionGroup)
 
@@ -815,8 +769,6 @@ def main():
                 rargs.insert(parsed_num, '--')
             OptionParser._process_args(self, largs, rargs, values)
 
-    supported_vcs = sorted(VCS_INFO.keys())
-
     usage = """%prog [options] [file|dir ...]"""
     parser = PassThroughOptionParser(
         usage=usage, description=META_INFO['description'],
@@ -836,10 +788,17 @@ def main():
         help="""colorize mode 'auto' (default), 'always', or 'never'""")
     parser.add_option(
         '-t', '--tab-width', type='int', default=8, metavar='N',
-        help="""convert tab characters to this many spcaes (default: 8)""")
+        help="""convert tab characters to this many spaces (default: 8)""")
     parser.add_option(
         '', '--wrap', action='store_true',
         help='wrap long lines in side-by-side view')
+    parser.add_option(
+        '-p', '--pager', metavar='M',
+        help="""pager application, suggested values are 'less' """
+             """or 'cat'""")
+    parser.add_option(
+        '-o', '--pager-options', metavar='M',
+        help="""options to supply to pager application""")
 
     # Hack: use OptionGroup text for extra help message after option list
     option_group = OptionGroup(
@@ -864,22 +823,26 @@ def main():
 
     opts, args = parser.parse_args(ydiff_opts + sys.argv[1:])
 
-    if opts.log:
-        diff_hdl = revision_control_log(args)
-        if not diff_hdl:
-            sys.stderr.write(('*** Not in a supported workspace, supported '
-                              'are: %s\n') % ', '.join(supported_vcs))
-            return 1
-    elif sys.stdin.isatty():
-        diff_hdl = revision_control_diff(args)
-        if not diff_hdl:
-            sys.stderr.write(('*** Not in a supported workspace, supported '
-                              'are: %s\n\n') % ', '.join(supported_vcs))
-            parser.print_help()
-            return 1
-    else:
+    if not sys.stdin.isatty():
         diff_hdl = (sys.stdin.buffer if hasattr(sys.stdin, 'buffer')
                     else sys.stdin)
+    else:
+        vcs_name = revision_control_probe()
+        if vcs_name is None:
+            supported_vcs = ', '.join(sorted(VCS_INFO.keys()))
+            sys.stderr.write('*** Not in a supported workspace, supported are:'
+                             ' %s\n' % supported_vcs)
+            return 1
+
+        if opts.log:
+            diff_hdl = revision_control_log(vcs_name, args)
+            if diff_hdl is None:
+                sys.stderr.write('*** %s does not support log command.\n' %
+                                 vcs_name)
+                return 1
+        else:
+            # 'diff' is a must have feature.
+            diff_hdl = revision_control_diff(vcs_name, args)
 
     stream = PatchStream(diff_hdl)
 
