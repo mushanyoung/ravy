@@ -16,8 +16,8 @@ bind P command-prompt -p "save scrollback to file:" -I "~/.tmux/scrollback" "cap
 bind t swap-window -t 1
 
 # swap current pane
-bind > swap-pane -D
-bind < swap-pane -U
+bind , swap-pane -D
+bind . swap-pane -U
 
 # use h,j,k,l to resize panes
 bind h resize-pane -L 5
