@@ -46,12 +46,15 @@ function __fle_fzf_files
   set -l preview_cmd $FZF_FILES_PREVIEW_COMMAND
   test -n "$preview_cmd"; or set preview_cmd 'ravy-file-preview {}'
 
+  test -n "$FZF_FILES_TAC"; and set -l tac_option "--tac"
+
   set -l result ($cmd 2>/dev/null |\
   fzf --height=45% --bind=ctrl-f:page-down,ctrl-b:page-up -m --reverse \
     --ansi \
     --prompt="$prompt> " \
     --preview="$preview_cmd" \
     --preview-window=right:wrap \
+    $tac_option \
     --expect=ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q)
 
   set -l key (string trim $result[1])
