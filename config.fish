@@ -137,7 +137,11 @@ end
 # aliases
 alias l "ls -l"
 alias la "ls -lA"
-alias lt "ls -ltr"
+alias lt "ls -lt"
+alias ltr "ls -ltr"
+alias lat "ls -lAt"
+alias latr "ls -lAtr"
+
 alias df "df -h"
 alias du "du -h"
 alias g "command git"
