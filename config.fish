@@ -134,6 +134,11 @@ if command -v colorls >/dev/null
   end
 end
 
+# =: similar to zsh =cmd
+function =
+  command -v $argv
+end
+
 # aliases
 alias l "ls -l"
 alias la "ls -lA"
