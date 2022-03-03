@@ -33,6 +33,10 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
   end
 end
 
+if test -d "$HOME/.gem/bin"
+  prepend_to_path "$HOME/.gem/bin"
+end
+
 # fundle
 fundle plugin jethrokuan/z
 fundle init
