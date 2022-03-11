@@ -9,12 +9,12 @@ __el() { echo "> $@" ; "$@" ; }
 
 __banner () { echo; echo "===== $@"; }
 
-link_homebrew () {
-  for brew in "$HOME/.brew" "$HOME/.linuxbrew" "/home/linuxbrew/.linuxbrew" "/usr/local"; do
-    test -f "$brew/bin/brew" && eval "$($brew/bin/brew shellenv)"
-  done
-  true
-}
+# link_homebrew () {
+#   for brew in "$HOME/.brew" "$HOME/.linuxbrew" "/home/linuxbrew/.linuxbrew" "/usr/local"; do
+#     test -f "$brew/bin/brew" && eval "$($brew/bin/brew shellenv)"
+#   done
+#   true
+# }
 
 append_content_if_absent () {
   file="$1" text="$2" appending=${3:-$2}
@@ -23,65 +23,65 @@ append_content_if_absent () {
   fi
 }
 
-if [ $(uname) = Linux ]; then
-  __banner Linux packages
-  if type apt-get >/dev/null 2>&1; then
-    deps_to_install=""
-    for dep in "build-essential" "curl" "file" "git"; do
-      echo -n "Checking apt for $dep... "
-      if ! type apt >/dev/null 2>&1 || \
-         ! apt -qq list $dep 2>/dev/null | grep -E "installed|upgradable" >/dev/null; then
-        deps_to_install="$deps_to_install $dep"
-        echo "to install"
-      else
-        echo "found"
-      fi
-    done
-    if [ -n "$deps_to_install" ]; then
-      __el sudo apt-get update
-      __el sudo apt-get install -y ${deps_to_install}
-    fi
-  elif type yum >/dev/null 2>&1; then
-    __el sudo yum groupinstall -y 'Development Tools'
-    __el sudo yum install -y curl file git libxcrypt-compat
-  else
-    echo "No supported package manager is found."
-    echo "Please manually install Linuxbrew dependencies."
-  fi
-fi
+# if [ $(uname) = Linux ]; then
+#   __banner Linux packages
+#   if type apt-get >/dev/null 2>&1; then
+#     deps_to_install=""
+#     for dep in "build-essential" "curl" "file" "git"; do
+#       echo -n "Checking apt for $dep... "
+#       if ! type apt >/dev/null 2>&1 || \
+#          ! apt -qq list $dep 2>/dev/null | grep -E "installed|upgradable" >/dev/null; then
+#         deps_to_install="$deps_to_install $dep"
+#         echo "to install"
+#       else
+#         echo "found"
+#       fi
+#     done
+#     if [ -n "$deps_to_install" ]; then
+#       __el sudo apt-get update
+#       __el sudo apt-get install -y ${deps_to_install}
+#     fi
+#   elif type yum >/dev/null 2>&1; then
+#     __el sudo yum groupinstall -y 'Development Tools'
+#     __el sudo yum install -y curl file git libxcrypt-compat
+#   else
+#     echo "No supported package manager is found."
+#     echo "Please manually install Linuxbrew dependencies."
+#   fi
+# fi
 
-__banner Homebrew
+# __banner Homebrew
 
-link_homebrew
+# link_homebrew
 
-if ! type brew >/dev/null 2>&1; then
-  echo "Homebrew / Linuxbrew is not present."
-  if [ $(uname) = Darwin ]; then
-    echo "Installing Homebrew..."
-    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-  elif [ $(uname) = Linux ]; then
-    echo "Installing Linuxbrew..."
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
-  else
-    echo "The system is not standard Linux or OSX."
-    echo "Please manually install Homebrew / Linuxbrew and rerun the script."
-    exit
-  fi
+# if ! type brew >/dev/null 2>&1; then
+#   echo "Homebrew / Linuxbrew is not present."
+#   if [ $(uname) = Darwin ]; then
+#     echo "Installing Homebrew..."
+#     /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+#   elif [ $(uname) = Linux ]; then
+#     echo "Installing Linuxbrew..."
+#     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+#   else
+#     echo "The system is not standard Linux or OSX."
+#     echo "Please manually install Homebrew / Linuxbrew and rerun the script."
+#     exit
+#   fi
 
-  link_homebrew
-  if ! type brew >/dev/null 2>&1; then
-    echo "Homebrew / Linuxbrew can not be loaded. Exiting."
-    exit
-  fi
-fi
+#   link_homebrew
+#   if ! type brew >/dev/null 2>&1; then
+#     echo "Homebrew / Linuxbrew can not be loaded. Exiting."
+#     exit
+#   fi
+# fi
 
-__banner Homebrew formulae
+# __banner Homebrew formulae
 
-for dep in "git" "vim" "fzf" "fd"; do
-  if ! type $dep >/dev/null 2>&1; then
-    __el brew install $dep
-  fi
-done
+# for dep in "git" "vim" "fzf" "fd"; do
+#   if ! type $dep >/dev/null 2>&1; then
+#     __el brew install $dep
+#   fi
+# done
 
 __banner mkdir
 __el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOME/.config/alacritty $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
