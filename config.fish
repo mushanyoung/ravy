@@ -22,16 +22,12 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
     set -q INFOPATH; or set INFOPATH ''; set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
 
     prepend_to_path "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin"
-
-    if test -f "$brewprefix/opt/ruby/bin/ruby"
-      prepend_to_path "$brewprefix/opt/ruby/bin"
-      set -l gems_bin "$brewprefix"/lib/ruby/gems/*/bin 2>/dev/null
-      set -q gems_bin
-      and prepend_to_path $gems_bin
-    end
     break
   end
 end
+
+set -x GEM_HOME (ruby -e 'puts Gem.user_dir')
+prepend_to_path "$GEM_HOME/bin"
 
 if test -d "$HOME/.gem/bin"
   prepend_to_path "$HOME/.gem/bin"

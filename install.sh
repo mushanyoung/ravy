@@ -97,6 +97,7 @@ __banner link dotfiles
 RAVY="$HOME/.ravy"
 append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]
 path=$RAVY/gitconfig"
+append_content_if_absent $HOME/.gitconfig "path=$RAVY/custom/gitconfig" "path=$RAVY/custom/gitconfig"
 append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
 
 __banner fish
