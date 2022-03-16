@@ -18,6 +18,7 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
     set -gx HOMEBREW_PREFIX "$brewprefix"
     set -gx HOMEBREW_CELLAR "$brewprefix/Cellar"
     set -gx HOMEBREW_REPOSITORY "$brewprefix/Homebrew"
+    set -gx HOMEBREW_NO_ANALYTICS 1
     set -q MANPATH; or set MANPATH ''; set -gx MANPATH "$HOMEBREW_PREFIX/share/man" $MANPATH
     set -q INFOPATH; or set INFOPATH ''; set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
 
