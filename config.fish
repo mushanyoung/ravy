@@ -170,6 +170,9 @@ alias brewleaf 'brew list | xargs -n1 -I{} sh -c \'if [ -z "$(brew uses {} --ins
 alias au "sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
 alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove"
 
+# pacman commands
+alias pupu "sudo pacman -Syy && sudo pacman -Suy"
+
 # docker commands
 alias dc "docker-compose"
 alias dp "docker-compose pull"
