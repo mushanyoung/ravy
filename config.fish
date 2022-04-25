@@ -27,6 +27,9 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
   end
 end
 
+set -x GEM_HOME (ruby -e 'puts Gem.user_dir')
+prepend_to_path "$GEM_HOME/bin"
+
 # fundle
 fundle plugin jethrokuan/z
 fundle init
@@ -121,7 +124,7 @@ function ls
   if command -v colorls >/dev/null
     command colorls --gs --sd --color=always --dark $argv
   else
-    ls $argv
+    command ls $argv
   end
 end
 
