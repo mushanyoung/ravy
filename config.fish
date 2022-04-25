@@ -27,8 +27,7 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
   end
 end
 
-set -x GEM_HOME (ruby -e 'puts Gem.user_dir')
-prepend_to_path "$GEM_HOME/bin"
+prepend_to_path (ruby -e 'puts Gem.user_dir')"/bin"
 
 # fundle
 fundle plugin jethrokuan/z
