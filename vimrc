@@ -10,6 +10,7 @@ if !isdirectory(expand("~/.vim/tmp")) || !isdirectory(expand("~/.vim/bundle"))
 end
 
 " General
+set nocompatible
 set directory=~/.vim/tmp//,. swapfile
 set backupdir=~/.vim/tmp//,. nobackup writebackup
 set undodir=~/.vim/tmp//,. undofile undolevels=1000 undoreload=10000
@@ -86,7 +87,7 @@ elseif $ITERM_SESSION_ID != ""
 endif
 
 scriptencoding utf-8
-filetype plugin indent on
+" filetype plugin indent on
 
 " }}
 
@@ -94,8 +95,6 @@ filetype plugin indent on
 
 augroup BufferEdit
   autocmd!
-
-  autocmd BufWritePre * StripWhitespace
 
   " restore cursor position when read a buffer
   autocmd BufReadPost * if line("'\"") >= 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
@@ -524,6 +523,24 @@ nnoremap \x <NOP>
 
 " Plugin Settings {{
 
+" ALE {{
+let g:ale_ruby_rubocop_executable = 'rubocop'
+let g:ale_linters_explicit = 1
+let g:ale_linters = {
+\   'ruby': ['rubocop'],
+\}
+
+let g:ale_fixers = {
+\   '*': ['remove_trailing_lines', 'trim_whitespace'],
+\   'javascript': ['eslint'],
+\   'ruby': ['rubocop'],
+\   'yaml': ['prettier'],
+\}
+let g:ale_fix_on_save = 1
+
+" }}
+
+noremap \fm :ALEFix<CR>
 " tagbar {{
 
 nnoremap <C-T> :TagbarToggle<CR>
@@ -554,6 +571,7 @@ let g:syntastic_always_populate_loc_list = 1
 " vim-airline {{
 
 let g:airline_powerline_fonts=1
+let g:airline#extensions#ale#enabled = 1
 
 " }}
 
@@ -635,12 +653,6 @@ let g:polyglot_disabled = ['csv', 'jsx']
 
 " }}
 
-" vim-prettier {{
-
-noremap \fm :Prettier<CR>
-
-" }}
-
 " vim-sneak {{
 
 " use case option from search settings
@@ -686,6 +698,7 @@ Plug 'andymass/vim-matchup'                     " even better % navigate and hig
 Plug 'ap/vim-css-color'                         " show css color in code
 Plug 'chrisbra/unicode.vim'                     " Search unicode
 Plug 'christoomey/vim-tmux-navigator'           " pane navigate integration with tmux
+Plug 'dense-analysis/ale'                       " Asynchronous Lint Engine
 Plug 'jiangmiao/auto-pairs'                     " Insert or delete brackets, parens, quotes in pair
 Plug 'junegunn/fzf'                             " fzf integration
 Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets
@@ -709,6 +722,7 @@ Plug 'tpope/vim-commentary'                     " gc to comment codes
 Plug 'tpope/vim-repeat'                         " `.` supports to repeat mapped key sequence
 Plug 'tpope/vim-rsi'                            " Readline style insertion
 Plug 'tpope/vim-sensible'                       " default settings
+Plug 'tpope/vim-sleuth'                         " Auto shiftwidth and expandtab
 Plug 'tpope/vim-speeddating'                    " use CTRL-A/CTRL-X to increment dates, times, and more
 Plug 'tpope/vim-surround'                       " `s`: manipulate surrounded symbols / texts
 Plug 'tpope/vim-unimpaired'                     " a bunch of useful [, ] key bindings
@@ -717,14 +731,6 @@ Plug 'vim-scripts/vim-scroll-position'          " simulated scroll bar using sig
 Plug 'vim-syntastic/syntastic'                  " check code syntax
 
 Plug 'mhinz/vim-sayonara', { 'on': 'Sayonara' } " Deletes the current buffer smartly
-
-if !exists('g:disable_prettier')
-  " auto format by prettier
-  Plug 'prettier/vim-prettier', {
-    \ 'do': 'npm install',
-    \ 'branch': 'release/1.x',
-    \ 'for': [ 'javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue', 'lua', 'php', 'python', 'ruby', 'html', 'swift' ] }
-endif
 
 if !exists('g:disable_ctags') && executable('ctags')
   Plug 'ludovicchabant/vim-gutentags'

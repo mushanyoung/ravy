@@ -27,13 +27,6 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
   end
 end
 
-set -x GEM_HOME (ruby -e 'puts Gem.user_dir')
-prepend_to_path "$GEM_HOME/bin"
-
-if test -d "$HOME/.gem/bin"
-  prepend_to_path "$HOME/.gem/bin"
-end
-
 # fundle
 fundle plugin jethrokuan/z
 fundle init
@@ -124,9 +117,11 @@ function free
 end
 
 # colorls
-if command -v colorls >/dev/null
-  function ls
-    colorls --gs --sd --color=always --dark $argv
+function ls
+  if command -v colorls >/dev/null
+    command colorls --gs --sd --color=always --dark $argv
+  else
+    ls $argv
   end
 end
 
@@ -199,4 +194,3 @@ alias ravys ravysource
 
 # CUSTOM
 test -f "$RAVY_HOME/custom/config.fish"; and source "$RAVY_HOME/custom/config.fish"
-
