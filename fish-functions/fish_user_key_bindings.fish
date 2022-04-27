@@ -162,6 +162,9 @@ bind \eg __fle_fzf_files_rg
 
 bind \et __fle_type
 
+bind \cf forward-word
+bind \cb backward-word
+
 bind \e. history-token-search-backward
 bind \e, history-token-search-forward
 
