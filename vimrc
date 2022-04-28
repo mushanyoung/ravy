@@ -70,7 +70,7 @@ let &t_EI="\e[2 q"
 
 " Bracketed Paste Mode:
 " [Vim Control Sequence Examples](https://ttssh2.osdn.jp/manual/en/usage/tips/vim.html)
-if &term =~ "screen"
+if &term =~ "tmux" || &term =~ "screen"
   let &t_BE="\e[?2004h"
   let &t_BD="\e[?2004l"
   let &t_PS="\e[200~"
