@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# Unarchives files
+# Unarchives files.
+# Always put unarchived files in a folder with the same name.
 
 if [ -z "$1" ]; then
   echo "usage: ${0} <archive_name.ext>..."
@@ -8,7 +9,10 @@ if [ -z "$1" ]; then
 fi
 
 for file in "${@:1}"; do
-  name="${file%.*}"
+  dir="${file%.*}"
+  file="$(realpath "${file}")"
+  mkdir -p "${dir}"
+  cd "${dir}"
   case "${file}" in
     (*.7z|*.001) 7za x "${file}" ;;
     (*.rar) (( ${+commands[unrar]} )) && unrar x -ad "${file}" || rar x -ad "${file}" ;;
@@ -20,7 +24,7 @@ for file in "${@:1}"; do
       || xzcat "${file}" | tar -xvf - ;;
     (*.tar.zst|*.tzst) XZ_OPT=-T0 tar --use-compress-program=unzstd -xvf "${file}" ;;
     (*.tar) tar -xvf "${file}" ;;
-    (*.zip) unzip "${file}" -d "${name}";;
+    (*.zip) unzip "${file}" ;;
     (*.bz|*.bz2) bunzip2 "${file}" ;;
     (*.gz) gunzip "${file}";;
     (*.lzma) unlzma -T0 "${file}" ;;
