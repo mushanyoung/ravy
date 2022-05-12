@@ -528,6 +528,7 @@ let g:ale_ruby_rubocop_executable = 'rubocop'
 let g:ale_linters_explicit = 1
 let g:ale_linters = {
 \   'ruby': ['rubocop'],
+\   'javascript': ['eslint'],
 \}
 
 let g:ale_fixers = {
