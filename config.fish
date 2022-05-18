@@ -27,7 +27,7 @@ for brewprefix in "/home/linuxbrew/.linuxbrew" "/usr/local" "$HOME/.brew" "$HOME
   end
 end
 
-if command -v gem > /dev/null
+if command -v gem &> /dev/null
   prepend_to_path (ruby -e 'puts Gem.user_dir')"/bin"
   prepend_to_path (gem environment gemdir)"/bin"
 end
@@ -74,8 +74,9 @@ end
 function lines
   if test (count $argv) -gt 0
     echo $argv | xargs -n1
-  else
-    xargs -n1
+  end
+  if not isatty stdin
+    cat 1>| xargs -n1
   end
 end
 
