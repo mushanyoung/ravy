@@ -1,18 +1,18 @@
 # change directory to a nearest possible folder
 function cd
-  if test (count $argv) -gt (test "$argv[1]" = "--" && echo 2 || echo 1)
-      printf "%s\n" (_ "Too many args for cd command")
-      return 1
-  end
-  set -l target
-  test (count $argv) -gt 0
-  and set target $argv[(count $argv)]
-  while ! test -d $target && test -n $target
-    set target (dirname $target)
-  end
-  test "$target" = .
-  and set target $argv
-  __fish_cd $target
+    if test (count $argv) -gt (test "$argv[1]" = "--" && echo 2 || echo 1)
+        printf "%s\n" (_ "Too many args for cd command")
+        return 1
+    end
+    set -l target
+    test (count $argv) -gt 0
+    and set target $argv[(count $argv)]
+    while ! test -d $target && test -n $target
+        set target (dirname $target)
+    end
+    test "$target" = .
+    and set target $argv
+    __fish_cd $target
 end
 
 function __fish_cd --description 'Change directory'
@@ -32,8 +32,8 @@ function __fish_cd --description 'Change directory'
     # Avoid set completions.
     set -l previous $PWD
 
-    if test "$argv" = "-"
-        if test "$__fish_cd_direction" = "next"
+    if test "$argv" = -
+        if test "$__fish_cd_direction" = next
             nextd
         else
             prevd

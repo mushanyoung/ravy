@@ -12,8 +12,8 @@ function __fish_title_or_pwd
 end
 
 function fish_title
-  set -l cmd (status current-command)
-  test "$cmd" != "fish"
-  and echo -n "$cmd "
-  __fish_title_or_pwd
+    set -l cmd (status current-command)
+    test "$cmd" != fish
+    and echo -n "$cmd "
+    __fish_title_or_pwd
 end

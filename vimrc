@@ -536,6 +536,7 @@ let g:ale_fixers = {
 \   'javascript': ['eslint'],
 \   'ruby': ['rubocop'],
 \   'yaml': ['prettier'],
+\   'fish': ['fish_indent'],
 \}
 let g:ale_fix_on_save = 1
 
