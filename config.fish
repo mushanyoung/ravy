@@ -12,6 +12,7 @@ function prepend_to_path
 end
 
 prepend_to_path "$RAVY_HOME/bin"
+prepend_to_path "$HOME/.local/bin"
 
 for brewprefix in "/home/linuxbrew/.linuxbrew" /usr/local "$HOME/.brew" "$HOME/.linuxbrew"
     if test -f "$brewprefix/bin/brew"
