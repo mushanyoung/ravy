@@ -125,12 +125,13 @@ endif
 " Functions {{
 
 " open a link remotely
-function! RavyRemoteOpenLink(url)
-  let t:url = substitute(a:url, "[\x0d\x0a].*", "", "")
-  let t:url = substitute(t:url, '^\s\+', "", "")
-  let t:url = (t:url =~ '.*://' ? '' : 'https://www.google.com/search?q=') . t:url
-  call SendViaOSC52("RAVY\x0dopen\x0d" . t:url)
-endfunction
+" function! RavyRemoteOpenLink(url)
+"   let t:url = substitute(a:url, "[\x0d\x0a].*", "", "")
+"   let t:url = substitute(t:url, '^\s\+', "", "")
+"   let t:url = (t:url =~ '.*://' ? '' : 'https://www.google.com/search?q=') . t:url
+"   call SendViaOSC52("RAVY\x0dopen\x0d" . t:url)
+" endfunction
+" nnoremap <silent> \l :call RavyRemoteOpenLink(getreg('"'))<CR>
 
 " fzf to select a directory to change to
 function! FZFDirectories()
@@ -413,8 +414,6 @@ nnoremap \fe :lcd<SPACE>
 
 " \h*: GitGutter
 
-nnoremap <silent> \l :call RavyRemoteOpenLink(getreg('"'))<CR>
-
 " new buffer
 nnoremap \n :enew<CR>
 
@@ -504,6 +503,7 @@ nnoremap \g <NOP>
 nnoremap \i <NOP>
 nnoremap \j <NOP>
 nnoremap \k <NOP>
+nnoremap \l <NOP>
 nnoremap \m <NOP>
 nnoremap \o <NOP>
 nnoremap \p <NOP>
