@@ -17,7 +17,8 @@ die() {
 # Send a DCS sequence through tmux.
 # Usage: <sequence>
 tmux_dcs() {
-  printf '\033Ptmux;\033%s\033\\' "$1"
+  # printf '\033Ptmux;\033%s\033\\' "$1"
+  screen_dcs "$@"
 }
 
 # Send a DCS sequence through screen.
