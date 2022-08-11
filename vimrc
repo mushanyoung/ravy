@@ -112,7 +112,7 @@ if $SSH_CONNECTION != ""
     autocmd!
 
     " forward remote yanked text
-    autocmd TextYankPost * if v:event.operator ==# 'y' | call SendViaOSC52(getreg('"')) | endif
+    autocmd TextYankPost * if v:event.operator is 'y' && v:event.regname is '' | execute 'OSCYankReg "' | endif
   augroup END
   set clipboard=
 else
@@ -123,11 +123,6 @@ endif
 " }}
 
 " Functions {{
-
-" send text to remote or system clipboard
-function! SendViaOSC52(text)
-  silent call system('osc52.sh >/dev/tty', a:text)
-endfunction
 
 " open a link remotely
 function! RavyRemoteOpenLink(url)
@@ -645,6 +640,14 @@ let g:indent_guides_auto_colors = 0
 
 " }}
 
+" vim-oscyank {{
+
+let g:oscyank_term = 'default'
+let g:oscyank_max_length = 1000000
+let g:oscyank_silent = v:true
+
+" }}
+
 " vim-peekaboo {{
 
 let g:peekaboo_window = 'vertical leftabove 40new'
@@ -711,9 +714,11 @@ Plug 'junegunn/vim-peekaboo'                    " list the content of registers 
 Plug 'justinmk/vim-sneak'                       " s: motion to match 2 characters
 Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and pairs with pairing colors
 Plug 'majutsushi/tagbar'                        " tag explorer
+Plug 'mhinz/vim-sayonara', { 'on': 'Sayonara' } " Deletes the current buffer smartly
 Plug 'mushanyoung/vim-windflower'               " theme
 Plug 'nathanaelkane/vim-indent-guides'          " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function
+Plug 'ojroques/vim-oscyank', {'branch': 'main'} " Yank through OSC 52
 Plug 'qpkorr/vim-renamer'                       " rename files in a folder
 Plug 'romainl/vim-cool'                         " disables search highlighting when you are done searching
 Plug 'sheerun/vim-polyglot'                     " a set of filetype plugins
@@ -733,8 +738,6 @@ Plug 'tpope/vim-unimpaired'                     " a bunch of useful [, ] key bin
 Plug 'vim-airline/vim-airline'                  " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position'          " simulated scroll bar using sign column
 Plug 'vim-syntastic/syntastic'                  " check code syntax
-
-Plug 'mhinz/vim-sayonara', { 'on': 'Sayonara' } " Deletes the current buffer smartly
 
 if !exists('g:disable_ctags') && executable('ctags')
   Plug 'ludovicchabant/vim-gutentags'

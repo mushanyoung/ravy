@@ -5,6 +5,9 @@ unbind C-b
 set -g prefix C-Space
 set -g prefix2 C-Space
 
+# allow copy through OSC 52
+set -g set-clipboard on
+
 # copy mode
 bind Space copy-mode
 bind C-Space copy-mode
