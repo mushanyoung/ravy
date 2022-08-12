@@ -714,6 +714,7 @@ Plug 'junegunn/vim-peekaboo'                    " list the content of registers 
 Plug 'justinmk/vim-sneak'                       " s: motion to match 2 characters
 Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and pairs with pairing colors
 Plug 'majutsushi/tagbar'                        " tag explorer
+Plug 'mg979/vim-visual-multi'                   " multiple cursor and multiple modifications
 Plug 'mhinz/vim-sayonara', { 'on': 'Sayonara' } " Deletes the current buffer smartly
 Plug 'mushanyoung/vim-windflower'               " theme
 Plug 'nathanaelkane/vim-indent-guides'          " visually displaying indent levels
@@ -725,7 +726,6 @@ Plug 'sheerun/vim-polyglot'                     " a set of filetype plugins
 Plug 'svermeulen/vim-cutlass'                   " plugin that adds a 'cut' operation separate from 'delete'
 Plug 'svermeulen/vim-yoink'                     " maintains a yank history to cycle between when pasting
 Plug 'terryma/vim-expand-region'                " +, - to expand and shrink selection
-Plug 'terryma/vim-multiple-cursors'             " multiple cursors and multiple modifications
 Plug 'tpope/vim-abolish'                        " deal with multiple variants of a word
 Plug 'tpope/vim-commentary'                     " gc to comment codes
 Plug 'tpope/vim-repeat'                         " `.` supports to repeat mapped key sequence
