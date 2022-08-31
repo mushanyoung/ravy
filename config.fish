@@ -2,6 +2,9 @@ if not status --is-interactive
     exit
 end
 
+# Disable fish_greeting message
+set fish_greeting
+
 set -x RAVY_HOME (dirname (status --current-filename))
 
 # paths operations
@@ -14,7 +17,7 @@ end
 prepend_to_path "$RAVY_HOME/bin"
 prepend_to_path "$HOME/.local/bin"
 
-for brewprefix in "/home/linuxbrew/.linuxbrew" /usr/local "$HOME/.brew" "$HOME/.linuxbrew"
+for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"
     if test -f "$brewprefix/bin/brew"
         set -gx HOMEBREW_PREFIX "$brewprefix"
         set -gx HOMEBREW_CELLAR "$brewprefix/Cellar"
