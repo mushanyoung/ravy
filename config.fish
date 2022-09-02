@@ -179,6 +179,7 @@ alias pupu "sudo pacman -Syy && sudo pacman -Suy"
 
 # docker commands
 alias dc docker-compose
+alias dcl "docker-compose logs -f --tail 100"
 alias dp "docker-compose pull"
 alias dud "docker-compose up -d"
 alias dpdu "docker-compose pull && docker-compose up -d"
