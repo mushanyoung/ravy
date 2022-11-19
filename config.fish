@@ -147,6 +147,7 @@ alias ltr "ls -ltr"
 alias lat "ls -lAt"
 alias latr "ls -lAtr"
 
+alias ta "type -a"
 alias df "df -h"
 alias du "du -h"
 alias g "command git"
