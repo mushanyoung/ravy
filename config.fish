@@ -97,7 +97,7 @@ function d
 end
 
 # edit command in path
-function ep
+function ep --wraps="command -v"
     if set -l exe (command -v $argv[1])
         test -n "$EDITOR"; or set -l EDITOR vim
         echo $EDITOR $exe
@@ -134,12 +134,8 @@ function ls
     end
 end
 
-# =: similar to zsh =cmd
-function =
-    command -v $argv
-end
-
 # aliases
+alias = "command -v"
 alias l "ls -l"
 alias la "ls -lA"
 alias lt "ls -lt"
