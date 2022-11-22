@@ -1,6 +1,6 @@
 #!/bin/bash
 
 brew list | while read -r line; do
-  deps=$(brew uses --installed --include-build $line)
+  deps=$(brew uses --installed $line)
   [ -z "$deps" ] && echo $line
 done
