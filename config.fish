@@ -175,11 +175,14 @@ alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade &&
 alias pupu "sudo pacman -Syy && sudo pacman -Suy"
 
 # docker commands
-alias dc docker-compose
-alias dcl "docker-compose logs -f --tail 100"
-alias dp "docker-compose pull"
-alias dud "docker-compose up -d"
-alias dpdu "docker-compose pull && docker-compose up -d"
+# alias dc docker-compose
+function dc --wraps="docker-compose"
+    docker-compose (set -q RAVY_DOCKER_COMPOSE_CONFIG && echo "--file" "$RAVY_DOCKER_COMPOSE_CONFIG" | string split " ") $argv
+end
+alias dp "dc pull"
+alias dcl "dc logs -f --tail 100"
+alias dud "dc up -d"
+alias dpdu "dc pull && dc up -d"
 alias dudp dpdu
 alias drc "docker ps -f status=exited -q | xargs -n1 -I{} docker rm '{}'"
 alias dri "docker images | grep '^<none>' | awk '{print \$3}' | xargs -n1 -I{} docker rmi '{}'"
