@@ -184,6 +184,8 @@ alias dcl "dc logs -f --tail 100"
 alias dud "dc up -d"
 alias dpdu "dc pull && dc up -d"
 alias dudp dpdu
+alias dpr "docker image prune"
+alias dprs "docker system prune --all"
 alias drc "docker ps -f status=exited -q | xargs -n1 -I{} docker rm '{}'"
 alias dri "docker images | grep '^<none>' | awk '{print \$3}' | xargs -n1 -I{} docker rmi '{}'"
 alias dry "docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry"
