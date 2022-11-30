@@ -86,6 +86,16 @@ function lines
     end
 end
 
+# retry command until it succeeds
+function retry
+    while true
+        $argv
+        and break
+        echo 'Failed, retrying...'
+        sleep 2
+    end
+end
+
 # ping handles url
 function ping
     echo $argv | sed -E -e 's#.*://##' -e 's#/.*$##' | xargs ping

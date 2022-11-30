@@ -1,7 +1,0 @@
-#!/bin/bash
-
-while true; do
-  eval "$@" && break
-  echo 'Failed, retrying...'
-  sleep "${INTERVAL:-2}"
-done
