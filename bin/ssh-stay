@@ -10,7 +10,7 @@ alive_interval=${ALIVE_INTERVAL:-10}
 ssh_default_opts=("-t" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${alive_interval}")
 ssh_opts=("$@" "${execute_command:+--}" "${execute_command}")
 
-if [ -n SSH_CONNECTION ];
+if [ -n "$SSH_CONNECTION" ]; then
     echo "It looks like you're already in a SSH connection: $SSH_CONNECTION"
     exit
 fi
