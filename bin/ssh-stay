@@ -10,6 +10,11 @@ alive_interval=${ALIVE_INTERVAL:-10}
 ssh_default_opts=("-t" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${alive_interval}")
 ssh_opts=("$@" "${execute_command:+--}" "${execute_command}")
 
+if [ -n SSH_CONNECTION ];
+    echo "It looks like you're already in a SSH connection: $SSH_CONNECTION"
+    exit
+fi
+
 while true; do
   echo ${ssh_command} "${ssh_default_opts[@]}" "${ssh_opts[@]}"
   ${ssh_command} "${ssh_default_opts[@]}" "${ssh_opts[@]}"
@@ -19,4 +24,3 @@ while true; do
   echo "SSH connection lost, reconnecting in ${reconnect_interval} seconds..."
   sleep "${reconnect_interval}"
 done
-
