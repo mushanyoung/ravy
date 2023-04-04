@@ -1,0 +1,92 @@
+#!/bin/bash
+
+function usage() {
+    echo "Usage: $0 [-i] [-s sort_option] [directory]"
+    echo "Options:"
+    echo "  -i                 Case insensitive counting of file extensions"
+    echo "  -s sort_option     Sort output by specified option"
+    echo "       count         Sort by number of occurrences in descending order"
+    echo "       count_asc     Sort by number of occurrences in ascending order"
+    echo "       ext_asc       Sort by file extension in ascending alphabetical order"
+    echo "       ext_desc      Sort by file extension in descending alphabetical order"
+}
+
+case_insensitive=0
+sort_option="count"
+
+while getopts ":is:" opt; do
+    case $opt in
+        i)
+            case_insensitive=1
+            ;;
+        s)
+            sort_option="$OPTARG"
+            ;;
+        \?)
+            usage
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "$1" ]; then
+    usage
+    exit 1
+fi
+
+dir="$1"
+
+if [ ! -d "$dir" ]; then
+    echo "Error: $dir is not a valid directory."
+    exit 1
+fi
+
+declare -A suffixes
+
+while IFS= read -r -d '' file; do
+    ext="${file##*.}"
+    if [ $case_insensitive -eq 1 ]; then
+        ext="${ext,,}" # Make the extension lowercase for case insensitive counting
+    fi
+    ((suffixes["$ext"]++))
+done < <(find "$dir" -type f -iname "*.*" -print0)
+
+# Create a combined list of extensions and their counts
+combined_list=()
+for ext in "${!suffixes[@]}"; do
+    combined_list+=("$ext:${suffixes[$ext]}")
+done
+
+# Sort the combined list based on the selected option
+IFS=$'\n'
+case $sort_option in
+    count)
+        sorted_list=($(printf "%s\n" "${combined_list[@]}" | sort -t':' -k2 -rn))
+        ;;
+    count_asc)
+        sorted_list=($(printf "%s\n" "${combined_list[@]}" | sort -t':' -k2 -n))
+        ;;
+    ext_asc)
+        sorted_list=($(printf "%s\n" "${combined_list[@]}" | sort -t':' -k1))
+        ;;
+    ext_desc)
+        sorted_list=($(printf "%s\n" "${combined_list[@]}" | sort -t':' -k1 -r))
+        ;;
+    *)
+        echo "Error: Invalid sort option."
+        usage
+        exit 1
+        ;;
+esac
+unset IFS
+
+if [ $case_insensitive -eq 1 ]; then
+    echo "Summary of suffixes in $dir (sorted by $sort_option, case insensitive):"
+else
+    echo "Summary of suffixes in $dir (sorted by $sort_option, case sensitive):"
+fi
+
+for item in "${sorted_list[@]}"; do
+    echo "$item"
+done
