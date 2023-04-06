@@ -40,6 +40,7 @@ end
 
 # fundle
 fundle plugin jethrokuan/z
+fundle plugin mushanyoung/brew-compose
 fundle init
 
 # ENV

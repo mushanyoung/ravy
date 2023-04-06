@@ -105,6 +105,10 @@ append_content_if_absent $HOME/.config/fish/config.fish "test -f $RAVY/config.fi
 curl https://raw.githubusercontent.com/danhper/fundle/master/functions/fundle.fish --create-dirs -sLo ~/.config/fish/functions/fundle.fish
 ln -sf $RAVY/fish-functions/* $HOME/.config/fish/functions
 
+__banner brew-compose
+__el rm -rf $HOME/.brew-compose
+__el ln -s -f $RAVY/brew-compose $HOME/.brew-compose
+
 __banner alacritty
 __el rm -rf $HOME/.config/alacritty/alacritty.yml
 __el ln -s -f $RAVY/alacritty.yml $HOME/.config/alacritty/alacritty.yml
