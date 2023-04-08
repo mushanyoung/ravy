@@ -26,9 +26,11 @@ def main():
     print(f"{'Subdirectory':<50} | {'Number of files'}")
     print(f"{'-'*50}-|-{'-'*14}")
 
+    # Define row format
+    row_format = "{:<{}} | {}"
+
     # Print sorted subdirectories
     for file_count, subdir in subdir_file_counts:
-        row_format = "{:<{}} | {}"
         print(row_format.format(subdir, 50 - display_width(subdir) + len(subdir), file_count))
 
     # Print current directory and total file count
