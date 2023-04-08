@@ -1,72 +1,43 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
-# Function to calculate the display width of a string with UTF-8 characters
-display_width() {
-  local str="$1"
-  local width=0
-  local c
+import os
+from pathlib import Path
 
-  # Iterate over each character in the string
-  while IFS= read -r -n1 c; do
-    # Calculate the display width of the character
-    local char_width=$(LC_ALL=C printf "%s" "$c" | awk '{ print length }')
+def display_width(s):
+    return sum(1 + (ord(c) > 0x7F) for c in s)
 
-    # Add the character width to the total width
-    width=$((width + char_width))
-  done <<< "$str"
+def main():
+    total_files = 0
+    subdir_file_counts = []
 
-  echo "$width"
-}
+    for entry in os.scandir('.'):
+        if entry.is_dir() and entry.name != '.':
+            file_count = sum(1 for _ in Path(entry.name).rglob('*') if _.is_file())
+            total_files += file_count
+            subdir_file_counts.append((file_count, entry.name))
 
-# Print table header
-printf "%-50s | %s\n" "Subdirectory" "Number of files"
-printf "%-50s-|-%s\n" "--------------------------------------------------" "--------------"
+    current_dir_file_count = len([f for f in os.listdir('.') if os.path.isfile(f)])
+    total_files += current_dir_file_count
 
-total_files=0
+    # Sort the subdirectories by the number of files in ascending order
+    subdir_file_counts.sort()
 
-subdir_file_counts=()
+    # Print table header
+    print(f"{'Subdirectory':<50} | {'Number of files'}")
+    print(f"{'-'*50}-|-{'-'*14}")
 
-# Iterate through subdirectories in the current directory
-while IFS= read -r subdir; do
-  # Skip the current directory
-  if [[ "$subdir" == "." ]]; then
-    continue
-  fi
+    # Print sorted subdirectories
+    for file_count, subdir in subdir_file_counts:
+        row_format = "{:<{}} | {}"
+        print(row_format.format(subdir, 50 - display_width(subdir) + len(subdir), file_count))
 
-  # Count the number of files in the subdirectory
-  file_count=$(find "$subdir" -type f | wc -l | awk '{print $1}')
+    # Print current directory and total file count
+    print(f"{'-'*50}-|-{'-'*14}")
+    current_dir_str = "Current directory"
+    print(row_format.format(current_dir_str, 50 - display_width(current_dir_str) + len(current_dir_str), current_dir_file_count))
+    print(f"{'-'*50}-|-{'-'*14}")
+    total_str = "Total"
+    print(row_format.format(total_str, 50 - display_width(total_str) + len(total_str), total_files))
 
-  # Add the count to the total
-  total_files=$((total_files + file_count))
-
-  # Store the file count in an array
-  subdir_file_counts+=("$file_count $subdir")
-done < <(find . -maxdepth 1 -type d)
-
-# Sort the subdirectories by the number of files in ascending order
-IFS=$'\n'
-sorted_subdirs=($(echo "${subdir_file_counts[*]}" | sort -n -k1,1))
-
-# Iterate through the sorted subdirectories and print the results
-for entry in "${sorted_subdirs[@]}"; do
-  file_count=$(echo "$entry" | awk '{print $1}')
-  subdir=$(echo "$entry" | awk '{$1=""; print substr($0, 2)}')
-  subdir_padding=$((50 - $(display_width "$subdir")))
-  printf "%s%${subdir_padding}s | %s\n" "${subdir}" "" "${file_count}"
-done
-
-# Count the number of files in the current directory
-current_dir_file_count=$(find . -maxdepth 1 -type f | wc -l | awk '{print $1}')
-
-# Add the count to the total
-total_files=$((total_files + current_dir_file_count))
-
-# Print the current directory file count and total file count
-printf "%-50s-|-%s\n" "--------------------------------------------------" "--------------"
-current_dir_str="Current directory"
-current_dir_padding=$((50 - $(display_width "$current_dir_str")))
-printf "%s%${current_dir_padding}s | %s\n" "$current_dir_str" "" "${current_dir_file_count}"
-printf "%-50s-|-%s\n" "--------------------------------------------------" "--------------"
-total_str="Total"
-total_padding=$((50 - $(display_width "$total_str")))
-printf "%s%${total_padding}s | %s\n" "$total_str" "" "${total_files}"
+if __name__ == "__main__":
+    main()
