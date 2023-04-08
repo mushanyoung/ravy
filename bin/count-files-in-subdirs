@@ -9,7 +9,7 @@ display_width() {
   # Iterate over each character in the string
   while IFS= read -r -n1 c; do
     # Calculate the display width of the character
-    local char_width=$(LC_ALL=C printf "%s" "$c" | wc -L)
+    local char_width=$(LC_ALL=C printf "%s" "$c" | awk '{ print length }')
 
     # Add the character width to the total width
     width=$((width + char_width))
@@ -34,7 +34,7 @@ while IFS= read -r subdir; do
   fi
 
   # Count the number of files in the subdirectory
-  file_count=$(find "$subdir" -type f | wc -l)
+  file_count=$(find "$subdir" -type f | wc -l | awk '{print $1}')
 
   # Add the count to the total
   total_files=$((total_files + file_count))
@@ -49,14 +49,14 @@ sorted_subdirs=($(echo "${subdir_file_counts[*]}" | sort -n -k1,1))
 
 # Iterate through the sorted subdirectories and print the results
 for entry in "${sorted_subdirs[@]}"; do
-  file_count=$(echo "$entry" | cut -d ' ' -f 1)
-  subdir=$(echo "$entry" | cut -d ' ' -f 2-)
+  file_count=$(echo "$entry" | awk '{print $1}')
+  subdir=$(echo "$entry" | awk '{$1=""; print substr($0, 2)}')
   subdir_padding=$((50 - $(display_width "$subdir")))
   printf "%s%${subdir_padding}s | %s\n" "${subdir}" "" "${file_count}"
 done
 
 # Count the number of files in the current directory
-current_dir_file_count=$(find . -maxdepth 1 -type f | wc -l)
+current_dir_file_count=$(find . -maxdepth 1 -type f | wc -l | awk '{print $1}')
 
 # Add the count to the total
 total_files=$((total_files + current_dir_file_count))
