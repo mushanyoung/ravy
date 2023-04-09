@@ -646,9 +646,9 @@ let g:indent_guides_auto_colors = 0
 
 " vim-oscyank {{
 
-let g:oscyank_term = 'default'
 let g:oscyank_max_length = 1000000
 let g:oscyank_silent = v:true
+let g:oscyank_trim = v:true
 
 " }}
 
