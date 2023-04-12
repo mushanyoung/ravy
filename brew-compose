@@ -1,12 +1,11 @@
-automake
 bat
+brew-gem
 coreutils
 ctags
 fd
 findutils
 fish
 fzf
-gem-colorls
 git
 glances
 howdoi
@@ -18,4 +17,3 @@ speedtest-cli
 the_silver_searcher
 tldr
 tmux
-vim
