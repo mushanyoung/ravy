@@ -1,14 +1,23 @@
-.tmp:      tmp
-temp:      tmp
+.tmp: tmp
+temp: tmp
 
-.ssh:      conf
-conf.d:    conf
-configs:   conf
-tools:     conf
-proto:     conf
+.ssh: conf
+.config: conf
+conf.d: conf
+configs: conf
+tools: conf
+proto: conf
 
-.java:     java
+bin: applications
 
-testing:   data
+.java: java
 
-Downloads: downloads
+testing: data
+
+.ravy: ravy
+
+.brew: brew
+.linuxbrew: brew
+.homebrew: brew
+linuxbrew: brew
+homebrew: brew
