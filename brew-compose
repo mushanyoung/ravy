@@ -1,5 +1,6 @@
 bat
 brew-gem
+gem-colorls
 coreutils
 ctags
 fd
