@@ -21,3 +21,8 @@ testing: data
 .homebrew: brew
 linuxbrew: brew
 homebrew: brew
+
+movies: video
+movie: video
+tv: video
+anime: video
