@@ -15,7 +15,7 @@ for file in "${@:1}"; do
   cd "${dir}"
   case "${file}" in
     (*.7z|*.001) 7za x "${file}" ;;
-    (*.rar) (( ${+commands[unrar]} )) && unrar x -ad "${file}" || rar x -ad "${file}" ;;
+    (*.rar) unrar x -ad "${file}" ;;
     (*.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar -xvjf "${file}" ;;
     (*.tar.gz|*.tgz) tar -xvzf "${file}" ;;
     (*.tar.lzma|*.tlz) tar --lzma --help &>/dev/null && XZ_OPT=-T0 tar --lzma -xvf "${file}" \
