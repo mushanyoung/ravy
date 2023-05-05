@@ -23,3 +23,5 @@ schema: db
 sql: db
 sqlm: db
 sqlt: test
+
+wmv: video
