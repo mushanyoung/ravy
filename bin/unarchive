@@ -1,36 +1,51 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
 
-# Unarchives files.
-# Always put unarchived files in a folder with the same name.
+import os
+import sys
+from pathlib import Path
+from pyunpack import Archive
 
-if [ -z "$1" ]; then
-  echo "usage: ${0} <archive_name.ext>..."
-  exit 2
-fi
+def extract_files(file_path):
+    file_path = Path(file_path)
+    file_name = file_path.stem
+    output_folder = file_path.parent / file_name
 
-for file in "${@:1}"; do
-  dir="${file%.*}"
-  file="$(realpath "${file}")"
-  mkdir -p "${dir}"
-  cd "${dir}"
-  case "${file}" in
-    (*.7z|*.001) 7za x "${file}" ;;
-    (*.rar) unrar x -ad "${file}" ;;
-    (*.tar.bz|*.tar.bz2|*.tbz|*.tbz2) tar -xvjf "${file}" ;;
-    (*.tar.gz|*.tgz) tar -xvzf "${file}" ;;
-    (*.tar.lzma|*.tlz) tar --lzma --help &>/dev/null && XZ_OPT=-T0 tar --lzma -xvf "${file}" \
-      || lzcat "${file}" | tar -xvf - ;;
-    (*.tar.xz|*.txz) tar -J --help &>/dev/null && XZ_OPT=-T0 tar -xvJf "${file}" \
-      || xzcat "${file}" | tar -xvf - ;;
-    (*.tar.zst|*.tzst) XZ_OPT=-T0 tar --use-compress-program=unzstd -xvf "${file}" ;;
-    (*.tar) tar -xvf "${file}" ;;
-    (*.zip) unzip "${file}" ;;
-    (*.bz|*.bz2) bunzip2 "${file}" ;;
-    (*.gz) gunzip "${file}";;
-    (*.lzma) unlzma -T0 "${file}" ;;
-    (*.xz) unxz -T0 "${file}" ;;
-    (*.zst) zstd -T0 -d "${file}" ;;
-    (*.Z) uncompress "${file}" ;;
-    (*) echo "${0}: unknown archive type: ${file}" ;;
-  esac
-done
+    # Ensure output folder exists
+    output_folder.mkdir(parents=True, exist_ok=True)
+
+    Archive(file_path).extractall(output_folder)
+
+    # Check if there's a single top-level folder
+    content = list(output_folder.iterdir())
+    while len(content) == 1 and content[0].is_dir():
+        temp_folder = output_folder / "temp"
+        content[0].rename(temp_folder)
+        for item in temp_folder.iterdir():
+            item.rename(output_folder / item.name)
+        temp_folder.rmdir()
+        content = list(output_folder.iterdir())
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python extract_files.py <compressed_file1> <compressed_file2> ...")
+        sys.exit(1)
+
+    for file_path in sys.argv[1:]:
+        if not os.path.exists(file_path):
+            print(f"File not found: {file_path}")
+            continue
+
+        ext = os.path.splitext(file_path)[-1].lower()
+        if ext not in ['.zip', '.rar', '.7z', '.tar.gz']:
+            print(f"Unsupported file extension: {file_path}")
+            continue
+
+        try:
+            print(f"Extracting {file_path}...")
+            extract_files(file_path)
+            print(f"Extraction completed: {file_path}")
+        except Exception as e:
+            print(f"Error extracting {file_path}: {e}")
+
+if __name__ == "__main__":
+    main()
