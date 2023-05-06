@@ -205,6 +205,10 @@ alias dcips='docker inspect -f \'{{.Name}}-{{range  $k, $v := .NetworkSettings.N
 # reset terminal buffer
 alias reset 'command reset; stty sane; tput reset; echo -e "\033c"; clear; builtin cd -- $PWD'
 
+function downcase-exts
+    find . -type f -exec bash -c 'file="$1"; filename="${file%.*}"; ext="${file##*.}"; ext_lower=$(echo "$ext" | tr "[:upper:]" "[:lower:]"); if [ "$ext" != "$ext_lower" ]; then mv "$file" "$filename.$ext_lower"; fi' _ {} \;
+end
+
 # open-remote
 test -n "$SSH_CONNECTION"
 and alias open open-remote
