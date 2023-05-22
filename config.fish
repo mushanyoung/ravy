@@ -183,7 +183,7 @@ alias au "sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
 alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove"
 
 # pacman commands
-alias pupu "sudo pacman -Syy && sudo pacman -Suy"
+alias pupu "sudo pacman -Syy --noconfirm && sudo pacman -Suy --noconfirm"
 
 # docker commands
 # alias dc docker-compose
