@@ -1,0 +1,27 @@
+#!/bin/bash
+# Keep an active mosh connection, auto reconnect when the connection is
+# terminated by an error, or any non user initiated reson.
+
+# Configurable parameters
+reconnect_interval=${RECONNECT_INTERVAL:-10}
+mosh_command=${MOSH_COMMAND:-mosh}
+mosh_exec_cmd=(${MOSH_EXEC_CMD:-tmux new-session -A -s tmux})
+mosh_ssh_port=${MOSH_SSH_PORT}
+mosh_default_opts=("-a" "-o")
+
+ssh_opts=("$@" "${execute_command:+--}" "${execute_command}")
+
+if [ -n "$SSH_CONNECTION" ]; then
+    echo "It looks like you're already in a SSH connection: $SSH_CONNECTION"
+    exit
+fi
+
+while true; do
+  echo ${mosh_command} ${mosh_ssh_port:+--ssh=\"ssh -p $mosh_ssh_port\"} "${mosh_default_opts[@]}" -- "$@" "${mosh_exec_cmd[@]}"
+  ${mosh_command} ${mosh_ssh_port:+--ssh="ssh -p $mosh_ssh_port"} "${mosh_default_opts[@]}" -- "$@"  "${mosh_exec_cmd[@]}"
+  exit_code=$?
+  echo "MOSH exits with code $exit_code"
+  [ $exit_code = 0 ] || [ $exit_code = 255 ] && break
+  echo "MOSH connection lost, reconnecting in ${reconnect_interval} seconds..."
+  sleep "${reconnect_interval}"
+done
