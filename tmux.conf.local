@@ -8,6 +8,8 @@ set -g prefix2 C-Space
 # allow copy through OSC 52
 set -g set-clipboard on
 
+set-option -ag terminal-overrides ",xterm-256color:Ms=\\E]52;c;%p2%s\\7"
+
 # copy mode
 bind Space copy-mode
 bind C-Space copy-mode
