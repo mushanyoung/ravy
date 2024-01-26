@@ -28,13 +28,18 @@ for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.br
         set -q INFOPATH; or set INFOPATH ''
         set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
 
+        if test -d "$brewprefix/opt/ruby/bin"
+            prepend_to_path "$brewprefix/opt/ruby/bin"
+        end
+
         prepend_to_path "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin"
+
         break
     end
 end
 
 if command -v gem &>/dev/null
-    prepend_to_path (ruby -e 'puts Gem.user_dir')"/bin"
+    # prepend_to_path (ruby -e 'puts Gem.user_dir')"/bin"
     prepend_to_path (gem environment gemdir)"/bin"
 end
 
