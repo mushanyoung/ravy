@@ -193,9 +193,9 @@ alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade &&
 alias pupu "sudo pacman -Syy --noconfirm && sudo pacman -Suy --noconfirm"
 
 # docker commands
-# alias dc docker-compose
-function dc --wraps="docker-compose"
-    docker-compose (set -q RAVY_DOCKER_COMPOSE_CONFIG && string collect -- "--file" "$RAVY_DOCKER_COMPOSE_CONFIG") $argv
+# alias dc to `docker compose` / docker compose V2
+function dc --wraps="docker compose"
+    docker compose (set -q RAVY_DOCKER_COMPOSE_CONFIG && string collect -- "--file" "$RAVY_DOCKER_COMPOSE_CONFIG") $argv
 end
 alias dp "dc pull"
 alias dcl "dc logs -f --tail 100"
