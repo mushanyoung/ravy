@@ -38,6 +38,7 @@ for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.br
     end
 end
 
+# $ python3 -m venv "$HOME/.venv"
 prepend_to_path "$HOME/.venv/bin"
 
 if command -v gem &>/dev/null
