@@ -150,7 +150,7 @@ function fish_prompt
     test $bg_jobs -gt 0; and echo -n -s (set_color d700af) "%$bg_jobs "
 
     # ssh
-    test -n "$SSH_CLIENT"; and echo -n -s (set_color d75f00) '易 '
+    test -n "$SSH_CLIENT"; and echo -n -s (set_color d75f00) ' '
     echo
 
     # line 3
