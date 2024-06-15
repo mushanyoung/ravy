@@ -38,12 +38,14 @@ for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.br
     end
 end
 
-# $ python3 -m venv "$HOME/.venv"
-prepend_to_path "$HOME/.venv/bin"
-
 if command -v gem &>/dev/null
     prepend_to_path (ruby -e 'puts Gem.user_dir')"/bin"
     prepend_to_path (gem environment gemdir)"/bin"
+end
+
+# $ python3 -m venv "$HOME/.venv"
+if test -e "$HOME/.venv/bin/activate.fish"
+    VIRTUAL_ENV_DISABLE_PROMPT=1 source "$HOME/.venv/bin/activate.fish"
 end
 
 # fundle
