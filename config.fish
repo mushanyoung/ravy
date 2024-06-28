@@ -10,7 +10,7 @@ set -x RAVY_HOME (dirname (status --current-filename))
 # paths operations
 function prepend_to_path
     for arg in $argv
-        fish_add_path -p -P -g $arg
+        fish_add_path -m -p -P -g $arg
     end
 end
 
@@ -37,6 +37,8 @@ for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.br
         break
     end
 end
+
+prepend_to_path /usr/local/bin
 
 if command -v gem &>/dev/null
     prepend_to_path (ruby -e 'puts Gem.user_dir')"/bin"
