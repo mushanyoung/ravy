@@ -179,6 +179,7 @@ alias vi vim
 alias v vim
 alias grep "grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}"
 alias pyserv "python3 -m http.server"
+alias ip ipython
 
 # ps-color
 alias pa ps-color
