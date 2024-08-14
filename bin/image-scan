@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Check if at least one input file was provided
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <input_image1> [<input_image2> ...]"
+    exit 1
+fi
+
+# Use FFMPEG_PATH if set, otherwise default to "ffmpeg"
+ffmpeg_cmd="${FFMPEG_PATH:-ffmpeg}"
+
+# Loop through all provided arguments (filenames)
+for input_image in "$@"; do
+    # Get the input file and its components
+    filename="${input_image%.*}"
+    extension="${input_image##*.}"
+
+    # Define the output file name
+    output_image="${filename}.scan.${extension}"
+
+    # Apply the ffmpeg filters
+    "$ffmpeg_cmd" -y -i "$input_image" -vf "unsharp=5:5:1.0, eq=contrast=1.5:brightness=0.05" "$output_image"
+
+    # Notify the user
+    echo "Processed image saved as scanned version $output_image"
+done
