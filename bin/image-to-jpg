@@ -28,8 +28,11 @@ restore_mtime() {
     fi
 }
 
+# Use FFMPEG_PATH if set, otherwise default to "ffmpeg"
+ffmpeg_cmd="${FFMPEG_PATH:-ffmpeg}"
+
 # Use MAGICK_PATH if set, otherwise default to "magick"
-magick_cmd="${MAGICK_PATH:magick}"
+# magick_cmd="${MAGICK_PATH:-magick}"
 
 # Check if at least one input file was provided
 if [ $# -eq 0 ]; then
@@ -42,14 +45,20 @@ for input_image in "$@"; do
     # Get the input filename without extension
     filename="${input_image%.*}"
 
+    # Define the output file name
+    output_image="${filename}.jpg"
+
     # Copy the modification time
     orig_mtime=$(get_mtime "$input_image")
 
     # Apply the magick filters
-    "$magick_cmd" mogrify -format jpg "$input_image"
+    # "$magick_cmd" mogrify -format jpg "$input_image"
+
+    # Apply the ffmpeg filters
+    "$ffmpeg_cmd" -y -i "$input_image" -q:v 3 "$output_image"
 
     # Restore the original modification time
-    restore_mtime "$orig_mtime" "${filename}.jpg"
+    restore_mtime "$orig_mtime" "$output_image"
 
     # Notify the user
     echo "Saved as jpg: $input_image"
