@@ -29,10 +29,10 @@ restore_mtime() {
 }
 
 # Use FFMPEG_PATH if set, otherwise default to "ffmpeg"
-ffmpeg_cmd="${FFMPEG_PATH:-ffmpeg}"
+# ffmpeg_cmd="${FFMPEG_PATH:-ffmpeg}"
 
 # Use MAGICK_PATH if set, otherwise default to "magick"
-# magick_cmd="${MAGICK_PATH:-magick}"
+magick_cmd="${MAGICK_PATH:-magick}"
 
 # Check if at least one input file was provided
 if [ $# -eq 0 ]; then
@@ -52,10 +52,10 @@ for input_image in "$@"; do
     orig_mtime=$(get_mtime "$input_image")
 
     # Apply the magick filters
-    # "$magick_cmd" mogrify -format jpg "$input_image"
+    "$magick_cmd" mogrify -format jpg -quality 85 "$input_image" "$output_image"
 
     # Apply the ffmpeg filters
-    "$ffmpeg_cmd" -y -i "$input_image" -q:v 3 "$output_image"
+    # "$ffmpeg_cmd" -y -i "$input_image" -q:v 3 "$output_image"
 
     # Restore the original modification time
     restore_mtime "$orig_mtime" "$output_image"
