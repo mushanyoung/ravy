@@ -531,8 +531,9 @@ let g:ale_linters = {
 let g:ale_fixers = {
 \   '*': ['remove_trailing_lines', 'trim_whitespace'],
 \   'javascript': ['eslint'],
-\   'ruby': ['rubocop'],
+\   'json': ['prettier'],
 \   'yaml': ['prettier'],
+\   'ruby': ['rubocop'],
 \   'fish': ['fish_indent'],
 \}
 let g:ale_fix_on_save = 1
