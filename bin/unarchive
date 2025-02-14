@@ -5,7 +5,8 @@ import sys
 from pathlib import Path
 from pyunpack import Archive
 
-def extract_files(file_path):
+
+def extract_files(file_path, password=None):
     file_path = Path(file_path)
     file_name = file_path.stem
     output_folder = file_path.parent / file_name
@@ -13,7 +14,9 @@ def extract_files(file_path):
     # Ensure output folder exists
     output_folder.mkdir(parents=True, exist_ok=True)
 
-    Archive(file_path).extractall(output_folder)
+    # Extract with optional password
+    archive_options = {"password": password} if password else {}
+    Archive(file_path, **archive_options).extractall(output_folder)
 
     # Check if there's a single top-level folder
     content = list(output_folder.iterdir())
@@ -25,10 +28,16 @@ def extract_files(file_path):
         temp_folder.rmdir()
         content = list(output_folder.iterdir())
 
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python extract_files.py <compressed_file1> <compressed_file2> ...")
+        print("Usage: python unarchive <compressed_file1> <compressed_file2> ...")
         sys.exit(1)
+
+    default_password = ""  # 可以更改为你的默认密码
+    password = default_password or input(
+        "Enter password (press Enter to use default): "
+    )
 
     for file_path in sys.argv[1:]:
         if not os.path.exists(file_path):
@@ -36,16 +45,17 @@ def main():
             continue
 
         ext = os.path.splitext(file_path)[-1].lower()
-        if ext not in ['.zip', '.rar', '.7z', '.tar.gz']:
+        if ext not in [".zip", ".rar", ".7z", ".tar.gz"]:
             print(f"Unsupported file extension: {file_path}")
             continue
 
         try:
             print(f"Extracting {file_path}...")
-            extract_files(file_path)
+            extract_files(file_path, password)
             print(f"Extraction completed: {file_path}")
         except Exception as e:
             print(f"Error extracting {file_path}: {e}")
+
 
 if __name__ == "__main__":
     main()
