@@ -49,7 +49,6 @@ set title titlestring=!%t:%l%(\ %m%r%h%w%)
 set textwidth=80
 set winwidth=79 winheight=5 winminheight=5
 set linebreak breakindent showbreak=>>
-set background=dark
 set noshowmode
 set showcmd
 set lazyredraw
@@ -722,7 +721,7 @@ Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and 
 Plug 'majutsushi/tagbar'                        " tag explorer
 Plug 'mg979/vim-visual-multi'                   " multiple cursor and multiple modifications
 Plug 'mhinz/vim-sayonara', { 'on': 'Sayonara' } " Deletes the current buffer smartly
-Plug 'mushanyoung/vim-windflower'               " theme
+Plug 'sainnhe/gruvbox-material'                 " color scheme
 Plug 'nathanaelkane/vim-indent-guides'          " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function
 Plug 'ojroques/vim-oscyank', {'branch': 'main'} " Yank through OSC 52
@@ -750,8 +749,18 @@ endif
 
 call plug#end()
 
+" Color Scheme
 if !exists('g:colors_name')
-  silent! colorscheme windflower
+  if has('termguicolors')
+    set termguicolors
+  endif
+
+  set background=dark
+
+  let g:gruvbox_material_background = 'hard'
+  let g:gruvbox_material_better_performance = 1
+
+  colorscheme gruvbox-material
 endif
 
 " }}
