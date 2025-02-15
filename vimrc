@@ -14,8 +14,8 @@ set nocompatible
 set directory=~/.vim/tmp//,. swapfile
 set backupdir=~/.vim/tmp//,. nobackup writebackup
 set undodir=~/.vim/tmp//,. undofile undolevels=1000 undoreload=10000
-set wildignore+=*.png,*.jpg,*.gif,*.ico,*.mp3,*.mp4,*.avi,*.mkv,*.o,*.obj,*.pyc,*.swf,*.fla,*.git*,*.hg*,*.svn*,*sass-cache*,log/**,tmp/**,*~,*~orig,*.DS_Store,tags,.tags,.tags_sorted_by_file,node_modules
-set encoding=utf-8 termencoding=utf-8 fileencoding=utf-8 fileencodings=utf-8,big5,gbk,euc-jp,euc-kr,iso8859-1,utf-16le,latin1
+set wildignore+=*.png,*.jpg,*.gif,*.ico,*.mp3,*.mp4,*.avi,*.mkv,*.o,*.obj,*.pyc,*.swf,*.fla,*.git*,*.hg*,*.svn,log/**,tmp/**,*~,*~orig,*.DS_Store,tags,.tags,.tags_sorted_by_file,node_modules
+set encoding=utf-8 termencoding=utf-8 fileencoding=utf-8 fileencodings=ucs-bom,utf-8,default,latin1,utf-16le,big5,gbk,euc-jp,euc-kr,iso8859-1
 set formatoptions=nmMcroql
 set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
 set tabstop=8 softtabstop=2 shiftwidth=2 expandtab smarttab
@@ -46,7 +46,7 @@ set list listchars=tab:›\ ,trail:•,extends:>,precedes:<,nbsp:.
 set showmatch matchpairs+=<:>
 set viewoptions=folds,options,cursor,unix,slash
 set title titlestring=!%t:%l%(\ %m%r%h%w%)
-set textwidth=80
+set textwidth=120
 set winwidth=79 winheight=5 winminheight=5
 set linebreak breakindent showbreak=>>
 set noshowmode
@@ -715,7 +715,7 @@ Plug 'jiangmiao/auto-pairs'                     " Insert or delete brackets, par
 Plug 'junegunn/fzf'                             " fzf integration
 Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/vim-easy-align'                  " ga to align a region of text on a key (<C-X> to use a regex)
-Plug 'junegunn/vim-peekaboo'                    " list the content of registers when \", @ in normal mode and <C-R> in insert mode
+Plug 'junegunn/vim-peekaboo'                    " preview registers for \", @ in normal mode and <C-R> in insert mode
 Plug 'justinmk/vim-sneak'                       " s: motion to match 2 characters
 Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and pairs with pairing colors
 Plug 'majutsushi/tagbar'                        " tag explorer
