@@ -38,10 +38,7 @@ for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.br
     end
 end
 
-prepend_to_path /usr/local/bin
-
 if command -v gem &>/dev/null
-    prepend_to_path (ruby -e 'puts Gem.user_dir')"/bin"
     prepend_to_path (gem environment gemdir)"/bin"
 end
 
