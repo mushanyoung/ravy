@@ -129,29 +129,50 @@ function fish_prompt
     echo
 
     # line 2
-    echo -n -s (set_color -b 222) '  '
+    set_color -b 222
+    echo -n '  '
+    set -l promptlen 2
 
     # path
-    echo -n -s (test -w $PWD; and set_color 008787; or set_color d70000) (__prompt_pwd) ' '
+    set -l path_str (__prompt_pwd)
+    echo -n -s (test -w $PWD; and set_color 008787; or set_color d70000) $path_str ' '
+    set promptlen (math $promptlen + (string length $path_str) + 1)
 
     # git
     set -l gbranch (__prompt_git_branch)
-    test -n "$gbranch"
-    and echo -n -s (set_color 5f8700) $gbranch (set_color d78700) (__prompt_git_status) ' '
+    if test -n "$gbranch"
+        set -l gstatus (__prompt_git_status)
+        echo -n -s (set_color 5f8700) $gbranch (set_color d78700) $gstatus ' '
+        set promptlen (math $promptlen + (string length $gbranch) + (string length $gstatus) + 1)
+    end
 
     # custom
-    test -n "$pcustom"
-    and echo -n -s (set_color 5f5f5f) $pcustom (set_color -b 222) ' '
+    if test -n "$pcustom"
+        echo -n -s (set_color 5f5f5f) $pcustom (set_color -b 222) ' '
+        set promptlen (math $promptlen + (string length $pcustom) + 1)
+    end
 
     # user
     echo -n -s (set_color $user_color) $USER ' '
+    set promptlen (math $promptlen + (string length $USER) + 1)
 
     # jobs
-    test $bg_jobs -gt 0; and echo -n -s (set_color d700af) "%$bg_jobs "
+    if test $bg_jobs -gt 0
+        echo -n -s (set_color d700af) "%$bg_jobs "
+        set promptlen (math $promptlen + (string length "%$bg_jobs") + 1)
+    end
 
     # ssh
-    test -n "$SSH_CLIENT"; and echo -n -s (set_color d75f00) ' '
-    echo
+    if test -n "$SSH_CLIENT"
+        echo -n -s (set_color d75f00) ' '
+        set promptlen (math $promptlen + 2) # ' ' is 2 characters wide
+    end
+
+    # padding to fill the remaining width
+    set -l termwidth (tput cols)
+    set -l padding (string repeat -n (math $termwidth - $promptlen) " ")
+    set_color -b 222
+    echo -s $padding
 
     # line 3
     # indicator
