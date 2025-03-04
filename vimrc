@@ -68,7 +68,7 @@ let &t_SI="\e[6 q"
 let &t_EI="\e[2 q"
 
 " Bracketed Paste Mode:
-" [Vim Control Sequence Examples](https://ttssh2.osdn.jp/manual/en/usage/tips/vim.html)
+" [Vim Control Sequence Examples](https://web.archive.org/web/20221005051612/https://ttssh2.osdn.jp/manual/4/en/usage/tips/vim.html)
 if &term =~ "tmux" || &term =~ "screen"
   let &t_BE="\e[?2004h"
   let &t_BD="\e[?2004l"
@@ -86,7 +86,6 @@ elseif $ITERM_SESSION_ID != ""
 endif
 
 scriptencoding utf-8
-" filetype plugin indent on
 
 " }}
 
