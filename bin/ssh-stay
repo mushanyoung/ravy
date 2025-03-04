@@ -4,11 +4,11 @@
 
 # Configurable parameters
 ssh_command=${SSH_COMMAND:-ssh}
-execute_command=${EXECUTE_COMMAND:-tmux new-session -A -s tmux}
+ssh_exec_cmd=${SSH_EXEC_CMD:-tmux new-session -A -s tmux}
+ssh_alive_interval=${SSH_ALIVE_INTERVAL:-10}
+ssh_default_opts=("-t" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
+ssh_opts=("$@" "${ssh_exec_cmd:+--}" "${ssh_exec_cmd}")
 reconnect_interval=${RECONNECT_INTERVAL:-10}
-alive_interval=${ALIVE_INTERVAL:-10}
-ssh_default_opts=("-t" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${alive_interval}")
-ssh_opts=("$@" "${execute_command:+--}" "${execute_command}")
 
 if [ -n "$SSH_CONNECTION" ]; then
     echo "It looks like you're already in a SSH connection: $SSH_CONNECTION"

@@ -3,13 +3,11 @@
 # terminated by an error, or any non user initiated reson.
 
 # Configurable parameters
-reconnect_interval=${RECONNECT_INTERVAL:-10}
 mosh_command=${MOSH_COMMAND:-mosh}
 mosh_exec_cmd=(${MOSH_EXEC_CMD:-tmux new-session -A -s tmux})
 mosh_ssh_port=${MOSH_SSH_PORT}
 mosh_default_opts=("-a" "-o")
-
-ssh_opts=("$@" "${execute_command:+--}" "${execute_command}")
+reconnect_interval=${RECONNECT_INTERVAL:-10}
 
 if [ -n "$SSH_CONNECTION" ]; then
     echo "It looks like you're already in a SSH connection: $SSH_CONNECTION"
