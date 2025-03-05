@@ -84,7 +84,7 @@ append_content_if_absent () {
 # done
 
 __banner mkdir
-__el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOME/.config/alacritty $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
+__el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOME/.vim $HOME/.vim/bundle $HOME/.vim/tmp $HOME/.vim/autoload
 
 __banner ~/.ravy
 if [ -d "$HOME/.ravy" ]; then
@@ -108,10 +108,6 @@ ln -sf $RAVY/fish-functions/* $HOME/.config/fish/functions
 __banner brew-compose
 __el rm -rf $HOME/.brew-compose
 __el ln -s -f $RAVY/brew-compose $HOME/.brew-compose
-
-__banner alacritty
-__el rm -rf $HOME/.config/alacritty/alacritty.yml
-__el ln -s -f $RAVY/alacritty.yml $HOME/.config/alacritty/alacritty.yml
 
 __banner colorls
 __el rm -rf $HOME/.config/colorls
