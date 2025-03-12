@@ -165,8 +165,9 @@ alias lat "ls -lAt"
 alias latr "ls -lAtr"
 
 alias ta "type -a"
-alias df "df -h"
-alias du "du -h"
+alias df "command df -h"
+alias du "command du -hs"
+alias dus "command du -hd1 | sort -h"
 alias g "command git"
 alias t "command tmux"
 alias hs history
