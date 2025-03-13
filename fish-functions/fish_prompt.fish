@@ -170,9 +170,12 @@ function fish_prompt
 
     # padding to fill the remaining width
     set -l termwidth (tput cols)
-    set -l padding (string repeat -n (math $termwidth - $promptlen) " ")
-    set_color -b 222
-    echo -s $padding
+    set -l paddinglen (math $termwidth - $promptlen)
+    if test $paddinglen -gt 0
+        echo -s (string repeat -n $paddinglen " ")
+    else
+        echo -s
+    end
 
     # line 3
     # indicator
