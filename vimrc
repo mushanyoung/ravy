@@ -504,7 +504,6 @@ nnoremap \k <NOP>
 nnoremap \l <NOP>
 nnoremap \m <NOP>
 nnoremap \o <NOP>
-nnoremap \p <NOP>
 nnoremap \s <NOP>
 nnoremap \t <NOP>
 nnoremap \x <NOP>
@@ -705,6 +704,29 @@ function! CheckBackspace() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
+
+function! TogglePyrightInlayParameterTypes()
+  let l:config_file = expand('~/.vim/coc-settings.json')
+  let l:content = join(readfile(l:config_file), "\n")
+
+  if l:content =~ '"pyright.inlayHints.parameterTypes"\s*:\s*true'
+    let l:content = substitute(l:content,
+          \ '"pyright.inlayHints.parameterTypes"\s*:\s*true',
+          \ '"pyright.inlayHints.parameterTypes": false', '')
+    let l:msg = "🧩 parameterTypes inlay hints: OFF"
+  else
+    let l:content = substitute(l:content,
+          \ '"pyright.inlayHints.parameterTypes"\s*:\s*false',
+          \ '"pyright.inlayHints.parameterTypes": true', '')
+    let l:msg = "🧩 parameterTypes inlay hints: ON"
+  endif
+
+  call writefile(split(l:content, "\n"), l:config_file)
+  execute ':CocRestart'
+  echo l:msg
+endfunction
+
+nnoremap <silent> \p :call TogglePyrightInlayParameterTypes()<CR>
 
 " :CocInstall coc-pyright
 
