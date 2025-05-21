@@ -437,6 +437,9 @@ nnoremap \vc :PlugClean!<CR>
 " write
 nnoremap \w :write<CR>
 
+" execute
+nnoremap \r :!"%:p"<CR>
+
 " toggle auto zz when scrolling
 nnoremap <silent> \z :let &scrolloff=999-&scrolloff<BAR>echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
 
@@ -505,7 +508,6 @@ nnoremap \l <NOP>
 nnoremap \m <NOP>
 nnoremap \o <NOP>
 nnoremap \p <NOP>
-nnoremap \r <NOP>
 nnoremap \s <NOP>
 nnoremap \t <NOP>
 nnoremap \x <NOP>
