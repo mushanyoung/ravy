@@ -332,9 +332,6 @@ nnoremap ^ 0
 
 " imap / cmap {{
 
-" <CR>: close popup and save indent.
-inoremap <expr><CR> pumvisible() ? "\<C-Y>" : "\<CR>"
-
 " C-J / C-K => C-N / C-P
 inoremap <C-J> <C-N>
 inoremap <C-K> <C-P>
@@ -693,6 +690,26 @@ let g:scroll_position_visual_overlap = '❮❯'
 
 " }}
 
+" coc.nvim {{
+
+inoremap <silent><expr> <TAB>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+function! CheckBackspace() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+" :CocInstall coc-pyright
+
+" }}
+
 " }}
 
 " Plugins & Custom Settings {{
@@ -743,6 +760,8 @@ Plug 'tpope/vim-unimpaired'                     " a bunch of useful [, ] key bin
 Plug 'vim-airline/vim-airline'                  " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position'          " simulated scroll bar using sign column
 Plug 'vim-syntastic/syntastic'                  " check code syntax
+Plug 'honza/vim-snippets'                       " snippets
+Plug 'neoclide/coc.nvim', {'branch': 'release'} " completions
 
 if !exists('g:disable_ctags') && executable('ctags')
   Plug 'ludovicchabant/vim-gutentags'
