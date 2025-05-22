@@ -803,6 +803,9 @@ if !exists('g:colors_name')
   let g:gruvbox_material_better_performance = 1
 
   colorscheme gruvbox-material
+
+  " temporary fix for vim 9.1.1400
+  highlight default link luaParenError Error
 endif
 
 " }}
