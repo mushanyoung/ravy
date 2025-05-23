@@ -45,7 +45,7 @@ set nofoldenable foldmethod=indent foldlevel=0 foldnestmax=3
 set list listchars=tab:›\ ,trail:•,extends:>,precedes:<,nbsp:.
 set showmatch matchpairs+=<:>
 set viewoptions=folds,options,cursor,unix,slash
-set title titlestring=!%t:%l%(\ %m%r%h%w%)
+set title titlestring=✏️\ \ %t:%l%(\ %m%r%h%w%)
 set textwidth=120
 set winwidth=79 winheight=5 winminheight=5
 set linebreak breakindent showbreak=>>
@@ -77,10 +77,7 @@ if &term =~? 'tmux' || &term =~? 'screen'
 endif
 
 " title string reporting
-if !empty($TMUX)
-  " tmux pane title
-  set t_ts=]2 t_fs=\\
-elseif !empty($ITERM_SESSION_ID)
+if !empty($ITERM_SESSION_ID) && empty($TMUX)
   " iterm window title
   set t_ts=]; t_fs=
 endif
