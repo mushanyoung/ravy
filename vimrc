@@ -160,17 +160,17 @@ function! RestoreRegister()
 endfunction
 
 function! s:Repl()
-    let s:restore_reg = getreg('"')
-    return "p@=RestoreRegister()\<cr>"
+  let s:restore_reg = getreg('"')
+  return "p@=RestoreRegister()\<cr>"
 endfunction
 
 function! s:ReplSelect()
-    echo 'Register to paste over selection? (<cr> => default register: '.strtrans(getreg('"')).')'
-    let c = nr2char(getchar())
-    let reg = c =~# '^[0-9a-z:.%#/*+~]$'
-                \ ? '"'.c
-                \ : ''
-    return "\<C-G>".reg.s:Repl()
+  echo 'Register to paste over selection? (<cr> => default register: '.strtrans(getreg('"')).')'
+  let c = nr2char(getchar())
+  let reg = c =~# '^[0-9a-z:.%#/*+~]$'
+        \ ? '"'.c
+        \ : ''
+  return "\<C-G>".reg.s:Repl()
 endfunction
 
 " This supports "rp that permits to replace the visual selection with the
@@ -388,20 +388,20 @@ nnoremap \x <NOP>
 " Only enable specified linters
 let g:ale_linters_explicit = 1
 let g:ale_linters = {
-\   'ruby': ['rubocop'],
-\   'javascript': ['eslint'],
-\   'fish': ['fish'],
-\   'vim': ['vint'],
-\}
+      \   'ruby': ['rubocop'],
+      \   'javascript': ['eslint'],
+      \   'fish': ['fish'],
+      \   'vim': ['vint'],
+      \}
 
 let g:ale_fixers = {
-\   '*': ['remove_trailing_lines', 'trim_whitespace'],
-\   'javascript': ['eslint'],
-\   'json': ['prettier'],
-\   'yaml': ['prettier'],
-\   'ruby': ['rubocop'],
-\   'fish': ['fish_indent'],
-\}
+      \   '*': ['remove_trailing_lines', 'trim_whitespace'],
+      \   'javascript': ['eslint'],
+      \   'json': ['prettier'],
+      \   'yaml': ['prettier'],
+      \   'ruby': ['rubocop'],
+      \   'fish': ['fish_indent'],
+      \}
 let g:ale_fix_on_save = 1
 let g:ale_lint_on_save = 1
 let g:ale_lint_on_enter = 1
@@ -566,7 +566,7 @@ inoremap <silent><expr> <TAB>
 inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
-                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+      \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
 
 function! CheckBackspace() abort
   let col = col('.') - 1
