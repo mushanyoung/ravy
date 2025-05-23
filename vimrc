@@ -5,8 +5,8 @@
 " Settings {{
 
 " make directory if necessary
-if !isdirectory(expand("~/.vim/tmp")) || !isdirectory(expand("~/.vim/bundle"))
-  call system("mkdir -p ~/.vim/tmp ~/.vim/bundle")
+if !isdirectory(expand("~/.vim/tmp"))
+  call system("mkdir -p ~/.vim/tmp")
 end
 
 " General
@@ -736,7 +736,7 @@ nnoremap <silent> \p :call TogglePyrightInlayParameterTypes()<CR>
 
 " Plugins & Custom Settings {{
 
-call plug#begin(expand('~/.vim/bundle'))
+call plug#begin()
 
 let s:custom_vimrc = expand('<sfile>:p:h') . '/' . 'custom/vimrc'
 if filereadable(s:custom_vimrc)
