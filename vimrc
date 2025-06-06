@@ -618,7 +618,7 @@ Plug 'andymass/vim-matchup'                     " even better % navigate and hig
 Plug 'ap/vim-css-color'                         " show css color in code
 Plug 'chrisbra/unicode.vim'                     " Search unicode
 Plug 'christoomey/vim-tmux-navigator'           " pane navigate integration with tmux
-Plug 'dense-analysis/ale'                       " Asynchronous Lint Engine
+" Plug 'dense-analysis/ale'                       " Asynchronous Lint Engine
 Plug 'jiangmiao/auto-pairs'                     " Insert or delete brackets, parens, quotes in pair
 Plug 'junegunn/fzf'                             " fzf integration
 Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets

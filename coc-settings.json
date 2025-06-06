@@ -5,7 +5,9 @@
   "python.formatting.provider": "black",
   "python.formatting.blackPath": "black",
   "python.formatting.blackArgs": ["--line-length", "100"],
-  "yaml.format.enable": false,
   "prettier.enable": true,
-  "coc.preferences.formatOnSaveFiletypes": ["python", "yaml"],
+  "coc.preferences.formatOnSaveFiletypes": ["python", "yaml", "json", "markdown", "javascript", "typescript"],
+  "prettier.requireConfig": false,
+  "prettier.trailingComma": "none",
+  "prettier.endOfLine": "lf"
 }
