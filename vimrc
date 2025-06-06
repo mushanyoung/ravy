@@ -397,8 +397,6 @@ let g:ale_linters = {
 let g:ale_fixers = {
       \   '*': ['remove_trailing_lines', 'trim_whitespace'],
       \   'javascript': ['eslint'],
-      \   'json': ['prettier'],
-      \   'yaml': ['prettier'],
       \   'ruby': ['rubocop'],
       \   'fish': ['fish_indent'],
       \}
@@ -593,11 +591,6 @@ function! TogglePyrightInlayParameterTypes()
   execute ':CocRestart'
   echo l:msg
 endfunction
-
-augroup BufferCoc
-  autocmd!
-  autocmd FileType python autocmd BufWritePre <buffer> silent! call CocAction('format')
-augroup END
 
 noremap \fm :call CocAction('format')<CR>
 
