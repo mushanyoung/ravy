@@ -664,7 +664,7 @@ Plug 'vim-scripts/vim-scroll-position'          " simulated scroll bar using sig
 Plug 'honza/vim-snippets'                       " snippets
 Plug 'neoclide/coc.nvim', {'branch': 'release'} " completions
 
-if !exists('g:disable_ctags') && executable('ctags')
+if executable('ctags')
   Plug 'ludovicchabant/vim-gutentags'
 endif
 
