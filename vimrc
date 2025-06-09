@@ -102,17 +102,27 @@ augroup BufferEdit
   autocmd InsertLeave * set nocursorline
 augroup END
 
-if !empty($SSH_CONNECTION)
-  augroup RemoteClip
-    autocmd!
-
-    " forward remote yanked text
-    autocmd TextYankPost * if v:event.operator is 'y' && v:event.regname is '' | execute 'OSCYankRegister "' | endif
-  augroup END
-  set clipboard=
-else
-  " access system clipboard if local
+if has('clipboard_working')
   set clipboard=unnamed
+else
+  " In the event that the clipboard isn't working, it's quite likely that
+  " the + and * registers will not be distinct from the unnamed register. In
+  " this case, a:event.regname will always be '' (empty string). However, it
+  " can be the case that `has('clipboard_working')` is false, yet `+` is
+  " still distinct, so we want to check them all.
+  let s:VimOSCYankPostRegisters = ['', '+', '*']
+  " copy text to clipboard on both (y)ank and (d)elete
+  let s:VimOSCYankOperators = ['y', 'd']
+  function! s:VimOSCYankPostCallback(event)
+    if index(s:VimOSCYankPostRegisters, a:event.regname) != -1
+          \ && index(s:VimOSCYankOperators, a:event.operator) != -1
+      call OSCYankRegister(a:event.regname)
+    endif
+  endfunction
+  augroup VimOSCYankPost
+    autocmd!
+    autocmd TextYankPost * call s:VimOSCYankPostCallback(v:event)
+  augroup END
 endif
 
 " }}
@@ -124,7 +134,7 @@ endif
 "   let t:url = substitute(a:url, "[\x0d\x0a].*", "", "")
 "   let t:url = substitute(t:url, '^\s\+', "", "")
 "   let t:url = (t:url =~ '.*://' ? '' : 'https://www.google.com/search?q=') . t:url
-"   call SendViaOSC52("RAVY\x0dopen\x0d" . t:url)
+"   call OSCYank("RAVY\x0dopen\x0d" . t:url)
 " endfunction
 " nnoremap <silent> \l :call RavyRemoteOpenLink(getreg('"'))<CR>
 
@@ -510,8 +520,8 @@ let g:indent_guides_auto_colors = 0
 
 " vim-oscyank {{
 
-let g:oscyank_max_length = 1000000
-let g:oscyank_silent = v:true
+let g:oscyank_max_length = 0
+let g:oscyank_silent = v:false
 let g:oscyank_trim = v:true
 
 " }}
@@ -632,7 +642,7 @@ Plug 'mhinz/vim-sayonara', { 'on': 'Sayonara' } " Deletes the current buffer sma
 Plug 'sainnhe/gruvbox-material'                 " color scheme
 Plug 'nathanaelkane/vim-indent-guides'          " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function
-Plug 'ojroques/vim-oscyank', {'branch': 'main'} " Yank through OSC 52
+Plug 'ojroques/vim-oscyank'                     " Yank through OSC 52
 Plug 'romainl/vim-cool'                         " disables search highlighting when you are done searching
 Plug 'sheerun/vim-polyglot'                     " a set of filetype plugins
 Plug 'svermeulen/vim-cutlass'                   " plugin that adds a 'cut' operation separate from 'delete'
