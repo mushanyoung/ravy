@@ -212,6 +212,9 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # increase history size
 #set -g history-limit 10000
 
+# set-clipboard to on for osc 52 support
+set -s set-clipboard on
+
 # granular mouse options
 set -g mouse-select-pane on     # click to focus pane
 set -g mouse-select-window on   # click to switch windows
