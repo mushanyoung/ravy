@@ -271,7 +271,7 @@ nnoremap \/ :%s/
 nnoremap \a ggVG
 
 " close current buffer
-nnoremap \c :Sayonara<CR>
+nnoremap \x :Sayonara<CR>
 
 " diff
 nnoremap <silent> \de :bdelete!<BAR>diffoff<CR>
@@ -386,7 +386,6 @@ nnoremap \m <NOP>
 nnoremap \o <NOP>
 nnoremap \s <NOP>
 nnoremap \t <NOP>
-nnoremap \x <NOP>
 
 " }}
 
@@ -419,9 +418,18 @@ let g:ale_lint_on_text_changed = 'never'
 
 " }}
 
-" tagbar {{
+" vista.vim {{
 
-nnoremap <C-T> :TagbarToggle<CR>
+function! ToggleVista()
+  if exists('*CocHasProvider') && CocHasProvider('documentSymbol')
+    let g:vista_default_executive = 'coc'
+  else
+    let g:vista_default_executive = 'ctags'
+  endif
+  execute 'Vista!!'
+endfunction
+
+nnoremap <silent> <C-T> :call ToggleVista()<CR>
 
 " }}
 
@@ -440,7 +448,7 @@ let g:syntastic_always_populate_loc_list = 1
 " vim-airline {{
 
 let g:airline_powerline_fonts=1
-let g:airline#extensions#ale#enabled = 1
+let g:airline#extensions#tabline#enabled = 1
 
 " }}
 
@@ -559,6 +567,9 @@ let g:scroll_position_visual_overlap = '❮❯'
 
 " coc.nvim {{
 
+nmap <silent><nowait> \cp <Plug>(coc-diagnostic-prev)
+nmap <silent><nowait> \cn <Plug>(coc-diagnostic-next)
+
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
       \ CheckBackspace() ? "\<Tab>" :
@@ -613,6 +624,7 @@ if filereadable(s:custom_vimrc)
   exec 'source ' . s:custom_vimrc
 endif
 
+" Plug 'dense-analysis/ale'                       " Asynchronous Lint Engine
 Plug 'PeterRincker/vim-argumentative'           " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
 Plug 'airblade/vim-gitgutter'                   " git: hunks operation indicator
 Plug 'airblade/vim-rooter'                      " set proper working directory
@@ -620,17 +632,16 @@ Plug 'andymass/vim-matchup'                     " even better % navigate and hig
 Plug 'ap/vim-css-color'                         " show css color in code
 Plug 'chrisbra/unicode.vim'                     " Search unicode
 Plug 'christoomey/vim-tmux-navigator'           " pane navigate integration with tmux
-" Plug 'dense-analysis/ale'                       " Asynchronous Lint Engine
 Plug 'LunarWatcher/auto-pairs'                  " Insert or delete brackets, parentheses, and quotes in pairs
 Plug 'junegunn/fzf'                             " fzf integration
 Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/vim-easy-align'                  " ga to align a region of text on a key (<C-X> to use a regex)
 Plug 'junegunn/vim-peekaboo'                    " preview registers for \", @ in normal mode and <C-R> in insert mode
 Plug 'justinmk/vim-sneak'                       " s: motion to match 2 characters
+Plug 'liuchengxu/vista.vim'                     " Viewer & Finder for LSP symbols and tags
 Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and pairs with pairing colors
-Plug 'majutsushi/tagbar'                        " tag explorer
 Plug 'mg979/vim-visual-multi'                   " multiple cursor and multiple modifications
-Plug 'mhinz/vim-sayonara', { 'on': 'Sayonara' } " Deletes the current buffer smartly
+Plug 'mhinz/vim-sayonara'                       " Deletes the current buffer smartly
 Plug 'sainnhe/gruvbox-material'                 " color scheme
 Plug 'nathanaelkane/vim-indent-guides'          " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function

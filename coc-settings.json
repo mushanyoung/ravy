@@ -1,13 +1,14 @@
 {
-  "pyright.inlayHints.functionReturnTypes": true,
-  "pyright.inlayHints.variableTypes": true,
-  "pyright.inlayHints.parameterTypes": false,
+  "diagnostic.level": "warning",
+  "coc.preferences.formatOnSaveFiletypes": ["python", "yaml", "json", "markdown", "javascript", "typescript"],
+  "prettier.enable": true,
+  "prettier.requireConfig": false,
+  "prettier.trailingComma": "none",
+  "prettier.endOfLine": "lf",
   "python.formatting.provider": "black",
   "python.formatting.blackPath": "black",
   "python.formatting.blackArgs": ["--line-length", "100"],
-  "prettier.enable": true,
-  "coc.preferences.formatOnSaveFiletypes": ["python", "yaml", "json", "markdown", "javascript", "typescript"],
-  "prettier.requireConfig": false,
-  "prettier.trailingComma": "none",
-  "prettier.endOfLine": "lf"
+  "pyright.inlayHints.functionReturnTypes": true,
+  "pyright.inlayHints.variableTypes": true,
+  "pyright.inlayHints.parameterTypes": false,
 }
