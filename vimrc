@@ -425,15 +425,6 @@ nnoremap <C-T> :TagbarToggle<CR>
 
 " }}
 
-" auto-pairs {{
-
-let g:AutoPairsFlyMode = 0
-let g:AutoPairsShortcutToggle=''
-let g:AutoPairsShortcutFastWrap = ''
-let g:AutoPairsShortcutJump = ''
-
-" }}
-
 " rainbow {{
 
 let g:rainbow_active = 1
@@ -630,7 +621,7 @@ Plug 'ap/vim-css-color'                         " show css color in code
 Plug 'chrisbra/unicode.vim'                     " Search unicode
 Plug 'christoomey/vim-tmux-navigator'           " pane navigate integration with tmux
 " Plug 'dense-analysis/ale'                       " Asynchronous Lint Engine
-Plug 'jiangmiao/auto-pairs'                     " Insert or delete brackets, parens, quotes in pair
+Plug 'LunarWatcher/auto-pairs'                  " Insert or delete brackets, parentheses, and quotes in pairs
 Plug 'junegunn/fzf'                             " fzf integration
 Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/vim-easy-align'                  " ga to align a region of text on a key (<C-X> to use a regex)
