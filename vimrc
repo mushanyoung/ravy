@@ -643,11 +643,10 @@ Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and 
 Plug 'mg979/vim-visual-multi'                   " multiple cursor and multiple modifications
 Plug 'mhinz/vim-sayonara'                       " Deletes the current buffer smartly
 Plug 'sainnhe/gruvbox-material'                 " color scheme
-Plug 'nathanaelkane/vim-indent-guides'          " visually displaying indent levels
+Plug 'preservim/vim-indent-guides'              " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function
 Plug 'ojroques/vim-oscyank'                     " Yank through OSC 52
 Plug 'romainl/vim-cool'                         " disables search highlighting when you are done searching
-Plug 'sheerun/vim-polyglot'                     " a set of filetype plugins
 Plug 'svermeulen/vim-cutlass'                   " plugin that adds a 'cut' operation separate from 'delete'
 Plug 'svermeulen/vim-yoink'                     " maintains a yank history to cycle between when pasting
 Plug 'terryma/vim-expand-region'                " +, - to expand and shrink selection
@@ -662,7 +661,6 @@ Plug 'tpope/vim-surround'                       " `s`: manipulate surrounded sym
 Plug 'tpope/vim-unimpaired'                     " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'                  " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position'          " simulated scroll bar using sign column
-Plug 'vim-syntastic/syntastic'                  " check code syntax
 Plug 'honza/vim-snippets'                       " snippets
 Plug 'neoclide/coc.nvim', {'branch': 'release'} " completions
 
