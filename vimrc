@@ -439,11 +439,6 @@ let g:rainbow_active = 1
 
 " }}
 
-" syntastic {{
-
-let g:syntastic_always_populate_loc_list = 1
-
-" }}
 
 " vim-airline {{
 
@@ -529,12 +524,6 @@ let g:oscyank_trim = v:true
 " vim-peekaboo {{
 
 let g:peekaboo_window = 'vertical leftabove 40new'
-
-" }}
-
-" vim-polyglot {{
-
-let g:polyglot_disabled = ['csv', 'jsx']
 
 " }}
 
