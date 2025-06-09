@@ -102,8 +102,9 @@ augroup BufferEdit
   autocmd InsertLeave * set nocursorline
 augroup END
 
-if has('clipboard_working')
-  set clipboard=unnamed
+" Register system clipboard or OSCYank plugin
+if has('clipboard')
+  set clipboard+=unnamed,unnamedplus
 else
   " In the event that the clipboard isn't working, it's quite likely that
   " the + and * registers will not be distinct from the unnamed register. In
