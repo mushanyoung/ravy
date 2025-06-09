@@ -212,8 +212,15 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # increase history size
 #set -g history-limit 10000
 
-# start with mouse mode enabled
-set -g mouse on
+# granular mouse options
+set -g mouse-select-pane on     # click to focus pane
+set -g mouse-select-window on   # click to switch windows
+set -g mouse-resize-pane on     # drag to resize
+set -g mouse-wheel on           # scroll inside panes
+
+# disable mouse and focus-events by default to avoid iTerm mouse reporting warning
+set -g mouse off
+set -s focus-events off
 
 # force Vi mode
 #   really you should export VISUAL or EDITOR environment variable, see manual
