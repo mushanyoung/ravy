@@ -614,14 +614,13 @@ if filereadable(s:custom_vimrc)
 endif
 
 " Plug 'dense-analysis/ale'                       " Asynchronous Lint Engine
+Plug 'LunarWatcher/auto-pairs'                  " Insert or delete brackets, parentheses, and quotes in pairs
 Plug 'PeterRincker/vim-argumentative'           " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
 Plug 'airblade/vim-gitgutter'                   " git: hunks operation indicator
 Plug 'airblade/vim-rooter'                      " set proper working directory
 Plug 'andymass/vim-matchup'                     " even better % navigate and highlight matching words
 Plug 'ap/vim-css-color'                         " show css color in code
-Plug 'chrisbra/unicode.vim'                     " Search unicode
 Plug 'christoomey/vim-tmux-navigator'           " pane navigate integration with tmux
-Plug 'LunarWatcher/auto-pairs'                  " Insert or delete brackets, parentheses, and quotes in pairs
 Plug 'junegunn/fzf'                             " fzf integration
 Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/vim-easy-align'                  " ga to align a region of text on a key (<C-X> to use a regex)
