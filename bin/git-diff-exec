@@ -11,4 +11,4 @@ OIFS="$IFS"
 IFS=$'\n'
 files=($files)
 IFS="$OIFS"
-${DIFF_EXEC_CMD:-vim} ${DIFF_EXEC_VIM_LCS_DIR:+"+cd $dpath"} "${files[@]}"
+${DIFF_EXEC_CMD:-nvim} ${DIFF_EXEC_VIM_LCS_DIR:+"+cd $dpath"} "${files[@]}"

@@ -143,7 +143,7 @@ function fish_prompt
     if test -n "$gbranch"
         set -l gstatus (__prompt_git_status)
         echo -n -s (set_color 5f8700) $gbranch (set_color d78700) $gstatus ' '
-        set promptlen (math $promptlen + (string length $gbranch) + (string length $gstatus) + 1)
+        set promptlen (math $promptlen + (string length $gbranch) + (string length "$gstatus") + 1)
     end
 
     # custom

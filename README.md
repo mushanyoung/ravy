@@ -10,7 +10,8 @@ Paste at a terminal prompt:
 curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh | sh -s
 ```
 
-Run the following vim command to install vim plugins:
+Run the following nvim command to install nvim plugins:
+
 ```
 :PlugUpdate
 ```

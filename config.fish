@@ -56,8 +56,8 @@ fundle init
 # ENV
 set -x LANG en_US.UTF-8
 set -x LANGUAGE $LANG
-set -x EDITOR vim
-set -x GIT_EDITOR vim
+set -x EDITOR nvim
+set -x GIT_EDITOR nvim
 
 set -x PAGER less
 set -x LESS FRSXMi
@@ -120,7 +120,6 @@ end
 # edit command in path
 function ep --wraps="command -v"
     if set -l exe (command -v $argv[1])
-        test -n "$EDITOR"; or set -l EDITOR vim
         echo $EDITOR $exe
         $EDITOR $exe
     end
@@ -174,8 +173,8 @@ alias hs history
 alias tf "tail -f"
 alias rd rmdir
 alias rb ruby
-alias vi vim
-alias v vim
+alias vi nvim
+alias v nvim
 alias grep "grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}"
 alias pyserv "python3 -m http.server"
 alias ipy ipython

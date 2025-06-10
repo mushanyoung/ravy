@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Dependencies: git, vim, fzf, fd, curl
+# Dependencies: git, fzf, fd, curl, nvim
 # Dependencies for Linux: build-essential
 
 SHELL=/bin/sh

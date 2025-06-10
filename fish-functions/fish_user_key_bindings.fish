@@ -86,7 +86,7 @@ function __fle_fzf_files
             end
         else if string match -rq '[EeVv]$' $key
             # Edit
-            set -l editor (set -q EDITOR; and echo $EDITOR; or echo vim)
+            set -l editor (set -q EDITOR; and echo $EDITOR; or echo nvim)
             commandline "$editor -- $escaped_list"
             commandline -f execute
         else if string match -rq '[Oo]$' $key
@@ -145,7 +145,7 @@ function __fle_fzf_files_rg
     end
     set -lx FZF_FILES_COMMAND rg -il $keyword
     set -lx FZF_FILES_PROMPT "Search: /$keyword/ "
-    set -lx FZF_FILES_DEFAULT_ACTION "custom:vim +'exe \"norm /$keyword\n\"' --"
+    set -lx FZF_FILES_DEFAULT_ACTION "custom:nvim +'exe \"norm /$keyword\n\"' --"
     set -lx FZF_FILES_PREVIEW_COMMAND "rg --pretty --context 2 '$keyword' {}"
     __fle_fzf_files
 end

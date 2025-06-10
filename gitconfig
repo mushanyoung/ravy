@@ -5,7 +5,7 @@
   safecrlf = warn
   whitespace = trailing-space,space-before-tab
   excludesfile = ~/.ignore
-  editor = ${GIT_EDITOR:-vim}
+  editor = ${GIT_EDITOR:-nvim}
 [color]
   ui = auto
 [diff]
@@ -75,7 +75,7 @@
   di = !ydiff -c auto -s -w 0 --
   ds = diff --stat
   dn = diff --name-only
-  de = !DIFF_EXEC_CMD=vim DIFF_EXEC_VIM_LCS_DIR=1 git diff-exec
+  de = !DIFF_EXEC_CMD=${EDITOR:-nvim} DIFF_EXEC_VIM_LCS_DIR=1 git diff-exec
   ; print the farest folder containing all changed files
   dd = "!gdd(){ git diff --name-only \"$@\" | sed -e 'N;s/^\\(.*\\).*\\n\\1.*$/\\1\\n\\1/;D'; }; gdd"
 

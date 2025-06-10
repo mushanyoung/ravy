@@ -5,7 +5,7 @@ set -eu
 # USAGE: vimv [file1 file2]
 # https://github.com/thameera/vimv
 
-declare -r FILENAMES_FILE=$(mktemp "${TMPDIR:-/tmp}/vimv.XXX")
+declare -r FILENAMES_FILE=$(mktemp "${TMPDIR:-/tmp}/vimv.XXXXXX")
 
 trap '{ rm -f "${FILENAMES_FILE}" ; }' EXIT
 
@@ -33,9 +33,9 @@ for ((i=0;i<${#src[@]};++i)); do
     if [ "${src[i]}" != "${dest[i]}" ]; then
         mkdir -p "$(dirname "${dest[i]}")"
         if git ls-files --error-unmatch "${src[i]}" > /dev/null 2>&1; then
-            git mv "${src[i]}" "${dest[i]}"
+            git mv -- "${src[i]}" "${dest[i]}"
         else
-            mv "${src[i]}" "${dest[i]}"
+            mv -- "${src[i]}" "${dest[i]}"
         fi
         ((++count))
     fi
