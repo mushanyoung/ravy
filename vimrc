@@ -15,7 +15,7 @@ set directory=~/.vim/tmp//,. swapfile
 set backupdir=~/.vim/tmp//,. nobackup writebackup
 set undodir=~/.vim/tmp//,. undofile undolevels=1000 undoreload=10000
 set wildignore+=*.png,*.jpg,*.gif,*.ico,*.mp3,*.mp4,*.avi,*.mkv,*.o,*.obj,*.pyc,*.swf,*.fla,*.git*,*.hg*,*.svn,log/**,tmp/**,*~,*~orig,*.DS_Store,tags,.tags,.tags_sorted_by_file,node_modules
-set encoding=utf-8 termencoding=utf-8 fileencoding=utf-8 fileencodings=ucs-bom,utf-8,default,latin1,utf-16le,big5,gbk,euc-jp,euc-kr,iso8859-1
+set encoding=utf-8 fileencoding=utf-8 fileencodings=ucs-bom,utf-8,default,latin1,utf-16le,big5,gbk,euc-jp,euc-kr,iso8859-1
 set formatoptions=nmMcroql
 set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
 set tabstop=8 softtabstop=2 shiftwidth=2 expandtab smarttab
@@ -606,7 +606,7 @@ nnoremap <silent> \p :call TogglePyrightInlayParameterTypes()<CR>
 
 " Plugins & Custom Settings {{
 
-call plug#begin()
+call plug#begin('~/.vim/plugged')
 
 let s:custom_vimrc = expand('<sfile>:p:h') . '/' . 'custom/vimrc'
 if filereadable(s:custom_vimrc)
