@@ -34,16 +34,12 @@ RAVY="$HOME/.ravy"
 append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]
 path=$RAVY/gitconfig"
 append_content_if_absent $HOME/.gitconfig "path=$RAVY/custom/gitconfig" "path=$RAVY/custom/gitconfig"
-append_content_if_absent $HOME/.ignore "RAVY_TMP" "$RAVY/ignore"
+__el ln -s -f $RAVY/ignore $HOME/.ignore
 
 __banner fish
 append_content_if_absent $HOME/.config/fish/config.fish "test -f $RAVY/config.fish && source $RAVY/config.fish"
 curl https://raw.githubusercontent.com/danhper/fundle/master/functions/fundle.fish --create-dirs -sLo ~/.config/fish/functions/fundle.fish
 ln -sf $RAVY/fish-functions/* $HOME/.config/fish/functions
-
-__banner brew-compose
-__el rm -rf $HOME/.brew-compose
-__el ln -s -f $RAVY/brew-compose $HOME/.brew-compose
 
 __banner colorls
 __el rm -rf $HOME/.config/colorls
