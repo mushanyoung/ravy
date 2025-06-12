@@ -338,28 +338,13 @@ nnoremap \t <NOP>
 
 " Plugin Settings {{
 
-" ALE {{
+" vim-better-whitespace {{
 
-" Only enable specified linters
-let g:ale_linters_explicit = 1
-let g:ale_linters = {
-      \   'ruby': ['rubocop'],
-      \   'javascript': ['eslint'],
-      \   'fish': ['fish'],
-      \   'vim': ['vint'],
-      \}
-
-let g:ale_fixers = {
-      \   '*': ['remove_trailing_lines', 'trim_whitespace'],
-      \   'javascript': ['eslint'],
-      \   'ruby': ['rubocop'],
-      \   'fish': ['fish_indent'],
-      \}
-let g:ale_fix_on_save = 1
-let g:ale_lint_on_save = 1
-let g:ale_lint_on_enter = 1
-let g:ale_lint_on_insert_leave = 0
-let g:ale_lint_on_text_changed = 'never'
+let g:better_whitespace_enabled=1
+let g:show_spaces_that_precede_tabs=1
+let g:strip_whitespace_on_save=1
+let g:strip_whitelines_at_eof=1
+let g:strip_whitespace_confirm=0
 
 " }}
 
@@ -550,7 +535,6 @@ if filereadable(s:custom_vimrc)
   exec 'source ' . s:custom_vimrc
 endif
 
-" Plug 'dense-analysis/ale'                       " Asynchronous Lint Engine
 Plug 'LunarWatcher/auto-pairs'                  " Insert or delete brackets, parentheses, and quotes in pairs
 Plug 'PeterRincker/vim-argumentative'           " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
 Plug 'airblade/vim-gitgutter'                   " git: hunks operation indicator
