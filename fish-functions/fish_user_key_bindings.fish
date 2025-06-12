@@ -127,13 +127,13 @@ function __fle_fzf_files_dirs_with_hidden
     __fle_fzf_files
 end
 
-function __fle_fzf_files_vim_source
-    grep '^>' $HOME/.viminfo | cut -b3-
+function __fle_fzf_files_nvim_source
+    nvim --headless +'lua for _,f in ipairs(vim.v.oldfiles) do io.write(f .. "\n") end' +qa
 end
 
-function __fle_fzf_files_vim
-    set -lx FZF_FILES_COMMAND __fle_fzf_files_vim_source
-    set -lx FZF_FILES_PROMPT "File(vim)"
+function __fle_fzf_files_nvim
+    set -lx FZF_FILES_COMMAND __fle_fzf_files_nvim_source
+    set -lx FZF_FILES_PROMPT "File(nvim)"
     set -lx FZF_FILES_DEFAULT_ACTION e
     __fle_fzf_files
 end
@@ -155,7 +155,7 @@ bind \eo __fle_fzf_files_files
 bind \eO __fle_fzf_files_files_with_hidden
 bind \ed __fle_fzf_files_dirs
 bind \eD __fle_fzf_files_dirs_with_hidden
-bind \ev __fle_fzf_files_vim
+bind \ev __fle_fzf_files_nvim
 bind \eg __fle_fzf_files_rg
 
 bind \et __fle_type
