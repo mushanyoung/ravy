@@ -542,6 +542,7 @@ Plug 'airblade/vim-rooter'                      " set proper working directory
 Plug 'andymass/vim-matchup'                     " even better % navigate and highlight matching words
 Plug 'ap/vim-css-color'                         " show css color in code
 Plug 'christoomey/vim-tmux-navigator'           " pane navigate integration with tmux
+Plug 'honza/vim-snippets'                       " snippets
 Plug 'junegunn/fzf'                             " fzf integration
 Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets
 Plug 'junegunn/vim-easy-align'                  " ga to align a region of text on a key (<C-X> to use a regex)
@@ -551,10 +552,11 @@ Plug 'liuchengxu/vista.vim'                     " Viewer & Finder for LSP symbol
 Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and pairs with pairing colors
 Plug 'mg979/vim-visual-multi'                   " multiple cursor and multiple modifications
 Plug 'mhinz/vim-sayonara'                       " Deletes the current buffer smartly
-Plug 'sainnhe/gruvbox-material'                 " color scheme
-Plug 'preservim/vim-indent-guides'              " visually displaying indent levels
+Plug 'neoclide/coc.nvim', {'branch': 'release'} " completions
 Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function
+Plug 'preservim/vim-indent-guides'              " visually displaying indent levels
 Plug 'romainl/vim-cool'                         " disables search highlighting when you are done searching
+Plug 'sainnhe/gruvbox-material'                 " color scheme
 Plug 'svermeulen/vim-cutlass'                   " plugin that adds a 'cut' operation separate from 'delete'
 Plug 'svermeulen/vim-yoink'                     " maintains a yank history to cycle between when pasting
 Plug 'terryma/vim-expand-region'                " +, - to expand and shrink selection
@@ -569,8 +571,6 @@ Plug 'tpope/vim-surround'                       " `s`: manipulate surrounded sym
 Plug 'tpope/vim-unimpaired'                     " a bunch of useful [, ] key bindings
 Plug 'vim-airline/vim-airline'                  " status line with powerline fonts
 Plug 'vim-scripts/vim-scroll-position'          " simulated scroll bar using sign column
-Plug 'honza/vim-snippets'                       " snippets
-Plug 'neoclide/coc.nvim', {'branch': 'release'} " completions
 
 if executable('ctags')
   Plug 'ludovicchabant/vim-gutentags'
