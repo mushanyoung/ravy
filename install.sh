@@ -20,7 +20,7 @@ append_content_if_absent () {
 }
 
 __banner mkdir
-__el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOME/.vim
+__el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOME/.config/nvim
 
 __banner ~/.ravy
 if [ -d "$HOME/.ravy" ]; then
@@ -44,12 +44,9 @@ __banner colorls
 __el rm -rf $HOME/.config/colorls
 __el ln -s -f $RAVY/colorls $HOME/.config/colorls
 
-__banner vim/neovim
-__el rm -rf $HOME/.config/nvim
-__el ln -s -f $HOME/.vim $HOME/.config/nvim
-__el ln -s -f $RAVY/coc-settings.json $HOME/.vim/coc-settings.json
-__el curl -fLo $HOME/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-append_content_if_absent $HOME/.vimrc "if filereadable('$RAVY/vimrc') | source $RAVY/vimrc | endif"
+__banner neovim
+__el ln -s -f $RAVY/coc-settings.json $HOME/.config/nvim/coc-settings.json
+__el curl -fLo $HOME/.config/nvim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 append_content_if_absent $HOME/.config/nvim/init.vim "if filereadable('$RAVY/vimrc') | source $RAVY/vimrc | endif"
 
 __banner tmux
