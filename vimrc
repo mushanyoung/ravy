@@ -528,7 +528,7 @@ nnoremap <silent> \p :call TogglePyrightInlayParameterTypes()<CR>
 
 " Plugins & Custom Settings {{
 
-call plug#begin('~/.config/nvim/plugged')
+call plug#begin()
 
 let s:custom_vimrc = expand('<sfile>:p:h') . '/' . 'custom/vimrc'
 if filereadable(s:custom_vimrc)

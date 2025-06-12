@@ -33,16 +33,17 @@ __banner link dotfiles
 RAVY="$HOME/.ravy"
 append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]
 path=$RAVY/gitconfig"
-__el ln -s -f $RAVY/ignore $HOME/.ignore
+append_content_if_absent $HOME/.ignore "$(cat $RAVY/ignore)"
 
 __banner fish
 append_content_if_absent $HOME/.config/fish/config.fish "test -f $RAVY/config.fish && source $RAVY/config.fish"
+__el rm -rf $HOME/.config/fish/functions
+__el cp -r $RAVY/fish-functions $HOME/.config/fish/functions
 curl https://raw.githubusercontent.com/danhper/fundle/master/functions/fundle.fish --create-dirs -sLo ~/.config/fish/functions/fundle.fish
-ln -sf $RAVY/fish-functions/* $HOME/.config/fish/functions
 
 __banner colorls
 __el rm -rf $HOME/.config/colorls
-__el ln -s -f $RAVY/colorls $HOME/.config/colorls
+__el cp -r $RAVY/colorls $HOME/.config/colorls
 
 __banner neovim
 __el ln -s -f $RAVY/coc-settings.json $HOME/.config/nvim/coc-settings.json
@@ -51,7 +52,7 @@ append_content_if_absent $HOME/.config/nvim/init.vim "if filereadable('$RAVY/vim
 
 __banner tmux
 __el curl -sfLo $HOME/.tmux.conf https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
-__el ln -s -f $RAVY/tmux.conf.local $HOME/.tmux.conf.local
+append_content_if_absent $HOME/.tmux.conf.local "source $RAVY/tmux.conf.local"
 
 __banner custom
 if command -v "$RAVY/custom/install.sh" >/dev/null; then
