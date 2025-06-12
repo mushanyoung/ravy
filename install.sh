@@ -33,7 +33,6 @@ __banner link dotfiles
 RAVY="$HOME/.ravy"
 append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]
 path=$RAVY/gitconfig"
-append_content_if_absent $HOME/.gitconfig "path=$RAVY/custom/gitconfig" "path=$RAVY/custom/gitconfig"
 __el ln -s -f $RAVY/ignore $HOME/.ignore
 
 __banner fish
@@ -63,5 +62,5 @@ if command -v "$RAVY/custom/install.sh" >/dev/null; then
 fi
 
 __banner complete
-echo "Please chsh to fish, if not yet."
+echo "Finish install."
 type fish

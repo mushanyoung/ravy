@@ -1,3 +1,5 @@
+[include]
+  path=./custom/gitconfig
 [apply]
   whitespace = fix
 [core]
