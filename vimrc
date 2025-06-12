@@ -36,6 +36,12 @@ set nostartofline                " does not move the cursor to start of line for
 set scrolloff=3 scrolljump=1     " 3 lines away from margins to scroll 1 line
 set sidescrolloff=8 sidescroll=2 " 8 columns away from margins to scroll 2 column
 
+" Register system clipboard
+if has('clipboard')
+  set clipboard+=unnamed,unnamedplus
+endif
+
+
 " UI
 set number numberwidth=4
 set nofoldenable foldmethod=indent foldlevel=0 foldnestmax=3
@@ -99,30 +105,6 @@ augroup BufferEdit
   autocmd InsertLeave * set nocursorline
 augroup END
 
-" Register system clipboard or OSCYank plugin
-if has('clipboard')
-  set clipboard+=unnamed,unnamedplus
-else
-  " In the event that the clipboard isn't working, it's quite likely that
-  " the + and * registers will not be distinct from the unnamed register. In
-  " this case, a:event.regname will always be '' (empty string). However, it
-  " can be the case that `has('clipboard_working')` is false, yet `+` is
-  " still distinct, so we want to check them all.
-  let s:VimOSCYankPostRegisters = ['', '+', '*']
-  " copy text to clipboard on both (y)ank and (d)elete
-  let s:VimOSCYankOperators = ['y', 'd']
-  function! s:VimOSCYankPostCallback(event)
-    if index(s:VimOSCYankPostRegisters, a:event.regname) != -1
-          \ && index(s:VimOSCYankOperators, a:event.operator) != -1
-      call OSCYankRegister(a:event.regname)
-    endif
-  endfunction
-  augroup VimOSCYankPost
-    autocmd!
-    autocmd TextYankPost * call s:VimOSCYankPostCallback(v:event)
-  augroup END
-endif
-
 " }}
 
 " Functions {{
@@ -153,43 +135,6 @@ endfunction
 function! s:AltMapKey(key)
   return has('nvim')?  '<A-'. a:key . '>' : '<ESC>'. a:key
 endfun
-
-" repl-visual-no-reg-overwrite.vim {{
-
-function! RestoreRegister()
-  if &clipboard ==# 'unnamed'
-    call setreg('*', s:restore_reg)
-  elseif &clipboard ==# 'unnamedplus'
-    call setreg('+', s:restore_reg)
-  else
-    call setreg('"', s:restore_reg)
-  endif
-  return ''
-endfunction
-
-function! s:Repl()
-  let s:restore_reg = getreg('"')
-  return "p@=RestoreRegister()\<cr>"
-endfunction
-
-function! s:ReplSelect()
-  echo 'Register to paste over selection? (<cr> => default register: '.strtrans(getreg('"')).')'
-  let c = nr2char(getchar())
-  let reg = c =~# '^[0-9a-z:.%#/*+~]$'
-        \ ? '"'.c
-        \ : ''
-  return "\<C-G>".reg.s:Repl()
-endfunction
-
-" This supports "rp that permits to replace the visual selection with the
-" contents of @r
-xnoremap <silent> <expr> p <sid>Repl()
-
-" Mappings on <s-insert>, that'll also work in select mode!
-xnoremap <silent> <expr> <S-Insert> <sid>Repl()
-snoremap <silent> <expr> <S-Insert> <sid>ReplSelect()
-
-" }}
 
 " }}
 
@@ -247,6 +192,9 @@ nnoremap m d
 xnoremap m d
 nnoremap mm dd
 nnoremap M D
+
+" paste in visual mode does not overwrite the register
+xnoremap p "_dP
 
 " Y to copy to the end of the line
 nnoremap Y y$
@@ -510,14 +458,6 @@ let g:indent_guides_auto_colors = 0
 
 " }}
 
-" vim-oscyank {{
-
-let g:oscyank_max_length = 0
-let g:oscyank_silent = v:false
-let g:oscyank_trim = v:true
-
-" }}
-
 " vim-peekaboo {{
 
 let g:peekaboo_window = 'vertical leftabove 40new'
@@ -630,7 +570,6 @@ Plug 'mhinz/vim-sayonara'                       " Deletes the current buffer sma
 Plug 'sainnhe/gruvbox-material'                 " color scheme
 Plug 'preservim/vim-indent-guides'              " visually displaying indent levels
 Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function
-Plug 'ojroques/vim-oscyank'                     " Yank through OSC 52
 Plug 'romainl/vim-cool'                         " disables search highlighting when you are done searching
 Plug 'svermeulen/vim-cutlass'                   " plugin that adds a 'cut' operation separate from 'delete'
 Plug 'svermeulen/vim-yoink'                     " maintains a yank history to cycle between when pasting
