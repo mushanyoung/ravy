@@ -46,7 +46,8 @@ __el rm -rf $HOME/.config/colorls
 __el cp -r $RAVY/colorls $HOME/.config/colorls
 
 __banner neovim
-__el ln -s -f $RAVY/coc-settings.json $HOME/.config/nvim/coc-settings.json
+__el rm -f $HOME/.config/nvim/coc-settings.json
+__el cp -f $RAVY/coc-settings.json $HOME/.config/nvim/coc-settings.json
 __el curl -fLo $HOME/.config/nvim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 append_content_if_absent $HOME/.config/nvim/init.vim "if filereadable('$RAVY/vimrc') | source $RAVY/vimrc | endif"
 
