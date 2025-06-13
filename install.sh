@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# Dependencies: git, fzf, fd, curl, nvim
-# Dependencies for Linux: build-essential
-
 SHELL=/bin/sh
 
 set -e
