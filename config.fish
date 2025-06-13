@@ -53,6 +53,9 @@ fundle plugin jethrokuan/z
 fundle plugin mushanyoung/brew-compose
 fundle init
 
+# atuin
+atuin init fish | source
+
 # ENV
 set -x LANG en_US.UTF-8
 set -x LANGUAGE $LANG
