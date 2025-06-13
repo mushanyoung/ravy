@@ -14,23 +14,29 @@ __banner () { echo; echo "===== $@"; }
 
 append_content_if_absent () {
   file="$1" text="$2" appending=${3:-$2}
+  echo "> $file"
   if ! grep "$text" "$file" >/dev/null 2>&1; then
     [ -f "$appending" ] && cat "$appending" >> "$file" || echo "$appending" >> "$file"
   fi
 }
 
+if [ -t 0 ]; then
+  echo "Running interactively or from a terminal."
+  RAVY="$(cd "$(dirname "$0")" && pwd)"
+else
+  echo "Script is being piped. Trying to create the ravy folder."
+  RAVY="$HOME/.ravy"
+  if [ -d "$RAVY" ]; then
+    __el git -C "$RAVY" pull --rebase || true
+  else
+    __el git clone https://github.com/mushanyoung/ravy $RAVY
+  fi
+fi
+
 __banner mkdir
 __el mkdir -p $HOME/.config $HOME/.config/fish $HOME/.config/fish/functions $HOME/.config/nvim
 
-__banner ~/.ravy
-if [ -d "$HOME/.ravy" ]; then
-  __el git -C "$HOME/.ravy" pull --rebase || true
-else
-  __el git clone https://github.com/mushanyoung/ravy $HOME/.ravy
-fi
-
-__banner link dotfiles
-RAVY="$HOME/.ravy"
+__banner dotfiles
 append_content_if_absent $HOME/.gitconfig "path=$RAVY/gitconfig" "[include]
 path=$RAVY/gitconfig"
 append_content_if_absent $HOME/.ignore "$(cat $RAVY/ignore)"
