@@ -54,7 +54,7 @@ fundle plugin mushanyoung/brew-compose
 fundle init
 
 # atuin
-if command -v gem &>/dev/null
+if command -v atuin &>/dev/null
     atuin init fish | source
 end
 
