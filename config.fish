@@ -54,7 +54,9 @@ fundle plugin mushanyoung/brew-compose
 fundle init
 
 # atuin
-atuin init fish | source
+if command -v gem &>/dev/null
+    atuin init fish | source
+end
 
 # ENV
 set -x LANG en_US.UTF-8
@@ -176,8 +178,9 @@ alias hs history
 alias tf "tail -f"
 alias rd rmdir
 alias rb ruby
-alias vi nvim
 alias v nvim
+alias vi nvim
+alias vim nvim
 alias grep "grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}"
 alias pyserv "python3 -m http.server"
 alias ipy ipython
