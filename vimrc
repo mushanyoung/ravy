@@ -15,7 +15,8 @@ set wildignore+=*.png,*.jpg,*.gif,*.ico,*.mp3,*.mp4,*.avi,*.mkv,*.o,*.obj,*.pyc,
 set encoding=utf-8 fileencoding=utf-8 fileencodings=ucs-bom,utf-8,default,latin1,utf-16le,big5,gbk,euc-jp,euc-kr,iso8859-1
 set formatoptions=nmMcroql
 set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
-set tabstop=8 softtabstop=2 shiftwidth=2 expandtab smarttab
+set tabstop=8
+set softtabstop=2 shiftwidth=2 expandtab smarttab
 set copyindent smartindent nocindent
 set ignorecase smartcase
 set hlsearch incsearch
@@ -40,7 +41,6 @@ set sidescrolloff=8 sidescroll=2 " 8 columns away from margins to scroll 2 colum
 if has('clipboard')
   set clipboard+=unnamed,unnamedplus
 endif
-
 
 " UI
 set number numberwidth=4
@@ -138,19 +138,44 @@ endfun
 
 " }}
 
-" Keys {{
+" Obsidian Vimrc compatible settings {{
 
-" basic key remap {{
+" exit insert mode
+imap jj <Esc>
 
 " scroll the view port faster
 nnoremap <C-E> 3<C-E>
 nnoremap <C-Y> 3<C-Y>
 
-" 0 go to first non blank, ^ go to the very beginning
-nnoremap 0 ^
-nnoremap ^ 0
+" H and L go to beginning/end of line
+nnoremap H ^
+nnoremap L $
+
+" 'Cut' motion
+nnoremap m d
+vnoremap m d
+nnoremap mm dd
+nnoremap M D
+
+" paste in visual mode does not overwrite the register
+vnoremap p "_dP
+
+" Y to copy to the end of the line
+nnoremap Y y$
+
+" repalce texts
+vnoremap <Space>/ :s/
+nnoremap <Space>/ :%s/
+
+" select ALL the buffer
+nnoremap <Space>a ggVG
+
+" write
+nnoremap <Space>w :write<CR>
 
 " }}
+
+" Keys {{
 
 " imap / cmap {{
 
@@ -187,36 +212,15 @@ nnoremap gw :exec("vsplit ".expand("<cfile>"))<CR>
 " Visually select the text that was last edited/pasted
 nnoremap gV `[v`]
 
-" 'Cut' motion
-nnoremap m d
-xnoremap m d
-nnoremap mm dd
-nnoremap M D
-
-" paste in visual mode does not overwrite the register
-xnoremap p "_dP
-
-" Y to copy to the end of the line
-nnoremap Y y$
-
 " map leader key to >
 let g:mapleader = '>'
-
-" use space and backslash as the actual leader key for my own key bindings
-map <SPACE> \
-map <SPACE><SPACE> \\
 
 " search & substitute very magically
 nnoremap / /\v
 vnoremap / /\v
-vnoremap \/ :s/
-nnoremap \/ :%s/
-
-" select ALL
-nnoremap \a ggVG
 
 " close current buffer
-nnoremap \x :Sayonara<CR>
+nnoremap <Space>x :Sayonara<CR>
 
 " diff
 nnoremap <silent> \de :bdelete!<BAR>diffoff<CR>
@@ -226,16 +230,16 @@ nnoremap <silent> \dr :diffget 3<BAR>diffupdate<CR>
 
 " current working directory
 " print current working directory and path of current buffer
-nnoremap \ff :echo getcwd().' > '. expand('%')<CR>
+nnoremap <Space>ff :echo getcwd().' > '. expand('%')<CR>
 " change current working directory
-nnoremap \f. :lcd ..<BAR>pwd<CR>
-nnoremap \fh :lcd %:p:h<BAR>pwd<CR>
-nnoremap \fe :lcd<SPACE>
+nnoremap <Space>f. :lcd ..<BAR>pwd<CR>
+nnoremap <Space>fh :lcd %:p:h<BAR>pwd<CR>
+nnoremap <Space>fe :lcd<Space>
 
 " \h*: GitGutter
 
 " new buffer
-nnoremap \n :enew<CR>
+nnoremap <Space>n :enew<CR>
 
 " toggle quickfix window
 nnoremap <silent> \q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
@@ -244,45 +248,42 @@ nnoremap <silent> \q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<B
 nnoremap <silent> \u :set invfoldenable<BAR>echo &foldenable?'Fold enabled.':'Fold disabled.'<CR>
 
 " edit / reload vimrc
-nnoremap \ve :edit $MYVIMRC<CR>
-nnoremap \vs :source $MYVIMRC<CR>
+nnoremap <Space>ve :edit $MYVIMRC<CR>
+nnoremap <Space>vs :source $MYVIMRC<CR>
 
 " print key maps in a new buffer
-nnoremap \vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent map!<BAR>redir END<BAR>put =kms<CR>
+nnoremap <Space>vm :enew<BAR>redir=>kms<BAR>silent map<BAR>silent map!<BAR>redir END<BAR>put =kms<CR>
 
 " Install & Update plugins
-nnoremap \vu :PlugUpdate<CR>
+nnoremap <Space>vu :PlugUpdate<CR>
 
 " Clean plugins
-nnoremap \vc :PlugClean!<CR>
-
-" write
-nnoremap \w :write<CR>
+nnoremap <Space>vc :PlugClean!<CR>
 
 " execute
-nnoremap \r :!"%:p"<CR>
+nnoremap <Space>r :!"%:p"<CR>
 
 " toggle auto zz when scrolling
 nnoremap <silent> \z :let &scrolloff=999-&scrolloff<BAR>echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
 
 " indent / unindent
-nnoremap \<TAB> v>
-nnoremap \<S-TAB> v<
-vnoremap \<TAB> >gv
-vnoremap \<S-TAB> <gv
+nnoremap <TAB> v>
+nnoremap <S-TAB> v<
+vnoremap <TAB> >gv
+vnoremap <S-TAB> <gv
 
 " insert an empty line without entering insert mode
-nmap \<CR> <PLUG>unimpairedBlankDown
-nmap \\<CR> <PLUG>unimpairedBlankUp
+nmap <Space><CR> <PLUG>unimpairedBlankDown
+nmap <Space><Space> <PLUG>unimpairedBlankUp
 
 " FZF
-exec 'nnoremap           ' . s:AltMapKey('a') . ' :Ag<SPACE>'
+exec 'nnoremap           ' . s:AltMapKey('a') . ' :Ag<Space>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('d') . ' :call FZFDirectories()<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('b') . ' :Buffers<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('m') . ' :Marks<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('e') . ' :Lines<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
-exec 'nnoremap <silent> 0' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
+" exec 'nnoremap <silent> 0' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
 exec 'nnoremap <silent> 1' . s:AltMapKey('o') . ' :Files %:p:h/..<CR>'
 exec 'nnoremap <silent> 2' . s:AltMapKey('o') . ' :Files %:p:h/../..<CR>'
 exec 'nnoremap <silent> 3' . s:AltMapKey('o') . ' :Files %:p:h/../../..<CR>'
@@ -320,17 +321,17 @@ exec 'nnoremap           ' . s:AltMapKey('y') . ' <NOP>'
 
 " nnoremap <ESC><ESC> <NOP>
 
-nnoremap \b <NOP>
-nnoremap \e <NOP>
-nnoremap \g <NOP>
-nnoremap \i <NOP>
-nnoremap \j <NOP>
-nnoremap \k <NOP>
-nnoremap \l <NOP>
-nnoremap \m <NOP>
-nnoremap \o <NOP>
-nnoremap \s <NOP>
-nnoremap \t <NOP>
+nnoremap <Space>b <NOP>
+nnoremap <Space>e <NOP>
+nnoremap <Space>g <NOP>
+nnoremap <Space>i <NOP>
+nnoremap <Space>j <NOP>
+nnoremap <Space>k <NOP>
+nnoremap <Space>l <NOP>
+nnoremap <Space>m <NOP>
+nnoremap <Space>o <NOP>
+nnoremap <Space>s <NOP>
+nnoremap <Space>t <NOP>
 
 " }}
 
@@ -385,7 +386,7 @@ let g:CoolTotalMatches = 1
 
 " vim-easy-align {{
 
-xmap ga <PLUG>(EasyAlign)
+vmap ga <PLUG>(EasyAlign)
 nmap ga <PLUG>(EasyAlign)
 
 " }}
@@ -412,17 +413,17 @@ function! GitGutterDiffBase()
   echo 'GitGutter diff base: ' . g:gitgutter_diff_base
 endfunction
 
-nmap \hn <PLUG>(GitGutterNextHunk)
-nmap \hp <PLUG>(GitGutterPrevHunk)
+nmap <Space>hn <PLUG>(GitGutterNextHunk)
+nmap <Space>hp <PLUG>(GitGutterPrevHunk)
 
-nmap \hu <PLUG>(GitGutterUndoHunk)
-nmap \hs <PLUG>(GitGutterStageHunk)
-nmap \hv <PLUG>(GitGutterPreviewHunk)
+nmap <Space>hu <PLUG>(GitGutterUndoHunk)
+nmap <Space>hs <PLUG>(GitGutterStageHunk)
+nmap <Space>hv <PLUG>(GitGutterPreviewHunk)
 
 nnoremap <silent> \hl :GitGutterLineHighlightsToggle<CR>
 nnoremap <silent> \hc :call GitGutterDiffBase()<CR>
 nnoremap <silent> \hr :let g:gitgutter_diff_base=''<BAR>call GitGutterDiffBase()<CR>
-nnoremap \hb :let g:gitgutter_diff_base=''<LEFT>
+nnoremap <Space>hb :let g:gitgutter_diff_base=''<LEFT>
 for i in range(0, 9)
   exec 'nnoremap <silent> \h' . i . ' :let g:gitgutter_diff_base="HEAD~' . i . '"<BAR>call GitGutterDiffBase()<CR>'
 endfor
@@ -430,8 +431,8 @@ endfor
 " text objects
 omap ic <PLUG>(GitGutterTextObjectInnerPending)
 omap ac <PLUG>(GitGutterTextObjectOuterPending)
-xmap ic <PLUG>(GitGutterTextObjectInnerVisual)
-xmap ac <PLUG>(GitGutterTextObjectOuterVisual)
+vmap ic <PLUG>(GitGutterTextObjectInnerVisual)
+vmap ac <PLUG>(GitGutterTextObjectOuterVisual)
 
 " }}
 
@@ -516,7 +517,7 @@ function! TogglePyrightInlayParameterTypes()
   echo l:msg
 endfunction
 
-noremap \fm :call CocAction('format')<CR>
+noremap <Space>fm :call CocAction('format')<CR>
 
 nnoremap <silent> \p :call TogglePyrightInlayParameterTypes()<CR>
 
@@ -553,7 +554,7 @@ Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and 
 Plug 'mg979/vim-visual-multi'                   " multiple cursor and multiple modifications
 Plug 'mhinz/vim-sayonara'                       " Deletes the current buffer smartly
 Plug 'neoclide/coc.nvim', {'branch': 'release'} " completions
-Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and provide StripWhitespace function
+Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and strip whitespace on save
 Plug 'preservim/vim-indent-guides'              " visually displaying indent levels
 Plug 'romainl/vim-cool'                         " disables search highlighting when you are done searching
 Plug 'sainnhe/gruvbox-material'                 " color scheme
