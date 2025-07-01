@@ -198,6 +198,12 @@ cnoremap <C-N> <DOWN>
 cnoremap <UP> <C-P>
 cnoremap <DOWN> <C-N>
 
+" readline style insert mode keys
+inoremap <C-A> <C-O>^
+cnoremap <C-A> <Home>
+
+inoremap <expr> <C-E> col('.')>strlen(getline('.'))<bar><bar>pumvisible()?"\<Lt>C-E>":"\<Lt>End>"
+
 " }}
 
 " nmap / vmap {{
@@ -339,6 +345,12 @@ nnoremap <Space>t <NOP>
 
 " Plugin Settings {{
 
+" auto-pairs {{
+
+let g:AutoPairsCompatibleMaps = 1
+
+" }}
+
 " vim-better-whitespace {{
 
 let g:better_whitespace_enabled=1
@@ -477,10 +489,18 @@ let g:scroll_position_visual_overlap = '❮❯'
 
 " }}
 
+" copilot.vim {{
+
+let g:copilot_enabled = 1
+inoremap <C-N> <Plug>(copilot-next)
+inoremap <C-P> <Plug>(copilot-previous)
+
+" }}
+
 " coc.nvim {{
 
-nmap <silent><nowait> \cp <Plug>(coc-diagnostic-prev)
-nmap <silent><nowait> \cn <Plug>(coc-diagnostic-next)
+nmap <silent><nowait> <Space>cp <Plug>(coc-diagnostic-prev)
+nmap <silent><nowait> <Space>cn <Plug>(coc-diagnostic-next)
 
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
@@ -543,6 +563,7 @@ Plug 'airblade/vim-rooter'                      " set proper working directory
 Plug 'andymass/vim-matchup'                     " even better % navigate and highlight matching words
 Plug 'ap/vim-css-color'                         " show css color in code
 Plug 'christoomey/vim-tmux-navigator'           " pane navigate integration with tmux
+Plug 'github/copilot.vim'                       " copilot
 Plug 'honza/vim-snippets'                       " snippets
 Plug 'junegunn/fzf'                             " fzf integration
 Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets
@@ -564,7 +585,6 @@ Plug 'terryma/vim-expand-region'                " +, - to expand and shrink sele
 Plug 'tpope/vim-abolish'                        " deal with multiple variants of a word
 Plug 'tpope/vim-commentary'                     " gc to comment codes
 Plug 'tpope/vim-repeat'                         " `.` supports to repeat mapped key sequence
-Plug 'tpope/vim-rsi'                            " Readline style insertion
 Plug 'tpope/vim-sensible'                       " default settings
 Plug 'tpope/vim-sleuth'                         " Auto shiftwidth and expandtab
 Plug 'tpope/vim-speeddating'                    " use CTRL-A/CTRL-X to increment dates, times, and more
