@@ -229,10 +229,10 @@ vnoremap / /\v
 nnoremap <Space>x :Sayonara<CR>
 
 " diff
-nnoremap <silent> \de :bdelete!<BAR>diffoff<CR>
-nnoremap <silent> \dl :diffget 1<BAR>diffupdate<CR>
-nnoremap <silent> \db :diffget 2<BAR>diffupdate<CR>
-nnoremap <silent> \dr :diffget 3<BAR>diffupdate<CR>
+nnoremap <silent> <Space>de :bdelete!<BAR>diffoff<CR>
+nnoremap <silent> <Space>dl :diffget 1<BAR>diffupdate<CR>
+nnoremap <silent> <Space>db :diffget 2<BAR>diffupdate<CR>
+nnoremap <silent> <Space>dr :diffget 3<BAR>diffupdate<CR>
 
 " current working directory
 " print current working directory and path of current buffer
@@ -248,10 +248,10 @@ nnoremap <Space>fe :lcd<Space>
 nnoremap <Space>n :enew<CR>
 
 " toggle quickfix window
-nnoremap <silent> \q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
+nnoremap <silent> <Space>q :exec exists('g:qfwin')?'cclose<BAR>unlet g:qfwin':'copen<BAR>let g:qfwin=bufnr("$")'<CR>
 
 " toggle foldenable
-nnoremap <silent> \u :set invfoldenable<BAR>echo &foldenable?'Fold enabled.':'Fold disabled.'<CR>
+nnoremap <silent> <Space>u :set invfoldenable<BAR>echo &foldenable?'Fold enabled.':'Fold disabled.'<CR>
 
 " edit / reload vimrc
 nnoremap <Space>ve :edit $MYVIMRC<CR>
@@ -270,7 +270,7 @@ nnoremap <Space>vc :PlugClean!<CR>
 nnoremap <Space>r :!"%:p"<CR>
 
 " toggle auto zz when scrolling
-nnoremap <silent> \z :let &scrolloff=999-&scrolloff<BAR>echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
+nnoremap <silent> <Space>z :let &scrolloff=999-&scrolloff<BAR>echo &scrolloff<20?'Auto zz disabled.':'Auto zz enabled.'<CR>
 
 " indent / unindent
 nnoremap <TAB> v>
@@ -325,11 +325,8 @@ exec 'nnoremap           ' . s:AltMapKey('w') . ' <NOP>'
 exec 'nnoremap           ' . s:AltMapKey('x') . ' <NOP>'
 exec 'nnoremap           ' . s:AltMapKey('y') . ' <NOP>'
 
-" nnoremap <ESC><ESC> <NOP>
-
 nnoremap <Space>b <NOP>
 nnoremap <Space>e <NOP>
-nnoremap <Space>g <NOP>
 nnoremap <Space>i <NOP>
 nnoremap <Space>j <NOP>
 nnoremap <Space>k <NOP>
@@ -338,6 +335,7 @@ nnoremap <Space>m <NOP>
 nnoremap <Space>o <NOP>
 nnoremap <Space>s <NOP>
 nnoremap <Space>t <NOP>
+nnoremap <Space>y <NOP>
 
 " }}
 
@@ -494,6 +492,20 @@ let g:scroll_position_visual_overlap = '❮❯'
 let g:copilot_enabled = 1
 inoremap <C-N> <Plug>(copilot-next)
 inoremap <C-P> <Plug>(copilot-previous)
+inoremap <C-Space> <Plug>(copilot-dismiss)
+
+" Function to toggle Copilot
+function! ToggleCopilot()
+  if copilot#Enabled()
+    Copilot disable
+  else
+    Copilot enable
+  endif
+  Copilot status
+endfunction
+
+" Map the toggle function to a key, for example, <leader>c
+nnoremap <silent><Space>g :call ToggleCopilot()<CR>
 
 " }}
 
@@ -501,6 +513,7 @@ inoremap <C-P> <Plug>(copilot-previous)
 
 nmap <silent><nowait> <Space>cp <Plug>(coc-diagnostic-prev)
 nmap <silent><nowait> <Space>cn <Plug>(coc-diagnostic-next)
+nnoremap <silent> <Space>cp :call TogglePyrightInlayParameterTypes()<CR>
 
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
@@ -539,9 +552,7 @@ endfunction
 
 noremap <Space>fm :call CocAction('format')<CR>
 
-nnoremap <silent> \p :call TogglePyrightInlayParameterTypes()<CR>
-
-" :CocInstall coc-pyright
+" :CocInstall coc-prettier coc-pyright
 
 " }}
 
