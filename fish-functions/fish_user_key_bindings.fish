@@ -150,6 +150,10 @@ function __fle_fzf_files_rg
     __fle_fzf_files
 end
 
+function __fle_prepend_last_history_line
+    commandline -i $history[1]
+end
+
 bind \er __fle_fzf_history
 bind \eo __fle_fzf_files_files
 bind \eO __fle_fzf_files_files_with_hidden
@@ -165,6 +169,7 @@ bind \cb backward-word
 
 bind \e. history-token-search-backward
 bind \e, history-token-search-forward
+bind \e/ __fle_prepend_last_history_line
 
 bind \cz __fle_fg
 

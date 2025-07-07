@@ -49,6 +49,7 @@ if test -e "$HOME/.venv/bin/activate.fish"
 end
 
 # fundle
+fundle plugin franciscolourenco/done
 fundle plugin jethrokuan/z
 fundle init
 
