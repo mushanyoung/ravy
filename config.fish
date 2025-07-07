@@ -50,7 +50,6 @@ end
 
 # fundle
 fundle plugin jethrokuan/z
-fundle plugin mushanyoung/brew-compose
 fundle init
 
 # atuin
@@ -190,10 +189,9 @@ alias pa ps-color
 alias pc "env HIGH_CPU_MEM_ONLY=1 ps-color"
 
 # brew commands
-alias bc brew-compose
 alias bi "brew install --force-bottle"
+alias blr "brew list --installed-on-request"
 alias bubu "brew update && brew outdated && brew upgrade && brew cleanup"
-alias brewleaf 'brew list | xargs -n1 -I{} sh -c \'if [ -z "$(brew uses {} --installed)" ]; then echo {}; fi\''
 
 # apt commands
 alias au "sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
@@ -203,7 +201,7 @@ alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade &&
 alias pupu "sudo pacman -Syuu --noconfirm"
 
 # docker commands
-# alias dc to `docker compose` / docker compose V2
+# alias dc to `docker compose`
 function dc --wraps="docker compose"
     docker compose (set -q RAVY_DOCKER_COMPOSE_CONFIG && string collect -- "--file" "$RAVY_DOCKER_COMPOSE_CONFIG") $argv
 end
