@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""
+Counts the total number of files within each subfolder up to a specified
+maximum depth, printing the results sorted by file count.
+"""
+import argparse
+from pathlib import Path
+
+
+def count_files_in_tree(directory: Path) -> int:
+    """Recursively counts all files in a given directory tree."""
+    file_count = 0
+    try:
+        # rglob('*') recursively finds all items, then we filter for files.
+        for item in directory.rglob("*"):
+            if item.is_file():
+                file_count += 1
+    except PermissionError:
+        return -1  # Use -1 to indicate a permission error in the output
+    return file_count
+
+
+def find_folders_up_to_depth(start_path: Path, max_depth: int) -> list[Path]:
+    """
+    Finds all directories from a starting path up to a maximum depth.
+    Depth 0 is the start_path itself.
+    """
+    if max_depth < 0:
+        return []
+
+    all_folders = [start_path]
+    folders_to_scan = [start_path]
+
+    for _ in range(max_depth):
+        next_level_folders = []
+        for folder in folders_to_scan:
+            try:
+                # Find immediate subdirectories
+                subdirs = [item for item in folder.iterdir() if item.is_dir()]
+                all_folders.extend(subdirs)
+                next_level_folders.extend(subdirs)
+            except PermissionError:
+                continue  # Skip folders we can't read
+
+        folders_to_scan = next_level_folders
+        if not folders_to_scan:
+            break  # Stop if there are no more subfolders to scan
+
+    return all_folders
+
+
+def main():
+    """Parses arguments and orchestrates the folder finding and counting."""
+    parser = argparse.ArgumentParser(
+        description="Count files per folder, up to a given subdirectory depth.",
+        epilog="Example: python count_sorted.py -d 1",
+    )
+    parser.add_argument(
+        "-d",
+        "--depth",
+        type=int,
+        default=1,
+        help="Max depth of subfolders to analyze (default: 0, for the current folder only).",
+    )
+    args = parser.parse_args()
+
+    if args.depth < 0:
+        print("❌ Error: Depth must be a non-negative integer.")
+        return
+
+    start_path = Path.cwd()
+    print(f"🔍 Analyzing folders in '{start_path}' up to depth {args.depth}...\n")
+
+    # 1. Find all target folders up to the specified depth
+    target_folders = find_folders_up_to_depth(start_path, args.depth)
+
+    # 2. For each folder, count files and store with its relative path
+    results = {}
+    for folder in target_folders:
+        count = count_files_in_tree(folder)
+        relative_path = folder.relative_to(start_path)
+        results[relative_path] = count
+
+    # 3. Print the results, sorted by file count (the dictionary value)
+    print(f"{'Total Files':>15} | {'Path'}")
+    print(f"{'-'*15:->} | {'-'*60:->}")
+
+    # --- THIS IS THE MODIFIED LINE ---
+    # Sort by the dictionary value (item[1]), which is the count.
+    for path, count in sorted(results.items(), key=lambda item: item[1]):
+        count_str = f"{count:,}" if count != -1 else "Permission Denied"
+        # Use str(path) to handle the special case of '.' for the current dir
+        print(f"{count_str:>15} | {str(path)}")
+
+
+if __name__ == "__main__":
+    main()
