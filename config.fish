@@ -206,12 +206,13 @@ alias pdau "podman auto-update"
 
 # systemctl commands
 alias sc "systemctl --user"
-alias scd "sc daemon-reload"
+alias sce "sc daemon-reload"
 alias scs "sc status"
 alias scr "sc restart"
 alias scst "sc start"
 alias scstop "sc stop"
 alias scrall "systemctl --user list-unit-files --state=generated --no-legend | awk '{print \$1}' | xargs --no-run-if-empty systemctl --user restart"
+alias scd "cd ~/.config/containers/systemd"
 
 function jl --wraps="journalctl --user -xeu"
     if test (count $argv) -eq 0
