@@ -205,13 +205,21 @@ alias pupu "sudo pacman -Syuu --noconfirm"
 alias pdau "podman auto-update"
 
 # systemctl commands
-alias sc "systemctl --user --no-pager"
+alias sc "systemctl --user"
 alias scd "sc daemon-reload"
 alias scs "sc status"
 alias scr "sc restart"
 alias scst "sc start"
 alias scstop "sc stop"
 alias scrall "systemctl --user list-unit-files --state=generated --no-legend | awk '{print \$1}' | xargs --no-run-if-empty systemctl --user restart"
+
+function jl --wraps="journalctl --user -xeu"
+    if test (count $argv) -eq 0
+        echo "Usage: jl <service_name>"
+        return 1
+    end
+    journalctl --user -xeu $argv[1] -f
+end
 
 # docker commands
 # alias dc to `docker compose`
