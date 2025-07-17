@@ -201,6 +201,18 @@ alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade &&
 # pacman commands
 alias pupu "sudo pacman -Syuu --noconfirm"
 
+# podman commands
+alias pdau "podman auto-update"
+
+# systemctl commands
+alias sc "systemctl --user --no-pager"
+alias scd "sc daemon-reload"
+alias scs "sc status"
+alias scr "sc restart"
+alias scst "sc start"
+alias scstop "sc stop"
+alias scrall "systemctl --user list-unit-files --state=generated --no-legend | awk '{print \$1}' | xargs --no-run-if-empty systemctl --user restart"
+
 # docker commands
 # alias dc to `docker compose`
 function dc --wraps="docker compose"
