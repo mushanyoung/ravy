@@ -43,9 +43,14 @@ if command -v gem &>/dev/null
     prepend_to_path (gem environment gemdir)"/bin"
 end
 
-# $ python3 -m venv "$HOME/.venv"
-if test -e "$HOME/.venv/bin/activate.fish"
-    VIRTUAL_ENV_DISABLE_PROMPT=1 source "$HOME/.venv/bin/activate.fish"
+# miniconda
+if command -v conda &>/dev/null
+    eval $(conda shell.fish hook)
+end
+
+# direnv
+if command -v direnv &>/dev/null
+    direnv hook fish | source
 end
 
 # fundle
