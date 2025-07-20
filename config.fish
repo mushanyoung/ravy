@@ -207,7 +207,10 @@ alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade &&
 alias pupu "sudo pacman -Syuu --noconfirm"
 
 # podman commands
+alias pd podman
 alias pdau "podman auto-update"
+alias pdl "podman logs -f --tail 100"
+alias pdips='podman ps -a --format "table {{.Names}}\t{{.Networks}}\t{{.Ports}}" | column -t'
 
 # systemctl commands
 alias sc "systemctl --user"
