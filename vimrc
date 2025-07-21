@@ -16,7 +16,7 @@ set encoding=utf-8 fileencoding=utf-8 fileencodings=ucs-bom,utf-8,default,latin1
 set formatoptions=nmMcroql
 set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
 set tabstop=8
-set softtabstop=2 shiftwidth=2 expandtab smarttab
+set softtabstop=4 shiftwidth=4 expandtab smarttab
 set copyindent smartindent nocindent
 set ignorecase smartcase
 set hlsearch incsearch
@@ -449,8 +449,8 @@ vmap ac <PLUG>(GitGutterTextObjectOuterVisual)
 " vim-indent-guides {{
 
 let g:indent_guides_enable_on_vim_startup = 1
-let g:indent_guides_start_level = 3
-let g:indent_guides_auto_colors = 0
+let g:indent_guides_start_level = 2
+let g:indent_guides_auto_colors = 1
 
 " }}
 
