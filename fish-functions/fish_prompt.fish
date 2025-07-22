@@ -136,30 +136,30 @@ function fish_prompt
     # path
     set -l path_str (__prompt_pwd)
     echo -n -s (test -w $PWD; and set_color 008787; or set_color d70000) $path_str ' '
-    set promptlen (math $promptlen + (string length $path_str) + 1)
+    set promptlen (math $promptlen + (string length -- $path_str) + 1)
 
     # git
     set -l gbranch (__prompt_git_branch)
     if test -n "$gbranch"
         set -l gstatus (__prompt_git_status)
-        echo -n -s (set_color 5f8700) $gbranch (set_color d78700) $gstatus ' '
-        set promptlen (math $promptlen + (string length $gbranch) + (string length "$gstatus") + 1)
+        echo -n -s -- (set_color 5f8700) $gbranch (set_color d78700) $gstatus ' '
+        set promptlen (math $promptlen + (string length -- $gbranch) + (string length -- "$gstatus") + 1)
     end
 
     # custom
     if test -n "$pcustom"
         echo -n -s (set_color 5f5f5f) $pcustom (set_color -b 222) ' '
-        set promptlen (math $promptlen + (string length $pcustom) + 1)
+        set promptlen (math $promptlen + (string length -- $pcustom) + 1)
     end
 
     # user
     echo -n -s (set_color $user_color) $USER ' '
-    set promptlen (math $promptlen + (string length $USER) + 1)
+    set promptlen (math $promptlen + (string length -- $USER) + 1)
 
     # jobs
     if test $bg_jobs -gt 0
         echo -n -s (set_color d700af) "%$bg_jobs "
-        set promptlen (math $promptlen + (string length "%$bg_jobs") + 1)
+        set promptlen (math $promptlen + (string length -- "%$bg_jobs") + 1)
     end
 
     # ssh
