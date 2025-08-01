@@ -69,7 +69,17 @@ set -x LANGUAGE $LANG
 set -x EDITOR nvim
 set -x GIT_EDITOR nvim
 
-set -x PAGER less
+if set -q CURSOR_AGENT || set -q CURSOR_TRACE_ID
+    # Do not hang on cursor terminal executions
+    set -x PAGER cat
+    set -x MANPAGER cat
+    set -x GIT_PAGER cat
+else
+    set -x PAGER less
+    set -x MANPAGER less
+    set -x GIT_PAGER less
+end
+
 set -x LESS FRSXMi
 set -x LESS_TERMCAP_mb '[01;31m' # begin blinking
 set -x LESS_TERMCAP_md '[01;38;5;74m' # begin bold
