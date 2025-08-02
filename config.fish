@@ -247,7 +247,8 @@ function dc --wraps="docker compose"
 end
 alias dp "dc pull"
 alias dcl "dc logs -f --tail 100"
-alias dud "dc up --build -d"
+alias dcb "dc build"
+alias dud "dc build && dc up -d"
 alias dpdu "dc pull && dc up -d"
 alias dudp dpdu
 alias dpri "docker image prune"
