@@ -182,6 +182,7 @@ alias lt "ls -lt"
 alias ltr "ls -ltr"
 alias lat "ls -lAt"
 alias latr "ls -lAtr"
+alias ll "ls -l --non-human-readable"
 
 alias ta "type -a"
 alias df "command df -h"
