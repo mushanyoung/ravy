@@ -22,7 +22,6 @@
     "pyright.inlayHints.functionReturnTypes": true,
     "pyright.inlayHints.parameterTypes": false,
     "pyright.inlayHints.variableTypes": true,
-    "python.formatting.blackArgs": ["--line-length", "100"],
     "python.formatting.blackPath": "black",
     "python.formatting.provider": "black"
 }
