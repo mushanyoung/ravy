@@ -567,46 +567,116 @@ if filereadable(s:custom_vimrc)
   exec 'source ' . s:custom_vimrc
 endif
 
-Plug 'LunarWatcher/auto-pairs'                  " Insert or delete brackets, parentheses, and quotes in pairs
-Plug 'PeterRincker/vim-argumentative'           " argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
-Plug 'airblade/vim-gitgutter'                   " git: hunks operation indicator
-Plug 'airblade/vim-rooter'                      " set proper working directory
-Plug 'andymass/vim-matchup'                     " even better % navigate and highlight matching words
-Plug 'ap/vim-css-color'                         " show css color in code
-Plug 'christoomey/vim-tmux-navigator'           " pane navigate integration with tmux
-Plug 'github/copilot.vim'                       " copilot
-Plug 'honza/vim-snippets'                       " snippets
-Plug 'junegunn/fzf'                             " fzf integration
-Plug 'junegunn/fzf.vim'                         " provide utility commands to fzf in a list of certain targets
-Plug 'junegunn/vim-easy-align'                  " ga to align a region of text on a key (<C-X> to use a regex)
-Plug 'junegunn/vim-peekaboo'                    " preview registers for \", @ in normal mode and <C-R> in insert mode
-Plug 'justinmk/vim-sneak'                       " s: motion to match 2 characters
-Plug 'liuchengxu/vista.vim'                     " Viewer & Finder for LSP symbols and tags
-Plug 'luochen1990/rainbow'                      " Decorate brackets, parens and pairs with pairing colors
-Plug 'mg979/vim-visual-multi'                   " multiple cursor and multiple modifications
-Plug 'mhinz/vim-sayonara'                       " Deletes the current buffer smartly
-Plug 'neoclide/coc.nvim', {'branch': 'release'} " completions
-Plug 'ntpeters/vim-better-whitespace'           " highlight trailing blanks and strip whitespace on save
-Plug 'preservim/vim-indent-guides'              " visually displaying indent levels
-Plug 'romainl/vim-cool'                         " disables search highlighting when you are done searching
-Plug 'sainnhe/gruvbox-material'                 " color scheme
-Plug 'svermeulen/vim-cutlass'                   " plugin that adds a 'cut' operation separate from 'delete'
-Plug 'svermeulen/vim-yoink'                     " maintains a yank history to cycle between when pasting
-Plug 'terryma/vim-expand-region'                " +, - to expand and shrink selection
-Plug 'tpope/vim-abolish'                        " deal with multiple variants of a word
-Plug 'tpope/vim-commentary'                     " gc to comment codes
-Plug 'tpope/vim-repeat'                         " `.` supports to repeat mapped key sequence
-Plug 'tpope/vim-sensible'                       " default settings
-Plug 'tpope/vim-sleuth'                         " Auto shiftwidth and expandtab
-Plug 'tpope/vim-speeddating'                    " use CTRL-A/CTRL-X to increment dates, times, and more
-Plug 'tpope/vim-surround'                       " `s`: manipulate surrounded symbols / texts
-Plug 'tpope/vim-unimpaired'                     " a bunch of useful [, ] key bindings
-Plug 'vim-airline/vim-airline'                  " status line with powerline fonts
-Plug 'vim-scripts/vim-scroll-position'          " simulated scroll bar using sign column
+" Insert or delete brackets, parentheses, and quotes in pairs
+Plug 'LunarWatcher/auto-pairs'
 
-if executable('ctags')
-  Plug 'ludovicchabant/vim-gutentags'
-endif
+" argument: jump: '[,' '],'; shift: '<,' '>,'; text-object: 'a,' 'i,'
+Plug 'PeterRincker/vim-argumentative'
+
+" git: hunks operation indicator
+Plug 'airblade/vim-gitgutter'
+
+" set proper working directory
+Plug 'airblade/vim-rooter'
+
+" even better % navigate and highlight matching words
+Plug 'andymass/vim-matchup'
+
+" show css color in code
+Plug 'ap/vim-css-color'
+
+" pane navigate integration with tmux
+Plug 'christoomey/vim-tmux-navigator'
+
+" copilot
+Plug 'github/copilot.vim'
+
+" fzf integration
+Plug 'junegunn/fzf'
+
+" provide utility commands to fzf in a list of certain targets
+Plug 'junegunn/fzf.vim'
+
+" ga to align a region of text on a key (<C-X> to use a regex)
+Plug 'junegunn/vim-easy-align'
+
+" preview registers for \", @ in normal mode and <C-R> in insert mode
+Plug 'junegunn/vim-peekaboo'
+
+" s: motion to match 2 characters
+Plug 'justinmk/vim-sneak'
+
+" Viewer & Finder for LSP symbols and tags
+Plug 'liuchengxu/vista.vim'
+
+" Decorate brackets, parens and pairs with pairing colors
+Plug 'luochen1990/rainbow'
+
+" multiple cursor and multiple modifications
+Plug 'mg979/vim-visual-multi'
+
+" Deletes the current buffer smartly
+Plug 'mhinz/vim-sayonara'
+
+" highlight trailing blanks and strip whitespace on save
+Plug 'ntpeters/vim-better-whitespace'
+
+" visually displaying indent levels
+Plug 'preservim/vim-indent-guides'
+
+" disables search highlighting when you are done searching
+Plug 'romainl/vim-cool'
+
+" plugin that adds a 'cut' operation separate from 'delete'
+Plug 'svermeulen/vim-cutlass'
+
+" maintains a yank history to cycle between when pasting
+Plug 'svermeulen/vim-yoink'
+
+" +, - to expand and shrink selection
+Plug 'terryma/vim-expand-region'
+
+" deal with multiple variants of a word
+Plug 'tpope/vim-abolish'
+
+" gc to comment codes
+Plug 'tpope/vim-commentary'
+
+" `.` supports to repeat mapped key sequence
+Plug 'tpope/vim-repeat'
+
+" default settings
+Plug 'tpope/vim-sensible'
+
+" Auto shiftwidth and expandtab
+Plug 'tpope/vim-sleuth'
+
+" use CTRL-A/CTRL-X to increment dates, times, and more
+Plug 'tpope/vim-speeddating'
+
+" `s`: manipulate surrounded symbols / texts
+Plug 'tpope/vim-surround'
+
+" a bunch of useful [, ] key bindings
+Plug 'tpope/vim-unimpaired'
+
+" color scheme
+Plug 'sainnhe/gruvbox-material'
+
+" status line with powerline fonts
+Plug 'vim-airline/vim-airline',!exists('g:vscode') ? {} : { 'on': [] }
+
+" completions
+Plug 'neoclide/coc.nvim', !exists('g:vscode') ? {'branch': 'release'} : { 'on': [] }
+
+" snippets
+Plug 'honza/vim-snippets', !exists('g:vscode') ? {} : { 'on': [] }
+
+" simulated scroll bar using sign column
+Plug 'vim-scripts/vim-scroll-position', !exists('g:vscode') ? {} : { 'on': [] }
+
+" ctags
+Plug 'ludovicchabant/vim-gutentags', executable('ctags') && !exists('g:vscode') ? {} : { 'on': [] }
 
 call plug#end()
 
@@ -621,7 +691,9 @@ if !exists('g:colors_name')
   let g:gruvbox_material_background = 'hard'
   let g:gruvbox_material_better_performance = 1
 
-  colorscheme gruvbox-material
+  if !exists('g:vscode')
+    colorscheme gruvbox-material
+  endif
 
   " temporary fix for vim 9.1.1400
   highlight default link luaParenError Error
