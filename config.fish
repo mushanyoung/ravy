@@ -43,11 +43,6 @@ if command -v gem &>/dev/null
     prepend_to_path (gem environment gemdir)"/bin"
 end
 
-# miniconda
-if command -v conda &>/dev/null
-    eval (conda shell.fish hook)
-end
-
 # direnv
 if command -v direnv &>/dev/null
     direnv hook fish | source
