@@ -496,8 +496,8 @@ let g:gutentags_file_list_command = 'ag --hidden --ignore .git --ignore .hg --ig
 " copilot.vim {{
 
 let g:copilot_enabled = 1
-inoremap <C-N> <Plug>(copilot-next)
-inoremap <C-P> <Plug>(copilot-previous)
+inoremap <C-J> <Plug>(copilot-next)
+inoremap <C-K> <Plug>(copilot-previous)
 inoremap <C-Space> <Plug>(copilot-dismiss)
 
 " Function to toggle Copilot
