@@ -487,6 +487,12 @@ let g:scroll_position_visual_overlap = '❮❯'
 
 " }}
 
+" vim-gutentags {{
+
+let g:gutentags_file_list_command = 'ag --hidden --ignore .git --ignore .hg --ignore .svn --ignore node_modules -g ""'
+
+" }}
+
 " copilot.vim {{
 
 let g:copilot_enabled = 1
