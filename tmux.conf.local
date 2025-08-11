@@ -18,8 +18,8 @@ bind j resize-pane -D 5
 bind k resize-pane -U 5
 bind l resize-pane -R 5
 
-bind c new-window
-bind n new-window -c $HOME
+bind c new-window -c $HOME
+bind n new-window
 
 # C-c to open new window instead of new session
 unbind C-c
