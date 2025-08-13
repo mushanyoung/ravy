@@ -477,16 +477,6 @@ let g:surround_36="$(\r)"      " $
 
 " }}
 
-" vim-scroll-position {{
-
-let g:scroll_position_marker         = '❯'
-let g:scroll_position_visual_begin   = '-'
-let g:scroll_position_visual_middle  = '|'
-let g:scroll_position_visual_end     = '-'
-let g:scroll_position_visual_overlap = '❮❯'
-
-" }}
-
 " vim-gutentags {{
 
 let g:gutentags_file_list_command = 'ag --hidden --ignore .git --ignore .hg --ignore .svn --ignore node_modules -g ""'
@@ -677,9 +667,6 @@ Plug 'neoclide/coc.nvim', !exists('g:vscode') ? {'branch': 'release'} : { 'on': 
 
 " snippets
 Plug 'honza/vim-snippets', !exists('g:vscode') ? {} : { 'on': [] }
-
-" simulated scroll bar using sign column
-Plug 'vim-scripts/vim-scroll-position', !exists('g:vscode') ? {} : { 'on': [] }
 
 " ctags
 Plug 'ludovicchabant/vim-gutentags', executable('ctags') && !exists('g:vscode') ? {} : { 'on': [] }
