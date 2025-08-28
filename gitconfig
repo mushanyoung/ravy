@@ -52,7 +52,7 @@
   rv = remote -v
   gr = grep -n -I
   pm = !git pr && git smu
-  pp = !git pm && git push
+  pp = !git pr && git push --all
   root = rev-parse --show-toplevel
 
   ; swap last two commits
