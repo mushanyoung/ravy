@@ -69,6 +69,10 @@ if set -q CURSOR_AGENT || set -q CURSOR_TRACE_ID
     set -x PAGER cat
     set -x MANPAGER cat
     set -x GIT_PAGER cat
+    if command -v cursor
+        set -x CURSOR_SHELL_INTEGRATION_PATH (cursor --locate-shell-integration-path fish)
+        . "$CURSOR_SHELL_INTEGRATION_PATH"
+    end
 else
     set -x PAGER less
     set -x MANPAGER less
