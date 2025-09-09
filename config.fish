@@ -70,8 +70,7 @@ if set -q CURSOR_AGENT || set -q CURSOR_TRACE_ID
     set -x MANPAGER cat
     set -x GIT_PAGER cat
     if command -v cursor
-        set -x CURSOR_SHELL_INTEGRATION_PATH (cursor --locate-shell-integration-path fish)
-        . "$CURSOR_SHELL_INTEGRATION_PATH"
+        . (cursor --locate-shell-integration-path fish)
     end
 else
     set -x PAGER less
@@ -182,6 +181,8 @@ alias ltr "ls -ltr"
 alias lat "ls -lAt"
 alias latr "ls -lAtr"
 alias ll "ls -l --non-human-readable"
+
+alias c cd
 
 alias ta "type -a"
 alias df "command df -h"
