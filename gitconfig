@@ -46,9 +46,8 @@
   smu = submodule update --init --recursive
   smpa = submodule foreach git pull --rebase
   pr = pull --rebase
-  pra = "!gpra() {\
-    if [ -d .git ]; then echo $PWD; git pull --rebase; echo; fi; \
-    find * -maxdepth 0 -type d 2>/dev/null | while read -r d; do (cd \"$d\"; gpra); done; }; gpra"
+  pra = "!gpr() { if [ -d .git ]; then echo $PWD; git pull --rebase; echo; fi; }; \
+    find . -maxdepth 2 -type d 2>/dev/null | while read -r d; do (cd \"$d\"; gpr); done"
   rv = remote -v
   gr = grep -n -I
   pm = !git pr && git smu
