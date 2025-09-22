@@ -118,6 +118,17 @@ augroup END
 " endfunction
 " nnoremap <silent> \l :call RavyRemoteOpenLink(getreg('"'))<CR>
 
+function! s:osc52_yank() abort
+  if v:event.operator ==# 'y' && v:event.regname ==# ''
+    lua require('osc52').copy_register('"')
+  endif
+endfunction
+
+augroup osc52
+  autocmd!
+  autocmd TextYankPost * call s:osc52_yank()
+augroup END
+
 " fzf to select a directory to change to
 function! FZFDirectories()
   function! DirectorySink(line)
@@ -670,6 +681,9 @@ Plug 'honza/vim-snippets', !exists('g:vscode') ? {} : { 'on': [] }
 
 " ctags
 Plug 'ludovicchabant/vim-gutentags', executable('ctags') && !exists('g:vscode') ? {} : { 'on': [] }
+
+" osc52
+Plug 'ojroques/nvim-osc52'
 
 call plug#end()
 
