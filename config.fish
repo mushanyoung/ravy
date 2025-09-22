@@ -1,10 +1,3 @@
-if not status --is-interactive
-    exit
-end
-
-# Disable fish_greeting message
-set fish_greeting
-
 set -x RAVY_HOME (dirname (status --current-filename))
 
 # paths operations
@@ -42,6 +35,14 @@ if command -v gem &>/dev/null
     prepend_to_path (ruby -e 'puts Gem.user_dir')"/bin"
     prepend_to_path (gem environment gemdir)"/bin"
 end
+
+# Following is interactive only.
+if not status --is-interactive
+    exit
+end
+
+# Disable fish_greeting message
+set fish_greeting
 
 # direnv
 if command -v direnv &>/dev/null
