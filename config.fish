@@ -163,10 +163,12 @@ function free
     end
 end
 
-# colorls
+set -x EZA_CONFIG_DIR $RAVY_HOME/eza
+
+# eza wrapper
 function ls
-    if command -v colorls >/dev/null
-        command colorls --gs --sd --color=always --dark $argv
+    if command -v eza >/dev/null
+        command eza --icons --group-directories-first --git --color=always $argv
     else
         command ls $argv
     end
@@ -174,13 +176,13 @@ end
 
 # aliases
 alias = "command -v"
-alias l "ls -l"
-alias la "ls -lA"
-alias lt "ls -lt"
-alias ltr "ls -ltr"
-alias lat "ls -lAt"
-alias latr "ls -lAtr"
-alias ll "ls -l --non-human-readable"
+alias l "ls -lg"
+alias la "l -lA"
+alias lt "l -l --sort newest"
+alias ltr "lt -r"
+alias lat "lt -A"
+alias latr "lat -r"
+alias ll "ls -lg --no-permissions --no-user --no-time --bytes --git"
 
 alias c cd
 
