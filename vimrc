@@ -129,6 +129,33 @@ augroup osc52
   autocmd TextYankPost * call s:osc52_yank()
 augroup END
 
+function! ExtractMatches(pattern)
+  " Save current buffer number
+  let curbuf = bufnr('%')
+
+  " Collect matches
+  let matches = []
+  for lnum in range(1, line('$'))
+    let line = getbufline(curbuf, lnum)[0]
+
+    let start = 0
+    while 1
+      let m = matchstrpos(line, a:pattern, start)
+      if m[1] == -1
+        break
+      endif
+      call add(matches, m[0])
+      let start = m[2]
+    endwhile
+  endfor
+
+  " Open results in a new buffer
+  new
+  call setline(1, matches)
+endfunction
+
+command! -nargs=1 ExtractMatches call ExtractMatches(<q-args>)
+
 " fzf to select a directory to change to
 function! FZFDirectories()
   function! DirectorySink(line)
