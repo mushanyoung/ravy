@@ -115,7 +115,6 @@ function __fle_fzf_files_dirs
     set -lx FZF_FILES_COMMAND fd -t d
     set -lx FZF_FILES_PROMPT Dir
     set -lx FZF_FILES_DEFAULT_ACTION d
-    set -lx FZF_FILES_PREVIEW_COMMAND "colorls {}"
     __fle_fzf_files
 end
 
@@ -123,7 +122,6 @@ function __fle_fzf_files_dirs_with_hidden
     set -lx FZF_FILES_COMMAND fd -H -t d
     set -lx FZF_FILES_PROMPT ".Dir"
     set -lx FZF_FILES_DEFAULT_ACTION d
-    set -lx FZF_FILES_PREVIEW_COMMAND "colorls {}"
     __fle_fzf_files
 end
 

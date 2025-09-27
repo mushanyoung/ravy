@@ -5,9 +5,13 @@ echo "$file"
 echo
 
 if test -d "$file"; then
-  colorls "$file"
+  eza --icons --group-directories-first --git --color=always "$file"
 elif test -f "$file"; then
-  bat --plain --color=always "$file"
+  if file "$file" | grep -qE 'text|ASCII|UTF-8'; then
+    bat --plain --color=always "$file"
+  else
+    echo "⚠️  Binary content detected, not displaying."
+  fi
 else
   echo ": does not exist"
 fi

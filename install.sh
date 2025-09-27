@@ -44,10 +44,6 @@ __el rm -rf $HOME/.config/fish/functions
 __el cp -r $RAVY/fish-functions $HOME/.config/fish/functions
 curl https://raw.githubusercontent.com/danhper/fundle/master/functions/fundle.fish --create-dirs -sLo ~/.config/fish/functions/fundle.fish
 
-__banner colorls
-__el rm -rf $HOME/.config/colorls
-__el cp -r $RAVY/colorls $HOME/.config/colorls
-
 __banner neovim
 __el rm -f $HOME/.config/nvim/coc-settings.json
 __el cp -f $RAVY/coc-settings.json $HOME/.config/nvim/coc-settings.json
