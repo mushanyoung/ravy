@@ -179,10 +179,13 @@ end
 alias = "command -v"
 alias l "ls -lg"
 alias la "l -lA"
-alias lt "l -l --sort newest"
-alias ltr "lt -r"
+alias lt "l --tree"
+alias lta "lt -A"
 alias lat "lt -A"
-alias latr "lat -r"
+alias ld "l -l --sort newest"
+alias ldr "ld -r"
+alias ldt "ld -A"
+alias ldtr "ldt -r"
 alias ll "ls -lg --no-permissions --no-user --no-time --bytes --git"
 
 alias c cd
