@@ -56,7 +56,7 @@ fundle init
 
 # atuin
 if command -v atuin &>/dev/null
-    atuin init fish | source
+    atuin init fish | source 2>/dev/null
 end
 
 # ENV
