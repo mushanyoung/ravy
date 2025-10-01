@@ -176,7 +176,11 @@ function ls
 end
 
 function du --wraps='du' --description 'gdu or du'
-    if type -q gdu; command gdu; else command du; end
+    if type -q gdu
+        command gdu
+    else
+        command du
+    end
 end
 
 # aliases
