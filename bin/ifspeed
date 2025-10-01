@@ -1,0 +1,31 @@
+#!/bin/bash
+# Usage: ./if_speed.sh <ipaddr:-1.1.1.1>
+
+IPADDR="$1"
+
+if [[ -z "$IPADDR" ]]; then
+  IPADDR=1.1.1.1
+fi
+
+# 1. Find which interface is used to reach that ipaddr
+IFACE=$(ip route get $(echo $IPADDR | cut -d/ -f1) 2>/dev/null | awk '/dev/ {for(i=1;i<=NF;i++){if($i=="dev"){print $(i+1); exit}}}')
+
+if [[ -z "$IFACE" ]]; then
+  echo "No interface found for ipaddr $IPADDR"
+  exit 1
+fi
+
+# 2. Get the speed with ethtool
+if command -v ethtool >/dev/null 2>&1; then
+  SPEED=$(ethtool "$IFACE" 2>/dev/null | awk -F': ' '/Speed:/ {print $2}')
+else
+  echo "ethtool not installed. Please install it (apt/yum/dnf)."
+  exit 1
+fi
+
+if [[ -z "$SPEED" ]]; then
+  echo "Unable to determine speed for $IFACE"
+  exit 1
+fi
+
+echo "$SPEED"
