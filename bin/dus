@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# dus - list folder sizes with immediate and sorted output
+
+set -euo pipefail
+
+# Pick du implementation
+if command -v gdu >/dev/null 2>&1; then
+    DU="gdu"
+else
+    DU="du"
+fi
+
+# Collect sizes
+tmpfile=$(mktemp)
+$DU -hd1 "$@" | tee "$tmpfile"
+
+echo
+echo "Sorted by size:"
+sort -h "$tmpfile"
+
+rm -f "$tmpfile"

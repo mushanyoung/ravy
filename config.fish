@@ -175,6 +175,10 @@ function ls
     end
 end
 
+function du --wraps='du' --description 'gdu or du'
+    if type -q gdu; command gdu; else command du; end
+end
+
 # aliases
 alias = "command -v"
 alias l "ls -lg"
@@ -192,8 +196,6 @@ alias c cd
 
 alias ta "type -a"
 alias df "command df -h"
-alias du "command du -hs"
-alias dus "command du -hd1 | sort -h"
 alias g "command git"
 alias t "command tmux"
 alias hs history
