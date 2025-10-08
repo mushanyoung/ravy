@@ -523,23 +523,23 @@ let g:gutentags_file_list_command = 'ag --hidden --ignore .git --ignore .hg --ig
 
 " copilot.vim {{
 
-let g:copilot_enabled = 1
-inoremap <C-J> <Plug>(copilot-next)
-inoremap <C-K> <Plug>(copilot-previous)
-inoremap <C-Space> <Plug>(copilot-dismiss)
+" let g:copilot_enabled = 1
+" inoremap <C-J> <Plug>(copilot-next)
+" inoremap <C-K> <Plug>(copilot-previous)
+" inoremap <C-Space> <Plug>(copilot-dismiss)
 
-" Function to toggle Copilot
-function! ToggleCopilot()
-  if copilot#Enabled()
-    Copilot disable
-  else
-    Copilot enable
-  endif
-  Copilot status
-endfunction
+" " Function to toggle Copilot
+" function! ToggleCopilot()
+"   if copilot#Enabled()
+"     Copilot disable
+"   else
+"     Copilot enable
+"   endif
+"   Copilot status
+" endfunction
 
-" Map the toggle function to a key, for example, <leader>c
-nnoremap <silent><Space>g :call ToggleCopilot()<CR>
+" " Map the toggle function to a key, for example, <leader>c
+" nnoremap <silent><Space>g :call ToggleCopilot()<CR>
 
 " }}
 
@@ -623,7 +623,10 @@ Plug 'ap/vim-css-color'
 Plug 'christoomey/vim-tmux-navigator'
 
 " copilot
-Plug 'github/copilot.vim'
+" Plug 'github/copilot.vim'
+
+" windsurf
+Plug 'Exafunction/windsurf.vim', { 'branch': 'main' }
 
 " fzf integration
 Plug 'junegunn/fzf'
