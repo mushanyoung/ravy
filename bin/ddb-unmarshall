@@ -1,0 +1,27 @@
+#!/bin/sh
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "ERROR: jq command not found." >&2
+  exit 1
+fi
+
+JQ_FILTER='
+def unddb:
+if type == "object" and (keys_unsorted | length) == 1 then
+  keys_unsorted[0] as $key |.[$key] as $value |
+  if   $key == "S"    then $value
+  elif $key == "N"    then ($value | tonumber)
+  elif $key == "BOOL" then $value
+  elif $key == "NULL" then null
+  elif $key == "L"    then $value
+  elif $key == "M"    then $value
+  elif $key == "B"    then $value
+  elif $key == "SS"   then $value
+  elif $key == "NS"   then ($value | map(tonumber))
+  elif $key == "BS"   then $value
+  else . end
+else . end;
+walk(unddb)
+'
+
+jq "$JQ_FILTER" "$@"
