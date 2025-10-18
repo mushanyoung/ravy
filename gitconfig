@@ -49,6 +49,7 @@
   pra = "!gpr() { if [ -d .git ]; then echo $PWD; git pull --rebase; echo; fi; }; \
     find . -maxdepth 2 -type d 2>/dev/null | while read -r d; do (cd \"$d\"; gpr); done"
   rv = remote -v
+  ro = remote get-url origin
   gr = grep -n -I
   pm = !git pr && git smu
   pp = !git pr && git push --all
