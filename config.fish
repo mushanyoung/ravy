@@ -213,6 +213,8 @@ alias grep "grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.s
 alias pyserv "python3 -m http.server"
 alias ipy ipython
 
+alias ts tailscale
+
 # cursor-agent
 alias ci "cursor-agent --model grok-code-fast-1"
 alias cido "ci -p -f --output-format text --"
