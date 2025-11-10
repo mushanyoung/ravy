@@ -169,7 +169,7 @@ set -x EZA_CONFIG_DIR $RAVY_HOME/eza
 # eza wrapper
 function ls
     if command -v eza >/dev/null
-        command eza --icons --group-directories-first --git --color=always $argv
+        command eza --icons --group-directories-first --git --color $argv
     else
         command ls $argv
     end
