@@ -1,31 +1,170 @@
 #!/usr/bin/env bash
 
-# Script to convert timestamps, datetime strings, or ULIDs to human-readable format
-# Works on both macOS and Linux
+# Script to convert timestamps, datetime strings, ULIDs, or UUIDv7 to human-readable format
+# Uses Perl Time::Piece (core module) for cross-platform date handling
+# Works on both macOS and Linux without OS-specific code
 
 set -euo pipefail
 
-# Detect OS
-if [[ "$(uname)" == "Darwin" ]]; then
-    OS="macos"
-else
-    OS="linux"
-fi
+# Function to format timestamp (ISO8601 format)
+# Uses Perl Time::Piece (core module, no installation needed)
+# $1: timestamp (Unix epoch seconds)
+# $2: timezone (empty = local, "UTC" = UTC)
+# $3: optional flag to enable colors (default: auto-detect from -t 1)
+format_timestamp() {
+    local timestamp="$1"
+    local timezone="${2:-}"
+    local use_color="${3:-}"
+
+    # Auto-detect if colors should be used
+    if [[ -z "$use_color" ]]; then
+        [[ -t 1 ]] && use_color="true" || use_color="false"
+    fi
+
+    # Determine if UTC or local
+    local is_utc=false
+    if [[ "$timezone" == "UTC" ]]; then
+        is_utc=true
+    fi
+
+    if [[ "$use_color" == "true" ]]; then
+        perl -MTime::Piece -e "
+            my \$timestamp = $timestamp;
+            my \$is_utc = '$is_utc' eq 'true';
+
+            my \$t = \$is_utc ? gmtime(\$timestamp) : localtime(\$timestamp);
+
+            # Extract components
+            my \$date = \$t->strftime('%Y-%m-%d');
+            my \$time = \$t->strftime('%H:%M:%S');
+            my \$tz_str;
+
+            if (\$is_utc) {
+                \$tz_str = 'Z';
+            } else {
+                my \$offset = \$t->strftime('%z');
+                # Convert offset from +HHMM to +HH:MM format
+                if (\$offset =~ /^([+-])(\d{2})(\d{2})\$/) {
+                    \$tz_str = \$1 . \$2 . ':' . \$3;
+                } else {
+                    \$tz_str = \$offset;
+                }
+            }
+
+            # Color codes
+            my \$color_date = \"\033[32m\";    # Green for date
+            my \$color_time = \"\033[34m\";    # Blue for time
+            my \$color_tz = \$is_utc ? \"\033[36m\" : \"\033[33m\";  # Cyan for UTC, Yellow for local
+            my \$color_reset = \"\033[0m\";
+
+            print \$color_date . \$date . \$color_reset . 'T' .
+                  \$color_time . \$time . \$color_reset .
+                  \$color_tz . \$tz_str . \$color_reset;
+        "
+    else
+        perl -MTime::Piece -e "
+            my \$timestamp = $timestamp;
+            my \$is_utc = '$is_utc' eq 'true';
+
+            my \$t = \$is_utc ? gmtime(\$timestamp) : localtime(\$timestamp);
+
+            if (\$is_utc) {
+                print \$t->strftime('%Y-%m-%dT%H:%M:%SZ');
+            } else {
+                my \$offset = \$t->strftime('%z');
+                # Convert offset from +HHMM to +HH:MM format
+                if (\$offset =~ /^([+-])(\d{2})(\d{2})\$/) {
+                    \$offset = \$1 . \$2 . ':' . \$3;
+                }
+                print \$t->strftime('%Y-%m-%dT%H:%M:%S') . \$offset;
+            }
+        "
+    fi
+}
+
+# Function to parse datetime string
+# Uses Perl Time::Local (core module, no installation needed)
+# Datetime strings without timezone are interpreted as UTC
+parse_datetime() {
+    local datetime_str="$1"
+
+    local epoch
+    if epoch=$(
+        perl -MTime::Local -e '
+            use strict;
+            use warnings;
+            use Time::Local;
+            my $str = shift // "";
+
+            # Parse datetime components and optional timezone
+            my ($year, $mon, $day, $hour, $min, $sec, $tz_offset);
+
+            if ($str =~ /^(\d{4})-(\d{2})-(\d{2})(?:T| )(\d{2}):(\d{2}):(\d{2})(Z|([+-])(\d{2}):?(\d{2})?)?$/) {
+                # Full datetime with optional timezone
+                $year = $1;
+                $mon = $2;
+                $day = $3;
+                $hour = $4;
+                $min = $5;
+                $sec = $6;
+                if (defined $7 && $7 ne "") {
+                    # Has timezone: Z or +/-HH:MM
+                    if ($7 eq "Z") {
+                        $tz_offset = 0;  # Z means UTC
+                    } else {
+                        # $8 is sign (+ or -), $9 is hours, $10 is minutes
+                        my $sign = $8;
+                        my $tz_hour = $9 || 0;
+                        my $tz_min = $10 || 0;
+                        $tz_offset = ($sign eq "+" ? 1 : -1) * (($tz_hour * 3600) + ($tz_min * 60));
+                    }
+                }
+            } elsif ($str =~ /^(\d{4})-(\d{2})-(\d{2})$/) {
+                # Date only
+                $year = $1;
+                $mon = $2;
+                $day = $3;
+                $hour = 0;
+                $min = 0;
+                $sec = 0;
+            } else {
+                exit 1;
+            }
+
+            # Create UTC epoch from components
+            my $utc_epoch = timegm($sec, $min, $hour, $day, $mon - 1, $year - 1900);
+
+            # Adjust for timezone offset if present (subtract offset to convert to UTC)
+            if (defined $tz_offset) {
+                $utc_epoch -= $tz_offset;
+            }
+
+            print $utc_epoch;
+        ' "$datetime_str"
+    ); then
+        if [[ "$epoch" =~ ^[0-9]+$ ]]; then
+            echo "$epoch"
+            return 0
+        fi
+    fi
+
+    return 1
+}
 
 # Function to convert ULID to Unix timestamp (seconds)
 ulid_to_timestamp() {
     local ulid="$1"
-    
+
     # ULID is 26 characters, first 10 characters are timestamp (base32)
     local timestamp_part="${ulid:0:10}"
-    
+
     # Normalize Crockford's Base32: I/L -> 1, O -> 0
     timestamp_part=$(echo "$timestamp_part" | tr 'IL' '1' | tr 'O' '0')
-    
+
     # Base32 decoding (ULID uses Crockford's Base32)
     local base32_chars="0123456789ABCDEFGHJKMNPQRSTVWXYZ"
     local result=0
-    
+
     for ((i=0; i<${#timestamp_part}; i++)); do
         local char="${timestamp_part:$i:1}"
         # Convert to uppercase for consistency
@@ -37,78 +176,48 @@ ulid_to_timestamp() {
         value=$((value - 1))
         result=$((result * 32 + value))
     done
-    
+
     # ULID timestamp is in milliseconds, convert to seconds
     echo $((result / 1000))
 }
 
-# Function to format timestamp for output
-format_timestamp() {
-    local timestamp="$1"
-    local timezone="$2"
-    
-    if [[ "$OS" == "macos" ]]; then
-        if [[ "$timezone" == "UTC" ]]; then
-            TZ=UTC date -r "$timestamp" "+%Y-%m-%d %H:%M:%S %Z"
-        else
-            date -r "$timestamp" "+%Y-%m-%d %H:%M:%S %Z"
-        fi
-    else
-        if [[ "$timezone" == "UTC" ]]; then
-            TZ=UTC date -d "@$timestamp" "+%Y-%m-%d %H:%M:%S %Z"
-        else
-            date -d "@$timestamp" "+%Y-%m-%d %H:%M:%S %Z"
-        fi
-    fi
-}
+# Function to convert UUIDv7 to Unix timestamp (seconds)
+uuidv7_to_timestamp() {
+    local uuid="$1"
 
-# Function to parse datetime string
-parse_datetime() {
-    local datetime_str="$1"
-    
-    # Handle UTC timezone indicators
-    if [[ "$datetime_str" =~ Z$ ]] || [[ "$datetime_str" =~ \+00:00$ ]] || [[ "$datetime_str" =~ \+0000$ ]]; then
-        # Remove timezone indicator and parse as UTC
-        local clean_str=$(echo "$datetime_str" | sed 's/[Z+].*$//')
-        
-        if [[ "$OS" == "macos" ]]; then
-            # Parse as UTC by using -u flag
-            local timestamp=$(date -j -u -f "%Y-%m-%d %H:%M:%S" "$clean_str" "+%s" 2>/dev/null || \
-                             date -j -u -f "%Y-%m-%dT%H:%M:%S" "$clean_str" "+%s" 2>/dev/null || \
-                             date -j -u -f "%Y-%m-%d" "$clean_str" "+%s" 2>/dev/null)
-            echo "$timestamp"
-        else
-            # Parse as UTC
-            TZ=UTC date -d "$clean_str UTC" "+%s" 2>/dev/null || return 1
-        fi
-        return
+    # Remove hyphens if present (UUIDv7 can be 32 or 36 chars)
+    uuid=$(echo "$uuid" | tr -d '-')
+
+    # UUIDv7 must be 32 hex characters
+    if [[ ${#uuid} -ne 32 ]]; then
+        return 1
     fi
-    
-    if [[ "$OS" == "macos" ]]; then
-        # macOS date -j can parse various formats
-        # Try common formats
-        local timestamp=$(date -j -f "%Y-%m-%d %H:%M:%S" "$datetime_str" "+%s" 2>/dev/null || \
-                         date -j -f "%Y-%m-%dT%H:%M:%S" "$datetime_str" "+%s" 2>/dev/null || \
-                         date -j -f "%Y-%m-%d %H:%M:%S%z" "$datetime_str" "+%s" 2>/dev/null || \
-                         date -j -f "%Y-%m-%dT%H:%M:%S%z" "$datetime_str" "+%s" 2>/dev/null || \
-                         date -j -f "%Y-%m-%d" "$datetime_str" "+%s" 2>/dev/null || \
-                         date -j "$datetime_str" "+%s" 2>/dev/null)
-        echo "$timestamp"
-    else
-        # Linux date -d can parse many formats
-        date -d "$datetime_str" "+%s" 2>/dev/null || return 1
+
+    # Check version (position 12, 0-indexed, should be 7)
+    local version_char="${uuid:12:1}"
+    if [[ "$version_char" != "7" ]]; then
+        return 1
     fi
+
+    # Extract first 12 hex characters (48 bits = timestamp in milliseconds)
+    local timestamp_hex="${uuid:0:12}"
+
+    # Convert hex to decimal (milliseconds)
+    local timestamp_ms=$((16#${timestamp_hex}))
+
+    # Convert milliseconds to seconds
+    echo $((timestamp_ms / 1000))
 }
 
 # Function to convert a single input to timestamp
 convert_input() {
     local input="$1"
     local timestamp
-    
+
     # Check if input is numeric (timestamp)
     if [[ "$input" =~ ^[0-9]+$ ]]; then
         local len=${#input}
-        
+
         if [[ $len -le 10 ]]; then
             # Seconds
             timestamp="$input"
@@ -137,16 +246,19 @@ convert_input() {
     # Check if input is complete ULID (26 characters, alphanumeric, case-insensitive)
     elif [[ "$input" =~ ^[0-9A-Za-z]{26}$ ]]; then
         timestamp=$(ulid_to_timestamp "$input" 2>/dev/null) || return 1
+    # Check if input is UUIDv7 (32 hex chars or 36 chars with hyphens)
+    elif [[ "$input" =~ ^[0-9a-fA-F]{32}$ ]] || [[ "$input" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+        timestamp=$(uuidv7_to_timestamp "$input" 2>/dev/null) || return 1
     # Otherwise, treat as datetime string
     else
         timestamp=$(parse_datetime "$input" 2>/dev/null) || return 1
     fi
-    
+
     # Validate timestamp is reasonable (between 1970 and 2100)
     if [[ $timestamp -lt 0 ]] || [[ $timestamp -gt 4102444800 ]]; then
         return 1
     fi
-    
+
     echo "$timestamp"
 }
 
@@ -171,23 +283,26 @@ process_string() {
     local input="$1"
     local found_any=false
     local seen_matches=()
-    
+
     # Build regex patterns for different timestamp types
     # Numeric timestamps: seconds (10), milliseconds (13), nanoseconds (19)
     local numeric_pattern='\b[0-9]{19}\b|\b[0-9]{13}\b|\b[0-9]{10}\b'
-    
+
     # ULIDs: complete (26 chars) or incomplete starting with 01 (3-25 chars)
     local ulid_pattern='\b[0-9A-Za-z]{26}\b|\b01[0-9A-Za-z]{1,24}\b'
-    
+
+    # UUIDv7: 32 hex chars or 36 chars with hyphens (must have version 7)
+    local uuidv7_pattern='\b[0-9a-fA-F]{32}\b|\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b'
+
     # ISO 8601 datetime formats: YYYY-MM-DD with optional time
     # Format 1: YYYY-MM-DDTHH:MM:SS with optional fractional seconds and timezone (T part is optional)
     local iso8601_t_pattern='[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.?[0-9]+)?(Z|[+-][0-9]{2}:?[0-9]{2})?)?'
     # Format 2: YYYY-MM-DD HH:MM:SS (space-separated)
     local iso8601_space_pattern='[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]+[0-9]{2}:[0-9]{2}:[0-9]{2}'
-    
+
     # Combine all patterns
-    local all_patterns="${numeric_pattern}|${ulid_pattern}|${iso8601_t_pattern}|${iso8601_space_pattern}"
-    
+    local all_patterns="${numeric_pattern}|${ulid_pattern}|${uuidv7_pattern}|${iso8601_t_pattern}|${iso8601_space_pattern}"
+
     while IFS= read -r match; do
         if [[ -n "$match" ]]; then
             # Check if already seen
@@ -197,7 +312,7 @@ process_string() {
                     already_seen=true
                 fi
             fi
-            
+
             if [[ "$already_seen" == "false" ]]; then
                 # For datetime strings, also check if they contain already-seen timestamps
                 local skip=false
@@ -209,22 +324,25 @@ process_string() {
                         fi
                     done
                 fi
-                
+
                 if [[ "$skip" == "false" ]]; then
                     local timestamp=$(convert_input "$match" 2>/dev/null)
                     if [[ -n "$timestamp" ]]; then
                         found_any=true
                         seen_matches+=("$match")
                         echo "Match: \"$match\""
-                        echo "  Local: $(format_timestamp "$timestamp" "local")"
-                        echo "  UTC:   $(format_timestamp "$timestamp" "UTC")"
+                        # Check if output is to terminal for color support
+                        local use_color="false"
+                        [[ -t 1 ]] && use_color="true"
+                        echo "  Local: $(format_timestamp "$timestamp" "" "$use_color")"
+                        echo "  UTC:   $(format_timestamp "$timestamp" "UTC" "$use_color")"
                         echo ""
                     fi
                 fi
             fi
         fi
     done < <(echo "$input" | grep -oE "$all_patterns" | awk '{print length($0), $0}' | sort -rn | cut -d' ' -f2- | awk '!seen[$0]++')
-    
+
     if [[ "$found_any" == "false" ]]; then
         return 1
     fi
@@ -235,29 +353,29 @@ test() {
     local tests_passed=0
     local tests_failed=0
     local test_name
-    
+
     echo "Running tests..."
     echo ""
-    
+
     # Test helper function
     run_test() {
         test_name="$1"
         local input="$2"
         local expected_count="${3:-1}"  # Default to expecting 1 match
-        
+
         local output=""
         local match_count=0
-        
+
         # Capture output, allowing process_string to fail
         set +e
         output=$(process_string "$input" 2>&1)
         local exit_code=$?
         set -e
-        
+
         if [[ $exit_code -eq 0 ]] && [[ -n "$output" ]]; then
             match_count=$(echo "$output" | grep -c "Match:" 2>/dev/null || echo "0")
         fi
-        
+
         if [[ "$match_count" -ge "$expected_count" ]] && [[ -n "$output" ]] && ! echo "$output" | grep -q "Error:"; then
             echo "✓ PASS: $test_name"
             ((tests_passed++)) || true
@@ -272,45 +390,49 @@ test() {
             return 1
         fi
     }
-    
+
     # Test numeric timestamps
     run_test "Numeric timestamp (seconds)" "1609459200" 1
     run_test "Numeric timestamp (milliseconds)" "1609459200000" 1
     run_test "Numeric timestamp (nanoseconds)" "1609459200000000000" 1
-    
+
     # Test ULIDs
     run_test "Complete ULID" "01ARZ3NDEKTSV4RRFFQ69G5FAV" 1
     run_test "Incomplete ULID" "01ARZ3NDEK" 1
     run_test "Short incomplete ULID" "01ARZ3" 1
-    
+
+    # Test UUIDv7
+    run_test "UUIDv7 hex format" "019a70682c3a70000000000000000000" 1
+    run_test "UUIDv7 dashed format" "019a7068-2c3a-7000-0000-000000000000" 1
+
     # Test datetime strings
     run_test "ISO 8601 with T separator" "2021-01-01T00:00:00Z" 1
     run_test "ISO 8601 space-separated" "2021-01-01 00:00:00" 1
     run_test "ISO 8601 date only" "2021-01-01" 1
-    
+
     # Test multiple timestamps
     run_test "Multiple numeric timestamps" "ts1: 1609459200 ts2: 1609459200000" 2
     run_test "Mixed timestamp types" "ts: 1609459200 ulid: 01ARZ3NDEK date: 2021-01-01 00:00:00" 3
-    
+
     # Test edge cases
     run_test "Timestamp in text" "The timestamp is 1609459200 in the log" 1
     run_test "Multiple ULIDs" "id1: 01ARZ3NDEK id2: 01ARZ3NDEKTSV4RRFFQ69G5FAV" 2
-    
+
     echo ""
     echo "=== Testing Core Functions ==="
     echo ""
-    
+
     # Test convert_input function
     test_convert_input() {
         test_name="$1"
         local input="$2"
         local expected_ts="$3"
-        
+
         set +e
         local result=$(convert_input "$input" 2>&1)
         local exit_code=$?
         set -e
-        
+
         if [[ $exit_code -eq 0 ]] && [[ "$result" == "$expected_ts" ]]; then
             echo "✓ PASS: $test_name"
             ((tests_passed++)) || true
@@ -321,24 +443,24 @@ test() {
             return 1
         fi
     }
-    
+
     # Test convert_input - numeric timestamps
     test_convert_input "convert_input: seconds timestamp" "1609459200" "1609459200"
     test_convert_input "convert_input: milliseconds timestamp" "1609459200000" "1609459200"
     test_convert_input "convert_input: nanoseconds timestamp" "1609459200000000000" "1609459200"
-    
+
     # Test convert_input - ULIDs
     # Known ULID: 01ARZ3NDEKTSV4RRFFQ69G5FAV should convert to a specific timestamp
     # We'll test that it returns a valid timestamp (not empty and reasonable)
     test_ulid_conversion() {
         test_name="$1"
         local input="$2"
-        
+
         set +e
         local result=$(convert_input "$input" 2>&1)
         local exit_code=$?
         set -e
-        
+
         if [[ $exit_code -eq 0 ]] && [[ -n "$result" ]] && [[ "$result" =~ ^[0-9]+$ ]] && [[ "$result" -gt 0 ]] && [[ "$result" -lt 4102444800 ]]; then
             echo "✓ PASS: $test_name (timestamp: $result)"
             ((tests_passed++)) || true
@@ -349,21 +471,45 @@ test() {
             return 1
         fi
     }
-    
+
     test_ulid_conversion "convert_input: complete ULID" "01ARZ3NDEKTSV4RRFFQ69G5FAV"
     test_ulid_conversion "convert_input: incomplete ULID" "01ARZ3NDEK"
-    
+
+    # Test convert_input - UUIDv7
+    test_uuidv7_conversion() {
+        test_name="$1"
+        local input="$2"
+
+        set +e
+        local result=$(convert_input "$input" 2>&1)
+        local exit_code=$?
+        set -e
+
+        if [[ $exit_code -eq 0 ]] && [[ -n "$result" ]] && [[ "$result" =~ ^[0-9]+$ ]] && [[ "$result" -gt 0 ]] && [[ "$result" -lt 4102444800 ]]; then
+            echo "✓ PASS: $test_name (timestamp: $result)"
+            ((tests_passed++)) || true
+            return 0
+        else
+            echo "✗ FAIL: $test_name (got: $result)"
+            ((tests_failed++)) || true
+            return 1
+        fi
+    }
+
+    test_uuidv7_conversion "convert_input: UUIDv7 hex format" "019a70682c3a70000000000000000000"
+    test_uuidv7_conversion "convert_input: UUIDv7 dashed format" "019a7068-2c3a-7000-0000-000000000000"
+
     # Test parse_datetime function
     test_parse_datetime() {
         test_name="$1"
         local input="$2"
         local expected_ts="$3"
-        
+
         set +e
         local result=$(parse_datetime "$input" 2>&1)
         local exit_code=$?
         set -e
-        
+
         if [[ $exit_code -eq 0 ]] && [[ "$result" == "$expected_ts" ]]; then
             echo "✓ PASS: $test_name"
             ((tests_passed++)) || true
@@ -374,7 +520,7 @@ test() {
             return 1
         fi
     }
-    
+
     # Test parse_datetime - various formats
     # Note: We'll use a known timestamp for testing
     # 2021-01-01 00:00:00 UTC = 1609459200
@@ -382,12 +528,12 @@ test() {
     test_datetime_parsing() {
         test_name="$1"
         local input="$2"
-        
+
         set +e
         local result=$(parse_datetime "$input" 2>&1)
         local exit_code=$?
         set -e
-        
+
         if [[ $exit_code -eq 0 ]] && [[ -n "$result" ]] && [[ "$result" =~ ^[0-9]+$ ]] && [[ "$result" -gt 0 ]] && [[ "$result" -lt 4102444800 ]]; then
             echo "✓ PASS: $test_name (timestamp: $result)"
             ((tests_passed++)) || true
@@ -398,49 +544,53 @@ test() {
             return 1
         fi
     }
-    
+
     test_datetime_parsing "parse_datetime: ISO 8601 with T" "2021-01-01T00:00:00"
     test_datetime_parsing "parse_datetime: ISO 8601 with space" "2021-01-01 00:00:00"
     test_datetime_parsing "parse_datetime: ISO 8601 date only" "2021-01-01"
     test_datetime_parsing "parse_datetime: ISO 8601 with Z" "2021-01-01T00:00:00Z"
-    
+
     # Test format_timestamp function
     test_format_timestamp() {
         test_name="$1"
         local timestamp="$2"
-        local timezone="$3"
-        
+        local timezone="${3:-}"
+        local use_color="${4:-false}"
+
         set +e
-        local result=$(format_timestamp "$timestamp" "$timezone" 2>&1)
+        local result=$(format_timestamp "$timestamp" "$timezone" "$use_color" 2>&1)
         local exit_code=$?
         set -e
-        
-        # Check that output is a valid datetime string (contains year, month, day, time)
-        if [[ $exit_code -eq 0 ]] && [[ -n "$result" ]] && [[ "$result" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]]+[0-9]{2}:[0-9]{2}:[0-9]{2} ]]; then
-            echo "✓ PASS: $test_name (formatted: $result)"
+
+        # Check that output is a valid ISO8601 datetime string
+        # Format: YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DDTHH:MM:SS+HH:MM
+        # Strip ANSI color codes for regex matching
+        local clean_result=$(echo "$result" | sed 's/\x1b\[[0-9;]*m//g')
+        if [[ $exit_code -eq 0 ]] && [[ -n "$clean_result" ]] && [[ "$clean_result" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(Z|[+-][0-9]{2}:[0-9]{2})$ ]]; then
+            echo "✓ PASS: $test_name (formatted: $clean_result)"
             ((tests_passed++)) || true
             return 0
         else
-            echo "✗ FAIL: $test_name (got: $result)"
+            echo "✗ FAIL: $test_name (got: $clean_result)"
             ((tests_failed++)) || true
             return 1
         fi
     }
-    
-    # Test format_timestamp - known timestamp
-    test_format_timestamp "format_timestamp: local timezone" "1609459200" "local"
-    test_format_timestamp "format_timestamp: UTC timezone" "1609459200" "UTC"
-    
+
+    # Test format_timestamp function - known timestamp
+    test_format_timestamp "format_timestamp: local timezone" "1609459200" "" "false"
+    test_format_timestamp "format_timestamp: UTC timezone" "1609459200" "UTC" "false"
+
     # Test ulid_to_timestamp function directly
     test_ulid_to_timestamp() {
         test_name="$1"
         local ulid="$2"
-        
+
         set +e
         local result=$(ulid_to_timestamp "$ulid" 2>&1)
         local exit_code=$?
         set -e
-        
+
         if [[ $exit_code -eq 0 ]] && [[ -n "$result" ]] && [[ "$result" =~ ^[0-9]+$ ]] && [[ "$result" -gt 0 ]] && [[ "$result" -lt 4102444800 ]]; then
             echo "✓ PASS: $test_name (timestamp: $result)"
             ((tests_passed++)) || true
@@ -451,7 +601,7 @@ test() {
             return 1
         fi
     }
-    
+
     test_ulid_to_timestamp "ulid_to_timestamp: complete ULID" "01ARZ3NDEKTSV4RRFFQ69G5FAV"
     # Test incomplete ULID by padding it first (ulid_to_timestamp requires 26 chars)
     local incomplete_ulid="01ARZ3NDEK"
@@ -463,14 +613,38 @@ test() {
     done
     local padded_ulid="${incomplete_ulid}${padding}"
     test_ulid_to_timestamp "ulid_to_timestamp: padded incomplete ULID" "$padded_ulid"
-    
+
+    # Test uuidv7_to_timestamp function directly
+    test_uuidv7_to_timestamp() {
+        test_name="$1"
+        local uuid="$2"
+
+        set +e
+        local result=$(uuidv7_to_timestamp "$uuid" 2>&1)
+        local exit_code=$?
+        set -e
+
+        if [[ $exit_code -eq 0 ]] && [[ -n "$result" ]] && [[ "$result" =~ ^[0-9]+$ ]] && [[ "$result" -gt 0 ]] && [[ "$result" -lt 4102444800 ]]; then
+            echo "✓ PASS: $test_name (timestamp: $result)"
+            ((tests_passed++)) || true
+            return 0
+        else
+            echo "✗ FAIL: $test_name (got: $result)"
+            ((tests_failed++)) || true
+            return 1
+        fi
+    }
+
+    test_uuidv7_to_timestamp "uuidv7_to_timestamp: hex format" "019a70682c3a70000000000000000000"
+    test_uuidv7_to_timestamp "uuidv7_to_timestamp: dashed format" "019a7068-2c3a-7000-0000-000000000000"
+
     # Summary
     echo ""
     echo "Test Summary:"
     echo "  Passed: $tests_passed"
     echo "  Failed: $tests_failed"
     echo "  Total:  $((tests_passed + tests_failed))"
-    
+
     if [[ $tests_failed -eq 0 ]]; then
         echo ""
         echo "All tests passed! ✓"
@@ -485,29 +659,31 @@ test() {
 # Main function
 main() {
     local input
-    
+    local script_name="${0##*/}"  # Get basename without directory path
+
     # Check if running tests
     if [[ $# -gt 0 ]] && [[ "$1" == "test" ]]; then
         test
         exit $?
     fi
-    
+
     # Read input from stdin if no arguments provided, otherwise use first argument
     if [[ $# -eq 0 ]]; then
         # Check if stdin is a terminal (interactive) or a pipe/file
         if [[ -t 0 ]]; then
-            echo "Usage: $0 <timestamp|datetime|ulid>"
-            echo "   or: echo 'text with timestamps' | $0"
-            echo "   or: $0 test                    # Run tests"
+            echo "Usage: $script_name <timestamp|datetime|ulid|uuidv7>"
+            echo "   or: echo 'text with timestamps' | $script_name"
+            echo "   or: $script_name test                    # Run tests"
             echo ""
             echo "Examples:"
-            echo "  $0 1609459200              # Unix timestamp (seconds)"
-            echo "  $0 1609459200000           # Unix timestamp (milliseconds)"
-            echo "  $0 1609459200000000000     # Unix timestamp (nanoseconds)"
-            echo "  $0 '2021-01-01 00:00:00'   # Datetime string"
-            echo "  $0 '01ARZ3NDEK'            # ULID prefix (padded with zeros)"
-            echo "  echo 'ts: 1609459200' | $0  # Extract from stdin"
-            echo "  $0 test                    # Run test suite"
+            echo "  $script_name 1767225600                              # Unix timestamp (seconds)"
+            echo "  $script_name 1767225600000                           # Unix timestamp (milliseconds)"
+            echo "  $script_name 1767225600000000000                     # Unix timestamp (nanoseconds)"
+            echo "  $script_name '2026-01-01 00:00:00'                   # Datetime string"
+            echo "  $script_name '01KDVDNA00'                            # ULID prefix (padded with zeros)"
+            echo "  $script_name '019b76da-a800-7000-0000-000000000000'  # UUIDv7"
+            echo "  echo '1767225600 01KDVDNA00' | $script_name          # Extract timestamps from stdin"
+            echo "  $script_name test                                    # Run test suite"
             exit 1
         else
             # Read from stdin
@@ -516,7 +692,7 @@ main() {
     else
         input="$1"
     fi
-    
+
     # Always use multi-match mode - extract all timestamps from the string
     if ! process_string "$input"; then
         echo "Error: No valid timestamps found in input" >&2
@@ -525,4 +701,3 @@ main() {
 }
 
 main "$@"
-
