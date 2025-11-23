@@ -15,8 +15,7 @@ set wildignore+=*.png,*.jpg,*.gif,*.ico,*.mp3,*.mp4,*.avi,*.mkv,*.o,*.obj,*.pyc,
 set encoding=utf-8 fileencoding=utf-8 fileencodings=ucs-bom,utf-8,default,latin1,utf-16le,big5,gbk,euc-jp,euc-kr,iso8859-1
 set formatoptions=nmMcroql
 set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
-set tabstop=8
-set softtabstop=4 shiftwidth=4 expandtab smarttab
+set tabstop=2 softtabstop=2 shiftwidth=2 expandtab smarttab
 set copyindent smartindent nocindent
 set ignorecase smartcase
 set hlsearch incsearch
