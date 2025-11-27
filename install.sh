@@ -51,13 +51,15 @@ append_content_if_absent() {
 }
 
 info "Checking Homebrew"
-if ! command -v brew >/dev/null 2>&1; then
-  error "Homebrew/Linuxbrew is not installed."
-  echo "Please install it first using the following command:"
-  echo '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-  exit 1
+BREW_AVAILABLE=true
+if command -v brew >/dev/null 2>&1; then
+  success "Homebrew is installed."
+else
+  BREW_AVAILABLE=false
+  warn "Homebrew/Linuxbrew is not installed."
+  echo "Install it manually using:"
+  echo '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
 fi
-success "Homebrew is installed."
 
 info "Setting up Ravy"
 RAVY="$HOME/.ravy"
@@ -69,10 +71,11 @@ else
   __el git clone https://github.com/mushanyoung/ravy "$RAVY"
 fi
 
-info "Installing Packages"
+info "Preparing package installation command"
 PACKAGES="bat eza fd fish fzf git neovim ripgrep the_silver_searcher tmux"
-echo "Installing: $PACKAGES"
-__el brew install $PACKAGES
+BREW_INSTALL_CMD="brew install $PACKAGES"
+echo "Recommended packages: $PACKAGES"
+warn "Automatic Homebrew installs are disabled; run the command manually later."
 
 info "Configuring System"
 
@@ -106,11 +109,18 @@ if command -v "$RAVY/custom/install.sh" >/dev/null; then
 fi
 
 success "Installation complete!"
-echo "Installed packages: $PACKAGES"
+echo "Recommended packages: $PACKAGES"
 echo "Configuration files linked."
 
 if [[ "$SHELL" != *"fish"* ]]; then
   warn "Current shell is not fish."
   echo "It is recommended to switch to fish:"
   echo "  chsh -s $(which fish)"
+fi
+
+info "Next steps"
+echo "To install the recommended Homebrew packages, run:"
+echo "  $BREW_INSTALL_CMD"
+if [ "$BREW_AVAILABLE" != true ]; then
+  echo "Install Homebrew/Linuxbrew first using the command shown earlier."
 fi
