@@ -37,7 +37,7 @@ append_content_if_absent() {
   file="$1"
   text="$2"
   appending=${3:-$2}
-  
+
   if ! grep -F "$text" "$file" >/dev/null 2>&1; then
     echo -e "${BOLD}  > Appending to $file${RESET}"
     if [ -f "$appending" ]; then
@@ -50,17 +50,6 @@ append_content_if_absent() {
   fi
 }
 
-info "Checking Homebrew"
-BREW_AVAILABLE=true
-if command -v brew >/dev/null 2>&1; then
-  success "Homebrew is installed."
-else
-  BREW_AVAILABLE=false
-  warn "Homebrew/Linuxbrew is not installed."
-  echo "Install it manually using:"
-  echo '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-fi
-
 info "Setting up Ravy"
 RAVY="$HOME/.ravy"
 if [ -d "$RAVY" ]; then
@@ -70,12 +59,6 @@ else
   echo "Cloning ravy repo to $RAVY..."
   __el git clone https://github.com/mushanyoung/ravy "$RAVY"
 fi
-
-info "Preparing package installation command"
-PACKAGES="bat eza fd fish fzf git neovim ripgrep the_silver_searcher tmux"
-BREW_INSTALL_CMD="brew install $PACKAGES"
-echo "Recommended packages: $PACKAGES"
-warn "Automatic Homebrew installs are disabled; run the command manually later."
 
 info "Configuring System"
 
@@ -109,8 +92,6 @@ if command -v "$RAVY/custom/install.sh" >/dev/null; then
 fi
 
 success "Installation complete!"
-echo "Recommended packages: $PACKAGES"
-echo "Configuration files linked."
 
 if [[ "$SHELL" != *"fish"* ]]; then
   warn "Current shell is not fish."
@@ -119,8 +100,21 @@ if [[ "$SHELL" != *"fish"* ]]; then
 fi
 
 info "Next steps"
-echo "To install the recommended Homebrew packages, run:"
-echo "  $BREW_INSTALL_CMD"
-if [ "$BREW_AVAILABLE" != true ]; then
-  echo "Install Homebrew/Linuxbrew first using the command shown earlier."
+
+PACKAGES="bat eza fd fish fzf git neovim ripgrep the_silver_searcher tmux"
+
+BREW_AVAILABLE=true
+if command -v brew >/dev/null 2>&1; then
+  success "Homebrew is installed."
+else
+  BREW_AVAILABLE=false
+  warn "Homebrew/Linuxbrew is not installed."
+  echo "Install it manually using:"
+  echo '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
 fi
+
+info "Preparing package installation command"
+BREW_INSTALL_CMD="brew install $PACKAGES"
+
+echo "To install the recommended Homebrew packages, run:"
+echo "  brew install $PACKAGES"
