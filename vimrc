@@ -516,7 +516,7 @@ let g:surround_36="$(\r)"      " $
 
 " vim-gutentags {{
 
-let g:gutentags_file_list_command = 'ag --hidden --ignore .git --ignore .hg --ignore .svn --ignore node_modules -g ""'
+let g:gutentags_file_list_command = "rg --files --hidden --glob '!.git' --glob '!.hg' --glob '!.svn' --glob '!node_modules'"
 
 " }}
 

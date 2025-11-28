@@ -101,7 +101,7 @@ fi
 
 info "Next steps"
 
-PACKAGES="bat eza fd fish fzf git neovim ripgrep the_silver_searcher tmux"
+PACKAGES="bat eza fd fish fzf git neovim ripgrep tmux"
 
 BREW_AVAILABLE=true
 if command -v brew >/dev/null 2>&1; then
