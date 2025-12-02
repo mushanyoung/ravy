@@ -1,0 +1,97 @@
+# starship.toml
+
+# 禁用 Starship 自带的空行逻辑，我们要手动控制
+add_newline = false
+
+format = """
+$cmd_duration$status
+$directory$git_branch$git_status$conda$username$jobs$custom$fill
+$character"""
+
+# ------------------------------------------------------------------------------
+# 第一行：命令耗时与状态
+# ------------------------------------------------------------------------------
+
+[cmd_duration]
+min_time = 0
+show_milliseconds = true
+format = "[$duration]($style) "
+style = "fg:#666666"
+show_notifications = true
+min_time_to_notify = 15_000
+
+[status]
+disabled = false
+format = "[$symbol$status:$signal_name]($style)"
+symbol = ""
+style = "fg:#d70000"
+map_symbol = true
+
+# ------------------------------------------------------------------------------
+# 第二行：信息条 (背景色 #222222)
+# ------------------------------------------------------------------------------
+
+[directory]
+format = "[  $path ]($style)"
+style = "bg:#222222 fg:#008787"
+read_only = "🔒"
+read_only_style = "bg:#222222 fg:#d70000"
+truncation_length = 0
+truncate_to_repo = false
+
+[git_branch]
+format = "[$symbol$branch]($style)"
+symbol = ""
+style = "bg:#222222 fg:#5f8700"
+
+[git_status]
+format = "[$all_status$ahead_behind ]($style)"
+style = "bg:#222222 fg:#d78700"
+conflicted = "!"
+ahead = ">"
+behind = "<"
+diverged = "↕"
+up_to_date = ""
+untracked = "#"
+stashed = "≡"
+modified = "*"
+staged = "."
+renamed = "»"
+deleted = "-"
+
+[conda]
+format = "[$symbol$environment ]($style)"
+style = "bg:#222222 fg:#5f875f"
+symbol = "c:"
+ignore_base = false
+
+[username]
+show_always = true
+format = "[$user ]($style)"
+style_user = "bg:#222222 fg:#8787af"
+style_root = "bg:#222222 fg:#d70000"
+
+[jobs]
+format = "[%$number ]($style)"
+style = "bg:#222222 fg:#d700af"
+
+# SSH 自定义模块
+[custom.ssh_indicator]
+description = "SSH indicator"
+when = "test -n \"$SSH_CLIENT\""
+command = "echo ' '"
+style = "bg:#222222 fg:#d75f00"
+format = "[$output]($style)"
+
+# 填充模块：确保背景色延伸到行尾
+[fill]
+symbol = " "
+style = "bg:#222222"
+
+# ------------------------------------------------------------------------------
+# 第三行：提示符
+# ------------------------------------------------------------------------------
+
+[character]
+success_symbol = "[❯](fg:#666666)"
+error_symbol = "[❯](fg:#666666)"

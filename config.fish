@@ -44,13 +44,18 @@ end
 # Disable fish_greeting message
 set fish_greeting
 
+# starship
+if command -v starship &>/dev/null
+    set -x STARSHIP_CONFIG $RAVY_HOME/starship.toml
+    starship init fish | source
+end
+
 # direnv
 if command -v direnv &>/dev/null
     direnv hook fish | source
 end
 
 # fundle
-fundle plugin franciscolourenco/done
 fundle plugin jethrokuan/z
 fundle init
 
