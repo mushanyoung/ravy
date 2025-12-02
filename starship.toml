@@ -5,7 +5,7 @@ add_newline = false
 
 format = """
 $cmd_duration$status
-$directory$git_branch$git_status$conda$username$jobs$custom$fill
+$directory$git_branch$git_status$conda$username$jobs$hostname$fill
 $character"""
 
 # ------------------------------------------------------------------------------
@@ -76,12 +76,11 @@ format = "[%$number ]($style)"
 style = "bg:#222222 fg:#d700af"
 
 # SSH 自定义模块
-[custom.ssh_indicator]
-description = "SSH indicator"
-when = "test -n \"$SSH_CLIENT\""
-command = "echo ' '"
+[hostname]
+ssh_only = true
+ssh_symbol = " "
+format = "[$ssh_symbol$hostname]($style)"
 style = "bg:#222222 fg:#d75f00"
-format = "[$output]($style)"
 
 # 填充模块：确保背景色延伸到行尾
 [fill]
