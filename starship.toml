@@ -5,7 +5,15 @@ add_newline = false
 
 format = """
 $cmd_duration$status
-$directory$git_branch$git_status$conda$username$jobs$hostname$fill
+$directory\
+$git_branch\
+$git_status\
+$conda\
+$docker_context\
+$username\
+$hostname\
+$jobs\
+$fill
 $character"""
 
 # ------------------------------------------------------------------------------
@@ -65,22 +73,26 @@ style = "bg:#222222 fg:#5f875f"
 symbol = "c:"
 ignore_base = false
 
+[docker_context]
+format = "[$symbol$context ]($style)"
+symbol = "🐳 "
+style = "bg:#222222 fg:blue"
+
 [username]
 show_always = true
 format = "[$user ]($style)"
 style_user = "bg:#222222 fg:#8787af"
 style_root = "bg:#222222 fg:#d70000"
 
-[jobs]
-format = "[%$number ]($style)"
-style = "bg:#222222 fg:#d700af"
-
-# SSH 自定义模块
 [hostname]
 ssh_only = true
 ssh_symbol = " "
 format = "[$ssh_symbol$hostname]($style)"
 style = "bg:#222222 fg:#d75f00"
+
+[jobs]
+format = "[%$number ]($style)"
+style = "bg:#222222 fg:#d700af"
 
 # 填充模块：确保背景色延伸到行尾
 [fill]
