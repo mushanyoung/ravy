@@ -74,7 +74,7 @@ symbol = "c:"
 ignore_base = false
 
 [docker_context]
-format = "[$symbol$context ]($style)"
+format = "[$symbol ]($style)"
 symbol = "🐳 "
 style = "bg:#222222 fg:blue"
 
