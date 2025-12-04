@@ -57,6 +57,7 @@ end
 
 # fundle
 fundle plugin jethrokuan/z
+fundle plugin edc/bass
 fundle init
 
 # atuin
