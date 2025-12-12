@@ -1,0 +1,13 @@
+install.sh
+gitconfig
+README.md
+starship.toml
+tags
+tmux.conf.local
+vimrc
+
+eza/
+bin/
+fish-functions/
+tests/
+custom/

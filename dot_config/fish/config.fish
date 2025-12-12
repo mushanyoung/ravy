@@ -76,13 +76,6 @@ if command -v direnv &>/dev/null
     direnv hook fish | source
 end
 
-# fundle (optional)
-if functions -q fundle
-    fundle plugin jethrokuan/z
-    fundle plugin edc/bass
-    fundle init
-end
-
 # atuin
 if command -v atuin &>/dev/null
     atuin init fish | source 2>/dev/null
@@ -350,5 +343,3 @@ function ravysource
     source "$HOME/.config/fish/config.fish"
 end
 alias ravys ravysource
-
-

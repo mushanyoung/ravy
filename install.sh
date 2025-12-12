@@ -85,7 +85,7 @@ else
 fi
 
 # Optional bootstrap helpers (kept from the old installer experience)
-info "Optional bootstrap: tmux base config + vim-plug + fundle"
+info "Optional bootstrap: tmux base config + vim-plug"
 
 if [ ! -f "$HOME/.tmux.conf" ]; then
   __el curl -sfLo "$HOME/.tmux.conf" https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
@@ -93,10 +93,6 @@ fi
 
 if [ ! -f "$HOME/.config/nvim/autoload/plug.vim" ]; then
   __el curl -fLo "$HOME/.config/nvim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-fi
-
-if [ ! -f "$HOME/.config/fish/functions/fundle.fish" ]; then
-  __el curl -fsLo "$HOME/.config/fish/functions/fundle.fish" --create-dirs https://raw.githubusercontent.com/danhper/fundle/master/functions/fundle.fish
 fi
 
 success "Installation complete!"

@@ -83,10 +83,6 @@ fi
 exit 0
 "
 
-    __write_stub fundle "#!/usr/bin/env sh
-exit 0
-"
-
     __write_stub chezmoi "#!/usr/bin/env sh
 if [ \"\$1\" = \"source-path\" ]; then
   echo \"$repo_root\"
