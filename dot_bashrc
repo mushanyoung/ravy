@@ -1,0 +1,41 @@
+# Ravy (chezmoi)
+# shellcheck shell=bash
+
+# Only for interactive shells
+case "$-" in
+  *i*) ;;
+  *) return 0 ;;
+esac
+
+if [ -f "$HOME/.config/ravy/common.sh" ]; then
+  # shellcheck disable=SC1090
+  . "$HOME/.config/ravy/common.sh"
+fi
+
+if [ -f "$HOME/.config/ravy/aliases.sh" ]; then
+  # shellcheck disable=SC1090
+  . "$HOME/.config/ravy/aliases.sh"
+fi
+
+# starship
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init bash)"
+fi
+
+# direnv
+if command -v direnv >/dev/null 2>&1; then
+  eval "$(direnv hook bash)"
+fi
+
+# atuin
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init bash 2>/dev/null)"
+fi
+
+# Local overrides (not tracked)
+if [ -f "$HOME/.config/ravy/custom.sh" ]; then
+  # shellcheck disable=SC1090
+  . "$HOME/.config/ravy/custom.sh"
+fi
+
+

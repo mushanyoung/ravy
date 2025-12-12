@@ -1,0 +1,11 @@
+*~
+*~orig
+.DS_Store
+.tags
+.tags_sorted_by_file
+tags
+tags.lock
+node_modules
+RAVY_TMP
+
+

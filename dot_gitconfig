@@ -1,0 +1,6 @@
+[include]
+  path = ~/.local/share/chezmoi/gitconfig
+[include]
+  path = ~/.ravy/gitconfig
+
+

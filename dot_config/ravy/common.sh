@@ -1,0 +1,115 @@
+#!/usr/bin/env sh
+#
+# Shared shell setup for bash/zsh.
+# This file should be sourced by ~/.bashrc and ~/.zshrc.
+#
+
+# Resolve RAVY_HOME:
+# - Prefer chezmoi source-path when available
+# - Fall back to the default source dir used by chezmoi
+# - Fall back to legacy ~/.ravy
+if command -v chezmoi >/dev/null 2>&1; then
+  RAVY_HOME="$(chezmoi source-path 2>/dev/null || true)"
+fi
+if [ -z "${RAVY_HOME:-}" ] && [ -d "$HOME/.local/share/chezmoi" ]; then
+  RAVY_HOME="$HOME/.local/share/chezmoi"
+fi
+if [ -z "${RAVY_HOME:-}" ]; then
+  RAVY_HOME="$HOME/.ravy"
+fi
+export RAVY_HOME
+
+# --- PATH helpers -------------------------------------------------------------
+_ravy_prepend_path() {
+  # Usage: _ravy_prepend_path /some/dir
+  [ -n "${1:-}" ] || return 0
+  [ -d "$1" ] || return 0
+  case ":$PATH:" in
+    *":$1:"*) : ;;
+    *) PATH="$1:$PATH" ;;
+  esac
+}
+
+_ravy_prepend_path "$RAVY_HOME/bin"
+_ravy_prepend_path "$HOME/.local/bin"
+
+# Homebrew / Linuxbrew detection (sets env + updates PATH/MANPATH/INFOPATH)
+if [ -z "${RAVY_SKIP_BREW:-}" ]; then
+  for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"; do
+    if [ -x "$brewprefix/bin/brew" ]; then
+      HOMEBREW_PREFIX="$brewprefix"
+      HOMEBREW_CELLAR="$brewprefix/Cellar"
+      HOMEBREW_REPOSITORY="$brewprefix/Homebrew"
+      HOMEBREW_NO_ANALYTICS=1
+      export HOMEBREW_PREFIX HOMEBREW_CELLAR HOMEBREW_REPOSITORY HOMEBREW_NO_ANALYTICS
+
+      if [ -d "$HOMEBREW_PREFIX/share/man" ]; then
+        MANPATH="${MANPATH:-}"
+        export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH:+:$MANPATH}"
+      fi
+      if [ -d "$HOMEBREW_PREFIX/share/info" ]; then
+        INFOPATH="${INFOPATH:-}"
+        export INFOPATH="$HOMEBREW_PREFIX/share/info${INFOPATH:+:$INFOPATH}"
+      fi
+
+      if [ -d "$brewprefix/opt/ruby/bin" ]; then
+        _ravy_prepend_path "$brewprefix/opt/ruby/bin"
+      fi
+
+      _ravy_prepend_path "$HOMEBREW_PREFIX/sbin"
+      _ravy_prepend_path "$HOMEBREW_PREFIX/bin"
+      break
+    fi
+  done
+fi
+
+# RubyGems user/bin paths (optional)
+if command -v gem >/dev/null 2>&1; then
+  if command -v ruby >/dev/null 2>&1; then
+    gem_user_dir="$(ruby -e 'puts Gem.user_dir' 2>/dev/null || true)"
+    if [ -n "$gem_user_dir" ]; then
+      _ravy_prepend_path "$gem_user_dir/bin"
+    fi
+  fi
+  gemdir="$(gem environment gemdir 2>/dev/null || true)"
+  if [ -n "$gemdir" ]; then
+    _ravy_prepend_path "$gemdir/bin"
+  fi
+fi
+
+export PATH
+
+# --- Environment --------------------------------------------------------------
+export LANG="en_US.UTF-8"
+export LANGUAGE="$LANG"
+export EDITOR="nvim"
+export GIT_EDITOR="nvim"
+
+# Avoid hanging in Cursor Agent terminal executions.
+if [ -n "${CURSOR_AGENT:-}" ] || [ -n "${CURSOR_TRACE_ID:-}" ]; then
+  export PAGER="cat"
+  export MANPAGER="cat"
+  export GIT_PAGER="cat"
+else
+  export PAGER="less"
+  export MANPAGER="less"
+  export GIT_PAGER="less"
+fi
+
+export LESS="FRSXMi"
+export LESS_TERMCAP_mb="$(printf '\033[01;31m')"
+export LESS_TERMCAP_md="$(printf '\033[01;38;5;74m')"
+export LESS_TERMCAP_me="$(printf '\033[0m')"
+export LESS_TERMCAP_so="$(printf '\033[7;40;33m')"
+export LESS_TERMCAP_se="$(printf '\033[0m')"
+export LESS_TERMCAP_us="$(printf '\033[04;38;5;178m')"
+export LESS_TERMCAP_ue="$(printf '\033[0m')"
+
+export FZF_DEFAULT_OPTS="--bind=ctrl-f:page-down,ctrl-b:page-up --layout=reverse --height=50% --border"
+export FZF_DEFAULT_COMMAND="fd"
+
+# Keep these consistent across shells
+export EZA_CONFIG_DIR="$RAVY_HOME/eza"
+export STARSHIP_CONFIG="$RAVY_HOME/starship.toml"
+
+

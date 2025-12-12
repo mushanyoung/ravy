@@ -4,7 +4,7 @@
 
 ## Installation
 
-To install Ravy, run the following command (on both local and remote system):
+To install Ravy (bash/zsh/fish via chezmoi), run:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh | bash -s

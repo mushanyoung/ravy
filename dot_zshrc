@@ -1,0 +1,36 @@
+# Ravy (chezmoi)
+
+# Only for interactive shells
+[[ -o interactive ]] || return 0
+
+if [ -f "$HOME/.config/ravy/common.sh" ]; then
+  source "$HOME/.config/ravy/common.sh"
+fi
+
+if [ -f "$HOME/.config/ravy/aliases.sh" ]; then
+  source "$HOME/.config/ravy/aliases.sh"
+fi
+
+# starship
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
+
+# direnv
+if command -v direnv >/dev/null 2>&1; then
+  eval "$(direnv hook zsh)"
+fi
+
+# atuin
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init zsh 2>/dev/null)"
+fi
+
+# Local overrides (not tracked)
+if [ -f "$HOME/.config/ravy/custom.zsh" ]; then
+  source "$HOME/.config/ravy/custom.zsh"
+elif [ -f "$HOME/.config/ravy/custom.sh" ]; then
+  source "$HOME/.config/ravy/custom.sh"
+fi
+
+

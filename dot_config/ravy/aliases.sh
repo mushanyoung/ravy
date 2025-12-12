@@ -1,0 +1,151 @@
+#!/usr/bin/env sh
+#
+# Shared aliases/functions for bash/zsh.
+# Source this after dot_config/ravy/common.sh.
+#
+
+# ---- helpers -----------------------------------------------------------------
+retry() {
+  while true; do
+    "$@" && break
+    echo "Failed, retrying..." >&2
+    sleep 2
+  done
+}
+
+# ping handles url
+ping() {
+  if [ $# -eq 0 ]; then
+    command ping
+    return $?
+  fi
+  host="$1"
+  host="$(printf "%s" "$host" | sed -E -e 's#.*://##' -e 's#/.*$##')"
+  shift
+  command ping "$host" "$@"
+}
+
+history-stat() {
+  history 2>/dev/null | awk '{print $1}' | sort | uniq -c | sort -n -r | head
+}
+
+pip-update-all() {
+  PIP_COMMAND="${PIP_COMMAND:-pip3}"
+  "$PIP_COMMAND" list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs "$PIP_COMMAND" install -U
+}
+
+free() {
+  if [ "$(uname 2>/dev/null)" = "Darwin" ]; then
+    command top -l 1 -s 0 | grep PhysMem
+  else
+    command free -h "$@"
+  fi
+}
+
+# eza wrapper
+ls() {
+  if command -v eza >/dev/null 2>&1; then
+    command eza --icons --group-directories-first --git --color "$@"
+  else
+    command ls "$@"
+  fi
+}
+
+du() {
+  if command -v gdu >/dev/null 2>&1; then
+    command gdu "$@"
+  else
+    command du "$@"
+  fi
+}
+
+# docker compose wrapper
+dc() {
+  if [ -n "${RAVY_DOCKER_COMPOSE_CONFIG:-}" ]; then
+    docker compose --file "$RAVY_DOCKER_COMPOSE_CONFIG" "$@"
+  else
+    docker compose "$@"
+  fi
+}
+
+# ravy helpers
+ravy() {
+  cd "$RAVY_HOME" || return 1
+}
+ravycustom() {
+  cd "$RAVY_HOME/custom" || return 1
+}
+
+# ---- aliases -----------------------------------------------------------------
+alias l='ls -lg'
+alias la='l -lA'
+alias lt='l --tree'
+alias lta='lt -A'
+alias lat='lt -A'
+alias ld='l -l --sort newest'
+alias ldr='ld -r'
+alias ldt='ld -A'
+alias ldtr='ldt -r'
+alias ll='ls -lg --no-permissions --no-user --no-time --bytes --git'
+
+alias c='cd'
+
+alias ta='type -a'
+alias df='command df -h'
+alias g='command git'
+alias t='command tmux'
+alias hs='history'
+alias tf='tail -f'
+alias rd='rmdir'
+alias rb='ruby'
+alias v='nvim'
+alias vi='nvim'
+alias vim='nvim'
+alias grep='grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}'
+alias pyserv='python3 -m http.server'
+
+alias ts='tailscale'
+
+# cursor-agent
+alias ci='cursor-agent --model grok-code-fast-1'
+alias cido='ci -p -f --output-format text --'
+
+# ps-color
+alias pa='ps-color'
+alias pc='env HIGH_CPU_MEM_ONLY=1 ps-color'
+
+# brew commands
+alias bi='brew install --force-bottle'
+alias blr='brew list --installed-on-request'
+alias bubu='brew update && brew outdated && brew upgrade && brew cleanup'
+
+# apt commands
+alias au='sudo apt update && sudo apt full-upgrade && sudo apt autoclean'
+alias auau='sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove'
+
+# pacman commands
+alias pupu='sudo pacman -Syuu --noconfirm'
+
+# podman commands
+alias pd='podman'
+alias pdau='podman auto-update'
+alias pdl='podman logs -f --tail 100'
+alias pdips='podman ps -a --format "table {{.Names}}\t{{.Networks}}\t{{.Ports}}" | column -t'
+
+# systemctl commands
+alias sc='systemctl --user'
+alias sce='sc daemon-reload'
+alias scs='sc status'
+alias scr='sc restart'
+alias scst='sc start'
+alias scstop='sc stop'
+
+# docker compose helpers (depend on dc())
+alias dp='dc pull'
+alias dcl='dc logs -f --tail 100'
+alias dcb='dc build'
+alias dud='dc build && dc up -d'
+alias dpdu='dc pull && dc up -d'
+alias dudp='dpdu'
+
+

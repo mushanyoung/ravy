@@ -1,0 +1,11 @@
+# ChezMoi shim: keep the real config in the Ravy repo.
+
+# Resolve a best-effort RAVY_HOME (tmux can't run `chezmoi source-path` cheaply),
+# so default to the standard chezmoi source dir when present.
+if-shell '[ -n "$RAVY_HOME" ]' "set -gq @ravy_home \"$RAVY_HOME\"" ""
+if-shell '[ -z "#{@ravy_home}" ] && [ -d "$HOME/.local/share/chezmoi" ]' "set -gq @ravy_home \"$HOME/.local/share/chezmoi\"" ""
+if-shell '[ -z "#{@ravy_home}" ]' "set -gq @ravy_home \"$HOME/.ravy\"" ""
+
+source-file "#{@ravy_home}/tmux.conf.local"
+
+

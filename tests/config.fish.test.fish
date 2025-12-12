@@ -3,7 +3,7 @@
 # Ensure we run in an interactive shell with isolated config directories so
 # config.fish executes its interactive-only branches safely.
 set -l script_path (realpath (status --current-filename))
-set -l repo_root (realpath (dirname $script_path)/..)
+    set -l repo_root (realpath (dirname $script_path)/..)
 
 if not set -q RAVY_TEST_CHILD
     set -l tmp_home (mktemp -d "$repo_root/.tmp_fish_home.XXXXXX")
@@ -33,16 +33,37 @@ if not set -q RAVY_TEST_CHILD
     # Stubs for tools config.fish hooks into.
     __write_stub starship "#!/usr/bin/env sh
 if [ -n \"$tmp_home\" ]; then echo starship > \"$tmp_home/starship_ran\"; fi
+if [ \"\$1\" = \"init\" ] && [ \"\$2\" = \"fish\" ]; then
+  cat <<'EOF'
+function __starship_set_job_count
+end
+EOF
+  exit 0
+fi
 echo \"# starship stub\"
 "
 
     __write_stub direnv "#!/usr/bin/env sh
 if [ -n \"$tmp_home\" ]; then echo direnv > \"$tmp_home/direnv_ran\"; fi
+if [ \"\$1\" = \"hook\" ] && [ \"\$2\" = \"fish\" ]; then
+  cat <<'EOF'
+function __direnv_export_eval
+end
+EOF
+  exit 0
+fi
 echo \"# direnv stub\"
 "
 
     __write_stub atuin "#!/usr/bin/env sh
 if [ -n \"$tmp_home\" ]; then echo atuin > \"$tmp_home/atuin_ran\"; fi
+if [ \"\$1\" = \"init\" ] && [ \"\$2\" = \"fish\" ]; then
+  cat <<'EOF'
+function _atuin_preexec
+end
+EOF
+  exit 0
+fi
 echo \"# atuin stub\"
 "
 
@@ -66,6 +87,14 @@ exit 0
 exit 0
 "
 
+    __write_stub chezmoi "#!/usr/bin/env sh
+if [ \"\$1\" = \"source-path\" ]; then
+  echo \"$repo_root\"
+  exit 0
+fi
+exit 0
+"
+
     # Stubs used by wrapper functions.
     __write_stub eza "#!/usr/bin/env sh
 printf \"%s\\n\" \"\$@\" > \"$tmp_home/eza_args\"
@@ -81,6 +110,8 @@ printf \"%s\\n\" \"\$@\" > \"$tmp_home/gdu_args\"
         XDG_CONFIG_HOME=$tmp_home/.config \
         XDG_DATA_HOME=$tmp_home/.local/share \
         PATH="$stub_bin:/usr/bin:/bin" \
+        RAVY_SKIP_BREW=1 \
+        RAVY_CUSTOM= \
         RAVY_TEST_CHILD=1 \
         RAVY_TEST_TEMP_HOME=$tmp_home \
         STUB_BIN=$stub_bin \
@@ -125,13 +156,15 @@ function assert_contains --argument-names needle
     end
 end
 
-set -l expected_ravy_home (realpath (dirname "$repo_root/config.fish"))
+set -l expected_ravy_home (realpath "$repo_root")
 
 # Ensure cursor-related variables don't force pager to cat.
 set -e CURSOR_AGENT
 set -e CURSOR_TRACE_ID
+set -e RAVY_CUSTOM
 
-source "$repo_root/config.fish"
+# NOTE: The canonical fish config for chezmoi lives under dot_config.
+source "$repo_root/dot_config/fish/config.fish"
 
 if set -q RAVY_TEST_DEBUG
     echo "DEBUG PATH entries:"
@@ -139,10 +172,10 @@ if set -q RAVY_TEST_DEBUG
 end
 
 # Path setup
-assert_equal $RAVY_HOME $expected_ravy_home "RAVY_HOME set from config location"
+assert_equal $RAVY_HOME $expected_ravy_home "RAVY_HOME set from chezmoi source-path"
 assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
 assert_contains "$HOME/.local/bin" $PATH "PATH includes HOME/.local/bin"
-assert_contains "$RAVY_CUSTOM/bin" $PATH "PATH includes custom bin directory"
+assert_true "not set -q RAVY_CUSTOM" "RAVY_CUSTOM is not set by default"
 
 if command -v gem >/dev/null
     set -l expected_gem_user_bin (ruby -e 'puts Gem.user_dir')"/bin"
