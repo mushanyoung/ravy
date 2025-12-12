@@ -50,13 +50,6 @@ if not set -q RAVY_SKIP_BREW
     end
 end
 
-if command -v gem &>/dev/null
-    if command -v ruby &>/dev/null
-        prepend_to_path (ruby -e 'puts Gem.user_dir' 2>/dev/null)"/bin"
-    end
-    prepend_to_path (gem environment gemdir 2>/dev/null)"/bin"
-end
-
 # Following is interactive only.
 if not status --is-interactive
     exit

@@ -13,15 +13,6 @@ if not set -q RAVY_TEST_CHILD
         "$tmp_home/.config/fish" \
         "$tmp_home/.local/bin" \
         "$tmp_home/.local/share" \
-        "$tmp_home/.gem/bin" \
-        "$tmp_home/.gemdir/bin"
-
-    if command -q ruby
-        set -l gem_user_dir (env HOME=$tmp_home XDG_CONFIG_HOME=$tmp_home/.config ruby -e 'puts Gem.user_dir' ^/dev/null)
-        if test -n "$gem_user_dir"
-            mkdir -p "$gem_user_dir/bin"
-        end
-    end
 
     # Helper to write simple stub executables.
     function __write_stub --argument-names name body
@@ -65,22 +56,6 @@ EOF
   exit 0
 fi
 echo \"# atuin stub\"
-"
-
-    __write_stub gem "#!/usr/bin/env sh
-if [ \"\$1\" = \"environment\" ] && [ \"\$2\" = \"gemdir\" ]; then
-  echo \"$tmp_home/.gemdir\"
-  exit 0
-fi
-exit 0
-"
-
-    __write_stub ruby "#!/usr/bin/env sh
-if [ \"\$1\" = \"-e\" ]; then
-  echo \"$tmp_home/.gem\"
-  exit 0
-fi
-exit 0
 "
 
     __write_stub chezmoi "#!/usr/bin/env sh
@@ -172,13 +147,6 @@ assert_equal $RAVY_HOME $expected_ravy_home "RAVY_HOME set from chezmoi source-p
 assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
 assert_contains "$HOME/.local/bin" $PATH "PATH includes HOME/.local/bin"
 assert_true "not set -q RAVY_CUSTOM" "RAVY_CUSTOM is not set by default"
-
-if command -v gem >/dev/null
-    set -l expected_gem_user_bin (ruby -e 'puts Gem.user_dir')"/bin"
-    set -l expected_gemdir_bin (gem environment gemdir)"/bin"
-    assert_contains "$expected_gem_user_bin" $PATH "PATH includes Gem user bin"
-    assert_contains "$expected_gemdir_bin" $PATH "PATH includes Gem environment bin"
-end
 
 # Brew detection
 set -l expected_brew_prefix ''

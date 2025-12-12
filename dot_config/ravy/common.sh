@@ -63,20 +63,6 @@ if [ -z "${RAVY_SKIP_BREW:-}" ]; then
   done
 fi
 
-# RubyGems user/bin paths (optional)
-if command -v gem >/dev/null 2>&1; then
-  if command -v ruby >/dev/null 2>&1; then
-    gem_user_dir="$(ruby -e 'puts Gem.user_dir' 2>/dev/null || true)"
-    if [ -n "$gem_user_dir" ]; then
-      _ravy_prepend_path "$gem_user_dir/bin"
-    fi
-  fi
-  gemdir="$(gem environment gemdir 2>/dev/null || true)"
-  if [ -n "$gemdir" ]; then
-    _ravy_prepend_path "$gemdir/bin"
-  fi
-fi
-
 export PATH
 
 # --- Environment --------------------------------------------------------------
@@ -111,5 +97,3 @@ export FZF_DEFAULT_COMMAND="fd"
 # Keep these consistent across shells
 export EZA_CONFIG_DIR="$RAVY_HOME/eza"
 export STARSHIP_CONFIG="$RAVY_HOME/starship.toml"
-
-
