@@ -7,9 +7,6 @@ tags
 # Local-only scratch/custom content lives in the repo but should not be applied
 custom/
 
-# Legacy layout (moved to dot_config/*); avoid creating these at $HOME
-eza/
-
 # Old shared shell files no longer used; avoid creating empty dir at ~/.config/ravy
 dot_config/ravy/
 
@@ -21,6 +18,9 @@ vimrc
 # These are template partials and should never be applied
 templates/
 
+# binaries
+bin/
+
 install.sh
 gitconfig
 README.md
@@ -28,8 +28,3 @@ starship.toml
 tags
 tmux.conf.local
 vimrc
-
-eza/
-bin/
-tests/
-custom/

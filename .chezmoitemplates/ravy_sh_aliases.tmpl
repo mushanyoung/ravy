@@ -66,16 +66,10 @@ dc() {
 
 # ravy helpers
 ravy() {
-  if command -v chezmoi >/dev/null 2>&1; then
-    cd "$(chezmoi source-path 2>/dev/null)" || return 1
-  elif [ -d "$HOME/.local/share/chezmoi" ]; then
-    cd "$HOME/.local/share/chezmoi" || return 1
-  else
-    return 1
-  fi
+  cd "$RAVY_HOME" || return 1
 }
 ravycustom() {
-  cd "$HOME/.config/ravy" || return 1
+  cd "$RAVY_HOME/custom" || return 1
 }
 
 # ---- aliases -----------------------------------------------------------------

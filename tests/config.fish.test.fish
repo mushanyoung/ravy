@@ -87,7 +87,6 @@ printf \"%s\\n\" \"\$@\" > \"$tmp_home/gdu_args\"
         XDG_DATA_HOME=$tmp_home/.local/share \
         PATH="$stub_bin:/usr/bin:/bin" \
         RAVY_SKIP_BREW=1 \
-        RAVY_CUSTOM= \
         RAVY_TEST_CHILD=1 \
         RAVY_TEST_TEMP_HOME=$tmp_home \
         STUB_BIN=$stub_bin \
@@ -137,7 +136,6 @@ set -l expected_ravy_home (realpath "$repo_root")
 # Ensure cursor-related variables don't force pager to cat.
 set -e CURSOR_AGENT
 set -e CURSOR_TRACE_ID
-set -e RAVY_CUSTOM
 
 # Render the chezmoi template to a real config file, then source it.
 set -l rendered_config "$HOME/.config/fish/config.fish"
@@ -151,9 +149,10 @@ if set -q RAVY_TEST_DEBUG
 end
 
 # Path setup
+assert_equal $RAVY_HOME $expected_ravy_home "RAVY_HOME set from chezmoi source-path"
+assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
 assert_contains "$HOME/bin" $PATH "PATH includes HOME/bin"
 assert_contains "$HOME/.local/bin" $PATH "PATH includes HOME/.local/bin"
-assert_true "not set -q RAVY_CUSTOM" "RAVY_CUSTOM is not set by default"
 
 # Brew detection
 set -l expected_brew_prefix ''

@@ -11,7 +11,23 @@ _ravy_prepend_path() {
   esac
 }
 
-# User scripts (managed by chezmoi as ~/bin/* and ~/.local/bin/*)
+# Resolve RAVY_HOME:
+# - Prefer chezmoi source-path when available
+# - Fall back to the default source dir used by chezmoi
+# - Fall back to legacy ~/.ravy
+if command -v chezmoi >/dev/null 2>&1; then
+  RAVY_HOME="$(chezmoi source-path 2>/dev/null || true)"
+fi
+if [ -z "${RAVY_HOME:-}" ] && [ -d "$HOME/.local/share/chezmoi" ]; then
+  RAVY_HOME="$HOME/.local/share/chezmoi"
+fi
+if [ -z "${RAVY_HOME:-}" ]; then
+  RAVY_HOME="$HOME/.ravy"
+fi
+export RAVY_HOME
+
+# User scripts
+_ravy_prepend_path "$RAVY_HOME/bin"
 _ravy_prepend_path "$HOME/bin"
 _ravy_prepend_path "$HOME/.local/bin"
 

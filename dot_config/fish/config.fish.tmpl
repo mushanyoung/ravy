@@ -2,6 +2,24 @@
 # Ravy (chezmoi) fish config
 #
 
+# Resolve RAVY_HOME:
+# - Prefer chezmoi source-path when available
+# - Fall back to the default source dir used by chezmoi
+# - Fall back to legacy ~/.ravy
+if command -v chezmoi >/dev/null
+    set -l sp (chezmoi source-path 2>/dev/null)
+    if test -n "$sp"
+        set -gx RAVY_HOME $sp
+    end
+end
+if not set -q RAVY_HOME
+    if test -d "$HOME/.local/share/chezmoi"
+        set -gx RAVY_HOME "$HOME/.local/share/chezmoi"
+    else
+        set -gx RAVY_HOME "$HOME/.ravy"
+    end
+end
+
 # paths operations
 function prepend_to_path
     for arg in $argv
@@ -9,7 +27,8 @@ function prepend_to_path
     end
 end
 
-# User scripts (managed by chezmoi as ~/bin/* and ~/.local/bin/*)
+# User scripts
+prepend_to_path "$RAVY_HOME/bin"
 prepend_to_path "$HOME/bin"
 prepend_to_path "$HOME/.local/bin"
 
@@ -312,19 +331,15 @@ function fish_title
 end
 
 # LOCAL overrides (not tracked)
-test -f "$HOME/.config/ravy/custom.fish"; and source "$HOME/.config/ravy/custom.fish"
+test -f "$RAVY_HOME/custom/config.fish"; and source "$RAVY_HOME/custom/config.fish"
 
 # ravy convenience commands
 function ravy
-    if command -v chezmoi >/dev/null
-        set -l sp (chezmoi source-path 2>/dev/null)
-        test -n "$sp"; and cd "$sp"; and return
-    end
-    test -d "$HOME/.local/share/chezmoi"; and cd "$HOME/.local/share/chezmoi"
+    cd "$RAVY_HOME"
 end
 
 function ravycustom
-    cd "$HOME/.config/ravy"
+    cd "$RAVY_HOME/custom"
 end
 alias ravyc ravycustom
 
