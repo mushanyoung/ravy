@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+#
+# retry: run a command until it succeeds
+#
+set -eu
+
+if [ "$#" -eq 0 ]; then
+  echo "Usage: retry <command> [args...]" >&2
+  exit 2
+fi
+
+while true; do
+  "$@" && exit 0
+  echo "Failed, retrying..." >&2
+  sleep 2
+done
+
+

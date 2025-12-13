@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+#
+# Update all outdated pip packages (user environment).
+#
+set -eu
+
+PIP_COMMAND="${PIP_COMMAND:-pip3}"
+
+if ! command -v "$PIP_COMMAND" >/dev/null 2>&1; then
+  echo "pip-update-all: '$PIP_COMMAND' not found" >&2
+  exit 127
+fi
+
+# List outdated packages (skip header), extract first column.
+outdated="$("$PIP_COMMAND" list --outdated --format=columns 2>/dev/null | tail -n +3 | awk '{print $1}')"
+if [ -z "${outdated:-}" ]; then
+  exit 0
+fi
+
+printf "%s\n" "$outdated" | xargs "$PIP_COMMAND" install -U
+
+

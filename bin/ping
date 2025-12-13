@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+#
+# ping: like ping, but accepts URLs (extracts host)
+#
+set -eu
+
+self="$(command -v ping || true)"
+real_ping=""
+for cand in /sbin/ping /bin/ping /usr/bin/ping; do
+  if [ -x "$cand" ] && [ "$cand" != "$self" ]; then
+    real_ping="$cand"
+    break
+  fi
+done
+if [ -z "$real_ping" ]; then
+  echo "ping: could not find system ping (tried /sbin/ping /bin/ping /usr/bin/ping)" >&2
+  exit 127
+fi
+
+if [ "$#" -eq 0 ]; then
+  exec "$real_ping"
+fi
+
+host="$1"
+host="$(printf "%s" "$host" | sed -E -e 's#.*://##' -e 's#/.*$##')"
+shift
+exec "$real_ping" "$host" "$@"
+
+

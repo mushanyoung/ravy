@@ -1,0 +1,69 @@
+{{- /* Shared environment variables across shells.
+      Expects .shell to be "sh" or "fish". */ -}}
+{{- $shell := .shell | default "sh" -}}
+
+{{- if eq $shell "fish" }}
+set -x LANG en_US.UTF-8
+set -x LANGUAGE $LANG
+set -x EDITOR nvim
+set -x GIT_EDITOR nvim
+
+if set -q CURSOR_AGENT || set -q CURSOR_TRACE_ID
+    # Do not hang on cursor terminal executions
+    set -x PAGER cat
+    set -x MANPAGER cat
+    set -x GIT_PAGER cat
+else
+    set -x PAGER less
+    set -x MANPAGER less
+    set -x GIT_PAGER less
+end
+
+set -x LESS FRSXMi
+set -x LESS_TERMCAP_mb (printf '\033[01;31m')
+set -x LESS_TERMCAP_md (printf '\033[01;38;5;74m')
+set -x LESS_TERMCAP_me (printf '\033[0m')
+set -x LESS_TERMCAP_so (printf '\033[7;40;33m')
+set -x LESS_TERMCAP_se (printf '\033[0m')
+set -x LESS_TERMCAP_us (printf '\033[04;38;5;178m')
+set -x LESS_TERMCAP_ue (printf '\033[0m')
+
+set -x FZF_DEFAULT_OPTS --bind=ctrl-f:page-down,ctrl-b:page-up --layout=reverse --height=50% --border
+set -x FZF_DEFAULT_COMMAND fd
+
+set -x EZA_CONFIG_DIR "$HOME/.config/eza"
+set -x STARSHIP_CONFIG "$HOME/.config/starship.toml"
+{{- else }}
+export LANG="en_US.UTF-8"
+export LANGUAGE="$LANG"
+export EDITOR="nvim"
+export GIT_EDITOR="nvim"
+
+# Avoid hanging in Cursor Agent terminal executions.
+if [ -n "${CURSOR_AGENT:-}" ] || [ -n "${CURSOR_TRACE_ID:-}" ]; then
+  export PAGER="cat"
+  export MANPAGER="cat"
+  export GIT_PAGER="cat"
+else
+  export PAGER="less"
+  export MANPAGER="less"
+  export GIT_PAGER="less"
+fi
+
+export LESS="FRSXMi"
+export LESS_TERMCAP_mb="$(printf '\033[01;31m')"
+export LESS_TERMCAP_md="$(printf '\033[01;38;5;74m')"
+export LESS_TERMCAP_me="$(printf '\033[0m')"
+export LESS_TERMCAP_so="$(printf '\033[7;40;33m')"
+export LESS_TERMCAP_se="$(printf '\033[0m')"
+export LESS_TERMCAP_us="$(printf '\033[04;38;5;178m')"
+export LESS_TERMCAP_ue="$(printf '\033[0m')"
+
+export FZF_DEFAULT_OPTS="--bind=ctrl-f:page-down,ctrl-b:page-up --layout=reverse --height=50% --border"
+export FZF_DEFAULT_COMMAND="fd"
+
+export EZA_CONFIG_DIR="$HOME/.config/eza"
+export STARSHIP_CONFIG="$HOME/.config/starship.toml"
+{{- end }}
+
+

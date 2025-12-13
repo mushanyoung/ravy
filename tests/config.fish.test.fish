@@ -211,12 +211,17 @@ if test -z "$LESS_TERMCAP_mb" -o -z "$LESS_TERMCAP_md" -o -z "$LESS_TERMCAP_so"
 end
 
 # Functions and aliases
-for fn in prepend_to_path imv lines retry ping d ep history-stat pip-update-all free ls du fish_title __fish_title_or_pwd jl dc downcase-exts
+for fn in prepend_to_path imv lines d ep history-stat ls du fish_title __fish_title_or_pwd jl downcase-exts
     assert_true "functions -q $fn" "Function '$fn' defined"
 end
 
 for alias_name in l la lt ld ll ta df g t hs tf rd rb v vi vim grep ts ci pa pc bi au pupu pd dp dcl dcb dud dpdu dudp dpri dprs dli dls drc dri dry reset ravy ravycustom ravysource
     assert_true "functions -q $alias_name" "Alias '$alias_name' defined"
+end
+
+# Script helpers (shared across shells via $RAVY_HOME/bin)
+for cmd in dc retry ping pip-update-all free
+    assert_true "command -v $cmd >/dev/null" "Command '$cmd' exists"
 end
 
 # Wrapper behavior: ls and du should execute without errors.

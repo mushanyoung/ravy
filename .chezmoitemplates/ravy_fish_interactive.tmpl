@@ -2,9 +2,16 @@
 # Disable fish_greeting message
 set fish_greeting
 
+{{ template "ravy_env_common.tmpl" (dict "shell" "fish") }}
+
+if set -q CURSOR_AGENT || set -q CURSOR_TRACE_ID
+    if command -v cursor
+        . (cursor --locate-shell-integration-path fish)
+    end
+end
+
 # starship
 if command -v starship &>/dev/null
-    set -x STARSHIP_CONFIG "$HOME/.config/starship.toml"
     starship init fish | source
 end
 
@@ -17,40 +24,6 @@ end
 if command -v atuin &>/dev/null
     atuin init fish | source 2>/dev/null
 end
-
-# ENV
-set -x LANG en_US.UTF-8
-set -x LANGUAGE $LANG
-set -x EDITOR nvim
-set -x GIT_EDITOR nvim
-
-if set -q CURSOR_AGENT || set -q CURSOR_TRACE_ID
-    # Do not hang on cursor terminal executions
-    set -x PAGER cat
-    set -x MANPAGER cat
-    set -x GIT_PAGER cat
-    if command -v cursor
-        . (cursor --locate-shell-integration-path fish)
-    end
-else
-    set -x PAGER less
-    set -x MANPAGER less
-    set -x GIT_PAGER less
-end
-
-set -x LESS FRSXMi
-set -x LESS_TERMCAP_mb '[01;31m' # begin blinking
-set -x LESS_TERMCAP_md '[01;38;5;74m' # begin bold
-set -x LESS_TERMCAP_me '[0m' # end mode
-set -x LESS_TERMCAP_so '[7;40;33m' # begin standout-mode - info box
-set -x LESS_TERMCAP_se '[0m' # end standout-mode
-set -x LESS_TERMCAP_us '[04;38;5;178m' # begin underline
-set -x LESS_TERMCAP_ue '[0m' # end underline
-
-set -x FZF_DEFAULT_OPTS --bind=ctrl-f:page-down,ctrl-b:page-up --layout=reverse --height=50% --border
-set -x FZF_DEFAULT_COMMAND fd
-
-set -x EZA_CONFIG_DIR "$HOME/.config/eza"
 
 # functions
 function imv
@@ -77,21 +50,6 @@ function lines
     end
 end
 
-# retry command until it succeeds
-function retry
-    while true
-        $argv
-        and break
-        echo 'Failed, retrying...'
-        sleep 2
-    end
-end
-
-# ping handles url
-function ping
-    echo $argv | sed -E -e 's#.*://##' -e 's#/.*$##' | xargs ping
-end
-
 # cd ..
 function d
     cd ..
@@ -108,21 +66,6 @@ end
 # history statistics
 function history-stat
     history | awk '{print $1}' | sort | uniq -c | sort -n -r | head
-end
-
-# update installed pip packages
-function pip-update-all
-    set -q PIP_COMMAND; or set -l PIP_COMMAND pip3
-    $PIP_COMMAND list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs $PIP_COMMAND install -U
-end
-
-# free
-function free
-    if test (uname) = Darwin
-        command top -l 1 -s 0 | grep PhysMem
-    else
-        command free -h $argv
-    end
 end
 
 # eza wrapper
@@ -171,10 +114,7 @@ function jl --wraps="journalctl --user -xeu"
 end
 
 # docker commands
-# alias dc to `docker compose`
-function dc --wraps="docker compose"
-    docker compose (set -q RAVY_DOCKER_COMPOSE_CONFIG && string collect -- "--file" "$RAVY_DOCKER_COMPOSE_CONFIG") $argv
-end
+# `dc` is provided as an executable in $RAVY_HOME/bin (shared across shells)
 alias dpri "docker image prune"
 alias dprs "docker system prune --all"
 alias dli "docker image list"

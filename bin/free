@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+#
+# free: show memory stats (portable-ish)
+#
+set -eu
+
+os="$(uname 2>/dev/null || true)"
+if [ "$os" = "Darwin" ]; then
+  exec top -l 1 -s 0 | grep PhysMem
+else
+  exec free -h "$@"
+fi
+
+

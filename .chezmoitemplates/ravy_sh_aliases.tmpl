@@ -1,41 +1,7 @@
 {{- /* Common bash/zsh aliases + functions. */ -}}
 
-# ---- helpers -----------------------------------------------------------------
-retry() {
-  while true; do
-    "$@" && break
-    echo "Failed, retrying..." >&2
-    sleep 2
-  done
-}
-
-# ping handles url
-ping() {
-  if [ $# -eq 0 ]; then
-    command ping
-    return $?
-  fi
-  host="$1"
-  host="$(printf "%s" "$host" | sed -E -e 's#.*://##' -e 's#/.*$##')"
-  shift
-  command ping "$host" "$@"
-}
-
 history-stat() {
   history 2>/dev/null | awk '{print $1}' | sort | uniq -c | sort -n -r | head
-}
-
-pip-update-all() {
-  PIP_COMMAND="${PIP_COMMAND:-pip3}"
-  "$PIP_COMMAND" list --outdated --format=columns | tail -n +3 | cut -f1 -d' ' | xargs "$PIP_COMMAND" install -U
-}
-
-free() {
-  if [ "$(uname 2>/dev/null)" = "Darwin" ]; then
-    command top -l 1 -s 0 | grep PhysMem
-  else
-    command free -h "$@"
-  fi
 }
 
 # eza wrapper
@@ -55,23 +21,6 @@ du() {
   fi
 }
 
-# docker compose wrapper
-dc() {
-  if [ -n "${RAVY_DOCKER_COMPOSE_CONFIG:-}" ]; then
-    docker compose --file "$RAVY_DOCKER_COMPOSE_CONFIG" "$@"
-  else
-    docker compose "$@"
-  fi
-}
-
-# ravy helpers
-ravy() {
-  cd "$RAVY_HOME" || return 1
-}
-ravycustom() {
-  cd "$RAVY_HOME/custom" || return 1
-}
-
 # ---- aliases -----------------------------------------------------------------
 alias l='ls -lg'
 alias la='l -lA'
@@ -88,4 +37,3 @@ alias ll='ls -lg --no-permissions --no-user --no-time --bytes --git'
 
 # shell-specific aliases (not in common list)
 alias pdips='podman ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.Networks{{"}}"}}\t{{"{{"}}.Ports{{"}}"}}" | column -t'
-

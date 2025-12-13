@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+#
+# docker compose wrapper
+#
+# If $RAVY_DOCKER_COMPOSE_CONFIG is set, use it as the compose file.
+#
+set -eu
+
+if [ -n "${RAVY_DOCKER_COMPOSE_CONFIG:-}" ]; then
+  exec docker compose --file "$RAVY_DOCKER_COMPOSE_CONFIG" "$@"
+else
+  exec docker compose "$@"
+fi
+
+

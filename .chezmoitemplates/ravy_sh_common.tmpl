@@ -63,36 +63,5 @@ fi
 
 export PATH
 
-# --- Environment --------------------------------------------------------------
-export LANG="en_US.UTF-8"
-export LANGUAGE="$LANG"
-export EDITOR="nvim"
-export GIT_EDITOR="nvim"
-
-# Avoid hanging in Cursor Agent terminal executions.
-if [ -n "${CURSOR_AGENT:-}" ] || [ -n "${CURSOR_TRACE_ID:-}" ]; then
-  export PAGER="cat"
-  export MANPAGER="cat"
-  export GIT_PAGER="cat"
-else
-  export PAGER="less"
-  export MANPAGER="less"
-  export GIT_PAGER="less"
-fi
-
-export LESS="FRSXMi"
-export LESS_TERMCAP_mb="$(printf '\033[01;31m')"
-export LESS_TERMCAP_md="$(printf '\033[01;38;5;74m')"
-export LESS_TERMCAP_me="$(printf '\033[0m')"
-export LESS_TERMCAP_so="$(printf '\033[7;40;33m')"
-export LESS_TERMCAP_se="$(printf '\033[0m')"
-export LESS_TERMCAP_us="$(printf '\033[04;38;5;178m')"
-export LESS_TERMCAP_ue="$(printf '\033[0m')"
-
-export FZF_DEFAULT_OPTS="--bind=ctrl-f:page-down,ctrl-b:page-up --layout=reverse --height=50% --border"
-export FZF_DEFAULT_COMMAND="fd"
-
-# Keep these consistent across shells
-export EZA_CONFIG_DIR="$HOME/.config/eza"
-export STARSHIP_CONFIG="$HOME/.config/starship.toml"
+{{ template "ravy_env_common.tmpl" (dict "shell" "sh") }}
 
