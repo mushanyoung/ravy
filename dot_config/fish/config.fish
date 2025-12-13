@@ -326,7 +326,7 @@ function fish_title
 end
 
 # LOCAL overrides (not tracked)
-test -f "$HOME/.config/ravy/custom.fish"; and source "$HOME/.config/ravy/custom.fish"
+test -f "$RAVY_HOME/custom/config.fish"; and source "$RAVY_HOME/custom/config.fish"
 
 # ravy convenience commands
 alias ravy "cd \$RAVY_HOME"
