@@ -1,0 +1,65 @@
+{{- /* Common aliases shared across shells.
+      Expects .shell to be "sh" or "fish".
+      Keep this list restricted to commands that do NOT contain single quotes (for sh) or double quotes (for fish). */ -}}
+
+{{- $shell := .shell | default "sh" -}}
+{{- $aliases := list
+  (dict "name" "c" "cmd" "cd")
+  (dict "name" "ta" "cmd" "type -a")
+  (dict "name" "df" "cmd" "command df -h")
+  (dict "name" "g" "cmd" "command git")
+  (dict "name" "t" "cmd" "command tmux")
+  (dict "name" "hs" "cmd" "history")
+  (dict "name" "tf" "cmd" "tail -f")
+  (dict "name" "rd" "cmd" "rmdir")
+  (dict "name" "rb" "cmd" "ruby")
+  (dict "name" "v" "cmd" "nvim")
+  (dict "name" "vi" "cmd" "nvim")
+  (dict "name" "vim" "cmd" "nvim")
+  (dict "name" "grep" "cmd" "grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}")
+  (dict "name" "pyserv" "cmd" "python3 -m http.server")
+
+  (dict "name" "ts" "cmd" "tailscale")
+
+  (dict "name" "ci" "cmd" "cursor-agent --model grok-code-fast-1")
+  (dict "name" "cido" "cmd" "ci -p -f --output-format text --")
+
+  (dict "name" "pa" "cmd" "ps-color")
+  (dict "name" "pc" "cmd" "env HIGH_CPU_MEM_ONLY=1 ps-color")
+
+  (dict "name" "bi" "cmd" "brew install --force-bottle")
+  (dict "name" "blr" "cmd" "brew list --installed-on-request")
+  (dict "name" "bubu" "cmd" "brew update && brew outdated && brew upgrade && brew cleanup")
+
+  (dict "name" "au" "cmd" "sudo apt update && sudo apt full-upgrade && sudo apt autoclean")
+  (dict "name" "auau" "cmd" "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove")
+  (dict "name" "pupu" "cmd" "sudo pacman -Syuu --noconfirm")
+
+  (dict "name" "pd" "cmd" "podman")
+  (dict "name" "pdau" "cmd" "podman auto-update")
+  (dict "name" "pdl" "cmd" "podman logs -f --tail 100")
+
+  (dict "name" "sc" "cmd" "systemctl --user")
+  (dict "name" "sce" "cmd" "sc daemon-reload")
+  (dict "name" "scs" "cmd" "sc status")
+  (dict "name" "scr" "cmd" "sc restart")
+  (dict "name" "scst" "cmd" "sc start")
+  (dict "name" "scstop" "cmd" "sc stop")
+
+  (dict "name" "dp" "cmd" "dc pull")
+  (dict "name" "dcl" "cmd" "dc logs -f --tail 100")
+  (dict "name" "dcb" "cmd" "dc build")
+  (dict "name" "dud" "cmd" "dc build && dc up -d")
+  (dict "name" "dpdu" "cmd" "dc pull && dc up -d")
+  (dict "name" "dudp" "cmd" "dpdu")
+ -}}
+
+{{- range $aliases }}
+{{- if eq $shell "fish" }}
+alias {{ .name }} "{{ .cmd }}"
+{{- else }}
+alias {{ .name }}='{{ .cmd }}'
+{{- end }}
+{{- end }}
+
+
