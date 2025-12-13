@@ -39,6 +39,7 @@ set -gx MAMBA_ROOT_PREFIX "/opt/conda"
 set -gx MAMBA_NO_PROMPT 1
 $MAMBA_EXE shell hook --shell fish --root-prefix $MAMBA_ROOT_PREFIX | source
 
+set -gx _ZO_DATA_DIR "$HOME/.local/share/zoxide"
 zoxide init fish | source
 
 {{- else }}
@@ -73,5 +74,6 @@ export FZF_DEFAULT_COMMAND="fd"
 export EZA_CONFIG_DIR="$HOME/.config/eza"
 export STARSHIP_CONFIG="$HOME/.config/starship.toml"
 
+export _ZO_DATA_DIR="$HOME/.local/share/zoxide"
 eval "$(zoxide init posix --hook prompt)"
 {{- end }}
