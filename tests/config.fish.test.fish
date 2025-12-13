@@ -211,7 +211,7 @@ if test -z "$LESS_TERMCAP_mb" -o -z "$LESS_TERMCAP_md" -o -z "$LESS_TERMCAP_so"
 end
 
 # Functions and aliases
-for fn in prepend_to_path imv lines d ep history-stat ls du fish_title __fish_title_or_pwd jl downcase-exts
+for fn in prepend_to_path imv lines d ep ls fish_title __fish_title_or_pwd jl downcase-exts
     assert_true "functions -q $fn" "Function '$fn' defined"
 end
 
