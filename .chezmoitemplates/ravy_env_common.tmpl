@@ -33,6 +33,12 @@ set -x FZF_DEFAULT_COMMAND fd
 
 set -x EZA_CONFIG_DIR "$HOME/.config/eza"
 set -x STARSHIP_CONFIG "$HOME/.config/starship.toml"
+
+set -gx MAMBA_EXE "/opt/homebrew/opt/micromamba/bin/mamba"
+set -gx MAMBA_ROOT_PREFIX "/opt/conda"
+set -gx MAMBA_NO_PROMPT 1
+$MAMBA_EXE shell hook --shell fish --root-prefix $MAMBA_ROOT_PREFIX | source
+
 {{- else }}
 export LANG="en_US.UTF-8"
 export LANGUAGE="$LANG"
@@ -65,5 +71,3 @@ export FZF_DEFAULT_COMMAND="fd"
 export EZA_CONFIG_DIR="$HOME/.config/eza"
 export STARSHIP_CONFIG="$HOME/.config/starship.toml"
 {{- end }}
-
-
