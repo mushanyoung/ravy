@@ -1,23 +1,4 @@
-#!/usr/bin/env sh
-#
-# Shared shell setup for bash/zsh.
-# This file should be sourced by ~/.bashrc and ~/.zshrc.
-#
-
-# Resolve RAVY_HOME:
-# - Prefer chezmoi source-path when available
-# - Fall back to the default source dir used by chezmoi
-# - Fall back to legacy ~/.ravy
-if command -v chezmoi >/dev/null 2>&1; then
-  RAVY_HOME="$(chezmoi source-path 2>/dev/null || true)"
-fi
-if [ -z "${RAVY_HOME:-}" ] && [ -d "$HOME/.local/share/chezmoi" ]; then
-  RAVY_HOME="$HOME/.local/share/chezmoi"
-fi
-if [ -z "${RAVY_HOME:-}" ]; then
-  RAVY_HOME="$HOME/.ravy"
-fi
-export RAVY_HOME
+{{- /* Common bash/zsh env + PATH setup. */ -}}
 
 # --- PATH helpers -------------------------------------------------------------
 _ravy_prepend_path() {
@@ -30,7 +11,8 @@ _ravy_prepend_path() {
   esac
 }
 
-_ravy_prepend_path "$RAVY_HOME/bin"
+# User scripts (managed by chezmoi as ~/bin/* and ~/.local/bin/*)
+_ravy_prepend_path "$HOME/bin"
 _ravy_prepend_path "$HOME/.local/bin"
 
 # Homebrew / Linuxbrew detection (sets env + updates PATH/MANPATH/INFOPATH)
@@ -95,5 +77,6 @@ export FZF_DEFAULT_OPTS="--bind=ctrl-f:page-down,ctrl-b:page-up --layout=reverse
 export FZF_DEFAULT_COMMAND="fd"
 
 # Keep these consistent across shells
-export EZA_CONFIG_DIR="$RAVY_HOME/eza"
-export STARSHIP_CONFIG="$RAVY_HOME/starship.toml"
+export EZA_CONFIG_DIR="$HOME/.config/eza"
+export STARSHIP_CONFIG="$HOME/.config/starship.toml"
+

@@ -2,21 +2,6 @@
 # Ravy (chezmoi) fish config
 #
 
-# Resolve RAVY_HOME (prefer chezmoi source-path)
-if command -v chezmoi >/dev/null
-    set -l sp (chezmoi source-path 2>/dev/null)
-    if test -n "$sp"
-        set -gx RAVY_HOME $sp
-    end
-end
-if not set -q RAVY_HOME
-    if test -d "$HOME/.local/share/chezmoi"
-        set -gx RAVY_HOME "$HOME/.local/share/chezmoi"
-    else
-        set -gx RAVY_HOME "$HOME/.ravy"
-    end
-end
-
 # paths operations
 function prepend_to_path
     for arg in $argv
@@ -24,7 +9,8 @@ function prepend_to_path
     end
 end
 
-prepend_to_path "$RAVY_HOME/bin"
+# User scripts (managed by chezmoi as ~/bin/* and ~/.local/bin/*)
+prepend_to_path "$HOME/bin"
 prepend_to_path "$HOME/.local/bin"
 
 if not set -q RAVY_SKIP_BREW
@@ -52,7 +38,7 @@ end
 
 # Following is interactive only.
 if not status --is-interactive
-    exit
+    return
 end
 
 # Disable fish_greeting message
@@ -60,7 +46,7 @@ set fish_greeting
 
 # starship
 if command -v starship &>/dev/null
-    set -x STARSHIP_CONFIG $RAVY_HOME/starship.toml
+    set -x STARSHIP_CONFIG "$HOME/.config/starship.toml"
     starship init fish | source
 end
 
@@ -106,7 +92,7 @@ set -x LESS_TERMCAP_ue '[0m' # end underline
 set -x FZF_DEFAULT_OPTS --bind=ctrl-f:page-down,ctrl-b:page-up --layout=reverse --height=50% --border
 set -x FZF_DEFAULT_COMMAND fd
 
-set -x EZA_CONFIG_DIR $RAVY_HOME/eza
+set -x EZA_CONFIG_DIR "$HOME/.config/eza"
 
 # functions
 function imv
@@ -253,7 +239,7 @@ alias pupu "sudo pacman -Syuu --noconfirm"
 alias pd podman
 alias pdau "podman auto-update"
 alias pdl "podman logs -f --tail 100"
-alias pdips='podman ps -a --format "table {{.Names}}\t{{.Networks}}\t{{.Ports}}" | column -t'
+alias pdips='podman ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.Networks{{"}}"}}\t{{"{{"}}.Ports{{"}}"}}" | column -t'
 
 # systemctl commands
 alias sc "systemctl --user"
@@ -291,7 +277,7 @@ alias dls "docker system info"
 alias drc "docker ps -f status=exited -q | xargs -n1 -I{} docker rm '{}'"
 alias dri "docker images | grep '^<none>' | awk '{print \$3}' | xargs -n1 -I{} docker rmi '{}'"
 alias dry "docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry"
-alias dcips='docker inspect -f \'{{.Name}}-{{range  $k, $v := .NetworkSettings.Networks}}{{$k}}-{{.IPAddress}} {{end}}-{{range $k, $v := .NetworkSettings.Ports}}{{ if not $v }}{{$k}} {{end}}{{end}} -{{range $k, $v := .NetworkSettings.Ports}}{{ if $v }}{{$k}} => {{range . }}{{ .HostIp}}:{{.HostPort}}{{end}}{{end}} {{end}}\' (docker ps -aq) | column -t -s-'
+alias dcips='docker inspect -f \'{{"{{"}}.Name{{"}}"}}-{{"{{"}}range  $k, $v := .NetworkSettings.Networks{{"}}"}}{{"{{"}}$k{{"}}"}}-{{"{{"}}.IPAddress{{"}}"}} {{"{{"}}end{{"}}"}}-{{"{{"}}range $k, $v := .NetworkSettings.Ports{{"}}"}}{{"{{"}} if not $v {{"}}"}}{{"{{"}}$k{{"}}"}} {{"{{"}}end{{"}}"}}{{"{{"}}end{{"}}"}} -{{"{{"}}range $k, $v := .NetworkSettings.Ports{{"}}"}}{{"{{"}} if $v {{"}}"}}{{"{{"}}$k{{"}}"}} => {{"{{"}}range . {{"}}"}}{{"{{"}} .HostIp{{"}}"}}:{{"{{"}}.HostPort{{"}}"}}{{"{{"}}end{{"}}"}}{{"{{"}}end{{"}}"}} {{"{{"}}end{{"}}"}}\' (docker ps -aq) | column -t -s-'
 
 # reset terminal buffer
 alias reset 'command reset; stty sane; tput reset; echo -e "\033c"; clear; builtin cd -- $PWD'
@@ -326,13 +312,25 @@ function fish_title
 end
 
 # LOCAL overrides (not tracked)
-test -f "$RAVY_HOME/custom/config.fish"; and source "$RAVY_HOME/custom/config.fish"
+test -f "$HOME/.config/ravy/custom.fish"; and source "$HOME/.config/ravy/custom.fish"
 
 # ravy convenience commands
-alias ravy "cd \$RAVY_HOME"
-alias ravycustom "cd \$RAVY_HOME/custom"
+function ravy
+    if command -v chezmoi >/dev/null
+        set -l sp (chezmoi source-path 2>/dev/null)
+        test -n "$sp"; and cd "$sp"; and return
+    end
+    test -d "$HOME/.local/share/chezmoi"; and cd "$HOME/.local/share/chezmoi"
+end
+
+function ravycustom
+    cd "$HOME/.config/ravy"
+end
 alias ravyc ravycustom
+
 function ravysource
     source "$HOME/.config/fish/config.fish"
 end
 alias ravys ravysource
+
+

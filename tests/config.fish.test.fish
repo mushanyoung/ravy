@@ -8,6 +8,7 @@ set -l script_path (realpath (status --current-filename))
 if not set -q RAVY_TEST_CHILD
     set -l tmp_home (mktemp -d "$repo_root/.tmp_fish_home.XXXXXX")
     set -g stub_bin "$tmp_home/bin"
+    set -l real_chezmoi (command -s chezmoi)
 
     mkdir -p $stub_bin \
         "$tmp_home/.config/fish" \
@@ -62,6 +63,10 @@ echo \"# atuin stub\"
 if [ \"\$1\" = \"source-path\" ]; then
   echo \"$repo_root\"
   exit 0
+fi
+if [ \"\$1\" = \"execute-template\" ]; then
+  shift
+  exec \"$real_chezmoi\" execute-template \"\$@\"
 fi
 exit 0
 "
@@ -134,8 +139,11 @@ set -e CURSOR_AGENT
 set -e CURSOR_TRACE_ID
 set -e RAVY_CUSTOM
 
-# NOTE: The canonical fish config for chezmoi lives under dot_config.
-source "$repo_root/dot_config/fish/config.fish"
+# Render the chezmoi template to a real config file, then source it.
+set -l rendered_config "$HOME/.config/fish/config.fish"
+mkdir -p (dirname $rendered_config)
+chezmoi execute-template -f "$repo_root/dot_config/fish/config.fish.tmpl" > $rendered_config
+source $rendered_config
 
 if set -q RAVY_TEST_DEBUG
     echo "DEBUG PATH entries:"
@@ -143,8 +151,7 @@ if set -q RAVY_TEST_DEBUG
 end
 
 # Path setup
-assert_equal $RAVY_HOME $expected_ravy_home "RAVY_HOME set from chezmoi source-path"
-assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
+assert_contains "$HOME/bin" $PATH "PATH includes HOME/bin"
 assert_contains "$HOME/.local/bin" $PATH "PATH includes HOME/.local/bin"
 assert_true "not set -q RAVY_CUSTOM" "RAVY_CUSTOM is not set by default"
 
@@ -168,7 +175,7 @@ end
 
 # Tool hooks
 if command -v starship >/dev/null
-    assert_equal $STARSHIP_CONFIG "$RAVY_HOME/starship.toml" "Starship config path exported"
+    assert_equal $STARSHIP_CONFIG "$HOME/.config/starship.toml" "Starship config path exported"
     assert_true "functions -q __starship_set_job_count" "Starship prompt initialized"
 else
     assert_true "not set -q STARSHIP_CONFIG" "Starship config skipped when unavailable"
@@ -193,7 +200,7 @@ assert_equal $GIT_PAGER less "GIT_PAGER set"
 assert_equal $LESS FRSXMi "LESS options set"
 assert_contains "--bind=ctrl-f:page-down,ctrl-b:page-up" $FZF_DEFAULT_OPTS "FZF opts bound"
 assert_equal $FZF_DEFAULT_COMMAND fd "FZF default command set"
-assert_equal $EZA_CONFIG_DIR "$RAVY_HOME/eza" "EZA config dir set"
+assert_equal $EZA_CONFIG_DIR "$HOME/.config/eza" "EZA config dir set"
 assert_true "set -q FISH_TITLE" "FISH_TITLE defined"
 
 if test -z "$LESS_TERMCAP_mb" -o -z "$LESS_TERMCAP_md" -o -z "$LESS_TERMCAP_so"
@@ -219,7 +226,7 @@ assert_true "test $status -eq 0" "du wrapper executes successfully"
 # Aliases that change directories.
 set -l orig_pwd $PWD
 ravy
-assert_equal $PWD $RAVY_HOME "ravy alias jumps to RAVY_HOME"
+assert_equal $PWD $expected_ravy_home "ravy jumps to chezmoi source-path"
 cd $orig_pwd
 
 set -l before_title (__fish_title_or_pwd)

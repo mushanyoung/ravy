@@ -1,3 +1,26 @@
+# Ignore repo-only files/folders (do not manage/apply to $HOME)
+README.md
+install.sh
+tests/
+tags
+
+# Local-only scratch/custom content lives in the repo but should not be applied
+custom/
+
+# Legacy layout (moved to dot_config/*); avoid creating these at $HOME
+eza/
+
+# Old shared shell files no longer used; avoid creating empty dir at ~/.config/ravy
+dot_config/ravy/
+
+# Non-dot duplicates (dot_ variants are the ones intended to be applied)
+gitconfig
+tmux.conf.local
+vimrc
+
+# These are template partials and should never be applied
+templates/
+
 install.sh
 gitconfig
 README.md

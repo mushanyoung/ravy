@@ -1,8 +1,4 @@
-#!/usr/bin/env sh
-#
-# Shared aliases/functions for bash/zsh.
-# Source this after dot_config/ravy/common.sh.
-#
+{{- /* Common bash/zsh aliases + functions. */ -}}
 
 # ---- helpers -----------------------------------------------------------------
 retry() {
@@ -70,10 +66,16 @@ dc() {
 
 # ravy helpers
 ravy() {
-  cd "$RAVY_HOME" || return 1
+  if command -v chezmoi >/dev/null 2>&1; then
+    cd "$(chezmoi source-path 2>/dev/null)" || return 1
+  elif [ -d "$HOME/.local/share/chezmoi" ]; then
+    cd "$HOME/.local/share/chezmoi" || return 1
+  else
+    return 1
+  fi
 }
 ravycustom() {
-  cd "$RAVY_HOME/custom" || return 1
+  cd "$HOME/.config/ravy" || return 1
 }
 
 # ---- aliases -----------------------------------------------------------------
@@ -130,7 +132,7 @@ alias pupu='sudo pacman -Syuu --noconfirm'
 alias pd='podman'
 alias pdau='podman auto-update'
 alias pdl='podman logs -f --tail 100'
-alias pdips='podman ps -a --format "table {{.Names}}\t{{.Networks}}\t{{.Ports}}" | column -t'
+alias pdips='podman ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.Networks{{"}}"}}\t{{"{{"}}.Ports{{"}}"}}" | column -t'
 
 # systemctl commands
 alias sc='systemctl --user'
@@ -147,5 +149,4 @@ alias dcb='dc build'
 alias dud='dc build && dc up -d'
 alias dpdu='dc pull && dc up -d'
 alias dudp='dpdu'
-
 

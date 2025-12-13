@@ -7,15 +7,8 @@ case "$-" in
   *) return 0 ;;
 esac
 
-if [ -f "$HOME/.config/ravy/common.sh" ]; then
-  # shellcheck disable=SC1090
-  . "$HOME/.config/ravy/common.sh"
-fi
-
-if [ -f "$HOME/.config/ravy/aliases.sh" ]; then
-  # shellcheck disable=SC1090
-  . "$HOME/.config/ravy/aliases.sh"
-fi
+{{ template "ravy_sh_common.tmpl" . }}
+{{ template "ravy_sh_aliases.tmpl" . }}
 
 # starship
 if command -v starship >/dev/null 2>&1; then
