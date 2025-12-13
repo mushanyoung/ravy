@@ -1,0 +1,49 @@
+{{- /* ls/eza wrapper + related aliases shared across shells.
+      Expects .shell to be "sh" or "fish". */ -}}
+
+{{- $shell := .shell | default "sh" -}}
+
+{{- if eq $shell "fish" }}
+# eza wrapper
+function ls
+    if command -v eza >/dev/null
+        command eza --icons --group-directories-first --git --color=auto $argv
+    else
+        command ls $argv
+    end
+end
+
+# ---- ls aliases --------------------------------------------------------------
+alias l "ls -lg"
+alias la "l -lA"
+alias lt "l --tree"
+alias lta "lt -A"
+alias lat "lt -A"
+alias ld "l -l --sort newest"
+alias ldr "ld -r"
+alias ldt "ld -A"
+alias ldtr "ldt -r"
+alias ll "ls -lg --no-permissions --no-user --no-time --bytes --git"
+{{- else }}
+# eza wrapper
+ls() {
+  if command -v eza >/dev/null 2>&1; then
+    command eza --icons --group-directories-first --git --color=auto "$@"
+  else
+    command ls "$@"
+  fi
+}
+
+# ---- ls aliases --------------------------------------------------------------
+alias l='ls -lg'
+alias la='l -lA'
+alias lt='l --tree'
+alias lta='lt -A'
+alias lat='lt -A'
+alias ld='l -l --sort newest'
+alias ldr='ld -r'
+alias ldt='ld -A'
+alias ldtr='ldt -r'
+alias ll='ls -lg --no-permissions --no-user --no-time --bytes --git'
+{{- end }}
+

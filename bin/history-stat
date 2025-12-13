@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+pick_history_source() {
+  if [[ -n "${HISTFILE:-}" && -f "${HISTFILE}" ]]; then
+    printf '%s\n' "${HISTFILE}"
+    return 0
+  fi
+
+  if [[ -f "${HOME}/.zsh_history" ]]; then
+    printf '%s\n' "${HOME}/.zsh_history"
+    return 0
+  fi
+
+  if [[ -f "${HOME}/.bash_history" ]]; then
+    printf '%s\n' "${HOME}/.bash_history"
+    return 0
+  fi
+
+  if [[ -f "${HOME}/.local/share/fish/fish_history" ]]; then
+    printf '%s\n' "${HOME}/.local/share/fish/fish_history"
+    return 0
+  fi
+
+  return 1
+}
+
+src="$(pick_history_source || true)"
+if [[ -z "$src" ]]; then
+  echo "history-stat: no history file found (HISTFILE/.zsh_history/.bash_history/fish_history)" >&2
+  exit 1
+fi
+
+extract_commands() {
+  local f="$1"
+  case "$f" in
+    */.zsh_history|*.zsh_history)
+      # zsh may use "extended history":
+      #   : 1700000000:0;command args...
+      awk -F';' 'NF>1{print $2; next} {print $0}' "$f"
+      ;;
+    */fish_history)
+      # fish stores YAML-ish records:
+      # - cmd: <command line>
+      awk '/^- cmd: /{sub(/^- cmd: /,""); print}' "$f"
+      ;;
+    *)
+      cat "$f"
+      ;;
+  esac
+}
+
+extract_commands "$src" \
+  | awk 'NF{print $1}' \
+  | sort \
+  | uniq -c \
+  | sort -n -r \
+  | head
+
