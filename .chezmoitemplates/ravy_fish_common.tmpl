@@ -1,0 +1,56 @@
+{{- /* Fish common setup (non-interactive safe): RAVY_HOME, PATH, Homebrew env. */ -}}
+#
+# Resolve RAVY_HOME:
+# - Prefer chezmoi source-path when available
+# - Fall back to the default source dir used by chezmoi
+# - Fall back to legacy ~/.ravy
+if command -v chezmoi >/dev/null
+    set -l sp (chezmoi source-path 2>/dev/null)
+    if test -n "$sp"
+        set -gx RAVY_HOME $sp
+    end
+end
+if not set -q RAVY_HOME
+    if test -d "$HOME/.local/share/chezmoi"
+        set -gx RAVY_HOME "$HOME/.local/share/chezmoi"
+    else
+        set -gx RAVY_HOME "$HOME/.ravy"
+    end
+end
+
+# paths operations
+function prepend_to_path
+    for arg in $argv
+        fish_add_path -m -p -P -g $arg
+    end
+end
+
+# User scripts
+prepend_to_path "$RAVY_HOME/bin"
+prepend_to_path "$HOME/bin"
+prepend_to_path "$HOME/.local/bin"
+
+if not set -q RAVY_SKIP_BREW
+    for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"
+        if test -f "$brewprefix/bin/brew"
+            set -gx HOMEBREW_PREFIX "$brewprefix"
+            set -gx HOMEBREW_CELLAR "$brewprefix/Cellar"
+            set -gx HOMEBREW_REPOSITORY "$brewprefix/Homebrew"
+            set -gx HOMEBREW_NO_ANALYTICS 1
+            set -q MANPATH; or set MANPATH ''
+            set -gx MANPATH "$HOMEBREW_PREFIX/share/man" $MANPATH
+            set -q INFOPATH; or set INFOPATH ''
+            set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
+
+            if test -d "$brewprefix/opt/ruby/bin"
+                prepend_to_path "$brewprefix/opt/ruby/bin"
+            end
+
+            prepend_to_path "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin"
+
+            break
+        end
+    end
+end
+
+

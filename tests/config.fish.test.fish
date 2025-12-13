@@ -68,6 +68,10 @@ if [ \"\$1\" = \"execute-template\" ]; then
   shift
   exec \"$real_chezmoi\" execute-template \"\$@\"
 fi
+if [ \"\$1\" = \"cat\" ]; then
+  shift
+  exec \"$real_chezmoi\" -S \"$repo_root\" -D \"$tmp_home\" cat \"\$@\"
+fi
 exit 0
 "
 
@@ -140,7 +144,7 @@ set -e CURSOR_TRACE_ID
 # Render the chezmoi template to a real config file, then source it.
 set -l rendered_config "$HOME/.config/fish/config.fish"
 mkdir -p (dirname $rendered_config)
-chezmoi execute-template -f "$repo_root/dot_config/fish/config.fish.tmpl" > $rendered_config
+chezmoi cat "$rendered_config" > $rendered_config
 source $rendered_config
 
 if set -q RAVY_TEST_DEBUG
