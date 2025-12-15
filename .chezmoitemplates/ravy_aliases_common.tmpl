@@ -19,6 +19,8 @@
   (dict "name" "grep" "cmd" "grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}")
   (dict "name" "pyserv" "cmd" "python3 -m http.server")
 
+  (dict "name" "ag" "cmd" "rg")
+
   (dict "name" "ts" "cmd" "tailscale")
 
   (dict "name" "ci" "cmd" "cursor-agent --model grok-code-fast-1")
@@ -61,5 +63,3 @@ alias {{ .name }} "{{ .cmd }}"
 alias {{ .name }}='{{ .cmd }}'
 {{- end }}
 {{- end }}
-
-
