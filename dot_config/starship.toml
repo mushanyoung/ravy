@@ -27,7 +27,7 @@ min_time = 0
 show_milliseconds = true
 format = "[$duration]($style) "
 style = "fg:#666666"
-show_notifications = true
+show_notifications = false
 min_time_to_notify = 15_000
 
 [status]
@@ -106,5 +106,3 @@ style = "bg:#222222"
 
 [character]
 format = "[❯ ](fg:#666666)"
-
-

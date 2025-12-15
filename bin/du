@@ -4,6 +4,14 @@ set -euo pipefail
 if command -v gdu >/dev/null 2>&1; then
   exec gdu "$@"
 else
-  exec du "$@"
-fi
+  # Fallbacks for common du locations.
+  if [[ -x /usr/bin/du ]]; then
+    exec /usr/bin/du "$@"
+  fi
+  if [[ -x /bin/du ]]; then
+    exec /bin/du "$@"
+  fi
 
+  echo "du: could not locate real du in PATH" >&2
+  exit 127
+fi

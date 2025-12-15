@@ -1,21 +1,38 @@
 #!/usr/bin/env bash
-# dus - list folder sizes with immediate and sorted output
+# dus - list folder sizes, file counts, and combined table
 
 set -euo pipefail
 
-# Pick du implementation
-if command -v gdu >/dev/null 2>&1; then
-    DU="gdu"
-else
-    DU="du"
+args=("$@")
+if [[ ${#args[@]} -eq 0 ]]; then
+  args=(".")
 fi
 
-# Collect sizes
-tmpfile=$(mktemp)
-$DU -hd1 "$@" | tee "$tmpfile"
+# Section 1: sizes (like `du -h -d 1`)
+echo "Sizes:"
+sizes_tmp="$(mktemp)"
+du -h -d 1 "${args[@]}" | tee "$sizes_tmp"
 
+# Section 2: file counts for each entry from section 1
 echo
-echo "Sorted by size:"
-sort -h "$tmpfile"
+echo "File counts:"
+counts_tmp="$(mktemp)"
+while IFS=$'\t' read -r size name; do
+  [[ -z "${name:-}" ]] && continue
+  # Count regular files under each directory/tree.
+  files="$(find "$name" -type f -print 2>/dev/null | wc -l | tr -d '[:space:]')"
+  printf "%s\t%s\n" "$files" "$name" | tee -a "$counts_tmp"
+done < "$sizes_tmp"
 
-rm -f "$tmpfile"
+# Section 3: combined table
+echo
+printf "%-8s %7s  %s\n" "Size" "Files" "Name"
+printf "%-8s %7s  %s\n" "--------" "-------" "----"
+
+while IFS=$'\t' read -r size name; do
+  [[ -z "${name:-}" ]] && continue
+  files="$(awk -F'\t' -v n="$name" '$2==n {print $1; exit}' "$counts_tmp")"
+  printf "%-8s %7s  %s\n" "$size" "${files:-0}" "$name"
+done < "$sizes_tmp"
+
+rm -f "$sizes_tmp" "$counts_tmp"
