@@ -33,6 +33,6 @@ while IFS=$'\t' read -r size name; do
   [[ -z "${name:-}" ]] && continue
   files="$(awk -F'\t' -v n="$name" '$2==n {print $1; exit}' "$counts_tmp")"
   printf "%-8s %7s  %s\n" "$size" "${files:-0}" "$name"
-done < "$sizes_tmp"
+done < "$sizes_tmp" | sort -h
 
 rm -f "$sizes_tmp" "$counts_tmp"
