@@ -39,6 +39,11 @@ if test -e /opt/homebrew/opt/micromamba/bin/mamba
   set -gx MAMBA_ROOT_PREFIX "/opt/conda"
   set -gx MAMBA_NO_PROMPT 1
   $MAMBA_EXE shell hook --shell fish --root-prefix $MAMBA_ROOT_PREFIX | source
+else if test -e /home/linuxbrew/.linuxbrew/bin/mamba
+  set -gx MAMBA_EXE "/home/linuxbrew/.linuxbrew/bin/mamba"
+  set -gx MAMBA_ROOT_PREFIX "/opt/conda"
+  set -gx MAMBA_NO_PROMPT 1
+  $MAMBA_EXE shell hook --shell fish --root-prefix $MAMBA_ROOT_PREFIX | source
 end
 
 set -gx _ZO_DATA_DIR "$HOME/.local/share/zoxide"
