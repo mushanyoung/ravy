@@ -53,4 +53,7 @@ if not set -q RAVY_SKIP_BREW
     end
 end
 
-
+# direnv
+if command -v direnv &>/dev/null
+    direnv hook fish | source
+end
