@@ -8,10 +8,10 @@ os="$(uname 2>/dev/null || true)"
 if [ "$os" = "Darwin" ]; then
   exec top -l 1 -s 0 | grep PhysMem
 else
-  if [[ -x /usr/bin/free ]]; then
-    exec /usr/bin/free "$@"
+  if [ -x /usr/bin/free ]; then
+    exec /usr/bin/free -h "$@"
   fi
-  if [[ -x /bin/free ]]; then
-    exec /bin/free "$@"
+  if [ -x /bin/free ]; then
+    exec /bin/free -h "$@"
   fi
 fi

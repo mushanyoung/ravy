@@ -7,6 +7,11 @@ pick_history_source() {
     return 0
   fi
 
+  if [[ -f "${HOME}/.local/share/fish/fish_history" ]]; then
+    printf '%s\n' "${HOME}/.local/share/fish/fish_history"
+    return 0
+  fi
+
   if [[ -f "${HOME}/.zsh_history" ]]; then
     printf '%s\n' "${HOME}/.zsh_history"
     return 0
@@ -14,11 +19,6 @@ pick_history_source() {
 
   if [[ -f "${HOME}/.bash_history" ]]; then
     printf '%s\n' "${HOME}/.bash_history"
-    return 0
-  fi
-
-  if [[ -f "${HOME}/.local/share/fish/fish_history" ]]; then
-    printf '%s\n' "${HOME}/.local/share/fish/fish_history"
     return 0
   fi
 
@@ -56,4 +56,3 @@ extract_commands "$src" \
   | uniq -c \
   | sort -n -r \
   | head
-
