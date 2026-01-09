@@ -1,0 +1,19 @@
+# >>> mamba initialize >>>
+# !! Contents within this block are managed by 'mamba shell init' !!
+if [[ -e /opt/homebrew/bin/mamba ]]; then
+  export MAMBA_EXE='/opt/homebrew/bin/mamba';
+  export MAMBA_ROOT_PREFIX='/opt/conda';
+  export MAMBA_NO_PROMPT=1;
+else if [[ -e /home/linuxbrew/.linuxbrew/bin/mamba ]];
+  export MAMBA_EXE='/home/linuxbrew/.linuxbrew/bin/mamba';
+  export MAMBA_ROOT_PREFIX='/opt/conda';
+  export MAMBA_NO_PROMPT=1;
+fi
+__mamba_setup="$("$MAMBA_EXE" shell hook --shell bash --root-prefix "$MAMBA_ROOT_PREFIX" 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__mamba_setup"
+else
+    alias mamba="$MAMBA_EXE"  # Fallback on help from mamba activate
+fi
+unset __mamba_setup
+# <<< mamba initialize <<<
