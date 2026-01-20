@@ -239,7 +239,7 @@ set -g prefix2 C-Space
 # bind c new-window -c '#{pane_current_path}' #!important
 
 # move status line to top
-# set -g status-position top
+set -g status-position top
 
 
 # ------------------------------------------------------------------------------
