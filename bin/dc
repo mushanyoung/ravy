@@ -7,9 +7,12 @@
 set -eu
 
 if [ -n "${RAVY_DOCKER_COMPOSE_CONFIG:-}" ]; then
-  exec docker compose --file "$RAVY_DOCKER_COMPOSE_CONFIG" "$@"
+  if [ -f ./compose.yml ] || [ -f ./compose.yaml ] || [ -f ./docker-compose.yml ] || [ -f ./docker-compose.yaml ]; then
+    exec docker compose "$@"
+  else
+    exec docker compose --file "$RAVY_DOCKER_COMPOSE_CONFIG" "$@"
+  fi
 else
   exec docker compose "$@"
 fi
-
 
