@@ -563,7 +563,7 @@ endfunction
 
 noremap <Space>fm :call CocAction('format')<CR>
 
-" :CocInstall coc-prettier coc-pyright
+" :CocInstall coc-pyright
 
 " }}
 

@@ -2,16 +2,7 @@
   "diagnostic.level": "warning",
   "coc.preferences.formatOnSave": false,
 
-  // Prettier
-  "prettier.bracketSameLine": false,
-  "prettier.enable": true,
-  "prettier.endOfLine": "lf",
-  "prettier.htmlWhitespaceSensitivity": "ignore",
-  "prettier.printWidth": 100,
-  "prettier.requireConfig": false,
-  "prettier.singleQuote": true,
-  "prettier.tabWidth": 2,
-  "prettier.trailingComma": "es5",
+  // Tailwind
   "tailwindCSS.emmetCompletions": true,
 
   // Pyright
@@ -31,11 +22,50 @@
       "settings": {
         "logLevel": "debug"
       }
+    },
+    "biome": {
+      "command": "biome",
+      "args": ["lsp-proxy"],
+      "filetypes": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "json",
+        "jsonc",
+        "css"
+      ],
+      "rootPatterns": ["biome.json"],
+      "requireRootPattern": true
     }
   },
 
-  // Auto-format on save for Python
+  "typescript.format.enable": false,
+  "javascript.format.enable": false,
+
+  // Auto-format on save for specific filetypes
   "[python]": {
+    "coc.preferences.formatOnSave": true
+  },
+  "[javascript]": {
+    "coc.preferences.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "coc.preferences.formatOnSave": true
+  },
+  "[typescript]": {
+    "coc.preferences.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "coc.preferences.formatOnSave": true
+  },
+  "[json]": {
+    "coc.preferences.formatOnSave": true,
+  },
+  "[jsonc]": {
+    "coc.preferences.formatOnSave": true
+  },
+  "[css]": {
     "coc.preferences.formatOnSave": true
   }
 }
