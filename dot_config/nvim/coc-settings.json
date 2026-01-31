@@ -1,6 +1,8 @@
 {
   "diagnostic.level": "warning",
   "coc.preferences.formatOnSave": false,
+
+  // Prettier
   "prettier.bracketSameLine": false,
   "prettier.enable": true,
   "prettier.endOfLine": "lf",
@@ -11,11 +13,29 @@
   "prettier.tabWidth": 2,
   "prettier.trailingComma": "es5",
   "tailwindCSS.emmetCompletions": true,
+
+  // Pyright
   "pyright.inlayHints.functionReturnTypes": true,
   "pyright.inlayHints.parameterTypes": false,
   "pyright.inlayHints.variableTypes": true,
-  "python.formatting.blackPath": "black",
-  "python.formatting.provider": "black"
+
+  // Disable Pyright/Black's default formatting
+  "python.formatting.provider": "none",
+
+  // Register Ruff as a language server
+  "languageserver": {
+    "ruff": {
+      "command": "ruff",
+      "args": ["server"],
+      "filetypes": ["python"],
+      "settings": {
+        "logLevel": "debug"
+      }
+    }
+  },
+
+  // Auto-format on save for Python
+  "[python]": {
+    "coc.preferences.formatOnSave": true
+  }
 }
-
-

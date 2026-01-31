@@ -546,7 +546,6 @@ let g:gutentags_file_list_command = "rg --files --hidden --glob '!.git' --glob '
 
 nmap <silent><nowait> <Space>cp <Plug>(coc-diagnostic-prev)
 nmap <silent><nowait> <Space>cn <Plug>(coc-diagnostic-next)
-nnoremap <silent> <Space>cp :call TogglePyrightInlayParameterTypes()<CR>
 
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
@@ -560,27 +559,6 @@ inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
 function! CheckBackspace() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
-endfunction
-
-function! TogglePyrightInlayParameterTypes()
-  let l:config_file = expand('~/.config/nvim/coc-settings.json')
-  let l:content = join(readfile(l:config_file), "\n")
-
-  if l:content =~# '"pyright.inlayHints.parameterTypes"\s*:\s*true'
-    let l:content = substitute(l:content,
-          \ '"pyright.inlayHints.parameterTypes"\s*:\s*true',
-          \ '"pyright.inlayHints.parameterTypes": false', '')
-    let l:msg = '🧩 parameterTypes inlay hints: OFF'
-  else
-    let l:content = substitute(l:content,
-          \ '"pyright.inlayHints.parameterTypes"\s*:\s*false',
-          \ '"pyright.inlayHints.parameterTypes": true', '')
-    let l:msg = '🧩 parameterTypes inlay hints: ON'
-  endif
-
-  call writefile(split(l:content, "\n"), l:config_file)
-  execute ':CocRestart'
-  echo l:msg
 endfunction
 
 noremap <Space>fm :call CocAction('format')<CR>
