@@ -29,6 +29,7 @@ end
 prepend_to_path "$RAVY_HOME/bin"
 prepend_to_path "$HOME/bin"
 prepend_to_path "$HOME/.local/bin"
+prepend_to_path "$HOME/.bun/bin"
 
 if not set -q RAVY_SKIP_BREW
     for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"

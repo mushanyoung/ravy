@@ -30,6 +30,7 @@ export RAVY_HOME
 _ravy_prepend_path "$RAVY_HOME/bin"
 _ravy_prepend_path "$HOME/bin"
 _ravy_prepend_path "$HOME/.local/bin"
+_ravy_prepend_path "$HOME/.bun/bin"
 
 # Homebrew / Linuxbrew detection (sets env + updates PATH/MANPATH/INFOPATH)
 if [ -z "${RAVY_SKIP_BREW:-}" ]; then
@@ -64,4 +65,3 @@ fi
 export PATH
 
 {{ template "ravy_env_common.tmpl" (dict "shell" "sh") }}
-
