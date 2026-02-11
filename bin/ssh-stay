@@ -4,7 +4,9 @@
 
 # Configurable parameters
 ssh_command=${SSH_COMMAND:-ssh}
-ssh_exec_cmd=${SSH_EXEC_CMD:-tmux new-session -A -s tmux}
+# Use `exec` so the remote login shell is replaced by tmux.
+# This avoids leaving an extra shell process around while attached.
+ssh_exec_cmd=${SSH_EXEC_CMD:-exec tmux new-session -A -s tmux}
 ssh_alive_interval=${SSH_ALIVE_INTERVAL:-10}
 ssh_default_opts=("-t" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
 ssh_opts=("$@" "${ssh_exec_cmd:+--}" "${ssh_exec_cmd}")
