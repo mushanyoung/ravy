@@ -212,12 +212,6 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # set-clipboard to on for osc 52 support
 set -s set-clipboard on
 
-# granular mouse options
-set -g mouse-select-pane on     # click to focus pane
-set -g mouse-select-window on   # click to switch windows
-set -g mouse-resize-pane on     # drag to resize
-set -g mouse-wheel on           # scroll inside panes
-
 # mouse will trigger iTerm2 mouse reporting left on warning
 set -g mouse on
 
