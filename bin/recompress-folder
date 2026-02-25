@@ -7,6 +7,7 @@ from pyunpack import Archive
 import zipfile
 import shutil
 
+
 def extract_files(file_path, output_folder):
     file_path = Path(file_path)
     file_name = file_path.stem
@@ -26,16 +27,19 @@ def extract_files(file_path, output_folder):
             item.rename(output_folder / item.name)
         temp_folder.rmdir()
 
+
 def compress_folder(folder_path, zip_path):
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(folder_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, folder_path)
                 zipf.write(file_path, arcname)
 
+
 def remove_temp_folder(temp_folder):
     shutil.rmtree(temp_folder)
+
 
 def main():
     if len(sys.argv) < 2:
@@ -55,7 +59,7 @@ def main():
             for file in files:
                 file_path = os.path.join(root, file)
                 ext = os.path.splitext(file)[-1].lower()
-                if ext in ['.zip', '.rar', '.7z', '.tar.gz']:
+                if ext in [".zip", ".rar", ".7z", ".tar.gz"]:
                     try:
                         print(f"Extracting {file_path}...")
                         extract_files(file_path, Path(temp_folder))
@@ -72,6 +76,7 @@ def main():
         print(f"Removing temp folder: {temp_folder}...")
         remove_temp_folder(temp_folder)
         print(f"Temp folder removed: {temp_folder}")
+
 
 if __name__ == "__main__":
     main()

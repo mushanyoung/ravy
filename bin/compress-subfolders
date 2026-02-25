@@ -6,18 +6,26 @@ import zipfile
 import argparse
 import shutil
 
+
 def zip_folder(folder_path, output_file):
-    with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile(output_file, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(folder_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, start=os.path.dirname(folder_path))
                 zipf.write(file_path, arcname)
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Compress top-level subfolders to individual zip files.")
+    parser = argparse.ArgumentParser(
+        description="Compress top-level subfolders to individual zip files."
+    )
     parser.add_argument("path", help="Path to the directory containing the subfolders.")
-    parser.add_argument("--archive", action="store_true", help="Move the original folders to an 'archive' subfolder after compression and exclude the 'archive' folder from compression.")
+    parser.add_argument(
+        "--archive",
+        action="store_true",
+        help="Move the original folders to an 'archive' subfolder after compression and exclude the 'archive' folder from compression.",
+    )
 
     args = parser.parse_args()
 
@@ -43,6 +51,7 @@ def main():
                 archived_folder = os.path.join(archive_path, folder_name)
                 shutil.move(folder_path, archived_folder)
             print(f"Compressed {folder_name} successfully.")
+
 
 if __name__ == "__main__":
     main()

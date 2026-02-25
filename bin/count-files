@@ -4,6 +4,7 @@ Counts files within each subfolder up to a specified depth.
 The output is sorted hierarchically: subfolders appear before their
 parent and are sorted by their total file count.
 """
+
 import argparse
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Tuple
@@ -99,11 +100,13 @@ def main() -> None:
         current_level["count"] = count
 
     # Flatten the tree using the new post-order sorting logic
-    sorted_items: Generator[Tuple[Path, int], None, None] = get_sorted_results(file_tree)
+    sorted_items: Generator[Tuple[Path, int], None, None] = get_sorted_results(
+        file_tree
+    )
 
     # Print the formatted results
     print(f"{'Total Files':^12} | {'Path'}")
-    print(f"{'-'*12:->} | {'-'*60:->}")
+    print(f"{'-' * 12:->} | {'-' * 60:->}")
 
     for path, count in sorted_items:
         relative_path: Path = path.relative_to(start_path)
