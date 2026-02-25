@@ -71,29 +71,64 @@
   ls = log --decorate --stat
 
   ; diffs
-  df = !ydiff -c auto --
-  di = !ydiff -c auto -s -w 0 --
+  df = !ydiff
+  du = !ydiff -u
   ds = diff --stat
-  dn = diff --name-only
   de = !DIFF_EXEC_CMD=${EDITOR:-nvim} DIFF_EXEC_VIM_LCS_DIR=1 git diff-exec
   ; print the farest folder containing all changed files
   dd = "!gdd(){ git diff --name-only \"$@\" | sed -e 'N;s/^\\(.*\\).*\\n\\1.*$/\\1\\n\\1/;D'; }; gdd"
 
-  dfc = !git df --cached
-  df1 = !git df HEAD~ HEAD
-  df2 = !git df HEAD~2 HEAD
-  dic = !git di --cached
-  di1 = !git di HEAD~ HEAD
-  di2 = !git di HEAD~2 HEAD
   dsc = !git ds --cached
   ds1 = !git ds HEAD~ HEAD
   ds2 = !git ds HEAD~2 HEAD
-  dnc = !git dn --cached
-  dn1 = !git dn HEAD~ HEAD
-  dn2 = !git dn HEAD~2 HEAD
+  ds3 = !git ds HEAD~3 HEAD
+  ds4 = !git ds HEAD~4 HEAD
+  ds5 = !git ds HEAD~5 HEAD
+  ds6 = !git ds HEAD~6 HEAD
+  ds7 = !git ds HEAD~7 HEAD
+  ds8 = !git ds HEAD~8 HEAD
+  ds9 = !git ds HEAD~9 HEAD
+
+  dfc = !git df --cached
+  df1 = !git df HEAD~ HEAD
+  df2 = !git df HEAD~2 HEAD
+  df3 = !git df HEAD~3 HEAD
+  df4 = !git df HEAD~4 HEAD
+  df5 = !git df HEAD~5 HEAD
+  df6 = !git df HEAD~6 HEAD
+  df7 = !git df HEAD~7 HEAD
+  df8 = !git df HEAD~8 HEAD
+  df9 = !git df HEAD~9 HEAD
+
+  duc = !git du --cached
+  du1 = !git du HEAD~ HEAD
+  du2 = !git du HEAD~2 HEAD
+  du3 = !git du HEAD~3 HEAD
+  du4 = !git du HEAD~4 HEAD
+  du5 = !git du HEAD~5 HEAD
+  du6 = !git du HEAD~6 HEAD
+  du7 = !git du HEAD~7 HEAD
+  du8 = !git du HEAD~8 HEAD
+  du9 = !git du HEAD~9 HEAD
+
   dec = !git de --cached
   de1 = !git de HEAD~ HEAD
   de2 = !git de HEAD~2 HEAD
+  de3 = !git de HEAD~3 HEAD
+  de4 = !git de HEAD~4 HEAD
+  de5 = !git de HEAD~5 HEAD
+  de6 = !git de HEAD~6 HEAD
+  de7 = !git de HEAD~7 HEAD
+  de8 = !git de HEAD~8 HEAD
+  de9 = !git de HEAD~9 HEAD
+
   ddc = !git dd --cached
   dd1 = !git dd HEAD~ HEAD
   dd2 = !git dd HEAD~2 HEAD
+  dd3 = !git dd HEAD~3 HEAD
+  dd4 = !git dd HEAD~4 HEAD
+  dd5 = !git dd HEAD~5 HEAD
+  dd6 = !git dd HEAD~6 HEAD
+  dd7 = !git dd HEAD~7 HEAD
+  dd8 = !git dd HEAD~8 HEAD
+  dd9 = !git dd HEAD~9 HEAD
