@@ -1,0 +1,15 @@
+#!/bin/bash
+# Mock xsel that uses OSC 52 to copy to local clipboard over SSH/tmux
+if ! [ -t 0 ]; then
+  content=$(cat)
+  if [ -n "$content" ]; then
+    encoded=$(printf "%s" "$content" | base64 | tr -d '\n')
+    seq=$(printf "\033]52;c;%s\007" "$encoded")
+    if [ -w /dev/tty ]; then
+      printf "%s" "$seq" > /dev/tty
+    else
+      printf "%s" "$seq" >&2
+    fi
+  fi
+fi
+exit 0
