@@ -87,9 +87,7 @@ fi
 # Optional bootstrap helpers (kept from the old installer experience)
 info "Optional bootstrap: tmux base config + vim-plug"
 
-if [ ! -f "$HOME/.tmux.conf" ]; then
-  __el curl -sfLo "$HOME/.tmux.conf" https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
-fi
+__el curl -sfLo "$HOME/.tmux.conf" https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
 
 if [ ! -f "$HOME/.config/nvim/autoload/plug.vim" ]; then
   __el curl -fLo "$HOME/.config/nvim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
