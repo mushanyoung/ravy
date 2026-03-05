@@ -214,6 +214,8 @@ set -s set-clipboard on
 
 # mouse will trigger iTerm2 mouse reporting left on warning
 set -g mouse on
+unbind m
+bind m display-message "mouse toggle disabled; current mouse=#{?mouse,on,off}"
 
 # focus-events will trigger iTerm2 focus event left on warning
 set -s focus-events on
