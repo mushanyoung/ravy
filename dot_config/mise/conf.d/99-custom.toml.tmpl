@@ -1,0 +1,4 @@
+{{- $customConfig := joinPath .chezmoi.sourceDir "custom" "mise" "config.toml" -}}
+{{- if (stat $customConfig) -}}
+{{ include $customConfig }}
+{{- end -}}

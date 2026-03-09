@@ -1,0 +1,17 @@
+[tools]
+python = "3.14"
+uv = "latest"
+jq = "latest"
+bat = "latest"
+eza = "latest"
+fd = "latest"
+fzf = "latest"
+zoxide = "latest"
+starship = "latest"
+ripgrep = "latest"
+process-compose = "latest"
+duckdb = "latest"
+
+
+[settings]
+python.uv_venv_auto = false

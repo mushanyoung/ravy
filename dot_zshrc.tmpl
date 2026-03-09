@@ -12,9 +12,9 @@ if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
 
-# direnv
-if command -v direnv >/dev/null 2>&1; then
-  eval "$(direnv hook zsh)"
+# mise
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
 fi
 
 # atuin
@@ -28,5 +28,3 @@ if [ -f "$HOME/.config/ravy/custom.zsh" ]; then
 elif [ -f "$HOME/.config/ravy/custom.sh" ]; then
   source "$HOME/.config/ravy/custom.sh"
 fi
-
-
