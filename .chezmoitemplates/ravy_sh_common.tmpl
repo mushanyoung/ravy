@@ -25,12 +25,15 @@ if [ -z "${RAVY_HOME:-}" ]; then
   RAVY_HOME="$HOME/.ravy"
 fi
 export RAVY_HOME
+RAVY_CUSTOM="$RAVY_HOME/custom"
+export RAVY_CUSTOM
 
 # User scripts
 _ravy_prepend_path "$RAVY_HOME/bin"
 _ravy_prepend_path "$HOME/bin"
 _ravy_prepend_path "$HOME/.local/bin"
 _ravy_prepend_path "$HOME/.bun/bin"
+_ravy_prepend_path "$RAVY_CUSTOM/bin"
 
 # Homebrew / Linuxbrew detection (sets env + updates PATH/MANPATH/INFOPATH)
 if [ -z "${RAVY_SKIP_BREW:-}" ]; then

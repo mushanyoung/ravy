@@ -17,6 +17,7 @@ if not set -q RAVY_HOME
         set -gx RAVY_HOME "$HOME/.ravy"
     end
 end
+set -gx RAVY_CUSTOM "$RAVY_HOME/custom"
 
 # paths operations
 function prepend_to_path
@@ -30,6 +31,7 @@ prepend_to_path "$RAVY_HOME/bin"
 prepend_to_path "$HOME/bin"
 prepend_to_path "$HOME/.local/bin"
 prepend_to_path "$HOME/.bun/bin"
+prepend_to_path "$RAVY_CUSTOM/bin"
 
 if not set -q RAVY_SKIP_BREW
     for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"

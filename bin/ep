@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+set -eu
+
+if [ "$#" -eq 0 ]; then
+  echo "Usage: ep <command>" >&2
+  exit 1
+fi
+
+exe=$(command -v "$1" 2>/dev/null || true)
+if [ -z "$exe" ]; then
+  echo "ep: command not found: $1" >&2
+  exit 1
+fi
+case "$exe" in
+  */*) ;;
+  *)
+    echo "ep: $1 is not a file-backed command" >&2
+    exit 1
+    ;;
+esac
+
+editor=${EDITOR:-nvim}
+printf '%s %s\n' "$editor" "$exe"
+exec "$editor" "$exe"

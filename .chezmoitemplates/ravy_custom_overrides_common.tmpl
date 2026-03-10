@@ -1,0 +1,57 @@
+{{- /* Shared custom override loading.
+      Expects .shell to be "bash", "zsh", or "fish". */ -}}
+{{- $shell := .shell -}}
+
+{{- if eq $shell "fish" }}
+# Local overrides (not tracked)
+if not set -q RAVY_SKIP_CUSTOM
+    test -f "$RAVY_CUSTOM/config.fish"
+    and source "$RAVY_CUSTOM/config.fish"
+end
+{{- else }}
+# Local overrides (not tracked)
+if [ -z "${RAVY_SKIP_CUSTOM:-}" ]; then
+  _ravy_custom_loaded=0
+
+  if [ -f "$RAVY_CUSTOM/config.sh" ]; then
+    # shellcheck disable=SC1090
+    . "$RAVY_CUSTOM/config.sh"
+    _ravy_custom_loaded=1
+  fi
+{{- if eq $shell "bash" }}
+  if [ -f "$RAVY_CUSTOM/config.bash" ]; then
+    # shellcheck disable=SC1090
+    . "$RAVY_CUSTOM/config.bash"
+    _ravy_custom_loaded=1
+  fi
+{{- else }}
+  if [ -f "$RAVY_CUSTOM/config.zsh" ]; then
+    # shellcheck disable=SC1090
+    . "$RAVY_CUSTOM/config.zsh"
+    _ravy_custom_loaded=1
+  fi
+{{- end }}
+
+  if [ "$_ravy_custom_loaded" -eq 0 ]; then
+{{- if eq $shell "bash" }}
+    if [ -f "$HOME/.config/ravy/custom.bash" ]; then
+      # shellcheck disable=SC1090
+      . "$HOME/.config/ravy/custom.bash"
+    elif [ -f "$HOME/.config/ravy/custom.sh" ]; then
+      # shellcheck disable=SC1090
+      . "$HOME/.config/ravy/custom.sh"
+    fi
+{{- else }}
+    if [ -f "$HOME/.config/ravy/custom.zsh" ]; then
+      # shellcheck disable=SC1090
+      . "$HOME/.config/ravy/custom.zsh"
+    elif [ -f "$HOME/.config/ravy/custom.sh" ]; then
+      # shellcheck disable=SC1090
+      . "$HOME/.config/ravy/custom.sh"
+    fi
+{{- end }}
+  fi
+
+  unset _ravy_custom_loaded
+fi
+{{- end }}

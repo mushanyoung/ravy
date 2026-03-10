@@ -1,6 +1,7 @@
 # Ignore repo-only files/folders (do not manage/apply to $HOME)
 README.md
 install.sh
+Makefile
 tests/
 tags
 

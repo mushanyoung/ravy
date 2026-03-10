@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+find . -type f -print0 | while IFS= read -r -d '' file; do
+  [[ "$file" == *.* ]] || continue
+  filename=${file%.*}
+  ext=${file##*.}
+  ext_lower=${ext,,}
+  if [[ "$ext" != "$ext_lower" ]]; then
+    mv -- "$file" "$filename.$ext_lower"
+  fi
+done

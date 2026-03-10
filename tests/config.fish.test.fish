@@ -3,7 +3,7 @@
 # Ensure we run in an interactive shell with isolated config directories so
 # config.fish executes its interactive-only branches safely.
 set -l script_path (realpath (status --current-filename))
-    set -l repo_root (realpath (dirname $script_path)/..)
+set -l repo_root (realpath (dirname $script_path)/..)
 
 if not set -q RAVY_TEST_CHILD
     set -l tmp_home (mktemp -d "$repo_root/.tmp_fish_home.XXXXXX")
@@ -13,7 +13,7 @@ if not set -q RAVY_TEST_CHILD
     mkdir -p $stub_bin \
         "$tmp_home/.config/fish" \
         "$tmp_home/.local/bin" \
-        "$tmp_home/.local/share" \
+        "$tmp_home/.local/share"
 
     # Helper to write simple stub executables.
     function __write_stub --argument-names name body
@@ -35,16 +35,16 @@ fi
 echo \"# starship stub\"
 "
 
-    __write_stub direnv "#!/usr/bin/env sh
-if [ -n \"$tmp_home\" ]; then echo direnv > \"$tmp_home/direnv_ran\"; fi
-if [ \"\$1\" = \"hook\" ] && [ \"\$2\" = \"fish\" ]; then
+    __write_stub zoxide "#!/usr/bin/env sh
+if [ -n \"$tmp_home\" ]; then echo zoxide > \"$tmp_home/zoxide_ran\"; fi
+if [ \"\$1\" = \"init\" ] && [ \"\$2\" = \"fish\" ]; then
   cat <<'EOF'
-function __direnv_export_eval
+function __ravy_zoxide_init
 end
 EOF
   exit 0
 fi
-echo \"# direnv stub\"
+echo \"# zoxide stub\"
 "
 
     __write_stub atuin "#!/usr/bin/env sh
@@ -91,6 +91,7 @@ printf \"%s\\n\" \"\$@\" > \"$tmp_home/gdu_args\"
         XDG_DATA_HOME=$tmp_home/.local/share \
         PATH="$stub_bin:/usr/bin:/bin" \
         RAVY_SKIP_BREW=1 \
+        RAVY_SKIP_CUSTOM=1 \
         RAVY_TEST_CHILD=1 \
         RAVY_TEST_TEMP_HOME=$tmp_home \
         STUB_BIN=$stub_bin \
@@ -136,6 +137,7 @@ function assert_contains --argument-names needle
 end
 
 set -l expected_ravy_home (realpath "$repo_root")
+set -l expected_ravy_custom "$expected_ravy_home/custom"
 
 # Ensure cursor-related variables don't force pager to cat.
 set -e CURSOR_AGENT
@@ -154,7 +156,9 @@ end
 
 # Path setup
 assert_equal $RAVY_HOME $expected_ravy_home "RAVY_HOME set from chezmoi source-path"
+assert_equal $RAVY_CUSTOM $expected_ravy_custom "RAVY_CUSTOM set from RAVY_HOME"
 assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
+assert_contains "$RAVY_CUSTOM/bin" $PATH "PATH includes RAVY_CUSTOM/bin"
 assert_contains "$HOME/bin" $PATH "PATH includes HOME/bin"
 assert_contains "$HOME/.local/bin" $PATH "PATH includes HOME/.local/bin"
 
@@ -180,12 +184,10 @@ end
 if command -v starship >/dev/null
     assert_equal $STARSHIP_CONFIG "$HOME/.config/starship.toml" "Starship config path exported"
     assert_true "functions -q __starship_set_job_count" "Starship prompt initialized"
-else
-    assert_true "not set -q STARSHIP_CONFIG" "Starship config skipped when unavailable"
 end
 
-if command -v direnv >/dev/null
-    assert_true "functions -q __direnv_export_eval" "direnv hook initialized"
+if command -v zoxide >/dev/null
+    assert_true "functions -q __ravy_zoxide_init" "zoxide hook initialized"
 end
 
 if command -v atuin >/dev/null
@@ -211,16 +213,16 @@ if test -z "$LESS_TERMCAP_mb" -o -z "$LESS_TERMCAP_md" -o -z "$LESS_TERMCAP_so"
 end
 
 # Functions and aliases
-for fn in prepend_to_path imv lines d ep ls fish_title __fish_title_or_pwd jl downcase-exts
+for fn in prepend_to_path imv d ls fish_title __fish_title_or_pwd scd scrall drc dri reset ravy ravycustom ravysource
     assert_true "functions -q $fn" "Function '$fn' defined"
 end
 
-for alias_name in l la lt ld ll ta df g t hs tf rd rb v vi vim grep ts ci pa pc bi au pupu pd dp dcl dcb dud dpdu dudp dpri dprs dli dls drc dri dry reset ravy ravycustom ravysource
+for alias_name in l la lt ld ll ta df g t hs tf rd rb v vi vim grep ts ci pa pc bi au pupu pd dp dcl dcb dud dpdu dudp dpri dprs dli dls dry ravyc ravys
     assert_true "functions -q $alias_name" "Alias '$alias_name' defined"
 end
 
 # Script helpers (shared across shells via $RAVY_HOME/bin)
-for cmd in dc retry ping pip-update-all free
+for cmd in dc retry ping pip-update-all free ep jl lines downcase-exts
     assert_true "command -v $cmd >/dev/null" "Command '$cmd' exists"
 end
 
@@ -235,9 +237,10 @@ assert_true "test $status -eq 0" "du wrapper executes successfully"
 set -l orig_pwd $PWD
 ravy
 assert_equal $PWD $expected_ravy_home "ravy jumps to chezmoi source-path"
+ravycustom
+assert_equal $PWD $expected_ravy_custom "ravycustom jumps to custom source-path"
 cd $orig_pwd
 
-set -l before_title (__fish_title_or_pwd)
 cd $HOME
 assert_equal (__fish_title_or_pwd) "~" "__fish_title_or_pwd replaces home with ~"
 cd $orig_pwd

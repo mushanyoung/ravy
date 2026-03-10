@@ -36,62 +36,10 @@ function imv
     end
 end
 
-function lines
-    if test (count $argv) -gt 0
-        echo $argv | xargs -n1
-    end
-    if not isatty stdin
-        cat 1>| xargs -n1
-    end
-end
-
-# cd ..
-function d
-    cd ..
-end
-
-# edit command in path
-function ep --wraps="command -v"
-    if set -l exe (command -v $argv[1])
-        echo $EDITOR $exe
-        $EDITOR $exe
-    end
-end
-
 # aliases
-alias = "command -v"
 {{ template "ravy_ls_eza_common.tmpl" (dict "shell" "fish") }}
-
 {{ template "ravy_aliases_common.tmpl" (dict "shell" "fish") }}
-
-# fish-specific aliases (not in common list)
-alias scrall "systemctl --user list-unit-files --state=generated --no-legend | awk '{print \$1}' | xargs --no-run-if-empty systemctl --user restart"
-alias scd "cd ~/.config/containers/systemd"
-
-function jl --wraps="journalctl --user -xeu"
-    if test (count $argv) -eq 0
-        echo "Usage: jl <service_name>"
-        return 1
-    end
-    journalctl --user -xeu $argv[1] -f
-end
-
-# docker commands
-# `dc` is provided as an executable in $RAVY_HOME/bin (shared across shells)
-alias dpri "docker image prune"
-alias dprs "docker system prune --all"
-alias dli "docker image list"
-alias dls "docker system info"
-alias drc "docker ps -f status=exited -q | xargs -n1 -I{} docker rm '{}'"
-alias dri "docker images | grep '^<none>' | awk '{print \$3}' | xargs -n1 -I{} docker rmi '{}'"
-alias dry "docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry"
-
-# reset terminal buffer
-alias reset 'command reset; stty sane; tput reset; echo -e "\033c"; clear; builtin cd -- $PWD'
-
-function downcase-exts
-    find . -type f -exec bash -c 'file="$1"; filename="${file%.*}"; ext="${file##*.}"; ext_lower=$(echo "$ext" | tr "[:upper:]" "[:lower:]"); if [ "$ext" != "$ext_lower" ]; then mv "$file" "$filename.$ext_lower"; fi' _ {} \;
-end
+{{ template "ravy_interactive_common.tmpl" (dict "shell" "fish") }}
 
 # open-remote
 test -n "$SSH_CONNECTION"
@@ -118,20 +66,4 @@ function fish_title
     __fish_title_or_pwd
 end
 
-# LOCAL overrides (not tracked)
-test -f "$RAVY_HOME/custom/config.fish"; and source "$RAVY_HOME/custom/config.fish"
-
-# ravy convenience commands
-function ravy
-    cd "$RAVY_HOME"
-end
-
-function ravycustom
-    cd "$RAVY_HOME/custom"
-end
-alias ravyc ravycustom
-
-function ravysource
-    source "$HOME/.config/fish/config.fish"
-end
-alias ravys ravysource
+{{ template "ravy_custom_overrides_common.tmpl" (dict "shell" "fish") }}

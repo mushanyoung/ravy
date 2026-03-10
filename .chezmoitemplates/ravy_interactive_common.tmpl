@@ -1,0 +1,129 @@
+{{- /* Shared interactive commands across shells.
+      Expects .shell to be "bash", "zsh", or "fish". */ -}}
+{{- $shell := .shell -}}
+
+{{- if eq $shell "fish" }}
+# docker helpers
+alias dpri "docker image prune"
+alias dprs "docker system prune --all"
+alias dli "docker image list"
+alias dls "docker system info"
+alias dry "docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry"
+
+alias ravyc ravycustom
+alias ravys ravysource
+
+# Fish supports "=" aliases but bash/zsh do not.
+alias = "command -v"
+
+function d
+    builtin cd ..
+end
+
+function ravy
+    builtin cd -- "$RAVY_HOME"
+end
+
+function ravycustom
+    builtin cd -- "$RAVY_CUSTOM"
+end
+
+function ravysource
+    source "$HOME/.config/fish/config.fish"
+end
+
+function scd
+    builtin cd -- "$HOME/.config/containers/systemd"
+end
+
+function scrall
+    systemctl --user list-unit-files --state=generated --no-legend | awk '{print $1}' | while read -l unit
+        test -n "$unit"
+        and systemctl --user restart "$unit"
+    end
+end
+
+function drc
+    docker ps -f status=exited -q | while read -l container
+        test -n "$container"
+        and docker rm "$container"
+    end
+end
+
+function dri
+    docker images | awk '$1 == "<none>" { print $3 }' | while read -l image
+        test -n "$image"
+        and docker rmi "$image"
+    end
+end
+
+function reset
+    command reset
+    and stty sane
+    and tput reset
+    and printf '\033c'
+    and clear
+    builtin cd -- "$PWD"
+end
+{{- else }}
+# docker helpers
+alias dpri='docker image prune'
+alias dprs='docker system prune --all'
+alias dli='docker image list'
+alias dls='docker system info'
+alias dry='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry'
+
+alias ravyc='ravycustom'
+alias ravys='ravysource'
+
+d() {
+  builtin cd ..
+}
+
+ravy() {
+  builtin cd -- "$RAVY_HOME"
+}
+
+ravycustom() {
+  builtin cd -- "$RAVY_CUSTOM"
+}
+
+ravysource() {
+{{- if eq $shell "bash" }}
+  . "$HOME/.bashrc"
+{{- else }}
+  . "$HOME/.zshrc"
+{{- end }}
+}
+
+scd() {
+  builtin cd -- "$HOME/.config/containers/systemd"
+}
+
+scrall() {
+  systemctl --user list-unit-files --state=generated --no-legend | awk '{print $1}' | while IFS= read -r unit; do
+    [ -n "$unit" ] && systemctl --user restart "$unit"
+  done
+}
+
+drc() {
+  docker ps -f status=exited -q | while IFS= read -r container; do
+    [ -n "$container" ] && docker rm "$container"
+  done
+}
+
+dri() {
+  docker images | awk '$1 == "<none>" { print $3 }' | while IFS= read -r image; do
+    [ -n "$image" ] && docker rmi "$image"
+  done
+}
+
+reset() {
+  command reset
+  stty sane
+  tput reset
+  printf '\033c'
+  clear
+  builtin cd -- "$PWD"
+}
+{{- end }}

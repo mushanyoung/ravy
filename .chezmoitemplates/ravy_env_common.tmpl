@@ -47,7 +47,9 @@ else if test -e /home/linuxbrew/.linuxbrew/bin/mamba
 end
 
 set -gx _ZO_DATA_DIR "$HOME/.local/share/zoxide"
-zoxide init fish | source
+if command -v zoxide >/dev/null
+    zoxide init fish | source
+end
 
 {{- else }}
 export LANG="en_US.UTF-8"
@@ -82,5 +84,7 @@ export EZA_CONFIG_DIR="$HOME/.config/eza"
 export STARSHIP_CONFIG="$HOME/.config/starship.toml"
 
 export _ZO_DATA_DIR="$HOME/.local/share/zoxide"
-eval "$(zoxide init posix --hook prompt)"
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init posix --hook prompt)"
+fi
 {{- end }}

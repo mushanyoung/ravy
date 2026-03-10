@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+set -eu
+
+if [ "$#" -gt 0 ]; then
+  printf '%s\n' "$@"
+fi
+
+if [ ! -t 0 ]; then
+  xargs -n1
+fi

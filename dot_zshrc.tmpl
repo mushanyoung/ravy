@@ -6,6 +6,7 @@
 {{ template "ravy_sh_common.tmpl" . }}
 {{ template "ravy_ls_eza_common.tmpl" (dict "shell" "sh") }}
 {{ template "ravy_aliases_common.tmpl" (dict "shell" "sh") }}
+{{ template "ravy_interactive_common.tmpl" (dict "shell" "zsh") }}
 
 # starship
 if command -v starship >/dev/null 2>&1; then
@@ -22,9 +23,4 @@ if command -v atuin >/dev/null 2>&1; then
   eval "$(atuin init zsh 2>/dev/null)"
 fi
 
-# Local overrides (not tracked)
-if [ -f "$HOME/.config/ravy/custom.zsh" ]; then
-  source "$HOME/.config/ravy/custom.zsh"
-elif [ -f "$HOME/.config/ravy/custom.sh" ]; then
-  source "$HOME/.config/ravy/custom.sh"
-fi
+{{ template "ravy_custom_overrides_common.tmpl" (dict "shell" "zsh") }}
