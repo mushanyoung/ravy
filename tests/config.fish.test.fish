@@ -10,9 +10,11 @@ if not set -q RAVY_TEST_CHILD
 
     mkdir -p $stub_bin \
         "$tmp_home/.config/fish" \
+        "$tmp_home/.config/chezmoi" \
         "$tmp_home/.config/ravy" \
         "$tmp_home/.local/bin" \
         "$tmp_home/.local/share"
+    printf "%s\n" "seed = 1" > "$tmp_home/.config/chezmoi/chezmoi.toml"
 
     function __write_stub --argument-names name body
         set -l target "$stub_bin/$name"
@@ -65,23 +67,55 @@ exit 0
 
     __write_stub chezmoi "#!/usr/bin/env sh
 source_path=\"$repo_root\"
+config_path=''
+state_path=''
+subcommand=''
 while [ \"\$#\" -gt 0 ]; do
   case \"\$1\" in
     -S|--source)
       source_path=\"\$2\"
       shift 2
       ;;
-    *)
+    -c|--config)
+      config_path=\"\$2\"
+      shift 2
+      ;;
+    --persistent-state)
+      state_path=\"\$2\"
+      shift 2
+      ;;
+    source-path|init|cat|apply)
+      subcommand=\"\$1\"
+      shift
       break
+      ;;
+    *)
+      shift
       ;;
   esac
 done
-if [ \"\$1\" = \"source-path\" ]; then
+if [ \"\$subcommand\" = \"source-path\" ]; then
+  printf '%s\n' \"subcommand=source-path source=\$source_path config=\$config_path state=\$state_path\" >> \"\$HOME/chezmoi.log\"
   echo \"\$source_path\"
   exit 0
 fi
-if [ \"\$1\" = \"cat\" ]; then
-  shift
+if [ \"\$subcommand\" = \"init\" ]; then
+  init_config_path=''
+  while [ \"\$#\" -gt 0 ]; do
+    case \"\$1\" in
+      -C|--config-path)
+        init_config_path=\"\$2\"
+        shift 2
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
+  printf '%s\n' \"subcommand=init source=\$source_path config=\$config_path state=\$state_path config_path=\$init_config_path\" >> \"\$HOME/chezmoi.log\"
+  exit 0
+fi
+if [ \"\$subcommand\" = \"cat\" ]; then
   exec \"$real_chezmoi\" -S \"$repo_root\" -D \"$tmp_home\" cat \"\$@\"
 fi
 exit 0
@@ -187,7 +221,15 @@ assert_true "command -v ep >/dev/null" "ep helper exists"
 assert_true "command -v jl >/dev/null" "jl helper exists"
 assert_true "command -v lines >/dev/null" "lines helper exists"
 assert_true "command -v downcase-exts >/dev/null" "downcase-exts helper exists"
+rm -f "$HOME/chezmoi.log"
 assert_equal (chez source-path) $expected_ravy_home "chez resolves to public chezmoi source"
+chez init >/dev/null 2>/dev/null
+test ! -f "$HOME/.config/chezmoi/ravy-public.toml"
+or fail "chez does not create a dedicated public config file"
+grep -F "subcommand=source-path source=$expected_ravy_home config= state=" "$HOME/chezmoi.log" >/dev/null
+or fail "chez keeps using the default chezmoi config/state"
+grep -F "subcommand=init source=$expected_ravy_home config= state= config_path=" "$HOME/chezmoi.log" >/dev/null
+or fail "chez init keeps using the default chezmoi config/state"
 
 ravycustom >/dev/null 2>/dev/null
 if test $status -eq 0
@@ -209,7 +251,17 @@ assert_contains "$private_home/bin/common" $PATH "PATH includes private common b
 assert_true "test \"$__RAVY_PRIVATE_COMMON\" = 1" "private common overlay loaded"
 assert_true "test \"$__RAVY_SECRETS_FISH\" = 1" "managed secret fish overrides loaded"
 assert_true "command -v private-helper >/dev/null" "private helper command exists"
+rm -f "$HOME/chezmoi.log"
 assert_equal (chezp source-path) $private_home "chezp resolves to the private chezmoi source"
+test -f "$HOME/.config/chezmoi/ravy-private.toml"
+or fail "chezp seeds a dedicated private config file"
+grep -F "seed = 1" "$HOME/.config/chezmoi/ravy-private.toml" >/dev/null
+or fail "chezp copies the existing config into the dedicated private config"
+chezp init >/dev/null 2>/dev/null
+grep -F "subcommand=source-path source=$private_home config=$HOME/.config/chezmoi/ravy-private.toml state=$HOME/.config/chezmoi/ravy-private-state.boltdb" "$HOME/chezmoi.log" >/dev/null
+or fail "chezp uses dedicated private config"
+grep -F "subcommand=init source=$private_home config=$HOME/.config/chezmoi/ravy-private.toml state=$HOME/.config/chezmoi/ravy-private-state.boltdb config_path=$HOME/.config/chezmoi/ravy-private.toml" "$HOME/chezmoi.log" >/dev/null
+or fail "chezp init regenerates the private config file"
 
 set -l orig_pwd $PWD
 ravycustom

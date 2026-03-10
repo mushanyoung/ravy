@@ -33,6 +33,15 @@ assert_empty() {
   fi
 }
 
+assert_file_contains() {
+  local path=$1
+  local expected=$2
+  local msg=$3
+  if ! grep -F "$expected" "$path" >/dev/null 2>&1; then
+    fail "$msg"
+  fi
+}
+
 strip_bash_noise() {
   printf '%s' "$1" | awk '!/no job control in this shell$/'
 }
@@ -47,7 +56,8 @@ write_stub() {
 setup_home() {
   local tmp_home
   tmp_home=$(mktemp -d "$repo_root/.tmp_shell_home.XXXXXX")
-  mkdir -p "$tmp_home/bin" "$tmp_home/.config/fish" "$tmp_home/.config/ravy" "$tmp_home/.local/bin"
+  mkdir -p "$tmp_home/bin" "$tmp_home/.config/fish" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi" "$tmp_home/.local/bin"
+  printf '%s\n' 'seed = 1' > "$tmp_home/.config/chezmoi/chezmoi.toml"
   printf '%s\n' "$tmp_home"
 }
 
@@ -60,21 +70,54 @@ render_config() {
 
 setup_base_stubs() {
   local stub_bin=$1
-  write_stub "$stub_bin/chezmoi" "#!/usr/bin/env sh
+write_stub "$stub_bin/chezmoi" "#!/usr/bin/env sh
 source_path=\"$repo_root\"
+config_path=''
+state_path=''
+subcommand=''
 while [ \"\$#\" -gt 0 ]; do
   case \"\$1\" in
     -S|--source)
       source_path=\"\$2\"
       shift 2
       ;;
-    *)
+    -c|--config)
+      config_path=\"\$2\"
+      shift 2
+      ;;
+    --persistent-state)
+      state_path=\"\$2\"
+      shift 2
+      ;;
+    source-path|init|cat|apply)
+      subcommand=\"\$1\"
+      shift
       break
+      ;;
+    *)
+      shift
       ;;
   esac
 done
-if [ \"\$1\" = \"source-path\" ]; then
+if [ \"\$subcommand\" = \"source-path\" ]; then
+  printf '%s\\n' \"subcommand=source-path source=\$source_path config=\$config_path state=\$state_path\" >> \"\$HOME/chezmoi.log\"
   echo \"\$source_path\"
+  exit 0
+fi
+if [ \"\$subcommand\" = \"init\" ]; then
+  init_config_path=''
+  while [ \"\$#\" -gt 0 ]; do
+    case \"\$1\" in
+      -C|--config-path)
+        init_config_path=\"\$2\"
+        shift 2
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
+  printf '%s\\n' \"subcommand=init source=\$source_path config=\$config_path state=\$state_path config_path=\$init_config_path\" >> \"\$HOME/chezmoi.log\"
   exit 0
 fi
 exit 0
@@ -261,7 +304,6 @@ check_public_surface() {
     type chez >/dev/null 2>&1 &&
     type ravyc >/dev/null 2>&1 &&
     type ravys >/dev/null 2>&1 &&
-    test \"\$(chez source-path)\" = \"$repo_root\" &&
     ! type bi >/dev/null 2>&1 &&
     ! type au >/dev/null 2>&1 &&
     ! type pupu >/dev/null 2>&1 &&
@@ -273,10 +315,16 @@ check_public_surface() {
     $fn_check __ravy_zoxide_init >/dev/null &&
     $fn_check __ravy_atuin_init >/dev/null &&
     test \"\${__RAVY_MISE_INIT:-}\" = 1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
     cd \"\$HOME\" &&
     ravy && test \"\$PWD\" = \"$repo_root\" &&
+    test \"\$(chez source-path)\" = \"$repo_root\" &&
+    chez init >/dev/null 2>&1 &&
     ! ravycustom >/dev/null 2>&1 &&
-    ! chezp source-path >/dev/null 2>&1
+    ! chezp source-path >/dev/null 2>&1 &&
+    test ! -f \"\$HOME/.config/chezmoi/ravy-public.toml\" &&
+    grep -F 'subcommand=source-path source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    grep -F 'subcommand=init source=$repo_root config= state= config_path=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1
   "
 
   local result
@@ -310,9 +358,15 @@ check_private_surface() {
     test \"\${__RAVY_PRIVATE_COMMON:-}\" = 1 &&
     test \"\${__RAVY_SECRETS_SH:-}\" = 1 &&
     command -v private-helper >/dev/null 2>&1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
     test \"\$(chezp source-path)\" = \"$private_home\" &&
+    test -f \"\$HOME/.config/chezmoi/ravy-private.toml\" &&
+    grep -F 'seed = 1' \"\$HOME/.config/chezmoi/ravy-private.toml\" >/dev/null 2>&1 &&
+    chezp init >/dev/null 2>&1 &&
     cd \"\$HOME\" &&
-    ravycustom && test \"\$PWD\" = \"$private_home\"
+    ravycustom && test \"\$PWD\" = \"$private_home\" &&
+    grep -F 'subcommand=source-path source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    grep -F 'subcommand=init source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml' \"\$HOME/chezmoi.log\" >/dev/null 2>&1
   "
 
   local result

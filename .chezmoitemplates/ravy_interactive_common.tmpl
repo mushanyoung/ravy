@@ -13,10 +13,49 @@ alias dry "docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock monc
 alias ravyc ravyprivatecd
 alias ravyprivate ravyprivatecd
 alias ravys ravysource
-alias chez "chezmoi"
 
 # Fish supports "=" aliases but bash/zsh do not.
 alias = "command -v"
+
+function __ravy_chezmoi_config_dir
+    set -l config_home "$XDG_CONFIG_HOME"
+    test -n "$config_home"; or set config_home "$HOME/.config"
+    printf '%s\n' "$config_home/chezmoi"
+end
+
+function __ravy_chezmoi_seed_config --argument-names config_path
+    if test -f "$config_path"
+        return 0
+    end
+
+    set -l config_dir (__ravy_chezmoi_config_dir)
+    for candidate in "$config_dir/chezmoi.toml" "$config_dir/ravy-public.toml"
+        if test "$candidate" = "$config_path"
+            continue
+        end
+        if test -f "$candidate"
+            mkdir -p (dirname "$config_path")
+            command cp "$candidate" "$config_path"
+            return 0
+        end
+    end
+end
+
+function __ravy_chezmoi_run
+    set -l source_dir "$argv[1]"
+    set -l config_path "$argv[2]"
+    set -l state_path "$argv[3]"
+    set -e argv[1..3]
+
+    if test (count $argv) -gt 0; and test "$argv[1]" = init
+        mkdir -p (dirname "$config_path")
+        command chezmoi -S "$source_dir" -c "$config_path" --persistent-state "$state_path" init -C "$config_path" $argv[2..-1]
+        test -f "$config_path"; or __ravy_chezmoi_seed_config "$config_path"
+    else
+        __ravy_chezmoi_seed_config "$config_path"
+        command chezmoi -S "$source_dir" -c "$config_path" --persistent-state "$state_path" $argv
+    end
+end
 
 function d
     builtin cd ..
@@ -24,6 +63,10 @@ end
 
 function ravy
     builtin cd -- "$RAVY_HOME"
+end
+
+function chez
+    command chezmoi $argv
 end
 
 function ravycustom
@@ -41,7 +84,7 @@ end
 
 function chezp
     if set -q RAVY_PRIVATE_HOME; and test -n "$RAVY_PRIVATE_HOME"
-        command chezmoi -S "$RAVY_PRIVATE_HOME" $argv
+        __ravy_chezmoi_run "$RAVY_PRIVATE_HOME" (__ravy_chezmoi_config_dir)/ravy-private.toml (__ravy_chezmoi_config_dir)/ravy-private-state.boltdb $argv
     else
         echo "RAVY_PRIVATE_HOME is not configured" >&2
         return 1
@@ -96,7 +139,41 @@ alias dry='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock monc
 alias ravyc='ravyprivatecd'
 alias ravyprivate='ravyprivatecd'
 alias ravys='ravysource'
-alias chez='chezmoi'
+
+_ravy_chezmoi_config_dir() {
+  printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi"
+}
+
+_ravy_chezmoi_seed_config() {
+  config_path=$1
+  [ -f "$config_path" ] && return 0
+
+  config_dir="$(_ravy_chezmoi_config_dir)"
+  for candidate in "$config_dir/chezmoi.toml" "$config_dir/ravy-public.toml"; do
+    [ "$candidate" = "$config_path" ] && continue
+    [ -f "$candidate" ] || continue
+    mkdir -p "$(dirname "$config_path")"
+    cp "$candidate" "$config_path"
+    return 0
+  done
+}
+
+_ravy_chezmoi_run() {
+  source_dir=$1
+  config_path=$2
+  state_path=$3
+  shift 3
+
+  if [ "$#" -gt 0 ] && [ "$1" = "init" ]; then
+    mkdir -p "$(dirname "$config_path")"
+    shift
+    command chezmoi -S "$source_dir" -c "$config_path" --persistent-state "$state_path" init -C "$config_path" "$@"
+    [ -f "$config_path" ] || _ravy_chezmoi_seed_config "$config_path"
+  else
+    _ravy_chezmoi_seed_config "$config_path"
+    command chezmoi -S "$source_dir" -c "$config_path" --persistent-state "$state_path" "$@"
+  fi
+}
 
 d() {
   builtin cd ..
@@ -104,6 +181,10 @@ d() {
 
 ravy() {
   builtin cd -- "$RAVY_HOME"
+}
+
+chez() {
+  command chezmoi "$@"
 }
 
 ravycustom() {
@@ -121,7 +202,7 @@ ravyprivatecd() {
 
 chezp() {
   if [ -n "${RAVY_PRIVATE_HOME:-}" ]; then
-    command chezmoi -S "$RAVY_PRIVATE_HOME" "$@"
+    _ravy_chezmoi_run "$RAVY_PRIVATE_HOME" "$(_ravy_chezmoi_config_dir)/ravy-private.toml" "$(_ravy_chezmoi_config_dir)/ravy-private-state.boltdb" "$@"
   else
     echo "RAVY_PRIVATE_HOME is not configured" >&2
     return 1

@@ -68,6 +68,25 @@ default_private_home() {
   printf '%s\n' "$HOME/.local/share/ravy-private"
 }
 
+chezmoi_config_dir() {
+  printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi"
+}
+
+seed_chezmoi_config() {
+  target="$1"
+  shift
+
+  [ -f "$target" ] && return 0
+
+  __el mkdir -p "$(dirname "$target")"
+  for candidate in "$@"; do
+    [ -n "${candidate:-}" ] || continue
+    [ -f "$candidate" ] || continue
+    __el cp "$candidate" "$target"
+    return 0
+  done
+}
+
 resolve_private_install_script() {
   local chezmoi_source
 
@@ -157,7 +176,12 @@ RAVY_PRIVATE_HOME="${RAVY_PRIVATE_HOME:-$(default_private_home)}"
 RAVY_PRIVATE_REPO="${RAVY_PRIVATE_REPO:-}"
 RAVY_CHEZMOI_FORCE="${RAVY_CHEZMOI_FORCE:-0}"
 RAVY_BOOTSTRAP_OPTIONAL="${RAVY_BOOTSTRAP_OPTIONAL:-0}"
+RAVY_CHEZMOI_CONFIG_DIR="${RAVY_CHEZMOI_CONFIG_DIR:-$(chezmoi_config_dir)}"
+RAVY_CHEZMOI_PRIVATE_CONFIG="${RAVY_CHEZMOI_PRIVATE_CONFIG:-$RAVY_CHEZMOI_CONFIG_DIR/ravy-private.toml}"
+RAVY_CHEZMOI_PRIVATE_STATE="${RAVY_CHEZMOI_PRIVATE_STATE:-$RAVY_CHEZMOI_CONFIG_DIR/ravy-private-state.boltdb}"
 export RAVY_PRIVATE_HOME
+
+__el mkdir -p "$RAVY_CHEZMOI_CONFIG_DIR"
 
 if [ -n "$RAVY_PRIVATE_REPO" ]; then
   if ! command -v git >/dev/null 2>&1; then
@@ -188,7 +212,9 @@ fi
 
 if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
   info "Applying private encrypted overlay"
-  __el chezmoi apply -S "$RAVY_PRIVATE_HOME"
+  __el chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" init -C "$RAVY_CHEZMOI_PRIVATE_CONFIG"
+  seed_chezmoi_config "$RAVY_CHEZMOI_PRIVATE_CONFIG" "$RAVY_CHEZMOI_CONFIG_DIR/chezmoi.toml"
+  __el chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" apply
 fi
 
 private_install_script=''
@@ -216,4 +242,5 @@ echo "  - zsh:  sources ~/.zshrc (installed by chezmoi)"
 echo "  - fish: uses ~/.config/fish/config.fish (installed by chezmoi)"
 echo "  - managed shell secrets: ~/.config/ravy/secrets.sh and ~/.config/ravy/secrets.fish"
 echo "  - private age identity: ~/.config/chezmoi/key.txt"
+echo "  - private chezmoi config/state: ~/.config/chezmoi/ravy-private.toml and ~/.config/chezmoi/ravy-private-state.boltdb"
 echo "  - optional private repo: set RAVY_PRIVATE_REPO before install"

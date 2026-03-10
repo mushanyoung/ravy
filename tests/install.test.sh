@@ -63,18 +63,61 @@ assert_file_contains() {
 setup_home() {
   tmp_home=$(mktemp -d "$repo_root/.tmp_install_home.XXXXXX")
   mkdir -p "$tmp_home/bin" "$tmp_home/.ssh" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi"
+  printf '%s\n' '# default config' > "$tmp_home/.config/chezmoi/chezmoi.toml"
 
   write_stub "$tmp_home/bin/chezmoi" "#!/usr/bin/env sh
-if [ \"\$1\" = \"source-path\" ]; then
+source_path=\"$repo_root\"
+config_path=''
+state_path=''
+subcommand=''
+while [ \"\$#\" -gt 0 ]; do
+  case \"\$1\" in
+    -S|--source)
+      source_path=\"\$2\"
+      shift 2
+      ;;
+    -c|--config)
+      config_path=\"\$2\"
+      shift 2
+      ;;
+    --persistent-state)
+      state_path=\"\$2\"
+      shift 2
+      ;;
+    source-path|init|apply)
+      subcommand=\"\$1\"
+      shift
+      break
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+if [ \"\$subcommand\" = \"source-path\" ]; then
   echo \"$repo_root\"
   exit 0
 fi
 
-if [ \"\$1\" = \"init\" ]; then
+if [ \"\$subcommand\" = \"init\" ]; then
+  init_config_path=''
+  while [ \"\$#\" -gt 0 ]; do
+    case \"\$1\" in
+      -C|--config-path)
+        init_config_path=\"\$2\"
+        shift 2
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
+  printf '%s\n' \"subcommand=init source=\$source_path config=\$config_path state=\$state_path config_path=\$init_config_path\" >> \"$tmp_home/chezmoi.log\"
   exit 0
 fi
 
-if [ \"\$1\" = \"apply\" ]; then
+if [ \"\$subcommand\" = \"apply\" ]; then
+  printf '%s\n' \"subcommand=apply source=\$source_path config=\$config_path state=\$state_path\" >> \"$tmp_home/chezmoi.log\"
   exit 0
 fi
 
@@ -137,8 +180,12 @@ assert_not_symlink "$tmp_home/.config/ravy/private.gitconfig"
 assert_not_symlink "$tmp_home/.config/ravy/ssh.config"
 assert_not_symlink "$tmp_home/.ssh/config"
 assert_file_contains "$tmp_home/.config/chezmoi/key.txt" '# bootstrapped age identity'
+assert_file_contains "$tmp_home/.config/chezmoi/ravy-private.toml" '# default config'
 assert_file_contains "$tmp_home/.ssh/config" 'Host legacy'
 assert_file_contains "$tmp_home/.ssh/config" "Include $tmp_home/.config/ravy/ssh.config"
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$repo_root config= state= config_path="
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$repo_root/custom config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml"
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$repo_root/custom config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb"
 
 if [ "$failures" -eq 0 ]; then
   echo 'All install tests passed'
