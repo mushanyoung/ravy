@@ -3,29 +3,26 @@
 {{- $shell := .shell -}}
 
 {{- if eq $shell "fish" }}
-# Optional private overlay + machine-local secrets.
+# Optional private overlay + managed secret files.
 if not set -q RAVY_SKIP_CUSTOM
     set -l private_home "$RAVY_PRIVATE_HOME"
-    set -l host_name "$RAVY_HOST"
 
     if test -n "$private_home"; and test -d "$private_home"
         for file in \
             "$private_home/shell/config.fish" \
-            "$private_home/profiles/$RAVY_PROFILE/shell/config.fish" \
-            "$private_home/hosts/$host_name/shell/config.fish"
+            "$private_home/profiles/$RAVY_PROFILE/shell/config.fish"
             test -f "$file"
             and source "$file"
         end
     end
 
-    test -f "$HOME/.config/ravy/local.fish"
-    and source "$HOME/.config/ravy/local.fish"
+    test -f "$HOME/.config/ravy/secrets.fish"
+    and source "$HOME/.config/ravy/secrets.fish"
 end
 {{- else }}
-# Optional private overlay + machine-local secrets.
+# Optional private overlay + managed secret files.
 if [ -z "${RAVY_SKIP_CUSTOM:-}" ]; then
   _ravy_private_home="${RAVY_PRIVATE_HOME:-}"
-  _ravy_host="${RAVY_HOST:-unknown}"
 {{- if eq $shell "bash" }}
   _ravy_shell_suffix="bash"
 {{- else }}
@@ -37,9 +34,7 @@ if [ -z "${RAVY_SKIP_CUSTOM:-}" ]; then
       "$_ravy_private_home/shell/config.sh" \
       "$_ravy_private_home/shell/config.$_ravy_shell_suffix" \
       "$_ravy_private_home/profiles/${RAVY_PROFILE:-}/shell/config.sh" \
-      "$_ravy_private_home/profiles/${RAVY_PROFILE:-}/shell/config.$_ravy_shell_suffix" \
-      "$_ravy_private_home/hosts/$_ravy_host/shell/config.sh" \
-      "$_ravy_private_home/hosts/$_ravy_host/shell/config.$_ravy_shell_suffix"
+      "$_ravy_private_home/profiles/${RAVY_PROFILE:-}/shell/config.$_ravy_shell_suffix"
     do
       [ -f "$_ravy_file" ] || continue
       # shellcheck disable=SC1090
@@ -47,11 +42,11 @@ if [ -z "${RAVY_SKIP_CUSTOM:-}" ]; then
     done
   fi
 
-  if [ -f "$HOME/.config/ravy/local.sh" ]; then
+  if [ -f "$HOME/.config/ravy/secrets.sh" ]; then
     # shellcheck disable=SC1090
-    . "$HOME/.config/ravy/local.sh"
+    . "$HOME/.config/ravy/secrets.sh"
   fi
 
-  unset _ravy_file _ravy_host _ravy_private_home _ravy_shell_suffix
+  unset _ravy_file _ravy_private_home _ravy_shell_suffix
 fi
 {{- end }}

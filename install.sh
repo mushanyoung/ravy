@@ -52,6 +52,22 @@ append_content_if_absent() {
   fi
 }
 
+default_private_home() {
+  for candidate in \
+    "${RAVY_PRIVATE_HOME:-}" \
+    "$HOME/.local/share/ravy-private" \
+    "$HOME/.ravy-private" \
+    "$SCRIPT_DIR/custom"
+  do
+    [ -n "${candidate:-}" ] || continue
+    [ -d "$candidate/.git" ] || continue
+    printf '%s\n' "$candidate"
+    return 0
+  done
+
+  printf '%s\n' "$HOME/.local/share/ravy-private"
+}
+
 resolve_private_install_script() {
   local chezmoi_source
 
@@ -73,6 +89,43 @@ resolve_private_install_script() {
   fi
 
   return 1
+}
+
+ensure_age() {
+  if command -v age >/dev/null 2>&1; then
+    success "age is installed."
+    return 0
+  fi
+
+  warn "age is not installed; installing it for current user."
+  if command -v brew >/dev/null 2>&1; then
+    __el brew install age
+  fi
+
+  if ! command -v age >/dev/null 2>&1; then
+    error "age is required for the private encrypted overlay"
+    error "Install age and rerun this bootstrap"
+    return 1
+  fi
+
+  success "age is installed."
+}
+
+bootstrap_private_age_identity() {
+  local private_home bootstrap_key target_key target_dir
+
+  private_home="$1"
+  bootstrap_key="$private_home/bootstrap/key.txt.age"
+  target_dir="$HOME/.config/chezmoi"
+  target_key="$target_dir/key.txt"
+
+  [ -f "$bootstrap_key" ] || return 0
+  [ ! -f "$target_key" ] || return 0
+
+  info "Bootstrapping local age identity"
+  __el mkdir -p "$target_dir"
+  __el sh -c 'umask 077 && age --decrypt -o "$1" "$2"' sh "$target_key" "$bootstrap_key"
+  __el chmod 600 "$target_key"
 }
 
 info "Bootstrapping Ravy with chezmoi"
@@ -100,7 +153,7 @@ fi
 
 info "Applying dotfiles (bash, zsh, fish) for current user"
 RAVY_REPO="${RAVY_REPO:-mushanyoung/ravy}"
-RAVY_PRIVATE_HOME="${RAVY_PRIVATE_HOME:-$HOME/.local/share/ravy-private}"
+RAVY_PRIVATE_HOME="${RAVY_PRIVATE_HOME:-$(default_private_home)}"
 RAVY_PRIVATE_REPO="${RAVY_PRIVATE_REPO:-}"
 RAVY_CHEZMOI_FORCE="${RAVY_CHEZMOI_FORCE:-0}"
 RAVY_BOOTSTRAP_OPTIONAL="${RAVY_BOOTSTRAP_OPTIONAL:-0}"
@@ -121,11 +174,21 @@ if [ -n "$RAVY_PRIVATE_REPO" ]; then
   fi
 fi
 
+if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
+  ensure_age
+  bootstrap_private_age_identity "$RAVY_PRIVATE_HOME"
+fi
+
 if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
   warn "Using --force to overwrite existing files managed by this setup."
   __el chezmoi init --apply --force "$RAVY_REPO"
 else
   __el chezmoi init --apply "$RAVY_REPO"
+fi
+
+if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
+  info "Applying private encrypted overlay"
+  __el chezmoi apply -S "$RAVY_PRIVATE_HOME"
 fi
 
 private_install_script=''
@@ -151,5 +214,6 @@ info "Notes"
 echo "  - bash: sources ~/.bashrc (installed by chezmoi)"
 echo "  - zsh:  sources ~/.zshrc (installed by chezmoi)"
 echo "  - fish: uses ~/.config/fish/config.fish (installed by chezmoi)"
-echo "  - local machine secrets: ~/.config/ravy/local.sh and ~/.config/ravy/local.fish"
+echo "  - managed shell secrets: ~/.config/ravy/secrets.sh and ~/.config/ravy/secrets.fish"
+echo "  - private age identity: ~/.config/chezmoi/key.txt"
 echo "  - optional private repo: set RAVY_PRIVATE_REPO before install"

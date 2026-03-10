@@ -64,8 +64,20 @@ exit 0
 "
 
     __write_stub chezmoi "#!/usr/bin/env sh
+source_path=\"$repo_root\"
+while [ \"\$#\" -gt 0 ]; do
+  case \"\$1\" in
+    -S|--source)
+      source_path=\"\$2\"
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 if [ \"\$1\" = \"source-path\" ]; then
-  echo \"$repo_root\"
+  echo \"\$source_path\"
   exit 0
 fi
 if [ \"\$1\" = \"cat\" ]; then
@@ -133,13 +145,11 @@ function setup_private_overlay
     set -l private_home "$HOME/.local/share/ravy-private"
     mkdir -p \
         "$private_home/shell" \
-        "$private_home/hosts/test-host/shell" \
         "$private_home/bin/common" \
         "$HOME/.config/ravy"
 
     printf "%s\n" "set -gx __RAVY_PRIVATE_COMMON 1" > "$private_home/shell/config.fish"
-    printf "%s\n" "set -gx __RAVY_PRIVATE_HOST 1" > "$private_home/hosts/test-host/shell/config.fish"
-    printf "%s\n" "set -gx __RAVY_LOCAL_FISH 1" > "$HOME/.config/ravy/local.fish"
+    printf "%s\n" "set -gx __RAVY_SECRETS_FISH 1" > "$HOME/.config/ravy/secrets.fish"
     printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" > "$private_home/bin/common/private-helper"
     chmod +x "$private_home/bin/common/private-helper"
     printf "%s\n" $private_home
@@ -165,6 +175,8 @@ assert_true "test \"$__RAVY_MISE_INIT\" = 1" "mise activated"
 assert_true "functions -q d" "cd helper function defined"
 assert_true "functions -q ravy" "ravy helper defined"
 assert_true "functions -q ravyprivatecd" "private repo helper defined"
+assert_true "functions -q chez" "chez alias defined"
+assert_true "functions -q chezp" "chezp helper defined"
 assert_true "functions -q ravysource" "ravysource helper defined"
 assert_true "functions -q l" "generic alias 'l' defined"
 assert_true "functions -q ravyc" "compat alias 'ravyc' defined"
@@ -175,10 +187,16 @@ assert_true "command -v ep >/dev/null" "ep helper exists"
 assert_true "command -v jl >/dev/null" "jl helper exists"
 assert_true "command -v lines >/dev/null" "lines helper exists"
 assert_true "command -v downcase-exts >/dev/null" "downcase-exts helper exists"
+assert_equal (chez source-path) $expected_ravy_home "chez resolves to public chezmoi source"
 
 ravycustom >/dev/null 2>/dev/null
 if test $status -eq 0
     fail "ravycustom should fail without a private repo"
+end
+
+chezp source-path >/dev/null 2>/dev/null
+if test $status -eq 0
+    fail "chezp should fail without a private repo"
 end
 
 set -l private_home (setup_private_overlay)
@@ -189,9 +207,9 @@ assert_equal $RAVY_PRIVATE_HOME $private_home "RAVY_PRIVATE_HOME resolves to the
 assert_equal $RAVY_CUSTOM $private_home "RAVY_CUSTOM compatibility variable follows RAVY_PRIVATE_HOME"
 assert_contains "$private_home/bin/common" $PATH "PATH includes private common bin directory"
 assert_true "test \"$__RAVY_PRIVATE_COMMON\" = 1" "private common overlay loaded"
-assert_true "test \"$__RAVY_PRIVATE_HOST\" = 1" "private host overlay loaded"
-assert_true "test \"$__RAVY_LOCAL_FISH\" = 1" "machine-local fish overrides loaded"
+assert_true "test \"$__RAVY_SECRETS_FISH\" = 1" "managed secret fish overrides loaded"
 assert_true "command -v private-helper >/dev/null" "private helper command exists"
+assert_equal (chezp source-path) $private_home "chezp resolves to the private chezmoi source"
 
 set -l orig_pwd $PWD
 ravycustom

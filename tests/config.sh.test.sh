@@ -61,8 +61,20 @@ render_config() {
 setup_base_stubs() {
   local stub_bin=$1
   write_stub "$stub_bin/chezmoi" "#!/usr/bin/env sh
+source_path=\"$repo_root\"
+while [ \"\$#\" -gt 0 ]; do
+  case \"\$1\" in
+    -S|--source)
+      source_path=\"\$2\"
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 if [ \"\$1\" = \"source-path\" ]; then
-  echo \"$repo_root\"
+  echo \"\$source_path\"
   exit 0
 fi
 exit 0
@@ -125,13 +137,11 @@ setup_private_overlay() {
 
   mkdir -p \
     "$private_home/shell" \
-    "$private_home/hosts/test-host/shell" \
     "$private_home/bin/common" \
     "$tmp_home/.config/ravy"
 
   printf '%s\n' 'export __RAVY_PRIVATE_COMMON=1' > "$private_home/shell/config.sh"
-  printf '%s\n' 'export __RAVY_PRIVATE_HOST=1' > "$private_home/hosts/test-host/shell/config.sh"
-  printf '%s\n' 'export __RAVY_LOCAL_SH=1' > "$tmp_home/.config/ravy/local.sh"
+  printf '%s\n' 'export __RAVY_SECRETS_SH=1' > "$tmp_home/.config/ravy/secrets.sh"
 
   write_stub "$private_home/bin/common/private-helper" "#!/usr/bin/env sh
 exit 0
@@ -246,9 +256,12 @@ check_public_surface() {
     $fn_check ravy >/dev/null &&
     $fn_check ravycustom >/dev/null &&
     $fn_check ravyprivatecd >/dev/null &&
+    $fn_check chezp >/dev/null &&
     $fn_check ravysource >/dev/null &&
+    type chez >/dev/null 2>&1 &&
     type ravyc >/dev/null 2>&1 &&
     type ravys >/dev/null 2>&1 &&
+    test \"\$(chez source-path)\" = \"$repo_root\" &&
     ! type bi >/dev/null 2>&1 &&
     ! type au >/dev/null 2>&1 &&
     ! type pupu >/dev/null 2>&1 &&
@@ -262,7 +275,8 @@ check_public_surface() {
     test \"\${__RAVY_MISE_INIT:-}\" = 1 &&
     cd \"\$HOME\" &&
     ravy && test \"\$PWD\" = \"$repo_root\" &&
-    ! ravycustom >/dev/null 2>&1
+    ! ravycustom >/dev/null 2>&1 &&
+    ! chezp source-path >/dev/null 2>&1
   "
 
   local result
@@ -294,9 +308,9 @@ check_private_surface() {
     test \"\$RAVY_CUSTOM\" = \"$private_home\" &&
     case \":\$PATH:\" in *\":$private_home/bin/common:\"*) ;; *) exit 1 ;; esac &&
     test \"\${__RAVY_PRIVATE_COMMON:-}\" = 1 &&
-    test \"\${__RAVY_PRIVATE_HOST:-}\" = 1 &&
-    test \"\${__RAVY_LOCAL_SH:-}\" = 1 &&
+    test \"\${__RAVY_SECRETS_SH:-}\" = 1 &&
     command -v private-helper >/dev/null 2>&1 &&
+    test \"\$(chezp source-path)\" = \"$private_home\" &&
     cd \"\$HOME\" &&
     ravycustom && test \"\$PWD\" = \"$private_home\"
   "

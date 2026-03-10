@@ -62,7 +62,7 @@ assert_file_contains() {
 
 setup_home() {
   tmp_home=$(mktemp -d "$repo_root/.tmp_install_home.XXXXXX")
-  mkdir -p "$tmp_home/bin" "$tmp_home/.ssh"
+  mkdir -p "$tmp_home/bin" "$tmp_home/.ssh" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi"
 
   write_stub "$tmp_home/bin/chezmoi" "#!/usr/bin/env sh
 if [ \"\$1\" = \"source-path\" ]; then
@@ -74,8 +74,34 @@ if [ \"\$1\" = \"init\" ]; then
   exit 0
 fi
 
+if [ \"\$1\" = \"apply\" ]; then
+  exit 0
+fi
+
 exit 0
 "
+
+  write_stub "$tmp_home/bin/age" "#!/usr/bin/env sh
+output=''
+while [ \"\$#\" -gt 0 ]; do
+  case \"\$1\" in
+    -o)
+      output=\"\$2\"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+if [ -n \"\$output\" ]; then
+  printf '%s\n' '# bootstrapped age identity' > \"\$output\"
+fi
+exit 0
+"
+
+  printf '%s\n' '[user]' '    name = Test User' > "$tmp_home/.config/ravy/private.gitconfig"
+  printf '%s\n' 'Host private' '    HostName private.example' > "$tmp_home/.config/ravy/ssh.config"
 }
 
 run_install() {
@@ -87,6 +113,7 @@ run_install() {
     HOME="$tmp_home" \
     PATH="$tmp_home/bin:/usr/bin:/bin" \
     RAVY_BOOTSTRAP_OPTIONAL=0 \
+    RAVY_PRIVATE_HOME="$repo_root/custom" \
     "$bash_bin" "$repo_root/install.sh" 2>&1)
   status_code=$?
   set -e
@@ -106,13 +133,10 @@ output=${result#*$'\n__RAVY_OUTPUT__\n'}
 output=${output%$'\n__RAVY_END__'}
 assert_status_zero "$status_code" 'install.sh failed' "$output"
 
-assert_symlink_target \
-  "$tmp_home/.config/ravy/private.gitconfig" \
-  "$repo_root/custom/git/private.gitconfig"
-assert_symlink_target \
-  "$tmp_home/.config/ravy/ssh.config" \
-  "$repo_root/custom/ssh/config"
+assert_not_symlink "$tmp_home/.config/ravy/private.gitconfig"
+assert_not_symlink "$tmp_home/.config/ravy/ssh.config"
 assert_not_symlink "$tmp_home/.ssh/config"
+assert_file_contains "$tmp_home/.config/chezmoi/key.txt" '# bootstrapped age identity'
 assert_file_contains "$tmp_home/.ssh/config" 'Host legacy'
 assert_file_contains "$tmp_home/.ssh/config" "Include $tmp_home/.config/ravy/ssh.config"
 
