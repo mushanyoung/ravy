@@ -8,7 +8,7 @@ BASH ?= bash
 FISH ?= fish
 CHEZMOI_ARGS ?=
 
-.PHONY: help install apply chezmoi-apply test test-fish test-sh
+.PHONY: help install apply chezmoi-apply test test-fish test-sh test-install
 
 help:
 	@echo 'Targets:'
@@ -18,6 +18,7 @@ help:
 	@echo '  make test           Run all shell config tests'
 	@echo '  make test-fish      Run fish config test'
 	@echo '  make test-sh        Run bash/zsh config test'
+	@echo '  make test-install   Run installer regression test'
 
 install:
 	./install.sh
@@ -27,10 +28,13 @@ apply:
 
 chezmoi-apply: apply
 
-test: test-fish test-sh
+test: test-fish test-sh test-install
 
 test-fish:
 	$(FISH) tests/config.fish.test.fish
 
 test-sh:
 	$(BASH) tests/config.sh.test.sh
+
+test-install:
+	$(BASH) tests/install.test.sh

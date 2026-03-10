@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -48,6 +50,29 @@ append_content_if_absent() {
   else
     echo -e "${BOLD}  > Content already present in $file${RESET}"
   fi
+}
+
+resolve_private_install_script() {
+  local chezmoi_source
+
+  if [ -x "$RAVY_PRIVATE_HOME/install.sh" ]; then
+    printf '%s\n' "$RAVY_PRIVATE_HOME/install.sh"
+    return 0
+  fi
+
+  if chezmoi_source="$(chezmoi source-path 2>/dev/null)"; then
+    if [ -x "$chezmoi_source/custom/install.sh" ]; then
+      printf '%s\n' "$chezmoi_source/custom/install.sh"
+      return 0
+    fi
+  fi
+
+  if [ -x "$SCRIPT_DIR/custom/install.sh" ]; then
+    printf '%s\n' "$SCRIPT_DIR/custom/install.sh"
+    return 0
+  fi
+
+  return 1
 }
 
 info "Bootstrapping Ravy with chezmoi"
@@ -103,9 +128,10 @@ else
   __el chezmoi init --apply "$RAVY_REPO"
 fi
 
-if [ -x "$RAVY_PRIVATE_HOME/install.sh" ]; then
+private_install_script=''
+if private_install_script="$(resolve_private_install_script)"; then
   info "Configuring optional private overlay"
-  __el "$RAVY_PRIVATE_HOME/install.sh"
+  __el "$private_install_script"
 fi
 
 if [ "$RAVY_BOOTSTRAP_OPTIONAL" = "1" ]; then
