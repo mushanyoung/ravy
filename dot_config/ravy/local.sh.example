@@ -1,0 +1,9 @@
+# Machine-local shell overrides.
+# Rename this file to local.sh and keep secrets out of Git.
+
+# export GITHUB_TOKEN="..."
+# export MISE_GITHUB_TOKEN="$GITHUB_TOKEN"
+# export HOMEBREW_GITHUB_API_TOKEN="$GITHUB_TOKEN"
+# export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/ravy/keys/service-account.json"
+# export R2_ACCESS_KEY_ID="..."
+# export R2_SECRET_ACCESS_KEY="..."

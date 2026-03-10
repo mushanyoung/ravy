@@ -1,3 +1,0 @@
-[include]
-  path = ~/.local/share/chezmoi/gitconfig
-  path = ~/.local/share/chezmoi/custom/gitconfig

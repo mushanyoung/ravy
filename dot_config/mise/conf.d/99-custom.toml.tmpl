@@ -1,4 +1,11 @@
-{{- $customConfig := joinPath .chezmoi.sourceDir "custom" "mise" "config.toml" -}}
-{{- if (stat $customConfig) -}}
-{{ include $customConfig }}
+{{- $defaultPrivateHome := joinPath .chezmoi.homeDir ".local" "share" "ravy-private" -}}
+{{- $privateHome := env "RAVY_PRIVATE_HOME" | default $defaultPrivateHome -}}
+{{- $privateConfig := joinPath $privateHome "mise" "config.toml" -}}
+{{- if (stat $privateConfig) -}}
+{{ include $privateConfig }}
+{{- else -}}
+{{- $legacyConfig := joinPath .chezmoi.sourceDir "custom" "mise" "config.toml" -}}
+{{- if (stat $legacyConfig) -}}
+{{ include $legacyConfig }}
+{{- end -}}
 {{- end -}}

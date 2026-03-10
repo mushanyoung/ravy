@@ -573,9 +573,14 @@ noremap <Space>fm :call CocAction('format')<CR>
 
 call plug#begin()
 
-let s:custom_vimrc = expand('<sfile>:p:h') . '/' . 'custom/vimrc'
+let s:private_home = $RAVY_PRIVATE_HOME
+if empty(s:private_home)
+  let s:private_home = expand('~/.local/share/ravy-private')
+endif
+
+let s:custom_vimrc = s:private_home . '/vimrc'
 if filereadable(s:custom_vimrc)
-  exec 'source ' . s:custom_vimrc
+  execute 'source ' . fnameescape(s:custom_vimrc)
 endif
 
 " Insert or delete brackets, parentheses, and quotes in pairs

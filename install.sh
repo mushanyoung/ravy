@@ -75,7 +75,26 @@ fi
 
 info "Applying dotfiles (bash, zsh, fish) for current user"
 RAVY_REPO="${RAVY_REPO:-mushanyoung/ravy}"
-RAVY_CHEZMOI_FORCE="${RAVY_CHEZMOI_FORCE:-1}"
+RAVY_PRIVATE_HOME="${RAVY_PRIVATE_HOME:-$HOME/.local/share/ravy-private}"
+RAVY_PRIVATE_REPO="${RAVY_PRIVATE_REPO:-}"
+RAVY_CHEZMOI_FORCE="${RAVY_CHEZMOI_FORCE:-0}"
+RAVY_BOOTSTRAP_OPTIONAL="${RAVY_BOOTSTRAP_OPTIONAL:-0}"
+export RAVY_PRIVATE_HOME
+
+if [ -n "$RAVY_PRIVATE_REPO" ]; then
+  if ! command -v git >/dev/null 2>&1; then
+    error "git is required to install the optional private overlay"
+    exit 1
+  fi
+
+  info "Syncing optional private overlay"
+  __el mkdir -p "$(dirname "$RAVY_PRIVATE_HOME")"
+  if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
+    __el git -C "$RAVY_PRIVATE_HOME" pull --ff-only
+  else
+    __el git clone "$RAVY_PRIVATE_REPO" "$RAVY_PRIVATE_HOME"
+  fi
+fi
 
 if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
   warn "Using --force to overwrite existing files managed by this setup."
@@ -84,13 +103,20 @@ else
   __el chezmoi init --apply "$RAVY_REPO"
 fi
 
-# Optional bootstrap helpers (kept from the old installer experience)
-info "Optional bootstrap: tmux base config + vim-plug"
+if [ -x "$RAVY_PRIVATE_HOME/install.sh" ]; then
+  info "Configuring optional private overlay"
+  __el "$RAVY_PRIVATE_HOME/install.sh"
+fi
 
-__el curl -sfLo "$HOME/.tmux.conf" https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
+if [ "$RAVY_BOOTSTRAP_OPTIONAL" = "1" ]; then
+  info "Optional bootstrap: tmux base config + vim-plug"
+  __el curl -sfLo "$HOME/.tmux.conf" https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
 
-if [ ! -f "$HOME/.config/nvim/autoload/plug.vim" ]; then
-  __el curl -fLo "$HOME/.config/nvim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  if [ ! -f "$HOME/.config/nvim/autoload/plug.vim" ]; then
+    __el curl -fLo "$HOME/.config/nvim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+  fi
+else
+  info "Skipping optional tmux/vim bootstrap (set RAVY_BOOTSTRAP_OPTIONAL=1 to enable)"
 fi
 
 success "Installation complete!"
@@ -99,3 +125,5 @@ info "Notes"
 echo "  - bash: sources ~/.bashrc (installed by chezmoi)"
 echo "  - zsh:  sources ~/.zshrc (installed by chezmoi)"
 echo "  - fish: uses ~/.config/fish/config.fish (installed by chezmoi)"
+echo "  - local machine secrets: ~/.config/ravy/local.sh and ~/.config/ravy/local.fish"
+echo "  - optional private repo: set RAVY_PRIVATE_REPO before install"

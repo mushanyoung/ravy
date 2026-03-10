@@ -34,14 +34,21 @@ set -x FZF_DEFAULT_COMMAND fd
 set -x EZA_CONFIG_DIR "$HOME/.config/eza"
 set -x STARSHIP_CONFIG "$HOME/.config/starship.toml"
 
-if test -e /opt/homebrew/bin/mamba
-  set -gx MAMBA_EXE "/opt/homebrew/bin/mamba"
+if not set -q MAMBA_ROOT_PREFIX
   set -gx MAMBA_ROOT_PREFIX "/opt/conda"
-  set -gx MAMBA_NO_PROMPT 1
-  $MAMBA_EXE shell hook --shell fish --root-prefix $MAMBA_ROOT_PREFIX | source
+end
+
+if test -n "$MAMBA_EXE"
+  true
+else if command -q mamba
+  set -gx MAMBA_EXE (command -s mamba)
+else if test -e /opt/homebrew/bin/mamba
+  set -gx MAMBA_EXE "/opt/homebrew/bin/mamba"
 else if test -e /home/linuxbrew/.linuxbrew/bin/mamba
   set -gx MAMBA_EXE "/home/linuxbrew/.linuxbrew/bin/mamba"
-  set -gx MAMBA_ROOT_PREFIX "/opt/conda"
+end
+
+if set -q MAMBA_EXE
   set -gx MAMBA_NO_PROMPT 1
   $MAMBA_EXE shell hook --shell fish --root-prefix $MAMBA_ROOT_PREFIX | source
 end
@@ -82,6 +89,23 @@ export FZF_DEFAULT_COMMAND="fd"
 
 export EZA_CONFIG_DIR="$HOME/.config/eza"
 export STARSHIP_CONFIG="$HOME/.config/starship.toml"
+
+if [ -z "${MAMBA_ROOT_PREFIX:-}" ]; then
+  export MAMBA_ROOT_PREFIX="/opt/conda"
+fi
+if [ -z "${MAMBA_EXE:-}" ] && command -v mamba >/dev/null 2>&1; then
+  export MAMBA_EXE="$(command -v mamba)"
+fi
+if [ -n "${MAMBA_EXE:-}" ]; then
+  export MAMBA_NO_PROMPT=1
+  __ravy_mamba_setup="$("$MAMBA_EXE" shell hook --shell bash --root-prefix "$MAMBA_ROOT_PREFIX" 2>/dev/null || true)"
+  if [ -n "$__ravy_mamba_setup" ]; then
+    eval "$__ravy_mamba_setup"
+  else
+    alias mamba="$MAMBA_EXE"
+  fi
+  unset __ravy_mamba_setup
+fi
 
 export _ZO_DATA_DIR="$HOME/.local/share/zoxide"
 if command -v zoxide >/dev/null 2>&1; then

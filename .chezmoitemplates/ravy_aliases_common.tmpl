@@ -16,7 +16,7 @@
   (dict "name" "v" "cmd" "nvim")
   (dict "name" "vi" "cmd" "nvim")
   (dict "name" "vim" "cmd" "nvim")
-  (dict "name" "grep" "cmd" "grep --ignore-case --color=auto --exclude-dir={.bzr,.cvs,.git,.hg,.svn}")
+  (dict "name" "grep" "cmd" "grep -i")
   (dict "name" "pyserv" "cmd" "python3 -m http.server")
 
   (dict "name" "ag" "cmd" "rg -S")
@@ -29,32 +29,6 @@
 
   (dict "name" "pa" "cmd" "ps-color")
   (dict "name" "pc" "cmd" "env HIGH_CPU_MEM_ONLY=1 ps-color")
-
-  (dict "name" "bi" "cmd" "brew install --force-bottle")
-  (dict "name" "blr" "cmd" "brew list --installed-on-request")
-  (dict "name" "bubu" "cmd" "brew update && brew outdated && brew upgrade && brew cleanup")
-
-  (dict "name" "au" "cmd" "sudo apt update && sudo apt full-upgrade && sudo apt autoclean")
-  (dict "name" "auau" "cmd" "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove")
-  (dict "name" "pupu" "cmd" "sudo pacman -Syuu --noconfirm")
-
-  (dict "name" "pd" "cmd" "podman")
-  (dict "name" "pdau" "cmd" "podman auto-update")
-  (dict "name" "pdl" "cmd" "podman logs -f --tail 100")
-
-  (dict "name" "sc" "cmd" "systemctl --user")
-  (dict "name" "sce" "cmd" "sc daemon-reload")
-  (dict "name" "scs" "cmd" "sc status")
-  (dict "name" "scr" "cmd" "sc restart")
-  (dict "name" "scst" "cmd" "sc start")
-  (dict "name" "scstop" "cmd" "sc stop")
-
-  (dict "name" "dp" "cmd" "dc pull")
-  (dict "name" "dcl" "cmd" "dc logs -f --tail 100")
-  (dict "name" "dcb" "cmd" "dc build")
-  (dict "name" "dud" "cmd" "dc build && dc up -d --no-build")
-  (dict "name" "dpdu" "cmd" "dc pull && dc up -d")
-  (dict "name" "dudp" "cmd" "dpdu")
  -}}
 
 {{- range $aliases }}
@@ -63,4 +37,84 @@ alias {{ .name }} "{{ .cmd }}"
 {{- else }}
 alias {{ .name }}='{{ .cmd }}'
 {{- end }}
+{{- end }}
+
+{{- if eq $shell "fish" }}
+if command -q brew
+alias bi "brew install --force-bottle"
+alias blr "brew list --installed-on-request"
+alias bubu "brew update && brew outdated && brew upgrade && brew cleanup"
+end
+
+if command -q apt
+alias au "sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
+alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove"
+end
+
+if command -q pacman
+alias pupu "sudo pacman -Syuu --noconfirm"
+end
+
+if command -q podman
+alias pd "podman"
+alias pdau "podman auto-update"
+alias pdl "podman logs -f --tail 100"
+end
+
+if command -q systemctl
+alias sc "systemctl --user"
+alias sce "sc daemon-reload"
+alias scs "sc status"
+alias scr "sc restart"
+alias scst "sc start"
+alias scstop "sc stop"
+end
+
+if command -q docker
+alias dp "dc pull"
+alias dcl "dc logs -f --tail 100"
+alias dcb "dc build"
+alias dud "dc build && dc up -d --no-build"
+alias dpdu "dc pull && dc up -d"
+alias dudp "dpdu"
+end
+{{- else }}
+if command -v brew >/dev/null 2>&1; then
+  alias bi='brew install --force-bottle'
+  alias blr='brew list --installed-on-request'
+  alias bubu='brew update && brew outdated && brew upgrade && brew cleanup'
+fi
+
+if command -v apt >/dev/null 2>&1; then
+  alias au='sudo apt update && sudo apt full-upgrade && sudo apt autoclean'
+  alias auau='sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove'
+fi
+
+if command -v pacman >/dev/null 2>&1; then
+  alias pupu='sudo pacman -Syuu --noconfirm'
+fi
+
+if command -v podman >/dev/null 2>&1; then
+  alias pd='podman'
+  alias pdau='podman auto-update'
+  alias pdl='podman logs -f --tail 100'
+fi
+
+if command -v systemctl >/dev/null 2>&1; then
+  alias sc='systemctl --user'
+  alias sce='sc daemon-reload'
+  alias scs='sc status'
+  alias scr='sc restart'
+  alias scst='sc start'
+  alias scstop='sc stop'
+fi
+
+if command -v docker >/dev/null 2>&1; then
+  alias dp='dc pull'
+  alias dcl='dc logs -f --tail 100'
+  alias dcb='dc build'
+  alias dud='dc build && dc up -d --no-build'
+  alias dpdu='dc pull && dc up -d'
+  alias dudp='dpdu'
+fi
 {{- end }}

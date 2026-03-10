@@ -1,0 +1,9 @@
+# Machine-local shell overrides.
+# Rename this file to local.fish and keep secrets out of Git.
+
+# set -gx GITHUB_TOKEN "..."
+# set -gx MISE_GITHUB_TOKEN $GITHUB_TOKEN
+# set -gx HOMEBREW_GITHUB_API_TOKEN $GITHUB_TOKEN
+# set -gx GOOGLE_APPLICATION_CREDENTIALS "$HOME/.config/ravy/keys/service-account.json"
+# set -gx R2_ACCESS_KEY_ID "..."
+# set -gx R2_SECRET_ACCESS_KEY "..."

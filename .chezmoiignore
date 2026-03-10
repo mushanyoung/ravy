@@ -8,11 +8,7 @@ tags
 # Local-only scratch/custom content lives in the repo but should not be applied
 custom/
 
-# Old shared shell files no longer used; avoid creating empty dir at ~/.config/ravy
-dot_config/ravy/
-
 # Non-dot duplicates (dot_ variants are the ones intended to be applied)
-gitconfig
 tmux.conf.local
 vimrc
 
@@ -22,8 +18,6 @@ templates/
 # binaries
 bin/
 
-install.sh
-gitconfig
 README.md
 starship.toml
 tags

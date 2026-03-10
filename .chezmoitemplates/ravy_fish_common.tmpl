@@ -17,42 +17,88 @@ if not set -q RAVY_HOME
         set -gx RAVY_HOME "$HOME/.ravy"
     end
 end
-set -gx RAVY_CUSTOM "$RAVY_HOME/custom"
 
-# paths operations
+if not set -q RAVY_PRIVATE_HOME
+    for candidate in "$HOME/.local/share/ravy-private" "$HOME/.ravy-private" "$RAVY_HOME/custom"
+        if test -d "$candidate"
+            set -gx RAVY_PRIVATE_HOME "$candidate"
+            break
+        end
+    end
+end
+if set -q RAVY_PRIVATE_HOME
+    if not test -d "$RAVY_PRIVATE_HOME"
+        set -e RAVY_PRIVATE_HOME
+    end
+end
+if set -q RAVY_PRIVATE_HOME
+    set -gx RAVY_CUSTOM "$RAVY_PRIVATE_HOME"
+end
+
+if not set -q RAVY_HOST
+    set -gx RAVY_HOST (hostname -s 2>/dev/null | string lower)
+end
+if not set -q RAVY_OS
+    set -gx RAVY_OS (uname -s 2>/dev/null | string lower)
+end
+
+# PATH operations
 function prepend_to_path
     for arg in $argv
-        fish_add_path -m -p -P -g $arg
+        if test -d "$arg"
+            contains -- "$arg" $PATH
+            or set -gx PATH "$arg" $PATH
+        end
+    end
+end
+
+function append_to_path
+    for arg in $argv
+        if test -d "$arg"
+            contains -- "$arg" $PATH
+            or set -gx PATH $PATH "$arg"
+        end
     end
 end
 
 # User scripts
-prepend_to_path "$RAVY_HOME/bin"
 prepend_to_path "$HOME/bin"
 prepend_to_path "$HOME/.local/bin"
 prepend_to_path "$HOME/.bun/bin"
-prepend_to_path "$RAVY_CUSTOM/bin"
+append_to_path "$RAVY_HOME/bin"
+if set -q RAVY_PRIVATE_HOME
+    append_to_path "$RAVY_PRIVATE_HOME/bin/common"
+end
 
 if not set -q RAVY_SKIP_BREW
-    for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"
-        if test -f "$brewprefix/bin/brew"
-            set -gx HOMEBREW_PREFIX "$brewprefix"
-            set -gx HOMEBREW_CELLAR "$brewprefix/Cellar"
-            set -gx HOMEBREW_REPOSITORY "$brewprefix/Homebrew"
-            set -gx HOMEBREW_NO_ANALYTICS 1
-            set -q MANPATH; or set MANPATH ''
-            set -gx MANPATH "$HOMEBREW_PREFIX/share/man" $MANPATH
-            set -q INFOPATH; or set INFOPATH ''
-            set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
-
-            if test -d "$brewprefix/opt/ruby/bin"
-                prepend_to_path "$brewprefix/opt/ruby/bin"
+    set -l brewprefix ''
+    if command -q brew
+        set brewprefix (brew --prefix 2>/dev/null)
+    end
+    if test -z "$brewprefix"
+        for candidate in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"
+            if test -x "$candidate/bin/brew"
+                set brewprefix "$candidate"
+                break
             end
-
-            prepend_to_path "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin"
-
-            break
         end
+    end
+
+    if test -n "$brewprefix"
+        set -gx HOMEBREW_PREFIX "$brewprefix"
+        set -gx HOMEBREW_CELLAR "$brewprefix/Cellar"
+        set -gx HOMEBREW_REPOSITORY "$brewprefix/Homebrew"
+        set -gx HOMEBREW_NO_ANALYTICS 1
+        set -q MANPATH; or set MANPATH ''
+        set -gx MANPATH "$HOMEBREW_PREFIX/share/man" $MANPATH
+        set -q INFOPATH; or set INFOPATH ''
+        set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
+
+        if test -d "$brewprefix/opt/ruby/bin"
+            prepend_to_path "$brewprefix/opt/ruby/bin"
+        end
+
+        prepend_to_path "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin"
     end
 end
 

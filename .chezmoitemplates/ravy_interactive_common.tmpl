@@ -10,7 +10,8 @@ alias dli "docker image list"
 alias dls "docker system info"
 alias dry "docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry"
 
-alias ravyc ravycustom
+alias ravyc ravyprivatecd
+alias ravyprivate ravyprivatecd
 alias ravys ravysource
 
 # Fish supports "=" aliases but bash/zsh do not.
@@ -25,7 +26,16 @@ function ravy
 end
 
 function ravycustom
-    builtin cd -- "$RAVY_CUSTOM"
+    ravyprivatecd
+end
+
+function ravyprivatecd
+    if test -n "$RAVY_PRIVATE_HOME"
+        builtin cd -- "$RAVY_PRIVATE_HOME"
+    else
+        echo "RAVY_PRIVATE_HOME is not configured" >&2
+        return 1
+    end
 end
 
 function ravysource
@@ -73,7 +83,8 @@ alias dli='docker image list'
 alias dls='docker system info'
 alias dry='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry'
 
-alias ravyc='ravycustom'
+alias ravyc='ravyprivatecd'
+alias ravyprivate='ravyprivatecd'
 alias ravys='ravysource'
 
 d() {
@@ -85,7 +96,16 @@ ravy() {
 }
 
 ravycustom() {
-  builtin cd -- "$RAVY_CUSTOM"
+  ravyprivatecd
+}
+
+ravyprivatecd() {
+  if [ -n "${RAVY_PRIVATE_HOME:-}" ]; then
+    builtin cd -- "$RAVY_PRIVATE_HOME"
+  else
+    echo "RAVY_PRIVATE_HOME is not configured" >&2
+    return 1
+  fi
 }
 
 ravysource() {

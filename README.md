@@ -1,19 +1,52 @@
 # Ravy
 
-**Ravy** is a streamlined remote working environment that combines a macOS frontend with a Unix backend.
+**Ravy** is a cross-platform dotfiles setup managed with `chezmoi`.
 
 ## Installation
 
-To install Ravy (bash/zsh/fish via chezmoi), run:
+Public-only install:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh | bash -s
 ```
 
-Once installed, open Neovim and run the following command to install nvim plugins:
+Public + private install:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh | \
+  RAVY_PRIVATE_REPO=git@github.com:mushanyoung/custom.git bash -s
+```
+
+Optional bootstrap helpers stay opt-in:
+
+```sh
+RAVY_BOOTSTRAP_OPTIONAL=1 ./install.sh
+```
+
+## Local Secrets
+
+Keep machine-local secrets outside Git:
+
+- `~/.config/ravy/local.sh`
+- `~/.config/ravy/local.fish`
+
+Example files are installed at:
+
+- `~/.config/ravy/local.sh.example`
+- `~/.config/ravy/local.fish.example`
+
+## Neovim
+
+Once installed, open Neovim and install plugins:
 
 ```
 :PlugUpdate
+```
+
+## Testing
+
+```sh
+make test
 ```
 
 ## Recommended Setup

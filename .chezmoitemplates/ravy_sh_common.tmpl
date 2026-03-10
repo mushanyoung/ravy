@@ -2,13 +2,35 @@
 
 # --- PATH helpers -------------------------------------------------------------
 _ravy_prepend_path() {
-  # Usage: _ravy_prepend_path /some/dir
   [ -n "${1:-}" ] || return 0
   [ -d "$1" ] || return 0
   case ":$PATH:" in
     *":$1:"*) : ;;
     *) PATH="$1:$PATH" ;;
   esac
+}
+
+_ravy_append_path() {
+  [ -n "${1:-}" ] || return 0
+  [ -d "$1" ] || return 0
+  case ":$PATH:" in
+    *":$1:"*) : ;;
+    *) PATH="${PATH:+$PATH:}$1" ;;
+  esac
+}
+
+_ravy_default_private_home() {
+  for candidate in \
+    "$HOME/.local/share/ravy-private" \
+    "$HOME/.ravy-private" \
+    "${RAVY_HOME:-}/custom"
+  do
+    [ -n "$candidate" ] || continue
+    [ -d "$candidate" ] || continue
+    printf '%s\n' "$candidate"
+    return 0
+  done
+  return 1
 }
 
 # Resolve RAVY_HOME:
@@ -25,44 +47,76 @@ if [ -z "${RAVY_HOME:-}" ]; then
   RAVY_HOME="$HOME/.ravy"
 fi
 export RAVY_HOME
-RAVY_CUSTOM="$RAVY_HOME/custom"
+
+if [ -z "${RAVY_PRIVATE_HOME:-}" ]; then
+  RAVY_PRIVATE_HOME="$(_ravy_default_private_home 2>/dev/null || true)"
+fi
+if [ -n "${RAVY_PRIVATE_HOME:-}" ] && [ ! -d "$RAVY_PRIVATE_HOME" ]; then
+  unset RAVY_PRIVATE_HOME
+fi
+export RAVY_PRIVATE_HOME
+RAVY_CUSTOM="${RAVY_PRIVATE_HOME:-}"
 export RAVY_CUSTOM
 
+if [ -z "${RAVY_HOST:-}" ]; then
+  RAVY_HOST="$(hostname -s 2>/dev/null || hostname 2>/dev/null || true)"
+fi
+RAVY_HOST="$(printf '%s' "${RAVY_HOST:-unknown}" | tr '[:upper:]' '[:lower:]')"
+export RAVY_HOST
+
+if [ -z "${RAVY_OS:-}" ]; then
+  RAVY_OS="$(uname -s 2>/dev/null || true)"
+fi
+RAVY_OS="$(printf '%s' "${RAVY_OS:-unknown}" | tr '[:upper:]' '[:lower:]')"
+export RAVY_OS
+
 # User scripts
-_ravy_prepend_path "$RAVY_HOME/bin"
 _ravy_prepend_path "$HOME/bin"
 _ravy_prepend_path "$HOME/.local/bin"
 _ravy_prepend_path "$HOME/.bun/bin"
-_ravy_prepend_path "$RAVY_CUSTOM/bin"
+_ravy_append_path "$RAVY_HOME/bin"
+if [ -n "${RAVY_PRIVATE_HOME:-}" ]; then
+  _ravy_append_path "$RAVY_PRIVATE_HOME/bin/common"
+fi
 
 # Homebrew / Linuxbrew detection (sets env + updates PATH/MANPATH/INFOPATH)
 if [ -z "${RAVY_SKIP_BREW:-}" ]; then
-  for brewprefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"; do
-    if [ -x "$brewprefix/bin/brew" ]; then
-      HOMEBREW_PREFIX="$brewprefix"
-      HOMEBREW_CELLAR="$brewprefix/Cellar"
-      HOMEBREW_REPOSITORY="$brewprefix/Homebrew"
-      HOMEBREW_NO_ANALYTICS=1
-      export HOMEBREW_PREFIX HOMEBREW_CELLAR HOMEBREW_REPOSITORY HOMEBREW_NO_ANALYTICS
-
-      if [ -d "$HOMEBREW_PREFIX/share/man" ]; then
-        MANPATH="${MANPATH:-}"
-        export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH:+:$MANPATH}"
+  brewprefix=""
+  if command -v brew >/dev/null 2>&1; then
+    brewprefix="$(brew --prefix 2>/dev/null || true)"
+  fi
+  if [ -z "$brewprefix" ]; then
+    for candidate in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"; do
+      if [ -x "$candidate/bin/brew" ]; then
+        brewprefix="$candidate"
+        break
       fi
-      if [ -d "$HOMEBREW_PREFIX/share/info" ]; then
-        INFOPATH="${INFOPATH:-}"
-        export INFOPATH="$HOMEBREW_PREFIX/share/info${INFOPATH:+:$INFOPATH}"
-      fi
+    done
+  fi
 
-      if [ -d "$brewprefix/opt/ruby/bin" ]; then
-        _ravy_prepend_path "$brewprefix/opt/ruby/bin"
-      fi
+  if [ -n "$brewprefix" ]; then
+    HOMEBREW_PREFIX="$brewprefix"
+    HOMEBREW_CELLAR="$brewprefix/Cellar"
+    HOMEBREW_REPOSITORY="$brewprefix/Homebrew"
+    HOMEBREW_NO_ANALYTICS=1
+    export HOMEBREW_PREFIX HOMEBREW_CELLAR HOMEBREW_REPOSITORY HOMEBREW_NO_ANALYTICS
 
-      _ravy_prepend_path "$HOMEBREW_PREFIX/sbin"
-      _ravy_prepend_path "$HOMEBREW_PREFIX/bin"
-      break
+    if [ -d "$HOMEBREW_PREFIX/share/man" ]; then
+      MANPATH="${MANPATH:-}"
+      export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH:+:$MANPATH}"
     fi
-  done
+    if [ -d "$HOMEBREW_PREFIX/share/info" ]; then
+      INFOPATH="${INFOPATH:-}"
+      export INFOPATH="$HOMEBREW_PREFIX/share/info${INFOPATH:+:$INFOPATH}"
+    fi
+
+    if [ -d "$brewprefix/opt/ruby/bin" ]; then
+      _ravy_prepend_path "$brewprefix/opt/ruby/bin"
+    fi
+
+    _ravy_prepend_path "$HOMEBREW_PREFIX/sbin"
+    _ravy_prepend_path "$HOMEBREW_PREFIX/bin"
+  fi
 fi
 
 export PATH

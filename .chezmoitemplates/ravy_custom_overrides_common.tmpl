@@ -3,55 +3,55 @@
 {{- $shell := .shell -}}
 
 {{- if eq $shell "fish" }}
-# Local overrides (not tracked)
+# Optional private overlay + machine-local secrets.
 if not set -q RAVY_SKIP_CUSTOM
-    test -f "$RAVY_CUSTOM/config.fish"
-    and source "$RAVY_CUSTOM/config.fish"
+    set -l private_home "$RAVY_PRIVATE_HOME"
+    set -l host_name "$RAVY_HOST"
+
+    if test -n "$private_home"; and test -d "$private_home"
+        for file in \
+            "$private_home/shell/config.fish" \
+            "$private_home/profiles/$RAVY_PROFILE/shell/config.fish" \
+            "$private_home/hosts/$host_name/shell/config.fish"
+            test -f "$file"
+            and source "$file"
+        end
+    end
+
+    test -f "$HOME/.config/ravy/local.fish"
+    and source "$HOME/.config/ravy/local.fish"
 end
 {{- else }}
-# Local overrides (not tracked)
+# Optional private overlay + machine-local secrets.
 if [ -z "${RAVY_SKIP_CUSTOM:-}" ]; then
-  _ravy_custom_loaded=0
-
-  if [ -f "$RAVY_CUSTOM/config.sh" ]; then
-    # shellcheck disable=SC1090
-    . "$RAVY_CUSTOM/config.sh"
-    _ravy_custom_loaded=1
-  fi
+  _ravy_private_home="${RAVY_PRIVATE_HOME:-}"
+  _ravy_host="${RAVY_HOST:-unknown}"
 {{- if eq $shell "bash" }}
-  if [ -f "$RAVY_CUSTOM/config.bash" ]; then
-    # shellcheck disable=SC1090
-    . "$RAVY_CUSTOM/config.bash"
-    _ravy_custom_loaded=1
-  fi
+  _ravy_shell_suffix="bash"
 {{- else }}
-  if [ -f "$RAVY_CUSTOM/config.zsh" ]; then
-    # shellcheck disable=SC1090
-    . "$RAVY_CUSTOM/config.zsh"
-    _ravy_custom_loaded=1
-  fi
+  _ravy_shell_suffix="zsh"
 {{- end }}
 
-  if [ "$_ravy_custom_loaded" -eq 0 ]; then
-{{- if eq $shell "bash" }}
-    if [ -f "$HOME/.config/ravy/custom.bash" ]; then
+  if [ -n "$_ravy_private_home" ]; then
+    for _ravy_file in \
+      "$_ravy_private_home/shell/config.sh" \
+      "$_ravy_private_home/shell/config.$_ravy_shell_suffix" \
+      "$_ravy_private_home/profiles/${RAVY_PROFILE:-}/shell/config.sh" \
+      "$_ravy_private_home/profiles/${RAVY_PROFILE:-}/shell/config.$_ravy_shell_suffix" \
+      "$_ravy_private_home/hosts/$_ravy_host/shell/config.sh" \
+      "$_ravy_private_home/hosts/$_ravy_host/shell/config.$_ravy_shell_suffix"
+    do
+      [ -f "$_ravy_file" ] || continue
       # shellcheck disable=SC1090
-      . "$HOME/.config/ravy/custom.bash"
-    elif [ -f "$HOME/.config/ravy/custom.sh" ]; then
-      # shellcheck disable=SC1090
-      . "$HOME/.config/ravy/custom.sh"
-    fi
-{{- else }}
-    if [ -f "$HOME/.config/ravy/custom.zsh" ]; then
-      # shellcheck disable=SC1090
-      . "$HOME/.config/ravy/custom.zsh"
-    elif [ -f "$HOME/.config/ravy/custom.sh" ]; then
-      # shellcheck disable=SC1090
-      . "$HOME/.config/ravy/custom.sh"
-    fi
-{{- end }}
+      . "$_ravy_file"
+    done
   fi
 
-  unset _ravy_custom_loaded
+  if [ -f "$HOME/.config/ravy/local.sh" ]; then
+    # shellcheck disable=SC1090
+    . "$HOME/.config/ravy/local.sh"
+  fi
+
+  unset _ravy_file _ravy_host _ravy_private_home _ravy_shell_suffix
 fi
 {{- end }}
