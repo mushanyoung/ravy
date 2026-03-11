@@ -4,19 +4,31 @@
 _ravy_prepend_path() {
   [ -n "${1:-}" ] || return 0
   [ -d "$1" ] || return 0
-  case ":$PATH:" in
-    *":$1:"*) : ;;
-    *) PATH="$1:$PATH" ;;
-  esac
+  if [ -n "${PATH:-}" ]; then
+    __ravy_temp_path=":$PATH:"
+    __ravy_temp_path="${__ravy_temp_path//:$1:/:}"
+    __ravy_temp_path="${__ravy_temp_path#:}"
+    __ravy_temp_path="${__ravy_temp_path%:}"
+    PATH="$__ravy_temp_path"
+    unset __ravy_temp_path
+  fi
+  PATH="${PATH:+$1:$PATH}"
+  PATH="${PATH:-$1}"
 }
 
 _ravy_append_path() {
   [ -n "${1:-}" ] || return 0
   [ -d "$1" ] || return 0
-  case ":$PATH:" in
-    *":$1:"*) : ;;
-    *) PATH="${PATH:+$PATH:}$1" ;;
-  esac
+  if [ -n "${PATH:-}" ]; then
+    __ravy_temp_path=":$PATH:"
+    __ravy_temp_path="${__ravy_temp_path//:$1:/:}"
+    __ravy_temp_path="${__ravy_temp_path#:}"
+    __ravy_temp_path="${__ravy_temp_path%:}"
+    PATH="$__ravy_temp_path"
+    unset __ravy_temp_path
+  fi
+  PATH="${PATH:+$PATH:}$1"
+  PATH="${PATH:-$1}"
 }
 
 _ravy_default_private_home() {
@@ -74,7 +86,7 @@ export RAVY_OS
 _ravy_prepend_path "$HOME/bin"
 _ravy_prepend_path "$HOME/.local/bin"
 _ravy_prepend_path "$HOME/.bun/bin"
-_ravy_append_path "$RAVY_HOME/bin"
+_ravy_prepend_path "$RAVY_HOME/bin"
 if [ -n "${RAVY_PRIVATE_HOME:-}" ]; then
   _ravy_append_path "$RAVY_PRIVATE_HOME/bin/common"
 fi

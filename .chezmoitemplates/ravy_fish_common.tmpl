@@ -46,8 +46,10 @@ end
 function prepend_to_path
     for arg in $argv
         if test -d "$arg"
-            contains -- "$arg" $PATH
-            or set -gx PATH "$arg" $PATH
+            if set -l idx (contains -i -- "$arg" $PATH)
+                set -e PATH[$idx]
+            end
+            set -gx PATH "$arg" $PATH
         end
     end
 end
@@ -55,8 +57,10 @@ end
 function append_to_path
     for arg in $argv
         if test -d "$arg"
-            contains -- "$arg" $PATH
-            or set -gx PATH $PATH "$arg"
+            if set -l idx (contains -i -- "$arg" $PATH)
+                set -e PATH[$idx]
+            end
+            set -gx PATH $PATH "$arg"
         end
     end
 end
@@ -65,7 +69,7 @@ end
 prepend_to_path "$HOME/bin"
 prepend_to_path "$HOME/.local/bin"
 prepend_to_path "$HOME/.bun/bin"
-append_to_path "$RAVY_HOME/bin"
+prepend_to_path "$RAVY_HOME/bin"
 if set -q RAVY_PRIVATE_HOME
     append_to_path "$RAVY_PRIVATE_HOME/bin/common"
 end
