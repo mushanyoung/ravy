@@ -8,7 +8,7 @@ BASH ?= bash
 FISH ?= fish
 CHEZMOI_ARGS ?=
 
-.PHONY: help install apply chezmoi-apply test test-fish test-sh test-install
+.PHONY: help install apply chezmoi-apply test test-fish test-sh test-install test-nvim
 
 help:
 	@echo 'Targets:'
@@ -19,6 +19,7 @@ help:
 	@echo '  make test-fish      Run fish config test'
 	@echo '  make test-sh        Run bash/zsh config test'
 	@echo '  make test-install   Run installer regression test'
+	@echo '  make test-nvim      Run Neovim config rendering test'
 
 install:
 	./install.sh
@@ -28,7 +29,7 @@ apply:
 
 chezmoi-apply: apply
 
-test: test-fish test-sh test-install
+test: test-fish test-sh test-install test-nvim
 
 test-fish:
 	$(FISH) tests/config.fish.test.fish
@@ -38,3 +39,6 @@ test-sh:
 
 test-install:
 	$(BASH) tests/install.test.sh
+
+test-nvim:
+	$(BASH) tests/nvim.test.sh

@@ -1,24 +1,18 @@
-" ChezMoi shim: keep the real config in the Ravy repo.
+" Ravy Neovim entrypoint.
 "
-" This avoids duplicating the full vimrc into ChezMoi source state while still
-" installing a standard Neovim entry point.
+" Keep the main config under ~/.config/nvim so runtime behavior does not
+" depend on the chezmoi source checkout still existing at a fixed path.
 
-let s:ravy_home = $RAVY_HOME
+let s:config_dir = exists('*stdpath') ? stdpath('config') : fnamemodify(expand('<sfile>:p'), ':h')
+let s:ravy_vimrc = s:config_dir . '/ravy.vim'
 
-if empty(s:ravy_home)
-  if executable('chezmoi')
-    let s:ravy_home = system('chezmoi source-path')
-    let s:ravy_home = substitute(s:ravy_home, '\n\+$', '', '')
-  elseif isdirectory(expand('~/.local/share/chezmoi'))
-    let s:ravy_home = expand('~/.local/share/chezmoi')
-  else
-    let s:ravy_home = expand('~/.ravy')
-  endif
+if filereadable(s:ravy_vimrc)
+  let $MYVIMRC = s:ravy_vimrc
+  execute 'source ' . fnameescape(s:ravy_vimrc)
+else
+  let $MYVIMRC = expand('<sfile>:p')
+  echohl WarningMsg
+  echom 'Ravy: missing main config at ' . s:ravy_vimrc
+  echohl None
 endif
-
-let s:vimrc = s:ravy_home . '/vimrc'
-if filereadable(s:vimrc)
-  execute 'source ' . fnameescape(s:vimrc)
-endif
-
 
