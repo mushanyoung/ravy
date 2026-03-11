@@ -145,6 +145,18 @@ exit 0
 
   printf '%s\n' '[user]' '    name = Test User' > "$tmp_home/.config/ravy/private.gitconfig"
   printf '%s\n' 'Host private' '    HostName private.example' > "$tmp_home/.config/ravy/ssh.config"
+
+  # Create a fake private repo for testing
+  local fake_private="$tmp_home/private"
+  mkdir -p "$fake_private/.git" "$fake_private/bootstrap"
+  touch "$fake_private/bootstrap/key.txt.age"
+  
+  write_stub "$fake_private/install.sh" "#!/usr/bin/env bash
+rm -f \"\$HOME/.ssh/config\"
+cp \"\$HOME/legacy-ssh.config\" \"\$HOME/.ssh/config\"
+echo \"Include \$HOME/.config/ravy/ssh.config\" >> \"\$HOME/.ssh/config\"
+exit 0
+"
 }
 
 run_install() {
@@ -156,7 +168,7 @@ run_install() {
     HOME="$tmp_home" \
     PATH="$tmp_home/bin:/usr/bin:/bin" \
     RAVY_BOOTSTRAP_OPTIONAL=0 \
-    RAVY_PRIVATE_HOME="$repo_root/custom" \
+    RAVY_PRIVATE_HOME="$tmp_home/private" \
     "$bash_bin" "$repo_root/install.sh" 2>&1)
   status_code=$?
   set -e
@@ -184,8 +196,8 @@ assert_file_contains "$tmp_home/.config/chezmoi/ravy-private.toml" '# default co
 assert_file_contains "$tmp_home/.ssh/config" 'Host legacy'
 assert_file_contains "$tmp_home/.ssh/config" "Include $tmp_home/.config/ravy/ssh.config"
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$repo_root config= state= config_path="
-assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$repo_root/custom config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml"
-assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$repo_root/custom config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb"
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$tmp_home/private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml"
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$tmp_home/private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb"
 
 if [ "$failures" -eq 0 ]; then
   echo 'All install tests passed'

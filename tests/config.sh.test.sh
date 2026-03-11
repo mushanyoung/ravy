@@ -43,7 +43,7 @@ assert_file_contains() {
 }
 
 strip_bash_noise() {
-  printf '%s' "$1" | awk '!/no job control in this shell$/'
+  printf '%s' "$1" | awk '!/no job control in this shell$/ && !/cannot set terminal process group/ && !/Inappropriate ioctl for device/'
 }
 
 write_stub() {
@@ -242,6 +242,7 @@ run_bash_login() {
   output=$(env -i \
     HOME="$tmp_home" \
     PATH="$stub_bin:/usr/bin:/bin" \
+    RAVY_HOME="$repo_root" \
     RAVY_HOST="test-host" \
     RAVY_SKIP_BREW=1 \
     RAVY_PRIVATE_HOME="$private_home" \
@@ -304,9 +305,9 @@ check_public_surface() {
     type chez >/dev/null 2>&1 &&
     type ravyc >/dev/null 2>&1 &&
     type ravys >/dev/null 2>&1 &&
-    ! type bi >/dev/null 2>&1 &&
-    ! type au >/dev/null 2>&1 &&
-    ! type pupu >/dev/null 2>&1 &&
+    ( if command -v brew >/dev/null 2>&1; then type bi >/dev/null 2>&1; else ! type bi >/dev/null 2>&1; fi ) &&
+    ( if command -v apt >/dev/null 2>&1; then type au >/dev/null 2>&1; else ! type au >/dev/null 2>&1; fi ) &&
+    ( if command -v pacman >/dev/null 2>&1; then type pupu >/dev/null 2>&1; else ! type pupu >/dev/null 2>&1; fi ) &&
     command -v ep >/dev/null 2>&1 &&
     command -v jl >/dev/null 2>&1 &&
     command -v lines >/dev/null 2>&1 &&
@@ -394,6 +395,13 @@ bash_home=$(setup_home)
 trap 'rm -rf "$bash_home" "$zsh_home"' EXIT
 render_config "$bash_home" "$bash_home/.bashrc"
 render_config "$bash_home" "$bash_home/.bash_profile"
+
+# Prepend stub_bin to PATH so that system chezmoi is not invoked on macOS login
+tmp_profile=$(mktemp)
+echo "export PATH=\"$bash_home/bin:\$PATH\"" > "$tmp_profile"
+cat "$bash_home/.bash_profile" >> "$tmp_profile"
+mv "$tmp_profile" "$bash_home/.bash_profile"
+
 setup_base_stubs "$bash_home/bin"
 check_clean_start bash "$bash_home" "$bash_home/bin" "$bash_home/.missing-private"
 setup_tool_stubs "$bash_home/bin"
@@ -401,7 +409,7 @@ check_public_surface bash "$bash_home" "$bash_home/bin"
 check_private_surface bash "$bash_home" "$bash_home/bin" "$(setup_private_overlay "$bash_home")"
 check_rendered_gitconfig "$bash_home"
 
-login_result=$(run_bash_login "$bash_home" "$bash_home/bin" "$bash_home/.missing-private" 'type ravy >/dev/null 2>&1 && command -v ep >/dev/null 2>&1')
+login_result=$(run_bash_login "$bash_home" "$bash_home/bin" "$bash_home/.missing-private" 'if ! type ravy >/dev/null 2>&1; then echo "ravy missing"; exit 1; fi; if ! command -v ep >/dev/null 2>&1; then echo "ep missing, PATH=$PATH"; exit 1; fi')
 login_status=${login_result%%$'\n'*}
 login_output=${login_result#*$'\n__RAVY_OUTPUT__\n'}
 login_output=${login_output%$'\n__RAVY_END__'}

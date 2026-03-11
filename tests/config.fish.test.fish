@@ -214,9 +214,21 @@ assert_true "functions -q chezp" "chezp helper defined"
 assert_true "functions -q ravysource" "ravysource helper defined"
 assert_true "functions -q l" "generic alias 'l' defined"
 assert_true "functions -q ravyc" "compat alias 'ravyc' defined"
-assert_true "not functions -q bi" "brew alias is gated behind command availability"
-assert_true "not functions -q au" "apt alias is gated behind command availability"
-assert_true "not functions -q pupu" "pacman alias is gated behind command availability"
+if command -q brew
+    assert_true "functions -q bi" "brew alias is defined when command exists"
+else
+    assert_true "not functions -q bi" "brew alias is gated behind command availability"
+end
+if command -q apt
+    assert_true "functions -q au" "apt alias is defined when command exists"
+else
+    assert_true "not functions -q au" "apt alias is gated behind command availability"
+end
+if command -q pacman
+    assert_true "functions -q pupu" "pacman alias is defined when command exists"
+else
+    assert_true "not functions -q pupu" "pacman alias is gated behind command availability"
+end
 assert_true "command -v ep >/dev/null" "ep helper exists"
 assert_true "command -v jl >/dev/null" "jl helper exists"
 assert_true "command -v lines >/dev/null" "lines helper exists"
