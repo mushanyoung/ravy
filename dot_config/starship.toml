@@ -1,4 +1,5 @@
 # Disable the default blank line at the start of the prompt
+scan_timeout=30_000
 add_newline = false
 
 format = """
