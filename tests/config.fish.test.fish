@@ -5,6 +5,7 @@ set -l repo_root (realpath (dirname $script_path)/..)
 
 if not set -q RAVY_TEST_CHILD
     set -l tmp_home (mktemp -d "$repo_root/.tmp_fish_home.XXXXXX")
+    set -g __ravy_test_tmp_home "$tmp_home"
     set -g stub_bin "$tmp_home/bin"
     set -l real_chezmoi (command -s chezmoi)
 
@@ -16,10 +17,39 @@ if not set -q RAVY_TEST_CHILD
         "$tmp_home/.local/share"
     printf "%s\n" "seed = 1" > "$tmp_home/.config/chezmoi/chezmoi.toml"
 
-    function __write_stub --argument-names name body
-        set -l target "$stub_bin/$name"
+    function __write_exec --argument-names target body
+        mkdir -p (dirname "$target")
         printf "%s" "$body" >$target
         chmod +x $target
+    end
+
+    function __write_stub --argument-names name body
+        __write_exec "$stub_bin/$name" "$body"
+    end
+
+    function __install_mise_stub --argument-names layout
+        set -l target
+        switch "$layout"
+            case self
+                set target "$__ravy_test_tmp_home/opt/mise/bin/mise"
+            case system
+                set target "$__ravy_test_tmp_home/usr/bin/mise"
+            case '*'
+                echo "unknown mise stub layout: $layout" >&2
+                exit 1
+        end
+
+        __write_exec "$target" "#!/usr/bin/env sh
+if [ \"\$1\" = \"activate\" ]; then
+  cat <<'EOF'
+set -gx __RAVY_MISE_INIT 1
+EOF
+  exit 0
+fi
+printf \"%s\n\" \"\$*\" >> \"\$HOME/mise.log\"
+exit 0
+"
+        ln -sfn "$target" "$stub_bin/mise"
     end
 
     __write_stub starship "#!/usr/bin/env sh
@@ -55,14 +85,22 @@ fi
 exit 0
 "
 
-    __write_stub mise "#!/usr/bin/env sh
-if [ \"\$1\" = \"activate\" ]; then
-  cat <<'EOF'
-set -gx __RAVY_MISE_INIT 1
-EOF
+    __write_stub dpkg-query "#!/usr/bin/env sh
+if [ \"\$1\" = \"-S\" ] && [ \"\${RAVY_MISE_OWNER:-}\" = apt ] && [ \"\$2\" = \"\$HOME/usr/bin/mise\" ]; then
+  printf 'mise: %s\n' \"\$2\"
   exit 0
 fi
+exit 1
+"
+
+    __write_stub apt "#!/usr/bin/env sh
+printf \"%s\n\" \"\$*\" >> \"\$HOME/apt.log\"
 exit 0
+"
+
+    __write_stub sudo "#!/usr/bin/env sh
+printf \"%s\n\" \"\$*\" >> \"\$HOME/sudo.log\"
+exec \"\$@\"
 "
 
     __write_stub chezmoi "#!/usr/bin/env sh
@@ -124,6 +162,8 @@ exit 0
     __write_stub eza "#!/usr/bin/env sh
 exit 0
 "
+
+    __install_mise_stub self
 
     set -l fish_cmd (command -s fish)
 
@@ -214,6 +254,13 @@ assert_true "functions -q chezp" "chezp helper defined"
 assert_true "functions -q ravysource" "ravysource helper defined"
 assert_true "functions -q l" "generic alias 'l' defined"
 assert_true "functions -q ravyc" "compat alias 'ravyc' defined"
+assert_true "functions -q rgh" "rgh alias defined"
+assert_true "functions -q mu" "mu alias defined"
+assert_true "command -v mumu >/dev/null" "mumu command defined"
+functions mu | string match -q '*mise upgrade*'
+or fail "mu expands to mise upgrade"
+functions rgh | string match -q '*rg -S --hidden*'
+or fail "rgh expands to hidden rg search"
 if command -q brew
     assert_true "functions -q bi" "brew alias is defined when command exists"
 else
@@ -233,6 +280,58 @@ assert_true "command -v ep >/dev/null" "ep helper exists"
 assert_true "command -v jl >/dev/null" "jl helper exists"
 assert_true "command -v lines >/dev/null" "lines helper exists"
 assert_true "command -v downcase-exts >/dev/null" "downcase-exts helper exists"
+
+rm -f "$HOME/mise.log"
+mu
+grep -F "upgrade" "$HOME/mise.log" >/dev/null
+or fail "mu runs mise upgrade"
+
+rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log"
+rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib"
+mumu
+grep -F "self-update" "$HOME/mise.log" >/dev/null
+or fail "mumu uses mise self-update when not apt-managed"
+grep -F "upgrade" "$HOME/mise.log" >/dev/null
+or fail "mumu runs mise upgrade when not apt-managed"
+test ! -f "$HOME/apt.log"
+or fail "mumu should not call apt when not apt-managed"
+test ! -f "$HOME/sudo.log"
+or fail "mumu should not call sudo when not apt-managed"
+
+rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log"
+rm -rf "$HOME/usr/lib"
+mkdir -p "$HOME/usr/bin"
+printf "%s" "#!/usr/bin/env sh
+if [ \"\$1\" = \"activate\" ]; then
+  cat <<'EOF'
+set -gx __RAVY_MISE_INIT 1
+EOF
+  exit 0
+fi
+printf \"%s\n\" \"\$*\" >> \"\$HOME/mise.log\"
+exit 0
+" > "$HOME/usr/bin/mise"
+chmod +x "$HOME/usr/bin/mise"
+ln -sfn "$HOME/usr/bin/mise" "$HOME/bin/mise"
+mkdir -p "$HOME/usr/lib"
+touch "$HOME/usr/lib/.disable-self-update"
+set -gx RAVY_MISE_OWNER apt
+mumu
+set -e RAVY_MISE_OWNER
+grep -F "apt update" "$HOME/sudo.log" >/dev/null
+or fail "mumu uses sudo apt update when apt-managed"
+grep -F "apt install --only-upgrade mise" "$HOME/sudo.log" >/dev/null
+or fail "mumu uses sudo apt install --only-upgrade mise when apt-managed"
+grep -F "update" "$HOME/apt.log" >/dev/null
+or fail "apt stub records update when apt-managed"
+grep -F "install --only-upgrade mise" "$HOME/apt.log" >/dev/null
+or fail "apt stub records install command when apt-managed"
+grep -F "upgrade" "$HOME/mise.log" >/dev/null
+or fail "mumu runs mise upgrade when apt-managed"
+if grep -F "self-update" "$HOME/mise.log" >/dev/null
+    fail "mumu should not call mise self-update when apt-managed"
+end
+
 rm -f "$HOME/chezmoi.log"
 assert_equal (chez source-path) $expected_ravy_home "chez resolves to public chezmoi source"
 chez init >/dev/null 2>/dev/null

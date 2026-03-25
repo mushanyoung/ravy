@@ -21,11 +21,14 @@
 
   (dict "name" "ag" "cmd" "rg -S")
   (dict "name" "rg" "cmd" "rg -S")
+  (dict "name" "rgh" "cmd" "rg -S --hidden")
 
   (dict "name" "ts" "cmd" "tailscale")
 
   (dict "name" "ci" "cmd" "cursor-agent --model grok-code-fast-1")
   (dict "name" "cido" "cmd" "ci -p -f --output-format text --")
+
+  (dict "name" "mu" "cmd" "mise upgrade")
 
   (dict "name" "pa" "cmd" "ps-color")
   (dict "name" "pc" "cmd" "env HIGH_CPU_MEM_ONLY=1 ps-color")
@@ -49,11 +52,6 @@ end
 if command -q apt
 alias au "sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
 alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove"
-end
-
-if command -q mise
-alias mu "mise upgrade"
-alias mumu "mise self-update && mise upgrade"
 end
 
 if command -q pacman
@@ -94,11 +92,6 @@ if command -v apt >/dev/null 2>&1; then
   alias au='sudo apt update && sudo apt full-upgrade && sudo apt autoclean'
   alias auau='sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove'
 fi
-
-if command -v mise >/dev/null 2>&1; then
-  alias mu='mise upgrade'
-  alias mumu='mise self-update && mise upgrade'
-end
 
 if command -v pacman >/dev/null 2>&1; then
   alias pupu='sudo pacman -Syuu --noconfirm'

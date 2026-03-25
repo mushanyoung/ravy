@@ -1,0 +1,166 @@
+#!/usr/bin/env sh
+set -eu
+
+resolve_path() {
+  path=$1
+  if command -v realpath >/dev/null 2>&1; then
+    realpath "$path" 2>/dev/null && return 0
+  fi
+  printf '%s\n' "$path"
+}
+
+install_base() {
+  path="$(command -v mise 2>/dev/null || true)"
+  [ -n "$path" ] || return 1
+  path="$(resolve_path "$path")"
+  dirname "$(dirname "$path")"
+}
+
+find_tree() {
+  base=$1
+  shift
+  for rel in "$@"; do
+    if [ -e "$base/$rel" ]; then
+      printf '%s\n' "$base/$rel"
+      return 0
+    fi
+  done
+  return 1
+}
+
+instructions_path() {
+  if [ -n "${MISE_SELF_UPDATE_INSTRUCTIONS:-}" ] && [ -e "$MISE_SELF_UPDATE_INSTRUCTIONS" ]; then
+    printf '%s\n' "$MISE_SELF_UPDATE_INSTRUCTIONS"
+    return 0
+  fi
+
+  base="$(install_base 2>/dev/null || true)"
+  [ -n "$base" ] || return 1
+
+  find_tree "$base" \
+    "lib/mise-self-update-instructions.toml" \
+    "lib/mise/mise-self-update-instructions.toml" \
+    "lib64/mise/mise-self-update-instructions.toml"
+}
+
+self_update_disabled_path() {
+  base="$(install_base 2>/dev/null || true)"
+  [ -n "$base" ] || return 1
+
+  find_tree "$base" \
+    "lib/.disable-self-update" \
+    "lib/mise/.disable-self-update" \
+    "lib64/mise/.disable-self-update"
+}
+
+self_update_available() {
+  case "${MISE_SELF_UPDATE_AVAILABLE:-}" in
+    1|true|yes)
+      return 0
+      ;;
+    0|false|no)
+      return 1
+      ;;
+  esac
+
+  self_update_disabled_path >/dev/null 2>&1 && return 1
+  instructions_path >/dev/null 2>&1 && return 1
+  return 0
+}
+
+package_manager() {
+  path="$(command -v mise 2>/dev/null || true)"
+  [ -n "$path" ] || return 1
+  path="$(resolve_path "$path")"
+
+  if command -v brew >/dev/null 2>&1; then
+    brew_cellar="$(brew --cellar mise 2>/dev/null || true)"
+    case "$path" in
+      "$brew_cellar"/*)
+        [ -n "$brew_cellar" ] && printf '%s\n' brew && return 0
+        ;;
+    esac
+
+    brew_prefix="$(brew --prefix mise 2>/dev/null || true)"
+    if [ -n "$brew_prefix" ] && [ "$path" = "$brew_prefix/bin/mise" ]; then
+      printf '%s\n' brew
+      return 0
+    fi
+  fi
+
+  if command -v dpkg-query >/dev/null 2>&1 && command -v apt >/dev/null 2>&1; then
+    dpkg-query -S "$path" >/dev/null 2>&1 && printf '%s\n' apt && return 0
+  fi
+
+  if command -v rpm >/dev/null 2>&1 && command -v dnf >/dev/null 2>&1; then
+    rpm -qf "$path" >/dev/null 2>&1 && printf '%s\n' dnf && return 0
+  fi
+
+  if command -v pacman >/dev/null 2>&1; then
+    pacman -Qo "$path" >/dev/null 2>&1 && printf '%s\n' pacman && return 0
+  fi
+
+  if command -v apk >/dev/null 2>&1; then
+    apk info --who-owns "$path" >/dev/null 2>&1 && printf '%s\n' apk && return 0
+  fi
+
+  return 1
+}
+
+instructions_text() {
+  path="$(instructions_path 2>/dev/null || true)"
+  [ -n "$path" ] || return 1
+
+  text="$(
+    awk '
+      /^[[:space:]]*[[:alnum:]_-]+[[:space:]]*=/ {
+        line = $0
+        sub(/^[^=]*=[[:space:]]*"/, "", line)
+        sub(/"[[:space:]]*$/, "", line)
+        print line
+        exit
+      }
+    ' "$path" 2>/dev/null
+  )"
+  [ -n "$text" ] || return 1
+
+  text="$(printf '%s' "$text" | sed 's/\\"/"/g')"
+  printf '%b' "$text"
+}
+
+if ! command -v mise >/dev/null 2>&1; then
+  echo "mise is not installed" >&2
+  exit 1
+fi
+
+if self_update_available; then
+  exec sh -c 'mise self-update && mise upgrade'
+fi
+
+manager="$(package_manager 2>/dev/null || true)"
+case "$manager" in
+  brew)
+    exec sh -c 'brew upgrade mise && mise upgrade'
+    ;;
+  apt)
+    exec sh -c 'sudo apt update && sudo apt install --only-upgrade mise && mise upgrade'
+    ;;
+  dnf)
+    exec sh -c 'sudo dnf upgrade mise && mise upgrade'
+    ;;
+  pacman)
+    exec sh -c 'sudo pacman -Syu mise && mise upgrade'
+    ;;
+  apk)
+    exec sh -c 'sudo apk update && sudo apk upgrade mise && mise upgrade'
+    ;;
+  *)
+    text="$(instructions_text 2>/dev/null || true)"
+    if [ -n "$text" ]; then
+      printf '%s\n' "$text" >&2
+    else
+      echo "mise is installed via a package manager. Update it with your system package manager." >&2
+    fi
+    exit 1
+    ;;
+esac
