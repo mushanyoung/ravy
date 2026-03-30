@@ -176,8 +176,10 @@ write-file $"($tmp_home)/example.txt" "example\n"
 
 let rendered_env = $"($tmp_home)/.config/nushell/env.nu"
 let rendered_config = $"($tmp_home)/.config/nushell/config.nu"
+let rendered_login = $"($tmp_home)/.config/nushell/login.nu"
 render-config $tmp_home $rendered_env
 render-config $tmp_home $rendered_config
+render-config $tmp_home $rendered_login
 
 mkdir $"($tmp_home)/work/one/two"
 
@@ -249,6 +251,43 @@ if $probe.exit_code == 0 and not (($probe.stdout | default "" | str trim) | is-e
     assert-true (($mise_log | any {|line| $line | str contains "upgrade" })) "mu should call mise upgrade"
 }
 
+let login_probe = (
+    do {
+        with-env {
+            HOME: $tmp_home
+            XDG_CONFIG_HOME: $"($tmp_home)/.config"
+            XDG_DATA_HOME: $"($tmp_home)/.local/share"
+            PATH: [$"($tmp_home)/bin" "/usr/bin" "/bin"]
+            RAVY_HOST: "test-host"
+            RAVY_PRIVATE_HOME: $"($tmp_home)/.missing-private"
+            RAVY_SKIP_BREW: "1"
+        } {
+            run-external $nu_bin "-l" "-c" $'
+                {
+                    login: ($env.__RAVY_LOGIN_INIT? | default null)
+                    config_path: $nu.config-path
+                    env_path: $nu.env-path
+                } | to json -r
+            '
+        }
+    }
+    | complete
+)
+
+assert-equal $login_probe.exit_code 0 "nushell login probe command failed"
+if $login_probe.exit_code != 0 {
+    if not (($login_probe.stderr | default "" | str trim) | is-empty) {
+        fail $"nushell login probe stderr: ($login_probe.stderr | str trim)"
+    }
+}
+
+if $login_probe.exit_code == 0 and not (($login_probe.stdout | default "" | str trim) | is-empty) {
+    let data = ($login_probe.stdout | from json)
+    assert-equal $data.login "1" "login.nu should set the login marker"
+    assert-equal $data.config_path $rendered_config "login shell should use the canonical config path"
+    assert-equal $data.env_path $rendered_env "login shell should use the canonical env path"
+}
+
 let failures = ($env.__RAVY_NU_FAILURES? | default [])
 if ($failures | is-empty) {
     print "All config.nu tests passed"
@@ -258,4 +297,4 @@ if ($failures | is-empty) {
 for message in $failures {
     print -e $"FAIL ($message)"
 }
-exit ($failures | length)
+exit 1

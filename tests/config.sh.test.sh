@@ -3,6 +3,8 @@ set -euo pipefail
 
 script_path=$(realpath "${BASH_SOURCE[0]}")
 repo_root=$(realpath "$(dirname "$script_path")/..")
+# shellcheck source=tests/prefix_guard_common.sh
+source "$repo_root/tests/prefix_guard_common.sh"
 real_chezmoi=$(command -v chezmoi)
 bash_bin=$(command -v bash)
 zsh_bin=$(command -v zsh)
@@ -58,8 +60,18 @@ strip_bash_noise() {
 write_stub() {
   local target=$1
   local body=$2
+  local root
+
+  root=$(guard_guess_repo_tmp_root "$repo_root" "$target") || {
+    fail "unsafe stub target: $target"
+    return 1
+  }
+  guard_assert_path "$root" "$target" create || {
+    fail "unsafe stub target: $target"
+    return 1
+  }
   printf '%s' "$body" > "$target"
-  chmod +x "$target"
+  guard_exec "$root" chmod +x "$target"
 }
 
 mise_stub_body() {
@@ -79,7 +91,9 @@ EOF
 setup_home() {
   local tmp_home
   tmp_home=$(mktemp -d "$repo_root/.tmp_shell_home.XXXXXX")
-  mkdir -p "$tmp_home/bin" "$tmp_home/.config/fish" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi" "$tmp_home/.local/bin"
+  guard_assert_repo_tmp_root "$repo_root" "$tmp_home" || return 1
+  guard_exec "$tmp_home" mkdir -p "$tmp_home/bin" "$tmp_home/.config/fish" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi" "$tmp_home/.local/bin"
+  guard_assert_path "$tmp_home" "$tmp_home/.config/chezmoi/chezmoi.toml" create || return 1
   printf '%s\n' 'seed = 1' > "$tmp_home/.config/chezmoi/chezmoi.toml"
   printf '%s\n' "$tmp_home"
 }
@@ -87,12 +101,17 @@ setup_home() {
 render_config() {
   local tmp_home=$1
   local target=$2
-  mkdir -p "$(dirname "$target")"
+  guard_assert_path "$tmp_home" "$target" create || return 1
+  guard_exec "$tmp_home" mkdir -p "$(dirname "$target")"
   "$real_chezmoi" -S "$repo_root" -D "$tmp_home" cat "$target" > "$target"
 }
 
 setup_base_stubs() {
   local stub_bin=$1
+  local root
+
+  root=$(dirname "$stub_bin")
+  guard_install_wrappers "$root" "$stub_bin"
 write_stub "$stub_bin/chezmoi" "#!/usr/bin/env sh
 source_path=\"$repo_root\"
 config_path=''
@@ -281,16 +300,16 @@ install_mise_stub() {
       ;;
   esac
 
-  mkdir -p "$(dirname "$target")" "$tmp_home/bin"
+  guard_exec "$tmp_home" mkdir -p "$(dirname "$target")" "$tmp_home/bin"
   write_stub "$target" "$(mise_stub_body)"
-  ln -sfn "$target" "$tmp_home/bin/mise"
+  guard_exec "$tmp_home" ln -sfn "$target" "$tmp_home/bin/mise"
 }
 
 setup_private_overlay() {
   local tmp_home=$1
   local private_home="$tmp_home/.local/share/ravy-private"
 
-  mkdir -p \
+  guard_exec "$tmp_home" mkdir -p \
     "$private_home/shell" \
     "$private_home/bin/common" \
     "$tmp_home/.config/ravy"
@@ -744,15 +763,23 @@ check_rendered_gitconfig() {
 }
 
 bash_home=$(setup_home)
-trap 'rm -rf "$bash_home" "$zsh_home"' EXIT
+trap '
+  if [ -n "${bash_home:-}" ] && [ -d "$bash_home" ]; then
+    guard_exec "$bash_home" rm -rf "$bash_home"
+  fi
+  if [ -n "${zsh_home:-}" ] && [ -d "$zsh_home" ]; then
+    guard_exec "$zsh_home" rm -rf "$zsh_home"
+  fi
+' EXIT
 render_config "$bash_home" "$bash_home/.bashrc"
 render_config "$bash_home" "$bash_home/.bash_profile"
 
 # Prepend stub_bin to PATH so that system chezmoi is not invoked on macOS login
-tmp_profile=$(mktemp)
+tmp_profile=$(mktemp "$bash_home/.tmp_bash_profile.XXXXXX")
+guard_assert_path "$bash_home" "$tmp_profile" create
 echo "export PATH=\"$bash_home/bin:\$PATH\"" > "$tmp_profile"
 cat "$bash_home/.bash_profile" >> "$tmp_profile"
-mv "$tmp_profile" "$bash_home/.bash_profile"
+guard_exec "$bash_home" mv "$tmp_profile" "$bash_home/.bash_profile"
 
 setup_base_stubs "$bash_home/bin"
 check_clean_start bash "$bash_home" "$bash_home/bin" "$bash_home/.missing-private"

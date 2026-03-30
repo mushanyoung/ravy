@@ -1013,7 +1013,7 @@ ensure-keybinding {
 ensure-keybinding {
     name: ravy_history_token_backward
     modifier: alt
-    keycode: char_.
+    keycode: char_u002e
     mode: [emacs vi_normal vi_insert]
     event: { send: ExecuteHostCommand cmd: "ravy-history-token backward" }
 }
@@ -1021,7 +1021,7 @@ ensure-keybinding {
 ensure-keybinding {
     name: ravy_history_token_forward
     modifier: alt
-    keycode: char_,
+    keycode: char_u002c
     mode: [emacs vi_normal vi_insert]
     event: { send: ExecuteHostCommand cmd: "ravy-history-token forward" }
 }
@@ -1029,7 +1029,7 @@ ensure-keybinding {
 ensure-keybinding {
     name: ravy_prepend_last_history_line
     modifier: alt
-    keycode: char_/
+    keycode: char_u002f
     mode: [emacs vi_normal vi_insert]
     event: { send: ExecuteHostCommand cmd: "ravy-prepend-last-history-line" }
 }

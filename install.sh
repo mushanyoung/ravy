@@ -110,6 +110,16 @@ resolve_private_install_script() {
   return 1
 }
 
+run_nushell_harness() {
+  local harness_script
+
+  harness_script="$SCRIPT_DIR/scripts/nushell-harness.sh"
+  [ -f "$harness_script" ] || return 0
+
+  info "Harnessing Nushell native config paths"
+  __el bash "$harness_script"
+}
+
 ensure_age() {
   if command -v age >/dev/null 2>&1; then
     success "age is installed."
@@ -223,6 +233,8 @@ if private_install_script="$(resolve_private_install_script)"; then
   __el "$private_install_script"
 fi
 
+run_nushell_harness
+
 if [ "$RAVY_BOOTSTRAP_OPTIONAL" = "1" ]; then
   info "Optional bootstrap: tmux base config + vim-plug"
   __el curl -sfLo "$HOME/.tmux.conf" https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
@@ -240,7 +252,9 @@ info "Notes"
 echo "  - bash: sources ~/.bashrc (installed by chezmoi)"
 echo "  - zsh:  sources ~/.zshrc (installed by chezmoi)"
 echo "  - fish: uses ~/.config/fish/config.fish (installed by chezmoi)"
-echo "  - nushell files: ~/.config/nushell/env.nu and ~/.config/nushell/config.nu"
+echo "  - nushell canonical files: ~/.config/nushell/env.nu, config.nu, and login.nu"
+echo "  - macOS Nushell shims: ~/Library/Application Support/nushell/{env,config,login}.nu"
+echo "  - macOS Nushell history: ~/Library/Application Support/nushell/history.txt -> ~/.config/nushell/history.txt"
 echo "  - managed shell secrets: ~/.config/ravy/secrets.tsv with sh/fish wrappers"
 echo "  - private age identity: ~/.config/chezmoi/key.txt"
 echo "  - private chezmoi config/state: ~/.config/chezmoi/ravy-private.toml and ~/.config/chezmoi/ravy-private-state.boltdb"

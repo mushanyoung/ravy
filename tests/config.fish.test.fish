@@ -1,30 +1,70 @@
 #!/usr/bin/env fish
 
-set -l script_path (realpath (status --current-filename))
-set -l repo_root (realpath (dirname $script_path)/..)
+set -g script_path (realpath (status --current-filename))
+set -g repo_root (realpath (dirname $script_path)/..)
+set -g guard_cmd "$repo_root/tests/prefix_guard_command.sh"
+
+function __assert_guard_root --argument-names root
+    set -l prefix "$repo_root/.tmp_"
+    if test (string sub -s 1 -l (string length -- "$prefix") -- "$root") = "$prefix"
+        return 0
+    end
+
+    echo "prefix guard blocked unexpected tmp root: $root" >&2
+    exit 1
+end
+
+function __assert_guard_path --argument-names root path
+    if test "$path" = "$root"
+        return 0
+    end
+
+    set -l prefix "$root/"
+    if test (string sub -s 1 -l (string length -- "$prefix") -- "$path") = "$prefix"
+        return 0
+    end
+
+    echo "prefix guard blocked path outside root: $path" >&2
+    exit 1
+end
+
+function __guard_exec --argument-names root
+    "$guard_cmd" "$root" $argv[2..-1]
+end
 
 if not set -q RAVY_TEST_CHILD
     set -l tmp_home (mktemp -d "$repo_root/.tmp_fish_home.XXXXXX")
+    __assert_guard_root "$tmp_home"
     set -g __ravy_test_tmp_home "$tmp_home"
     set -g stub_bin "$tmp_home/bin"
     set -l real_chezmoi (command -s chezmoi)
 
-    mkdir -p $stub_bin \
+    __guard_exec "$tmp_home" mkdir -p $stub_bin \
         "$tmp_home/.config/fish" \
         "$tmp_home/.config/chezmoi" \
         "$tmp_home/.config/ravy" \
         "$tmp_home/.local/bin" \
         "$tmp_home/.local/share"
+    __assert_guard_path "$tmp_home" "$tmp_home/.config/chezmoi/chezmoi.toml"
     printf "%s\n" "seed = 1" > "$tmp_home/.config/chezmoi/chezmoi.toml"
 
     function __write_exec --argument-names target body
-        mkdir -p (dirname "$target")
+        __assert_guard_path "$__ravy_test_tmp_home" "$target"
+        __guard_exec "$__ravy_test_tmp_home" mkdir -p (dirname "$target")
         printf "%s" "$body" >$target
-        chmod +x $target
+        __guard_exec "$__ravy_test_tmp_home" chmod +x $target
     end
 
     function __write_stub --argument-names name body
         __write_exec "$stub_bin/$name" "$body"
+    end
+
+    function __install_guard_wrappers --argument-names root bin_dir
+        for cmd in rm cp mv ln mkdir touch chmod
+            __write_exec "$bin_dir/$cmd" "#!/usr/bin/env bash
+exec \"$guard_cmd\" \"$root\" \"$cmd\" \"\$@\"
+"
+        end
     end
 
     function __install_mise_stub --argument-names layout
@@ -49,8 +89,10 @@ fi
 printf \"%s\n\" \"\$*\" >> \"\$HOME/mise.log\"
 exit 0
 "
-        ln -sfn "$target" "$stub_bin/mise"
+        __guard_exec "$__ravy_test_tmp_home" ln -sfn "$target" "$stub_bin/mise"
     end
+
+    __install_guard_wrappers "$tmp_home" "$stub_bin"
 
     __write_stub starship "#!/usr/bin/env sh
 if [ \"\$1\" = \"init\" ] && [ \"\$2\" = \"fish\" ]; then
@@ -179,7 +221,7 @@ exit 0
 
     set -l status_code $status
     if not set -q RAVY_TEST_DEBUG
-        rm -rf $tmp_home
+        __guard_exec "$tmp_home" rm -rf $tmp_home
     end
     exit $status_code
 end

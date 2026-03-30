@@ -29,6 +29,16 @@ If the private repo is already checked out locally, point the bootstrap at it:
 RAVY_PRIVATE_HOME="$HOME/.local/share/ravy-private" ./install.sh
 ```
 
+## Nushell Path
+
+`~/.config/nushell` is the canonical Nushell config path on both Linux and macOS.
+
+- Linux reads `~/.config/nushell/{env,config,login}.nu` directly.
+- macOS keeps thin shims in `~/Library/Application Support/nushell/{env,config,login}.nu` that source the canonical files.
+- macOS keeps `~/Library/Application Support/nushell/history.txt` as a symlink back to `~/.config/nushell/history.txt`.
+
+After `chez apply` or `./install.sh`, restart Nushell to pick up updated config.
+
 ## Private Bootstrap
 
 Private files are managed by the private `custom` repo as an `age`-encrypted
@@ -83,7 +93,7 @@ Once installed, open Neovim and install plugins:
 make test
 ```
 
-`make test` now covers bash, zsh, fish, Nushell, install, and Neovim rendering.
+`make test` now covers bash, zsh, fish, Nushell, the macOS Nushell harness, install, and Neovim rendering.
 
 ## Recommended Setup
 

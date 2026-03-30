@@ -3,6 +3,8 @@ set -euo pipefail
 
 script_path=$(realpath "${BASH_SOURCE[0]}")
 repo_root=$(realpath "$(dirname "$script_path")/..")
+# shellcheck source=tests/prefix_guard_common.sh
+source "$repo_root/tests/prefix_guard_common.sh"
 real_chezmoi=$(command -v chezmoi)
 
 failures=0
@@ -32,13 +34,20 @@ assert_file_lacks() {
 }
 
 tmp_home=$(mktemp -d "$repo_root/.tmp_nvim_home.XXXXXX")
-trap 'rm -rf "$tmp_home"' EXIT
+guard_assert_repo_tmp_root "$repo_root" "$tmp_home"
+trap '
+  if [ -n "${tmp_home:-}" ] && [ -d "$tmp_home" ]; then
+    guard_exec "$tmp_home" rm -rf "$tmp_home"
+  fi
+' EXIT
 
 rendered_init="$tmp_home/.config/nvim/init.vim"
 rendered_main="$tmp_home/.config/nvim/ravy.vim"
-mkdir -p "$(dirname "$rendered_init")"
+guard_exec "$tmp_home" mkdir -p "$(dirname "$rendered_init")"
 
+guard_assert_path "$tmp_home" "$rendered_init" create
 "$real_chezmoi" -S "$repo_root" -D "$tmp_home" cat "$rendered_init" > "$rendered_init"
+guard_assert_path "$tmp_home" "$rendered_main" create
 "$real_chezmoi" -S "$repo_root" -D "$tmp_home" cat "$rendered_main" > "$rendered_main"
 
 assert_file_contains "$rendered_init" "let s:ravy_vimrc = s:config_dir . '/ravy.vim'" "init.vim points at the managed local config"

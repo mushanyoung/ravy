@@ -3,6 +3,8 @@ set -euo pipefail
 
 script_path=$(realpath "${BASH_SOURCE[0]}")
 repo_root=$(realpath "$(dirname "$script_path")/..")
+# shellcheck source=tests/prefix_guard_common.sh
+source "$repo_root/tests/prefix_guard_common.sh"
 bash_bin=$(command -v bash)
 
 failures=0
@@ -16,8 +18,18 @@ fail() {
 write_stub() {
   local target=$1
   local body=$2
+  local root
+
+  root=$(guard_guess_repo_tmp_root "$repo_root" "$target") || {
+    fail "unsafe stub target: $target"
+    return 1
+  }
+  guard_assert_path "$root" "$target" create || {
+    fail "unsafe stub target: $target"
+    return 1
+  }
   printf '%s' "$body" > "$target"
-  chmod +x "$target"
+  guard_exec "$root" chmod +x "$target"
 }
 
 assert_status_zero() {
@@ -62,7 +74,10 @@ assert_file_contains() {
 
 setup_home() {
   tmp_home=$(mktemp -d "$repo_root/.tmp_install_home.XXXXXX")
-  mkdir -p "$tmp_home/bin" "$tmp_home/.ssh" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi"
+  guard_assert_repo_tmp_root "$repo_root" "$tmp_home" || return 1
+  guard_exec "$tmp_home" mkdir -p "$tmp_home/bin" "$tmp_home/.ssh" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi"
+  guard_install_wrappers "$tmp_home" "$tmp_home/bin"
+  guard_assert_path "$tmp_home" "$tmp_home/.config/chezmoi/chezmoi.toml" create || return 1
   printf '%s\n' '# default config' > "$tmp_home/.config/chezmoi/chezmoi.toml"
 
   write_stub "$tmp_home/bin/chezmoi" "#!/usr/bin/env sh
@@ -143,13 +158,15 @@ fi
 exit 0
 "
 
+  guard_assert_path "$tmp_home" "$tmp_home/.config/ravy/private.gitconfig" create || return 1
   printf '%s\n' '[user]' '    name = Test User' > "$tmp_home/.config/ravy/private.gitconfig"
+  guard_assert_path "$tmp_home" "$tmp_home/.config/ravy/ssh.config" create || return 1
   printf '%s\n' 'Host private' '    HostName private.example' > "$tmp_home/.config/ravy/ssh.config"
 
   # Create a fake private repo for testing
   local fake_private="$tmp_home/private"
-  mkdir -p "$fake_private/.git" "$fake_private/bootstrap"
-  touch "$fake_private/bootstrap/key.txt.age"
+  guard_exec "$tmp_home" mkdir -p "$fake_private/.git" "$fake_private/bootstrap"
+  guard_exec "$tmp_home" touch "$fake_private/bootstrap/key.txt.age"
   
   write_stub "$fake_private/install.sh" "#!/usr/bin/env bash
 rm -f \"\$HOME/.ssh/config\"
@@ -177,10 +194,15 @@ run_install() {
 }
 
 setup_home
-trap 'rm -rf "$tmp_home"' EXIT
+trap '
+  if [ -n "${tmp_home:-}" ] && [ -d "$tmp_home" ]; then
+    guard_exec "$tmp_home" rm -rf "$tmp_home"
+  fi
+' EXIT
 
+guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create
 printf '%s\n' 'Host legacy' '    HostName legacy.example' > "$tmp_home/legacy-ssh.config"
-ln -s "$tmp_home/legacy-ssh.config" "$tmp_home/.ssh/config"
+guard_exec "$tmp_home" ln -s "$tmp_home/legacy-ssh.config" "$tmp_home/.ssh/config"
 
 result=$(run_install)
 status_code=${result%%$'\n'*}

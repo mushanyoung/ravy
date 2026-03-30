@@ -9,7 +9,7 @@ FISH ?= fish
 NU ?= nu
 CHEZMOI_ARGS ?=
 
-.PHONY: help install apply chezmoi-apply test test-fish test-sh test-nu test-install test-nvim
+.PHONY: help install apply chezmoi-apply test test-fish test-sh test-nu test-nushell-harness test-install test-nvim
 
 help:
 	@echo 'Targets:'
@@ -20,6 +20,7 @@ help:
 	@echo '  make test-fish      Run fish config test'
 	@echo '  make test-sh        Run bash/zsh config test'
 	@echo '  make test-nu        Run Nushell config test'
+	@echo '  make test-nushell-harness  Run macOS Nushell harness test'
 	@echo '  make test-install   Run installer regression test'
 	@echo '  make test-nvim      Run Neovim config rendering test'
 
@@ -31,7 +32,7 @@ apply:
 
 chezmoi-apply: apply
 
-test: test-fish test-sh test-nu test-install test-nvim
+test: test-fish test-sh test-nu test-nushell-harness test-install test-nvim
 
 test-fish:
 	$(FISH) tests/config.fish.test.fish
@@ -41,6 +42,9 @@ test-sh:
 
 test-nu:
 	$(NU) tests/config.nu.test.nu
+
+test-nushell-harness:
+	$(BASH) tests/nushell-harness.test.sh
 
 test-install:
 	$(BASH) tests/install.test.sh
