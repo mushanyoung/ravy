@@ -46,6 +46,7 @@ On a fresh machine:
 
 Managed private targets now include:
 
+- `~/.config/ravy/secrets.tsv`
 - `~/.config/ravy/secrets.sh`
 - `~/.config/ravy/secrets.fish`
 - `~/.config/ravy/private.gitconfig`
@@ -64,8 +65,8 @@ Examples:
 
 ```sh
 chez status
-chezp edit ~/.config/ravy/secrets.fish
-chezp apply ~/.config/ravy/secrets.fish
+chezp edit ~/.config/ravy/secrets.tsv
+chezp apply ~/.config/ravy/secrets.tsv
 ```
 
 ## Neovim
@@ -81,6 +82,8 @@ Once installed, open Neovim and install plugins:
 ```sh
 make test
 ```
+
+`make test` now covers bash, zsh, fish, Nushell, install, and Neovim rendering.
 
 ## Recommended Setup
 

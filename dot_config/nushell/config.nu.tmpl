@@ -1,0 +1,1086 @@
+# Ravy (chezmoi) Nushell config
+
+alias __core_cd = cd
+alias __core_open = open
+
+const __ravy_self_config = $nu.config-path
+
+def path-is-file [path: string] {
+    try {
+        (($path | path expand) | path type) == "file"
+    } catch {
+        false
+    }
+}
+
+def path-is-dir [path: string] {
+    try {
+        (($path | path expand) | path type) == "dir"
+    } catch {
+        false
+    }
+}
+
+def command-output [cmd: string, ...args: string] {
+    try {
+        do { run-external $cmd ...$args } | complete
+    } catch {
+        { stdout: "", stderr: "", exit_code: 1 }
+    }
+}
+
+def which-path [name: string] {
+    let matches = (which -a $name | where type == external | get path)
+    if ($matches | is-empty) {
+        ""
+    } else {
+        $matches | first
+    }
+}
+
+def escape-args [items: list<string>] {
+    $items | each {|item| $item | to nuon } | str join " "
+}
+
+def --env ensure-keybinding [binding: record] {
+    let bindings = ($env.config | get -o keybindings | default [])
+    let filtered = ($bindings | where {|row| (($row | get -o name) | default "") != $binding.name })
+    $env.config = ($env.config | upsert keybindings ($filtered | append $binding))
+}
+
+def --env ensure-hook [field: cell-path, marker: string, hook: record] {
+    let existing = ($env.config | get -o $field | default [])
+    let filtered = ($existing | where {|row| (($row | get -o $marker) | default false) != true })
+    $env.config = ($env.config | upsert $field ($filtered | append $hook))
+}
+
+def --env load-secrets-tsv [file: string] {
+    let path = ($file | path expand)
+    if not (path-is-file $path) {
+        return
+    }
+
+    for line in (open $path | lines) {
+        let trimmed = ($line | str trim)
+        if ($trimmed | is-empty) or ($trimmed | str starts-with "#") {
+            continue
+        }
+
+        let entry = ($trimmed | split row (char tab))
+        if ($entry | length) < 2 {
+            continue
+        }
+
+        let key = ($entry | first)
+        let value = ($entry | skip 1 | str join (char tab))
+        load-env { ($key): $value }
+    }
+}
+
+def ravy-secrets-tsv [] {
+    let config_home = ($env.XDG_CONFIG_HOME? | default $"($env.HOME)/.config")
+    $"($config_home)/ravy/secrets.tsv"
+}
+
+def ravy-title-or-pwd [] {
+    if not ((($env.FISH_TITLE? | default "") | str trim) | is-empty) {
+        $env.FISH_TITLE
+    } else {
+        let home = ($env.HOME | path expand)
+        if $env.PWD == $home {
+            "~"
+        } else if ($env.PWD | str starts-with $"($home)/") {
+            $"~($env.PWD | str substring ($home | str length)..)"
+        } else {
+            $env.PWD
+        }
+    }
+}
+
+def ravy-set-title [prefix?: string] {
+    let title = if ($prefix | default "" | str trim | is-empty) {
+        (ravy-title-or-pwd)
+    } else {
+        $"($prefix) (ravy-title-or-pwd)"
+    }
+
+    print -n $"\u{1b}]0;($title)\u{7}"
+}
+
+def --env ravy-dirprev [] {
+    $env.__RAVY_DIRPREV = ($env.__RAVY_DIRPREV? | default [])
+    $env.__RAVY_DIRNEXT = ($env.__RAVY_DIRNEXT? | default [])
+    $env.__RAVY_CD_DIRECTION = ($env.__RAVY_CD_DIRECTION? | default "prev")
+}
+
+def ravy-resolve-cd-target [target?: string] {
+    let raw_target = ($target | default $env.HOME)
+    if $raw_target == "-" {
+        return "-"
+    }
+
+    let trimmed = ($raw_target | str trim)
+    if ($trimmed | is-empty) {
+        return $env.HOME
+    }
+
+    mut candidate = $trimmed
+    while not ($candidate | is-empty) and not (path-is-dir $candidate) {
+        let parent = ($candidate | path dirname)
+        if ($parent == $candidate) or ($parent == ".") {
+            break
+        }
+        $candidate = $parent
+    }
+
+    if (path-is-dir $candidate) {
+        $candidate
+    } else {
+        $trimmed
+    }
+}
+
+def --env ravy-cd-push [previous: string] {
+    ravy-dirprev
+    let updated = (($env.__RAVY_DIRPREV | default []) | append $previous)
+    let len = ($updated | length)
+    $env.__RAVY_DIRPREV = if $len > 25 {
+        $updated | skip ($len - 25)
+    } else {
+        $updated
+    }
+    $env.__RAVY_DIRNEXT = []
+    $env.__RAVY_CD_DIRECTION = "prev"
+}
+
+def --env ravy-cd-prev [] {
+    ravy-dirprev
+    if (($env.__RAVY_DIRPREV | length) == 0) {
+        return
+    }
+
+    let previous = $env.PWD
+    let target = ($env.__RAVY_DIRPREV | last)
+    let prev_len = ($env.__RAVY_DIRPREV | length)
+    $env.__RAVY_DIRPREV = if $prev_len > 1 {
+        $env.__RAVY_DIRPREV | take ($prev_len - 1)
+    } else {
+        []
+    }
+    __core_cd $target
+    if $env.PWD != $previous {
+        $env.__RAVY_DIRNEXT = ([$previous] ++ ($env.__RAVY_DIRNEXT | default []))
+        $env.__RAVY_CD_DIRECTION = "next"
+    }
+}
+
+def --env ravy-cd-next [] {
+    ravy-dirprev
+    if (($env.__RAVY_DIRNEXT | length) == 0) {
+        return
+    }
+
+    let previous = $env.PWD
+    let target = ($env.__RAVY_DIRNEXT | first)
+    $env.__RAVY_DIRNEXT = ($env.__RAVY_DIRNEXT | skip 1)
+    __core_cd $target
+    if $env.PWD != $previous {
+        let updated = (($env.__RAVY_DIRPREV | default []) | append $previous)
+        let len = ($updated | length)
+        $env.__RAVY_DIRPREV = if $len > 25 {
+            $updated | skip ($len - 25)
+        } else {
+            $updated
+        }
+        $env.__RAVY_CD_DIRECTION = "prev"
+    }
+}
+
+def --env cd [target?: string] {
+    ravy-dirprev
+
+    if ($target | default "") == "-" {
+        if ($env.__RAVY_CD_DIRECTION? | default "prev") == "next" {
+            ravy-cd-next
+        } else {
+            ravy-cd-prev
+        }
+        return
+    }
+
+    let previous = $env.PWD
+    let resolved = (ravy-resolve-cd-target $target)
+    __core_cd $resolved
+    if $env.PWD != $previous {
+        ravy-cd-push $previous
+    }
+}
+
+def --env d [] {
+    cd ..
+}
+
+def --env ravy [] {
+    cd $env.RAVY_HOME
+}
+
+def ravy-chezmoi-config-dir [] {
+    let config_home = ($env.XDG_CONFIG_HOME? | default $"($env.HOME)/.config")
+    $"($config_home)/chezmoi"
+}
+
+def ravy-chezmoi-seed-config [config_path: string] {
+    let expanded = ($config_path | path expand)
+    if (path-is-file $expanded) {
+        return
+    }
+
+    let config_dir = (ravy-chezmoi-config-dir)
+    for candidate in [
+        $"($config_dir)/chezmoi.toml"
+        $"($config_dir)/ravy-public.toml"
+    ] {
+        if ($candidate == $expanded) or not (path-is-file $candidate) {
+            continue
+        }
+
+        do { run-external "mkdir" "-p" ($expanded | path dirname) } | complete | ignore
+        do { run-external "cp" $candidate $expanded } | complete | ignore
+        return
+    }
+}
+
+def --wrapped chez [...args: string] {
+    run-external "chezmoi" ...$args
+}
+
+def --env ravyprivatecd [] {
+    let private_home = (($env.RAVY_PRIVATE_HOME? | default "") | str trim)
+    if ($private_home | is-empty) {
+        error make { msg: "RAVY_PRIVATE_HOME is not configured" }
+    }
+
+    cd $private_home
+}
+
+def --env ravycustom [] {
+    ravyprivatecd
+}
+
+def --env chezp [...args: string] {
+    let private_home = (($env.RAVY_PRIVATE_HOME? | default "") | str trim)
+    if ($private_home | is-empty) {
+        error make { msg: "RAVY_PRIVATE_HOME is not configured" }
+    }
+
+    let config_dir = (ravy-chezmoi-config-dir)
+    let config_path = $"($config_dir)/ravy-private.toml"
+    let state_path = $"($config_dir)/ravy-private-state.boltdb"
+
+    if (($args | length) > 0) and (($args | first) == "init") {
+        do { run-external "mkdir" "-p" ($config_path | path dirname) } | complete | ignore
+        run-external "chezmoi" "-S" $private_home "-c" $config_path "--persistent-state" $state_path "init" "-C" $config_path ...($args | skip 1)
+        if not (path-is-file $config_path) {
+            ravy-chezmoi-seed-config $config_path
+        }
+    } else {
+        ravy-chezmoi-seed-config $config_path
+        run-external "chezmoi" "-S" $private_home "-c" $config_path "--persistent-state" $state_path ...$args
+    }
+}
+
+def --env ravysource [] {
+    print $"reload config from ($__ravy_self_config) in a new Nushell session"
+}
+
+def --env imv [...sources: string] {
+    for src in $sources {
+        let expanded = ($src | path expand)
+        if not (($expanded | path exists)) {
+            print $"($src) does not exist"
+            continue
+        }
+
+        let renamed = (input $"rename ($expanded) to> ")
+        let target = ($renamed | str trim)
+        if ($target | is-empty) or ($target == $expanded) {
+            continue
+        }
+
+        do { run-external "mkdir" "-p" (($target | path expand) | path dirname) } | complete | ignore
+        do { run-external "mv" $expanded ($target | path expand) } | complete | ignore
+    }
+}
+
+def --wrapped ls [...args: string] {
+    let eza = (which-path "eza")
+    if ($eza | str trim | is-empty) {
+        run-external "ls" ...$args
+    } else {
+        run-external $eza "--icons" "--group-directories-first" "--git" "--color=auto" ...$args
+    }
+}
+
+def --wrapped sysopen [...paths: string] {
+    let remote_open = (which-path "open-remote")
+    let mac_open = (which-path "open")
+    let xdg_open = (which-path "xdg-open")
+
+    for path in $paths {
+        if not ((($env.SSH_CONNECTION? | default "") | str trim) | is-empty) and not ($remote_open | is-empty) {
+            do { run-external $remote_open $path } | complete | ignore
+        } else if not ($mac_open | is-empty) {
+            do { run-external $mac_open $path } | complete | ignore
+        } else if not ($xdg_open | is-empty) {
+            do { run-external $xdg_open $path } | complete | ignore
+        }
+    }
+}
+
+def ravy-fzf-select [items: list<string>, prompt: string, default_action: string] {
+    let fzf = (which-path "fzf")
+    if ($fzf | is-empty) or ($items | is-empty) {
+        return { key: "", items: [] }
+    }
+
+    let args = [
+        "--height=45%"
+        "--bind" "ctrl-f:page-down,ctrl-b:page-up"
+        "-m"
+        "--reverse"
+        "--prompt" $"($prompt)> "
+        "--expect" "ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q"
+    ]
+    let out = (
+        $items
+        | str join (char nl)
+        | do { run-external $fzf ...$args }
+        | complete
+    )
+
+    let lines = ($out.stdout | lines)
+    if ($lines | is-empty) {
+        { key: "", items: [] }
+    } else {
+        let key = (($lines | first) | str trim)
+        let chosen = ($lines | skip 1 | where {|line| not (($line | str trim) | is-empty) })
+        {
+            key: (if ($key | is-empty) { $default_action } else { $key })
+            items: $chosen
+        }
+    }
+}
+
+def ravy-fzf-apply [result: record] {
+    let selections = ($result.items | default [])
+    if ($selections | is-empty) {
+        return
+    }
+
+    let action = if ($result.key | default "") in ["ctrl-a" "alt-a"] {
+        "append"
+    } else if ($result.key | default "") in ["ctrl-d" "alt-d"] {
+        "cd"
+    } else if ($result.key | default "") in ["ctrl-o" "alt-o"] {
+        "open"
+    } else {
+        "edit"
+    }
+
+    if $action == "append" {
+        let rendered = (escape-args $selections)
+        if not ((commandline | str trim) | is-empty) {
+            commandline edit --append " "
+        }
+        commandline edit --append $rendered
+        commandline edit --append " "
+    } else if $action == "cd" {
+        let first = ($selections | first)
+        let target = if (path-is-dir $first) {
+            $first
+        } else {
+            $first | path dirname
+        }
+        if not (($target | str trim) | is-empty) and ($target != ".") {
+            cd $target
+        }
+    } else if $action == "open" {
+        sysopen ...$selections
+    } else {
+        let editor = ($env.EDITOR? | default "nvim")
+        do { run-external $editor "--" ...$selections } | complete | ignore
+    }
+}
+
+def ravy-fzf-history [] {
+    let items = (history | get command | reverse | uniq)
+    let current = (commandline | str trim)
+    let fzf = (which-path "fzf")
+    if ($fzf | is-empty) or ($items | is-empty) {
+        return
+    }
+
+    let args = [
+        "-q" $current
+        "--height=45%"
+        "--prompt" "History> "
+        "--bind" "ctrl-r:toggle-sort,ctrl-f:page-down,ctrl-b:page-up"
+        "--tiebreak" "index"
+    ]
+    let out = (
+        $items
+        | str join (char nl)
+        | do { run-external $fzf ...$args }
+        | complete
+    )
+
+    let result = ($out.stdout | str trim -r -c "\n")
+    if not ($result | is-empty) {
+        commandline edit $result
+    }
+}
+
+def ravy-fzf-files [] {
+    let fd = (which-path "fd")
+    if ($fd | is-empty) {
+        return
+    }
+
+    let items = ((command-output $fd).stdout | lines | where {|line| not (($line | str trim) | is-empty) })
+    ravy-fzf-apply (ravy-fzf-select $items "File" "ctrl-e")
+}
+
+def ravy-fzf-files-hidden [] {
+    let fd = (which-path "fd")
+    if ($fd | is-empty) {
+        return
+    }
+
+    let items = ((command-output $fd "-H").stdout | lines | where {|line| not (($line | str trim) | is-empty) })
+    ravy-fzf-apply (ravy-fzf-select $items ".File" "ctrl-e")
+}
+
+def ravy-fzf-dirs [] {
+    let fd = (which-path "fd")
+    if ($fd | is-empty) {
+        return
+    }
+
+    let items = ((command-output $fd "-t" "d").stdout | lines | where {|line| not (($line | str trim) | is-empty) })
+    ravy-fzf-apply (ravy-fzf-select $items "Dir" "ctrl-d")
+}
+
+def ravy-fzf-dirs-hidden [] {
+    let fd = (which-path "fd")
+    if ($fd | is-empty) {
+        return
+    }
+
+    let items = ((command-output $fd "-H" "-t" "d").stdout | lines | where {|line| not (($line | str trim) | is-empty) })
+    ravy-fzf-apply (ravy-fzf-select $items ".Dir" "ctrl-d")
+}
+
+def ravy-fzf-nvim [] {
+    let nvim = (which-path "nvim")
+    if ($nvim | is-empty) {
+        return
+    }
+
+    let items = (
+        command-output $nvim "--headless" "+lua for _,f in ipairs(vim.v.oldfiles) do io.write(f .. \"\\n\") end" "+qa"
+    ).stdout | lines | where {|line| not (($line | str trim) | is-empty) }
+    ravy-fzf-apply (ravy-fzf-select $items "File(nvim)" "ctrl-e")
+}
+
+def ravy-fzf-rg [] {
+    let rg = (which-path "rg")
+    if ($rg | is-empty) {
+        return
+    }
+
+    let keyword = (commandline | str trim | str downcase)
+    if ($keyword | is-empty) {
+        return
+    }
+
+    let items = ((command-output $rg "-il" $keyword).stdout | lines | where {|line| not (($line | str trim) | is-empty) })
+    ravy-fzf-apply (ravy-fzf-select $items $"Search /($keyword)/" "ctrl-e")
+}
+
+def ravy-type-current [] {
+    let current = (commandline | str trim)
+    if ($current | is-empty) {
+        return
+    }
+
+    let cmd = ($current | split row " " | first)
+    if ($cmd | str trim | is-empty) {
+        return
+    }
+
+    do { run-external "which" "-a" $cmd } | complete | get stdout | print
+}
+
+def ravy-history-token [direction: string] {
+    let query = (commandline | str trim)
+    let matches = if ($query | is-empty) {
+        history | get command | reverse
+    } else {
+        history | get command | reverse | where {|cmd| $cmd | str contains $query }
+    }
+
+    if ($matches | is-empty) {
+        return
+    }
+
+    let replacement = if $direction == "forward" {
+        $matches | reverse | first
+    } else {
+        $matches | first
+    }
+
+    commandline edit $replacement
+}
+
+def ravy-prepend-last-history-line [] {
+    let items = (history | get command)
+    if ($items | is-empty) {
+        return
+    }
+
+    commandline edit --append ($items | last)
+}
+
+def ravy-fg [] {
+    let jobs = (job list)
+    if ($jobs | is-empty) {
+        return
+    }
+
+    let fzf = (which-path "fzf")
+    if ($fzf | is-empty) {
+        job unfreeze
+        return
+    }
+
+    let picked = (
+        $jobs
+        | each {|row| $"($row.id)\t($row.command? | default ($row.type? | default "job"))" }
+        | str join (char nl)
+        | do { run-external $fzf "-0" "-1" "--tac" }
+        | complete
+        | get stdout
+        | str trim
+    )
+
+    if ($picked | is-empty) {
+        return
+    }
+
+    let id = ($picked | split row (char tab) | first | into int)
+    job unfreeze $id
+}
+
+def --env scd [] {
+    cd $"($env.HOME)/.config/containers/systemd"
+}
+
+def scrall [] {
+    let units = (
+        command-output "systemctl" "--user" "list-unit-files" "--state=generated" "--no-legend"
+    ).stdout | lines | each {|line| $line | split row " " | first } | where {|unit| not (($unit | str trim) | is-empty) }
+
+    for unit in $units {
+        do { run-external "systemctl" "--user" "restart" $unit } | complete | ignore
+    }
+}
+
+def drc [] {
+    let containers = ((command-output "docker" "ps" "-f" "status=exited" "-q").stdout | lines | where {|id| not (($id | str trim) | is-empty) })
+    for container in $containers {
+        do { run-external "docker" "rm" $container } | complete | ignore
+    }
+}
+
+def dri [] {
+    let images = (
+        command-output "docker" "images"
+    ).stdout | lines | skip 1 | each {|line|
+        let cols = ($line | split row " " | where {|col| not (($col | str trim) | is-empty) })
+        if (($cols | length) >= 3) and (($cols | first) == "<none>") {
+            $cols | get 2
+        } else {
+            null
+        }
+    } | compact
+
+    for image in $images {
+        do { run-external "docker" "rmi" $image } | complete | ignore
+    }
+}
+
+def --env reset [] {
+    do { run-external "reset" } | complete | ignore
+    do { run-external "stty" "sane" } | complete | ignore
+    do { run-external "tput" "reset" } | complete | ignore
+    print -n "\u{1b}c"
+    do { run-external "clear" } | complete | ignore
+    cd $env.PWD
+}
+
+def parse-vars [] {
+    $in | from csv --noheaders --no-infer | rename op name value
+}
+
+def --env update-env [] {
+    for var in $in {
+        if $var.op == "set" {
+            if (($var.name | str upcase) == "PATH") {
+                $env.PATH = ($var.value | split row (char esep))
+            } else {
+                load-env { ($var.name): $var.value }
+            }
+        } else if ($var.op == "hide") and ($var.name in $env) {
+            hide-env $var.name
+        }
+    }
+}
+
+def --env ravy-mise-hook [] {
+    let mise = (which-path "mise")
+    if ($mise | is-empty) {
+        return
+    }
+
+    $env.MISE_SHELL = "nu"
+    $env.__RAVY_MISE_INIT = "1"
+
+    let hook_out = (command-output $mise "hook-env" "-s" "nu")
+    if ($hook_out.exit_code == 0) and not (($hook_out.stdout | str trim) | is-empty) {
+        $hook_out.stdout | parse-vars | update-env
+    }
+}
+
+def --env ravy-atuin-pre-execution [] {
+    let atuin = (which-path "atuin")
+    if ($atuin | is-empty) {
+        return
+    }
+
+    let cmd = (commandline | str trim)
+    if ($cmd | is-empty) {
+        return
+    }
+
+    let out = (command-output $atuin "history" "start" "--" $cmd)
+    let history_id = ($out.stdout | str trim)
+    if ($out.exit_code == 0) and not ($history_id | is-empty) {
+        $env.ATUIN_HISTORY_ID = $history_id
+    }
+}
+
+def --env ravy-atuin-pre-prompt [] {
+    let atuin = (which-path "atuin")
+    if ($atuin | is-empty) or ((($env.ATUIN_HISTORY_ID? | default "") | str trim) | is-empty) {
+        return
+    }
+
+    let exit_code = ($env.LAST_EXIT_CODE? | default 0 | into string)
+    do { run-external $atuin "history" "end" $"--exit=($exit_code)" "--" $env.ATUIN_HISTORY_ID } | complete | ignore
+    hide-env -i ATUIN_HISTORY_ID
+}
+
+def ravy-atuin-search [] {
+    let atuin = (which-path "atuin")
+    if ($atuin | is-empty) {
+        return
+    }
+
+    let out = (command-output $atuin "search" "--interactive")
+    let result = ($out.stdout | str trim)
+    if ($result | str starts-with "__atuin_accept__:") {
+        commandline edit --accept ($result | str replace "__atuin_accept__:" "")
+    } else if not ($result | is-empty) {
+        commandline edit $result
+    }
+}
+
+def ravy-starship-prompt [--right] {
+    let starship = (which-path "starship")
+    if ($starship | is-empty) {
+        return ""
+    }
+
+    let last_exit = ($env.LAST_EXIT_CODE? | default 0 | into string)
+    let cmd_duration = if (($env.CMD_DURATION_MS? | default "0823") == "0823") {
+        "0"
+    } else {
+        $env.CMD_DURATION_MS | into string
+    }
+
+    let job_args = if (which "job list" | where type == built-in | is-not-empty) {
+        ["--jobs" ((job list | length) | into string)]
+    } else {
+        []
+    }
+
+    let args = if $right {
+        [
+            "prompt"
+            "--right"
+            "--cmd-duration" $cmd_duration
+            $"--status=($last_exit)"
+            "--terminal-width" ((term size).columns | into string)
+        ] ++ $job_args
+    } else {
+        [
+            "prompt"
+            "--cmd-duration" $cmd_duration
+            $"--status=($last_exit)"
+            "--terminal-width" ((term size).columns | into string)
+        ] ++ $job_args
+    }
+
+    (command-output $starship ...$args).stdout
+}
+
+$env.config = ($env.config? | default {})
+$env.config = ($env.config
+    | upsert edit_mode "emacs"
+    | upsert history.file_format "plaintext"
+    | upsert history.max_size 100000
+    | upsert history.sync_on_enter true
+    | upsert keybindings ($env.config | get -o keybindings | default [])
+    | upsert hooks ($env.config | get -o hooks | default {})
+)
+
+ensure-hook hooks.pre_prompt "__ravy_title_hook" {
+    __ravy_title_hook: true
+    code: {||
+        ravy-set-title
+    }
+}
+
+ensure-hook hooks.pre_execution "__ravy_title_exec_hook" {
+    __ravy_title_exec_hook: true
+    code: {||
+        let line = (commandline | str trim)
+        let cmd = if ($line | is-empty) { "" } else { $line | split row " " | first }
+        if ($cmd | is-empty) or ($cmd == "nu") {
+            ravy-set-title
+        } else {
+            ravy-set-title $cmd
+        }
+    }
+}
+
+if not ((which-path "mise") | is-empty) {
+    ravy-mise-hook
+    ensure-hook hooks.pre_prompt "__ravy_mise_hook" {
+        __ravy_mise_hook: true
+        code: {||
+            ravy-mise-hook
+        }
+    }
+    ensure-hook hooks.env_change.PWD "__ravy_mise_pwd_hook" {
+        __ravy_mise_pwd_hook: true
+        code: {|_, _|
+            ravy-mise-hook
+        }
+    }
+}
+
+if not ((which-path "zoxide") | is-empty) {
+    ensure-hook hooks.env_change.PWD "__ravy_zoxide_pwd_hook" {
+        __ravy_zoxide_pwd_hook: true
+        code: {|_, dir|
+            do { run-external "zoxide" "add" "--" $dir } | complete | ignore
+        }
+    }
+
+    def --env --wrapped z [...rest: string] {
+        let path = match $rest {
+            [] => { "~" }
+            [ "-" ] => { "-" }
+            [ $arg ] if (path-is-dir $arg) => { $arg }
+            _ => {
+                command-output "zoxide" "query" "--exclude" $env.PWD "--" ...$rest | get stdout | str trim -r -c "\n"
+            }
+        }
+        cd $path
+    }
+
+    def --env --wrapped zi [...rest: string] {
+        let target = (command-output "zoxide" "query" "--interactive" "--" ...$rest | get stdout | str trim -r -c "\n")
+        if not ($target | is-empty) {
+            cd $target
+        }
+    }
+}
+
+if not ((which-path "atuin") | is-empty) {
+    if (($env.ATUIN_SESSION? | default "") | str trim | is-empty) {
+        $env.ATUIN_SESSION = (random uuid | str replace -a "-" "")
+    }
+    $env.ATUIN_SHLVL = ($env.SHLVL? | default "")
+    hide-env -i ATUIN_HISTORY_ID
+
+    ensure-hook hooks.pre_execution "__ravy_atuin_pre_execution" {
+        __ravy_atuin_pre_execution: true
+        code: {||
+            ravy-atuin-pre-execution
+        }
+    }
+    ensure-hook hooks.pre_prompt "__ravy_atuin_pre_prompt" {
+        __ravy_atuin_pre_prompt: true
+        code: {||
+            ravy-atuin-pre-prompt
+        }
+    }
+}
+
+if not ((which-path "starship") | is-empty) {
+    $env.STARSHIP_SHELL = "nu"
+    $env.STARSHIP_SESSION_KEY = (random chars -l 16)
+    $env.PROMPT_MULTILINE_INDICATOR = (command-output "starship" "prompt" "--continuation" | get stdout)
+    $env.PROMPT_INDICATOR = ""
+    $env.PROMPT_COMMAND = {||
+        ravy-starship-prompt
+    }
+    $env.PROMPT_COMMAND_RIGHT = {||
+        ravy-starship-prompt --right
+    }
+    $env.config = ($env.config | upsert render_right_prompt_on_last_line true)
+}
+
+alias l = ls -lg
+alias la = l -lA
+alias lt = l --tree
+alias lta = lt -A
+alias lat = lt -A
+alias ld = l -l --sort newest
+alias ldr = ld -r
+alias ldt = ld -A
+alias ldtr = ldt -r
+alias ll = ls -lg --no-permissions --no-user --no-time --bytes --git
+
+alias c = cd
+alias ta = which -a
+alias df = df -h
+alias g = git
+alias t = tmux
+alias hs = history
+alias tf = tail -f
+alias rd = rmdir
+alias rb = ruby
+alias v = nvim
+alias vi = nvim
+alias vim = nvim
+alias grep = grep -i
+alias pyserv = python3 -m http.server
+alias ag = rg -S
+alias rg = rg -S
+alias rgh = rg -S --hidden
+alias ts = tailscale
+alias ci = cursor-agent --model grok-code-fast-1
+alias cido = ci -p -f --output-format text --
+alias mu = mise upgrade
+alias pa = ps-color
+alias pc = env HIGH_CPU_MEM_ONLY=1 ps-color
+
+alias bi = brew install --force-bottle
+alias blr = brew list --installed-on-request
+alias pupu = sudo pacman -Syuu --noconfirm
+alias pd = podman
+alias pdau = podman auto-update
+alias pdl = podman logs -f --tail 100
+alias sc = systemctl --user
+alias sce = sc daemon-reload
+alias scs = sc status
+alias scr = sc restart
+alias scst = sc start
+alias scstop = sc stop
+alias dp = dc pull
+alias dcl = dc logs -f --tail 100
+alias dcb = dc build
+alias dudp = dpdu
+
+alias dpri = docker image prune
+alias dprs = docker system prune --all
+alias dli = docker image list
+alias dls = docker system info
+alias dry = docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry
+
+def bubu [] {
+    brew update
+    brew outdated
+    brew upgrade
+    brew cleanup
+}
+
+def au [] {
+    sudo apt update
+    sudo apt full-upgrade
+    sudo apt autoclean
+}
+
+def auau [] {
+    sudo apt update
+    sudo apt full-upgrade
+    sudo apt dist-upgrade
+    sudo apt autoclean
+    sudo apt autoremove
+}
+
+def dud [] {
+    dc build
+    dc up -d --no-build
+}
+
+def dpdu [] {
+    dc pull
+    dc up -d
+}
+
+alias ravyc = ravyprivatecd
+alias ravyprivate = ravyprivatecd
+alias ravys = ravysource
+
+ensure-keybinding {
+    name: ravy_history
+    modifier: alt
+    keycode: char_r
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-fzf-history" }
+}
+
+ensure-keybinding {
+    name: ravy_files
+    modifier: alt
+    keycode: char_o
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-fzf-files" }
+}
+
+ensure-keybinding {
+    name: ravy_files_hidden
+    modifier: alt_shift
+    keycode: char_o
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-fzf-files-hidden" }
+}
+
+ensure-keybinding {
+    name: ravy_dirs
+    modifier: alt
+    keycode: char_d
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-fzf-dirs" }
+}
+
+ensure-keybinding {
+    name: ravy_dirs_hidden
+    modifier: alt_shift
+    keycode: char_d
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-fzf-dirs-hidden" }
+}
+
+ensure-keybinding {
+    name: ravy_nvim_oldfiles
+    modifier: alt
+    keycode: char_v
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-fzf-nvim" }
+}
+
+ensure-keybinding {
+    name: ravy_rg
+    modifier: alt
+    keycode: char_g
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-fzf-rg" }
+}
+
+ensure-keybinding {
+    name: ravy_type_current
+    modifier: alt
+    keycode: char_t
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-type-current" }
+}
+
+ensure-keybinding {
+    name: ravy_history_token_backward
+    modifier: alt
+    keycode: char_.
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-history-token backward" }
+}
+
+ensure-keybinding {
+    name: ravy_history_token_forward
+    modifier: alt
+    keycode: char_,
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-history-token forward" }
+}
+
+ensure-keybinding {
+    name: ravy_prepend_last_history_line
+    modifier: alt
+    keycode: char_/
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-prepend-last-history-line" }
+}
+
+ensure-keybinding {
+    name: ravy_forward_word
+    modifier: control
+    keycode: char_f
+    mode: [emacs vi_normal vi_insert]
+    event: { until: [ { send: HistoryHintWordComplete } { edit: MoveWordRight } ] }
+}
+
+ensure-keybinding {
+    name: ravy_backward_word
+    modifier: control
+    keycode: char_b
+    mode: [emacs vi_normal vi_insert]
+    event: { edit: MoveWordLeft }
+}
+
+ensure-keybinding {
+    name: ravy_fg
+    modifier: control
+    keycode: char_z
+    mode: [emacs vi_normal vi_insert]
+    event: { send: ExecuteHostCommand cmd: "ravy-fg" }
+}
+
+ensure-keybinding {
+    name: ravy_clear_line
+    modifier: control
+    keycode: char_c
+    mode: [emacs vi_normal vi_insert]
+    event: [ { edit: Clear } ]
+}
+
+if not ((which-path "atuin") | is-empty) {
+    ensure-keybinding {
+        name: atuin
+        modifier: control
+        keycode: char_r
+        mode: [emacs vi_normal vi_insert]
+        event: { send: ExecuteHostCommand cmd: "ravy-atuin-search" }
+    }
+}
+
+{{- $repoPrivateNu := joinPath .chezmoi.sourceDir "custom" "shell" "config.nu" -}}
+{{- $repoPrivateHome := joinPath .chezmoi.sourceDir "custom" -}}
+{{- if stat $repoPrivateNu }}
+$env.RAVY_PRIVATE_SOURCE_HOME = "{{ $repoPrivateHome }}"
+source "{{ $repoPrivateNu }}"
+{{- end }}
+
+load-secrets-tsv (ravy-secrets-tsv)

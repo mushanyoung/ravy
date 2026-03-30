@@ -7,6 +7,11 @@ pick_history_source() {
     return 0
   fi
 
+  if [[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/nushell/history.txt" ]]; then
+    printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/nushell/history.txt"
+    return 0
+  fi
+
   if [[ -f "${HOME}/.local/share/fish/fish_history" ]]; then
     printf '%s\n' "${HOME}/.local/share/fish/fish_history"
     return 0
@@ -27,7 +32,7 @@ pick_history_source() {
 
 src="$(pick_history_source || true)"
 if [[ -z "$src" ]]; then
-  echo "history-stat: no history file found (HISTFILE/.zsh_history/.bash_history/fish_history)" >&2
+  echo "history-stat: no history file found (HISTFILE/nushell/history.txt/.zsh_history/.bash_history/fish_history)" >&2
   exit 1
 fi
 

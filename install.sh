@@ -170,7 +170,7 @@ if ! command -v chezmoi >/dev/null 2>&1; then
   exit 1
 fi
 
-info "Applying dotfiles (bash, zsh, fish) for current user"
+info "Applying dotfiles (bash, zsh, fish, and Nushell config files) for current user"
 RAVY_REPO="${RAVY_REPO:-mushanyoung/ravy}"
 RAVY_PRIVATE_HOME="${RAVY_PRIVATE_HOME:-$(default_private_home)}"
 RAVY_PRIVATE_REPO="${RAVY_PRIVATE_REPO:-}"
@@ -240,7 +240,8 @@ info "Notes"
 echo "  - bash: sources ~/.bashrc (installed by chezmoi)"
 echo "  - zsh:  sources ~/.zshrc (installed by chezmoi)"
 echo "  - fish: uses ~/.config/fish/config.fish (installed by chezmoi)"
-echo "  - managed shell secrets: ~/.config/ravy/secrets.sh and ~/.config/ravy/secrets.fish"
+echo "  - nushell files: ~/.config/nushell/env.nu and ~/.config/nushell/config.nu"
+echo "  - managed shell secrets: ~/.config/ravy/secrets.tsv with sh/fish wrappers"
 echo "  - private age identity: ~/.config/chezmoi/key.txt"
 echo "  - private chezmoi config/state: ~/.config/chezmoi/ravy-private.toml and ~/.config/chezmoi/ravy-private-state.boltdb"
 echo "  - optional private repo: set RAVY_PRIVATE_REPO before install"
