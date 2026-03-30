@@ -1,3 +1,9 @@
 # Ravy (chezmoi) Nushell login
 
 $env.__RAVY_LOGIN_INIT = "1"
+
+if $nu.is-interactive {
+    let host = ($env.RAVY_HOST? | default "unknown")
+    let pwd = ($env.PWD? | default "~")
+    print $"(ansi { fg: '#808080' })  ($host) | nu ((version).version) (ansi reset)"
+}

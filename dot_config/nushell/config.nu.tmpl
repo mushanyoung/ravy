@@ -750,6 +750,7 @@ $env.config = ($env.config
     | upsert history.file_format "plaintext"
     | upsert history.max_size 100000
     | upsert history.sync_on_enter true
+    | upsert show_banner false
     | upsert keybindings ($env.config | get -o keybindings | default [])
     | upsert hooks ($env.config | get -o hooks | default {})
 )
