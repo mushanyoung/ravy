@@ -4,7 +4,27 @@
 
 # Configurable parameters
 mosh_command=${MOSH_COMMAND:-mosh}
-mosh_exec_cmd=(${MOSH_EXEC_CMD:-tmux new-session -A -s tmux})
+mosh_exec_script=$(cat <<'EOF'
+for candidate in "$(command -v tmux 2>/dev/null)" \
+    /opt/homebrew/bin/tmux \
+    /home/linuxbrew/.linuxbrew/bin/tmux \
+    "$HOME/.linuxbrew/bin/tmux" \
+    "$HOME/.brew/bin/tmux" \
+    /usr/local/bin/tmux
+do
+    [ -n "$candidate" ] || continue
+    [ -x "$candidate" ] || continue
+    exec "$candidate" new-session -A -s tmux
+done
+echo "tmux not found; checked PATH=$PATH and common Homebrew prefixes" >&2
+exit 127
+EOF
+)
+if [ -n "${MOSH_EXEC_CMD:-}" ]; then
+  mosh_exec_cmd=(${MOSH_EXEC_CMD})
+else
+  mosh_exec_cmd=(/bin/sh -lc "$mosh_exec_script")
+fi
 mosh_ssh_port=${MOSH_SSH_PORT}
 mosh_default_opts=("-a" "-o")
 reconnect_interval=${RECONNECT_INTERVAL:-10}

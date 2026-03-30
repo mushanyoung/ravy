@@ -4,9 +4,28 @@
 
 # Configurable parameters
 ssh_command=${SSH_COMMAND:-ssh}
-# Use `exec` so the remote login shell is replaced by tmux.
-# This avoids leaving an extra shell process around while attached.
-ssh_exec_cmd=${SSH_EXEC_CMD:-exec tmux new-session -A -s tmux}
+# Remote commands run by sshd go through the user's login shell with `-c`.
+# Nushell does not automatically load env.nu/config.nu in that mode, so PATH
+# can miss Homebrew. Route through /bin/sh and probe common tmux locations.
+ssh_exec_cmd_default=$(cat <<'EOF'
+/bin/sh -lc '
+for candidate in "$(command -v tmux 2>/dev/null)" \
+    /opt/homebrew/bin/tmux \
+    /home/linuxbrew/.linuxbrew/bin/tmux \
+    "$HOME/.linuxbrew/bin/tmux" \
+    "$HOME/.brew/bin/tmux" \
+    /usr/local/bin/tmux
+do
+    [ -n "$candidate" ] || continue
+    [ -x "$candidate" ] || continue
+    exec "$candidate" new-session -A -s tmux
+done
+echo "tmux not found; checked PATH=$PATH and common Homebrew prefixes" >&2
+exit 127
+'
+EOF
+)
+ssh_exec_cmd=${SSH_EXEC_CMD:-$ssh_exec_cmd_default}
 ssh_alive_interval=${SSH_ALIVE_INTERVAL:-10}
 ssh_default_opts=("-t" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
 ssh_opts=("$@" "${ssh_exec_cmd:+--}" "${ssh_exec_cmd}")
