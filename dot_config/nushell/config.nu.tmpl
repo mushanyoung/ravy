@@ -337,22 +337,21 @@ def --wrapped sysopen [...paths: string] {
     }
 }
 
-def ravy-fzf-select [items: list<string>, prompt: string, default_action: string] {
+def ravy-fzf-run [items: list<string>, prompt: string, ...extra_args: string] {
     let fzf = (which-path "fzf")
-    if ($fzf | is-empty) or ($items | is-empty) {
-        return { key: "", items: [] }
+    let candidates = ($items | where {|line| not (($line | str trim) | is-empty) })
+    if ($fzf | is-empty) or ($candidates | is-empty) {
+        return ""
     }
 
-    let args = [
+    let args = ([
         "--height=45%"
         "--bind" "ctrl-f:page-down,ctrl-b:page-up"
-        "-m"
         "--reverse"
         "--prompt" $"($prompt)> "
-        "--expect" "ctrl-a,alt-a,ctrl-d,alt-d,ctrl-e,alt-e,ctrl-v,alt-v,ctrl-o,alt-o,ctrl-q,alt-q"
-    ]
+    ] | append $extra_args)
     let out = (
-        $items
+        $candidates
         | str join (char nl)
         | do { run-external $fzf ...$args }
         | complete
@@ -360,83 +359,36 @@ def ravy-fzf-select [items: list<string>, prompt: string, default_action: string
 
     let lines = ($out.stdout | lines)
     if ($lines | is-empty) {
-        { key: "", items: [] }
+        ""
     } else {
-        let key = (($lines | first) | str trim)
-        let chosen = ($lines | skip 1 | where {|line| not (($line | str trim) | is-empty) })
-        {
-            key: (if ($key | is-empty) { $default_action } else { $key })
-            items: $chosen
-        }
+        ($lines | first | str trim)
     }
 }
 
-def ravy-fzf-apply [result: record] {
-    let selections = ($result.items | default [])
-    if ($selections | is-empty) {
+def ravy-fzf-file-preview [] {
+    let bat = (which-path "bat")
+    if ($bat | is-empty) {
+        "cat {}"
+    } else {
+        "bat --color=always --style=numbers --line-range=:500 -- {}"
+    }
+}
+
+def ravy-open-editor [path: string] {
+    if (($path | str trim) | is-empty) {
         return
     }
 
-    let action = if ($result.key | default "") in ["ctrl-a" "alt-a"] {
-        "append"
-    } else if ($result.key | default "") in ["ctrl-d" "alt-d"] {
-        "cd"
-    } else if ($result.key | default "") in ["ctrl-o" "alt-o"] {
-        "open"
-    } else {
-        "edit"
-    }
-
-    if $action == "append" {
-        let rendered = (escape-args $selections)
-        if not ((commandline | str trim) | is-empty) {
-            commandline edit --append " "
-        }
-        commandline edit --append $rendered
-        commandline edit --append " "
-    } else if $action == "cd" {
-        let first = ($selections | first)
-        let target = if (path-is-dir $first) {
-            $first
-        } else {
-            $first | path dirname
-        }
-        if not (($target | str trim) | is-empty) and ($target != ".") {
-            cd $target
-        }
-    } else if $action == "open" {
-        sysopen ...$selections
-    } else {
-        let editor = ($env.EDITOR? | default "nvim")
-        do { run-external $editor "--" ...$selections } | complete | ignore
-    }
+    let editor = ($env.EDITOR? | default "nvim")
+    run-external $editor "--" $path
 }
 
 def ravy-fzf-history [] {
     let items = (history | get command | reverse | uniq)
     let current = (commandline | str trim)
-    let fzf = (which-path "fzf")
-    if ($fzf | is-empty) or ($items | is-empty) {
-        return
-    }
-
-    let args = [
-        "-q" $current
-        "--height=45%"
-        "--prompt" "History> "
-        "--bind" "ctrl-r:toggle-sort,ctrl-f:page-down,ctrl-b:page-up"
-        "--tiebreak" "index"
-    ]
-    let out = (
-        $items
-        | str join (char nl)
-        | do { run-external $fzf ...$args }
-        | complete
-    )
-
-    let result = ($out.stdout | str trim -r -c "\n")
-    if not ($result | is-empty) {
-        commandline edit $result
+    let selected = (ravy-fzf-run $items "History" "-q" $current "--tiebreak" "index")
+    if not (($selected | str trim) | is-empty) {
+        commandline edit $selected
     }
 }
 
@@ -446,8 +398,9 @@ def ravy-fzf-files [] {
         return
     }
 
-    let items = ((command-output $fd).stdout | lines | where {|line| not (($line | str trim) | is-empty) })
-    ravy-fzf-apply (ravy-fzf-select $items "File" "ctrl-e")
+    let items = ((command-output $fd "-t" "f").stdout | lines)
+    let selected = (ravy-fzf-run $items "File" "--preview" (ravy-fzf-file-preview) "--preview-window" "right:wrap")
+    ravy-open-editor $selected
 }
 
 def ravy-fzf-files-hidden [] {
@@ -456,8 +409,9 @@ def ravy-fzf-files-hidden [] {
         return
     }
 
-    let items = ((command-output $fd "-H").stdout | lines | where {|line| not (($line | str trim) | is-empty) })
-    ravy-fzf-apply (ravy-fzf-select $items ".File" "ctrl-e")
+    let items = ((command-output $fd "-H" "-t" "f").stdout | lines)
+    let selected = (ravy-fzf-run $items ".File" "--preview" (ravy-fzf-file-preview) "--preview-window" "right:wrap")
+    ravy-open-editor $selected
 }
 
 def ravy-fzf-dirs [] {
@@ -466,8 +420,11 @@ def ravy-fzf-dirs [] {
         return
     }
 
-    let items = ((command-output $fd "-t" "d").stdout | lines | where {|line| not (($line | str trim) | is-empty) })
-    ravy-fzf-apply (ravy-fzf-select $items "Dir" "ctrl-d")
+    let items = ((command-output $fd "-t" "d").stdout | lines)
+    let selected = (ravy-fzf-run $items "Dir")
+    if not (($selected | str trim) | is-empty) {
+        cd $selected
+    }
 }
 
 def ravy-fzf-dirs-hidden [] {
@@ -476,8 +433,11 @@ def ravy-fzf-dirs-hidden [] {
         return
     }
 
-    let items = ((command-output $fd "-H" "-t" "d").stdout | lines | where {|line| not (($line | str trim) | is-empty) })
-    ravy-fzf-apply (ravy-fzf-select $items ".Dir" "ctrl-d")
+    let items = ((command-output $fd "-H" "-t" "d").stdout | lines)
+    let selected = (ravy-fzf-run $items ".Dir")
+    if not (($selected | str trim) | is-empty) {
+        cd $selected
+    }
 }
 
 def ravy-fzf-nvim [] {
@@ -488,8 +448,9 @@ def ravy-fzf-nvim [] {
 
     let items = (
         command-output $nvim "--headless" "+lua for _,f in ipairs(vim.v.oldfiles) do io.write(f .. \"\\n\") end" "+qa"
-    ).stdout | lines | where {|line| not (($line | str trim) | is-empty) }
-    ravy-fzf-apply (ravy-fzf-select $items "File(nvim)" "ctrl-e")
+    ).stdout | lines
+    let selected = (ravy-fzf-run $items "File(nvim)" "--preview" (ravy-fzf-file-preview) "--preview-window" "right:wrap")
+    ravy-open-editor $selected
 }
 
 def ravy-fzf-rg [] {
@@ -498,13 +459,14 @@ def ravy-fzf-rg [] {
         return
     }
 
-    let keyword = (commandline | str trim | str downcase)
+    let keyword = (commandline | str trim)
     if ($keyword | is-empty) {
         return
     }
 
-    let items = ((command-output $rg "-il" $keyword).stdout | lines | where {|line| not (($line | str trim) | is-empty) })
-    ravy-fzf-apply (ravy-fzf-select $items $"Search /($keyword)/" "ctrl-e")
+    let items = ((command-output $rg "-il" "--" $keyword).stdout | lines)
+    let selected = (ravy-fzf-run $items $"Search /($keyword)/" "--preview" (ravy-fzf-file-preview) "--preview-window" "right:wrap")
+    ravy-open-editor $selected
 }
 
 def ravy-type-current [] {
