@@ -4,6 +4,9 @@ set fish_greeting
 
 {{ template "ravy_env_common.tmpl" (dict "shell" "fish") }}
 
+# theme
+fish_config theme choose ravy >/dev/null 2>/dev/null
+
 if set -q CURSOR_AGENT || set -q CURSOR_TRACE_ID
     if command -v cursor
         . (cursor --locate-shell-integration-path fish)

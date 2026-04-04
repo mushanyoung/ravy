@@ -273,9 +273,12 @@ end
 
 set -l expected_ravy_home (realpath "$repo_root")
 set -l rendered_config "$HOME/.config/fish/config.fish"
+set -l rendered_theme "$HOME/.config/fish/themes/ravy.theme"
 
 mkdir -p (dirname $rendered_config)
+mkdir -p (dirname $rendered_theme)
 chezmoi cat "$rendered_config" > $rendered_config
+chezmoi cat "$rendered_theme" > $rendered_theme
 
 source $rendered_config
 
@@ -284,6 +287,9 @@ assert_true "not set -q RAVY_PRIVATE_HOME" "RAVY_PRIVATE_HOME stays unset when p
 assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
 assert_contains "$HOME/bin" $PATH "PATH includes HOME/bin"
 assert_contains "$HOME/.local/bin" $PATH "PATH includes HOME/.local/bin"
+assert_contains 005fd7 $fish_color_command "fish theme sets command color"
+assert_contains 555 $fish_color_autosuggestion "fish theme sets autosuggestion fallback color"
+assert_contains brblack $fish_color_autosuggestion "fish theme sets autosuggestion named fallback"
 assert_true "functions -q __starship_set_job_count" "starship prompt initialized"
 assert_true "functions -q __ravy_zoxide_init" "zoxide hook initialized"
 assert_true "functions -q _atuin_preexec" "atuin hook initialized"
