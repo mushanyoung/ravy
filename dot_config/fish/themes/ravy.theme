@@ -3,7 +3,7 @@
 
 fish_color_autosuggestion 555 brblack
 fish_color_cancel -r
-fish_color_command 005fd7
+fish_color_command green
 fish_color_comment 990000
 fish_color_cwd green
 fish_color_cwd_root red
@@ -13,11 +13,11 @@ fish_color_escape 00a6b2
 fish_color_history_current --bold
 fish_color_host --reset
 fish_color_host_remote yellow
-# fish_color_match --background=brblue
+fish_color_match --background=brblue
 fish_color_normal --reset
 fish_color_operator 00a6b2
 fish_color_param 00afff
-fish_color_quote 999900
+fish_color_quote bbbb00
 fish_color_redirection 00afff
 fish_color_search_match white --background=brblack
 fish_color_selection white --bold --background=brblack
