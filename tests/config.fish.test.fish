@@ -265,7 +265,8 @@ function setup_private_overlay
         "$HOME/.config/ravy"
 
     printf "%s\n" "set -gx __RAVY_PRIVATE_COMMON 1" > "$private_home/shell/config.fish"
-    printf "%s\n" "set -gx __RAVY_SECRETS_FISH 1" > "$HOME/.config/ravy/secrets.fish"
+    cat "$repo_root/custom/dot_config/ravy/private_secrets.fish" > "$HOME/.config/ravy/secrets.fish"
+    printf "%s\t%s\n%s\t%s\n" __RAVY_SECRETS_FISH " 1" RAVY_TSV_VALUE " value" > "$HOME/.config/ravy/secrets.tsv"
     printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" > "$private_home/bin/common/private-helper"
     chmod +x "$private_home/bin/common/private-helper"
     printf "%s\n" $private_home
@@ -409,6 +410,7 @@ assert_equal $RAVY_CUSTOM $private_home "RAVY_CUSTOM compatibility variable foll
 assert_contains "$private_home/bin/common" $PATH "PATH includes private common bin directory"
 assert_true "test \"$__RAVY_PRIVATE_COMMON\" = 1" "private common overlay loaded"
 assert_true "test \"$__RAVY_SECRETS_FISH\" = 1" "managed secret fish overrides loaded"
+assert_equal "$RAVY_TSV_VALUE" value "managed secret fish loader trims delimiter padding"
 assert_true "command -v private-helper >/dev/null" "private helper command exists"
 rm -f "$HOME/chezmoi.log"
 assert_equal (chezp source-path) $private_home "chezp resolves to the private chezmoi source"

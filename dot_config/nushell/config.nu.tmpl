@@ -71,8 +71,11 @@ def --env load-secrets-tsv [file: string] {
             continue
         }
 
-        let key = ($entry | first)
-        let value = ($entry | skip 1 | str join (char tab))
+        let key = (($entry | first) | str trim -c " \t\r")
+        let value = ($entry | skip 1 | str join (char tab) | str trim -l -c " \t" | str trim -r -c "\r")
+        if ($key | is-empty) or ($key | str starts-with "#") {
+            continue
+        }
         load-env { ($key): $value }
     }
 }
