@@ -164,7 +164,7 @@ while [ \"\$#\" -gt 0 ]; do
       state_path=\"\$2\"
       shift 2
       ;;
-    source-path|init|cat|apply)
+    source-path|init|cat|apply|diff|status)
       subcommand=\"\$1\"
       shift
       break
@@ -193,6 +193,10 @@ if [ \"\$subcommand\" = \"init\" ]; then
     esac
   done
   printf '%s\n' \"subcommand=init source=\$source_path config=\$config_path state=\$state_path config_path=\$init_config_path\" >> \"\$HOME/chezmoi.log\"
+  exit 0
+fi
+if [ \"\$subcommand\" = \"apply\" ] || [ \"\$subcommand\" = \"diff\" ] || [ \"\$subcommand\" = \"status\" ]; then
+  printf '%s\n' \"subcommand=\$subcommand source=\$source_path config=\$config_path state=\$state_path\" >> \"\$HOME/chezmoi.log\"
   exit 0
 fi
 if [ \"\$subcommand\" = \"cat\" ]; then
@@ -383,17 +387,41 @@ end
 
 rm -f "$HOME/chezmoi.log"
 assert_equal (chez source-path) $expected_ravy_home "chez resolves to public chezmoi source"
+grep -F "subcommand=source-path source=$expected_ravy_home config= state=" "$HOME/chezmoi.log" >/dev/null
+or fail "chez keeps using the default chezmoi config/state"
+rm -f "$HOME/chezmoi.log"
+chez diff --exclude scripts >/dev/null 2>/dev/null
+grep -F "subcommand=diff source=$expected_ravy_home config= state=" "$HOME/chezmoi.log" >/dev/null
+or fail "chez diff should stay public-only when private is missing"
+test (grep -c '^subcommand=diff ' "$HOME/chezmoi.log") -eq 1
+or fail "chez diff should only run once without a private repo"
+rm -f "$HOME/chezmoi.log"
+chez status --path-style absolute >/dev/null 2>/dev/null
+grep -F "subcommand=status source=$expected_ravy_home config= state=" "$HOME/chezmoi.log" >/dev/null
+or fail "chez status should stay public-only when private is missing"
+test (grep -c '^subcommand=status ' "$HOME/chezmoi.log") -eq 1
+or fail "chez status should only run once without a private repo"
+rm -f "$HOME/chezmoi.log"
+chez apply >/dev/null 2>/dev/null
+grep -F "subcommand=apply source=$expected_ravy_home config= state=" "$HOME/chezmoi.log" >/dev/null
+or fail "chez apply should stay public-only when private is missing"
+test (grep -c '^subcommand=apply ' "$HOME/chezmoi.log") -eq 1
+or fail "chez apply should only run once without a private repo"
+rm -f "$HOME/chezmoi.log"
 chez init >/dev/null 2>/dev/null
 test ! -f "$HOME/.config/chezmoi/ravy-public.toml"
 or fail "chez does not create a dedicated public config file"
-grep -F "subcommand=source-path source=$expected_ravy_home config= state=" "$HOME/chezmoi.log" >/dev/null
-or fail "chez keeps using the default chezmoi config/state"
 grep -F "subcommand=init source=$expected_ravy_home config= state= config_path=" "$HOME/chezmoi.log" >/dev/null
 or fail "chez init keeps using the default chezmoi config/state"
 
 ravycustom >/dev/null 2>/dev/null
 if test $status -eq 0
     fail "ravycustom should fail without a private repo"
+end
+
+chez private source-path >/dev/null 2>/dev/null
+if test $status -eq 0
+    fail "chez private should fail without a private repo"
 end
 
 chezp source-path >/dev/null 2>/dev/null
@@ -413,16 +441,61 @@ assert_true "test \"$__RAVY_SECRETS_FISH\" = 1" "managed secret fish overrides l
 assert_equal "$RAVY_TSV_VALUE" value "managed secret fish loader trims delimiter padding"
 assert_true "command -v private-helper >/dev/null" "private helper command exists"
 rm -f "$HOME/chezmoi.log"
+assert_equal (chez source-path) $expected_ravy_home "chez source-path stays public when private is present"
+grep -F "subcommand=source-path source=$expected_ravy_home config= state=" "$HOME/chezmoi.log" >/dev/null
+or fail "chez source-path should keep targeting the public repo"
+rm -f "$HOME/chezmoi.log"
+assert_equal (chez private source-path) $private_home "chez private resolves to the private chezmoi source"
+grep -F "subcommand=source-path source=$private_home config=$HOME/.config/chezmoi/ravy-private.toml state=$HOME/.config/chezmoi/ravy-private-state.boltdb" "$HOME/chezmoi.log" >/dev/null
+or fail "chez private should use the dedicated private config/state"
+rm -f "$HOME/chezmoi.log"
 assert_equal (chezp source-path) $private_home "chezp resolves to the private chezmoi source"
 test -f "$HOME/.config/chezmoi/ravy-private.toml"
 or fail "chezp seeds a dedicated private config file"
 grep -F "seed = 1" "$HOME/.config/chezmoi/ravy-private.toml" >/dev/null
 or fail "chezp copies the existing config into the dedicated private config"
-chezp init >/dev/null 2>/dev/null
 grep -F "subcommand=source-path source=$private_home config=$HOME/.config/chezmoi/ravy-private.toml state=$HOME/.config/chezmoi/ravy-private-state.boltdb" "$HOME/chezmoi.log" >/dev/null
-or fail "chezp uses dedicated private config"
+or fail "chezp should remain a compatibility alias for the private repo"
+rm -f "$HOME/chezmoi.log"
+chezp init >/dev/null 2>/dev/null
 grep -F "subcommand=init source=$private_home config=$HOME/.config/chezmoi/ravy-private.toml state=$HOME/.config/chezmoi/ravy-private-state.boltdb config_path=$HOME/.config/chezmoi/ravy-private.toml" "$HOME/chezmoi.log" >/dev/null
 or fail "chezp init regenerates the private config file"
+rm -f "$HOME/chezmoi.log"
+chez diff --exclude scripts >/dev/null 2>/dev/null
+head -n 1 "$HOME/chezmoi.log" | grep -F "subcommand=diff source=$expected_ravy_home config= state=" >/dev/null
+or fail "chez diff should run the public repo first"
+tail -n 1 "$HOME/chezmoi.log" | grep -F "subcommand=diff source=$private_home config=$HOME/.config/chezmoi/ravy-private.toml state=$HOME/.config/chezmoi/ravy-private-state.boltdb" >/dev/null
+or fail "chez diff should run the private repo second"
+test (grep -c '^subcommand=diff ' "$HOME/chezmoi.log") -eq 2
+or fail "chez diff should run both repos when private is configured"
+rm -f "$HOME/chezmoi.log"
+chez status --path-style absolute >/dev/null 2>/dev/null
+head -n 1 "$HOME/chezmoi.log" | grep -F "subcommand=status source=$expected_ravy_home config= state=" >/dev/null
+or fail "chez status should run the public repo first"
+tail -n 1 "$HOME/chezmoi.log" | grep -F "subcommand=status source=$private_home config=$HOME/.config/chezmoi/ravy-private.toml state=$HOME/.config/chezmoi/ravy-private-state.boltdb" >/dev/null
+or fail "chez status should run the private repo second"
+test (grep -c '^subcommand=status ' "$HOME/chezmoi.log") -eq 2
+or fail "chez status should run both repos when private is configured"
+rm -f "$HOME/chezmoi.log"
+chez apply >/dev/null 2>/dev/null
+head -n 1 "$HOME/chezmoi.log" | grep -F "subcommand=apply source=$expected_ravy_home config= state=" >/dev/null
+or fail "chez apply should run the public repo first"
+tail -n 1 "$HOME/chezmoi.log" | grep -F "subcommand=apply source=$private_home config=$HOME/.config/chezmoi/ravy-private.toml state=$HOME/.config/chezmoi/ravy-private-state.boltdb" >/dev/null
+or fail "chez apply should run the private repo second"
+test (grep -c '^subcommand=apply ' "$HOME/chezmoi.log") -eq 2
+or fail "chez apply should run both repos when private is configured"
+rm -f "$HOME/chezmoi.log"
+chez diff ~/.config/ravy/secrets.tsv >/dev/null 2>/dev/null
+grep -F "subcommand=diff source=$expected_ravy_home config= state=" "$HOME/chezmoi.log" >/dev/null
+or fail "path-scoped chez diff should stay public-only"
+test (grep -c '^subcommand=diff ' "$HOME/chezmoi.log") -eq 1
+or fail "path-scoped chez diff should not fan out to the private repo"
+rm -f "$HOME/chezmoi.log"
+chez private diff ~/.config/ravy/secrets.tsv >/dev/null 2>/dev/null
+grep -F "subcommand=diff source=$private_home config=$HOME/.config/chezmoi/ravy-private.toml state=$HOME/.config/chezmoi/ravy-private-state.boltdb" "$HOME/chezmoi.log" >/dev/null
+or fail "chez private diff should target the private repo explicitly"
+test (grep -c '^subcommand=diff ' "$HOME/chezmoi.log") -eq 1
+or fail "chez private diff should only run once"
 
 set -l orig_pwd $PWD
 ravycustom

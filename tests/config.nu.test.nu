@@ -63,7 +63,7 @@ def maybe-text [path: string] {
 }
 
 def clear-logs [tmp_home: string] {
-    rm -f $"($tmp_home)/fd.log" $"($tmp_home)/fzf.log" $"($tmp_home)/fzf.stdin" $"($tmp_home)/rg.log" $"($tmp_home)/nvim.log" $"($tmp_home)/nvim-headless.log"
+    rm -f $"($tmp_home)/fd.log" $"($tmp_home)/fzf.log" $"($tmp_home)/fzf.stdin" $"($tmp_home)/rg.log" $"($tmp_home)/nvim.log" $"($tmp_home)/nvim-headless.log" $"($tmp_home)/chezmoi.log"
 }
 
 def run-probe [tmp_home: string, rendered_env: string, rendered_config: string, script: string, extra_env?: record] {
@@ -109,6 +109,64 @@ mkdir $"($tmp_home)/.local/share"
 
 "seed = 1\n" | save -f $"($tmp_home)/.config/chezmoi/chezmoi.toml"
 $"__RAVY_SECRETS_NU(char tab) 1\nRAVY_TSV_VALUE(char tab) value\n" | save -f $"($tmp_home)/.config/ravy/secrets.tsv"
+
+write-stub $"($tmp_home)/bin/chezmoi" ([
+    '#!/usr/bin/env sh'
+    $'source_path="($repo_root)"'
+    "config_path=''"
+    "state_path=''"
+    "subcommand=''"
+    'while [ "$#" -gt 0 ]; do'
+    '  case "$1" in'
+    '    -S|--source)'
+    '      source_path="$2"'
+    '      shift 2'
+    '      ;;'
+    '    -c|--config)'
+    '      config_path="$2"'
+    '      shift 2'
+    '      ;;'
+    '    --persistent-state)'
+    '      state_path="$2"'
+    '      shift 2'
+    '      ;;'
+    '    source-path|init|apply|diff|status)'
+    '      subcommand="$1"'
+    '      shift'
+    '      break'
+    '      ;;'
+    '    *)'
+    '      shift'
+    '      ;;'
+    '  esac'
+    'done'
+    'if [ "$subcommand" = "source-path" ]; then'
+    '  printf "%s\n" "subcommand=source-path source=$source_path config=$config_path state=$state_path" >> "$HOME/chezmoi.log"'
+    '  printf "%s\n" "$source_path"'
+    '  exit 0'
+    'fi'
+    'if [ "$subcommand" = "init" ]; then'
+    "  init_config_path=''"
+    '  while [ "$#" -gt 0 ]; do'
+    '    case "$1" in'
+    '      -C|--config-path)'
+    '        init_config_path="$2"'
+    '        shift 2'
+    '        ;;'
+    '      *)'
+    '        shift'
+    '        ;;'
+    '    esac'
+    '  done'
+    '  printf "%s\n" "subcommand=init source=$source_path config=$config_path state=$state_path config_path=$init_config_path" >> "$HOME/chezmoi.log"'
+    '  exit 0'
+    'fi'
+    'if [ "$subcommand" = "apply" ] || [ "$subcommand" = "diff" ] || [ "$subcommand" = "status" ]; then'
+    '  printf "%s\n" "subcommand=$subcommand source=$source_path config=$config_path state=$state_path" >> "$HOME/chezmoi.log"'
+    '  exit 0'
+    'fi'
+    'exit 0'
+] | str join (char newline))
 
 write-stub $"($tmp_home)/bin/starship" '#!/usr/bin/env sh
 if [ "$1" = "prompt" ]; then
@@ -262,6 +320,8 @@ write-file $"($tmp_home)/oldfile.txt" "old\n"
 write-file $"($tmp_home)/rg-match.txt" "match\n"
 mkdir $"($tmp_home)/dir-one"
 mkdir $"($tmp_home)/.hidden-dir"
+let private_home = $"($tmp_home)/private-repo"
+mkdir $private_home
 
 let rendered_env = $"($tmp_home)/.config/nushell/env.nu"
 let rendered_config = $"($tmp_home)/.config/nushell/config.nu"
@@ -353,6 +413,138 @@ if $probe.exit_code == 0 and not (($probe.stdout | default "" | str trim) | is-e
 
     let mise_log = (open $"($tmp_home)/mise.log" | lines)
     assert-true (($mise_log | any {|line| $line | str contains "upgrade" })) "mu should call mise upgrade"
+}
+
+let public_chez_probe = (run-probe $tmp_home $rendered_env $rendered_config '
+    rm -f $"($env.HOME)/chezmoi.log"
+    let source_path = (chez source-path | str trim)
+    let source_log = (open $"($env.HOME)/chezmoi.log" | lines)
+    rm -f $"($env.HOME)/chezmoi.log"
+    chez diff --exclude scripts
+    let diff_log = (open $"($env.HOME)/chezmoi.log" | lines)
+    rm -f $"($env.HOME)/chezmoi.log"
+    chez status --path-style absolute
+    let status_log = (open $"($env.HOME)/chezmoi.log" | lines)
+    rm -f $"($env.HOME)/chezmoi.log"
+    chez apply
+    let apply_log = (open $"($env.HOME)/chezmoi.log" | lines)
+    {
+        source_path: $source_path
+        source_log: $source_log
+        diff_log: $diff_log
+        status_log: $status_log
+        apply_log: $apply_log
+    } | to json -r
+')
+assert-probe-ok $public_chez_probe "nushell public chez probe command failed"
+if $public_chez_probe.exit_code == 0 and not (($public_chez_probe.stdout | default "" | str trim) | is-empty) {
+    let public_chez = ($public_chez_probe.stdout | from json)
+    assert-equal $public_chez.source_path $repo_root "chez source-path should stay public when private is missing"
+    assert-equal ($public_chez.source_log | length) 1 "public chez source-path should log once"
+    assert-equal ($public_chez.source_log | first) $"subcommand=source-path source=($repo_root) config= state=" "public chez source-path should use the default config/state"
+    assert-equal ($public_chez.diff_log | length) 1 "public chez diff should only run once without a private repo"
+    assert-equal ($public_chez.diff_log | first) $"subcommand=diff source=($repo_root) config= state=" "public chez diff should stay public-only when private is missing"
+    assert-equal ($public_chez.status_log | length) 1 "public chez status should only run once without a private repo"
+    assert-equal ($public_chez.status_log | first) $"subcommand=status source=($repo_root) config= state=" "public chez status should stay public-only when private is missing"
+    assert-equal ($public_chez.apply_log | length) 1 "public chez apply should only run once without a private repo"
+    assert-equal ($public_chez.apply_log | first) $"subcommand=apply source=($repo_root) config= state=" "public chez apply should stay public-only when private is missing"
+}
+
+let private_chez_probe = (run-probe $tmp_home $rendered_env $rendered_config '
+    let private_config = $"($env.HOME)/.config/chezmoi/ravy-private.toml"
+    let private_state = $"($env.HOME)/.config/chezmoi/ravy-private-state.boltdb"
+
+    rm -f $"($env.HOME)/chezmoi.log"
+    let public_source_path = (chez source-path | str trim)
+    let public_source_log = (open $"($env.HOME)/chezmoi.log" | lines)
+
+    rm -f $"($env.HOME)/chezmoi.log"
+    let private_source_path = (chez private source-path | str trim)
+    let private_source_log = (open $"($env.HOME)/chezmoi.log" | lines)
+
+    rm -f $"($env.HOME)/chezmoi.log"
+    let compat_source_path = (chezp source-path | str trim)
+    let compat_source_log = (open $"($env.HOME)/chezmoi.log" | lines)
+
+    let private_config_exists = ($private_config | path exists)
+    let private_config_text = (open --raw $private_config)
+
+    rm -f $"($env.HOME)/chezmoi.log"
+    chezp init
+    let init_log = (open $"($env.HOME)/chezmoi.log" | lines)
+
+    rm -f $"($env.HOME)/chezmoi.log"
+    chez diff --exclude scripts
+    let dual_diff_log = (open $"($env.HOME)/chezmoi.log" | lines)
+
+    rm -f $"($env.HOME)/chezmoi.log"
+    chez status --path-style absolute
+    let dual_status_log = (open $"($env.HOME)/chezmoi.log" | lines)
+
+    rm -f $"($env.HOME)/chezmoi.log"
+    chez apply
+    let dual_apply_log = (open $"($env.HOME)/chezmoi.log" | lines)
+
+    rm -f $"($env.HOME)/chezmoi.log"
+    chez diff ~/.config/ravy/secrets.tsv
+    let scoped_public_diff_log = (open $"($env.HOME)/chezmoi.log" | lines)
+
+    rm -f $"($env.HOME)/chezmoi.log"
+    chez private diff ~/.config/ravy/secrets.tsv
+    let scoped_private_diff_log = (open $"($env.HOME)/chezmoi.log" | lines)
+
+    {
+        private_state: $private_state
+        public_source_path: $public_source_path
+        public_source_log: $public_source_log
+        private_source_path: $private_source_path
+        private_source_log: $private_source_log
+        compat_source_path: $compat_source_path
+        compat_source_log: $compat_source_log
+        private_config_exists: $private_config_exists
+        private_config_text: $private_config_text
+        init_log: $init_log
+        dual_diff_log: $dual_diff_log
+        dual_status_log: $dual_status_log
+        dual_apply_log: $dual_apply_log
+        scoped_public_diff_log: $scoped_public_diff_log
+        scoped_private_diff_log: $scoped_private_diff_log
+    } | to json -r
+' {
+    RAVY_PRIVATE_HOME: $private_home
+})
+assert-probe-ok $private_chez_probe "nushell private chez probe command failed"
+if $private_chez_probe.exit_code == 0 and not (($private_chez_probe.stdout | default "" | str trim) | is-empty) {
+    let private_chez = ($private_chez_probe.stdout | from json)
+    let private_config_path = $"($tmp_home)/.config/chezmoi/ravy-private.toml"
+    let private_state_path = $"($tmp_home)/.config/chezmoi/ravy-private-state.boltdb"
+
+    assert-equal $private_chez.public_source_path $repo_root "chez source-path should stay public when private is configured"
+    assert-equal ($private_chez.public_source_log | length) 1 "chez source-path should log one public invocation"
+    assert-equal ($private_chez.public_source_log | first) $"subcommand=source-path source=($repo_root) config= state=" "chez source-path should keep the default public config/state"
+    assert-equal $private_chez.private_source_path $private_home "chez private source-path should resolve to the private repo"
+    assert-equal ($private_chez.private_source_log | length) 1 "chez private source-path should log once"
+    assert-equal ($private_chez.private_source_log | first) $"subcommand=source-path source=($private_home) config=($private_config_path) state=($private_state_path)" "chez private source-path should use the dedicated private config/state"
+    assert-equal $private_chez.compat_source_path $private_home "chezp should remain a compatibility alias for the private repo"
+    assert-equal ($private_chez.compat_source_log | length) 1 "chezp source-path should log once"
+    assert-equal ($private_chez.compat_source_log | first) $"subcommand=source-path source=($private_home) config=($private_config_path) state=($private_state_path)" "chezp should use the dedicated private config/state"
+    assert-true $private_chez.private_config_exists "private chez wrapper should seed the dedicated private config file"
+    assert-true ($private_chez.private_config_text | str contains "seed = 1") "private chez wrapper should seed the private config from the default config"
+    assert-equal ($private_chez.init_log | length) 1 "chezp init should log once"
+    assert-equal ($private_chez.init_log | first) $"subcommand=init source=($private_home) config=($private_config_path) state=($private_state_path) config_path=($private_config_path)" "chezp init should keep the dedicated private config/state"
+    assert-equal ($private_chez.dual_diff_log | length) 2 "chez diff should fan out to both repos when private is configured"
+    assert-equal ($private_chez.dual_diff_log | get 0) $"subcommand=diff source=($repo_root) config= state=" "chez diff should run the public repo first"
+    assert-equal ($private_chez.dual_diff_log | get 1) $"subcommand=diff source=($private_home) config=($private_config_path) state=($private_state_path)" "chez diff should run the private repo second"
+    assert-equal ($private_chez.dual_status_log | length) 2 "chez status should fan out to both repos when private is configured"
+    assert-equal ($private_chez.dual_status_log | get 0) $"subcommand=status source=($repo_root) config= state=" "chez status should run the public repo first"
+    assert-equal ($private_chez.dual_status_log | get 1) $"subcommand=status source=($private_home) config=($private_config_path) state=($private_state_path)" "chez status should run the private repo second"
+    assert-equal ($private_chez.dual_apply_log | length) 2 "chez apply should fan out to both repos when private is configured"
+    assert-equal ($private_chez.dual_apply_log | get 0) $"subcommand=apply source=($repo_root) config= state=" "chez apply should run the public repo first"
+    assert-equal ($private_chez.dual_apply_log | get 1) $"subcommand=apply source=($private_home) config=($private_config_path) state=($private_state_path)" "chez apply should run the private repo second"
+    assert-equal ($private_chez.scoped_public_diff_log | length) 1 "path-scoped chez diff should stay public-only"
+    assert-equal ($private_chez.scoped_public_diff_log | first) $"subcommand=diff source=($repo_root) config= state=" "path-scoped chez diff should not fan out to the private repo"
+    assert-equal ($private_chez.scoped_private_diff_log | length) 1 "chez private diff should only run once"
+    assert-equal ($private_chez.scoped_private_diff_log | first) $"subcommand=diff source=($private_home) config=($private_config_path) state=($private_state_path)" "chez private diff should target the private repo explicitly"
 }
 
 clear-logs $tmp_home

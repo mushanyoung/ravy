@@ -74,15 +74,18 @@ Managed private targets now include:
 
 For day-to-day use after your shell reloads:
 
-- `chez` is a short alias for the public `chezmoi` source
-- `chezp` targets the private `RAVY_PRIVATE_HOME` source automatically
+- `chez apply`, `chez diff`, and `chez status` run against the public source
+  first and then the private `RAVY_PRIVATE_HOME` source automatically when it
+  is configured
+- `chez private ...` targets the private `RAVY_PRIVATE_HOME` source explicitly
+- `chezp` remains available as a compatibility alias for `chez private ...`
 
 Examples:
 
 ```sh
-chez status
-chezp edit ~/.config/ravy/secrets.tsv
-chezp apply ~/.config/ravy/secrets.tsv
+chez diff
+chez apply
+chez private edit ~/.config/ravy/secrets.tsv
 ```
 
 ## Neovim

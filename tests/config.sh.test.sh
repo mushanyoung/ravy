@@ -131,7 +131,7 @@ while [ \"\$#\" -gt 0 ]; do
       state_path=\"\$2\"
       shift 2
       ;;
-    source-path|init|cat|apply)
+    source-path|init|cat|apply|diff|status)
       subcommand=\"\$1\"
       shift
       break
@@ -160,6 +160,10 @@ if [ \"\$subcommand\" = \"init\" ]; then
     esac
   done
   printf '%s\\n' \"subcommand=init source=\$source_path config=\$config_path state=\$state_path config_path=\$init_config_path\" >> \"\$HOME/chezmoi.log\"
+  exit 0
+fi
+if [ \"\$subcommand\" = \"apply\" ] || [ \"\$subcommand\" = \"diff\" ] || [ \"\$subcommand\" = \"status\" ]; then
+  printf '%s\\n' \"subcommand=\$subcommand source=\$source_path config=\$config_path state=\$state_path\" >> \"\$HOME/chezmoi.log\"
   exit 0
 fi
 exit 0
@@ -451,15 +455,29 @@ check_public_surface() {
     $fn_check __ravy_zoxide_init >/dev/null &&
     $fn_check __ravy_atuin_init >/dev/null &&
     test \"\${__RAVY_MISE_INIT:-}\" = 1 &&
-    rm -f \"\$HOME/chezmoi.log\" &&
     cd \"\$HOME\" &&
     ravy && test \"\$PWD\" = \"$repo_root\" &&
+    rm -f \"\$HOME/chezmoi.log\" &&
     test \"\$(chez source-path)\" = \"$repo_root\" &&
+    grep -F 'subcommand=source-path source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
+    chez diff --exclude scripts >/dev/null 2>&1 &&
+    grep -F 'subcommand=diff source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    test \"\$(grep -c '^subcommand=diff ' \"\$HOME/chezmoi.log\")\" -eq 1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
+    chez status --path-style absolute >/dev/null 2>&1 &&
+    grep -F 'subcommand=status source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    test \"\$(grep -c '^subcommand=status ' \"\$HOME/chezmoi.log\")\" -eq 1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
+    chez apply >/dev/null 2>&1 &&
+    grep -F 'subcommand=apply source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    test \"\$(grep -c '^subcommand=apply ' \"\$HOME/chezmoi.log\")\" -eq 1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
     chez init >/dev/null 2>&1 &&
     ! ravycustom >/dev/null 2>&1 &&
+    ! chez private source-path >/dev/null 2>&1 &&
     ! chezp source-path >/dev/null 2>&1 &&
     test ! -f \"\$HOME/.config/chezmoi/ravy-public.toml\" &&
-    grep -F 'subcommand=source-path source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
     grep -F 'subcommand=init source=$repo_root config= state= config_path=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1
   "
 
@@ -733,14 +751,45 @@ check_private_surface() {
     test \"\${RAVY_TSV_VALUE:-}\" = value &&
     command -v private-helper >/dev/null 2>&1 &&
     rm -f \"\$HOME/chezmoi.log\" &&
+    test \"\$(chez source-path)\" = \"$repo_root\" &&
+    grep -F 'subcommand=source-path source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
+    test \"\$(chez private source-path)\" = \"$private_home\" &&
+    grep -F 'subcommand=source-path source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
     test \"\$(chezp source-path)\" = \"$private_home\" &&
+    grep -F 'subcommand=source-path source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
     test -f \"\$HOME/.config/chezmoi/ravy-private.toml\" &&
     grep -F 'seed = 1' \"\$HOME/.config/chezmoi/ravy-private.toml\" >/dev/null 2>&1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
     chezp init >/dev/null 2>&1 &&
+    grep -F 'subcommand=init source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
+    chez diff --exclude scripts >/dev/null 2>&1 &&
+    head -n 1 \"\$HOME/chezmoi.log\" | grep -F 'subcommand=diff source=$repo_root config= state=' >/dev/null 2>&1 &&
+    tail -n 1 \"\$HOME/chezmoi.log\" | grep -F 'subcommand=diff source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb' >/dev/null 2>&1 &&
+    test \"\$(grep -c '^subcommand=diff ' \"\$HOME/chezmoi.log\")\" -eq 2 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
+    chez status --path-style absolute >/dev/null 2>&1 &&
+    head -n 1 \"\$HOME/chezmoi.log\" | grep -F 'subcommand=status source=$repo_root config= state=' >/dev/null 2>&1 &&
+    tail -n 1 \"\$HOME/chezmoi.log\" | grep -F 'subcommand=status source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb' >/dev/null 2>&1 &&
+    test \"\$(grep -c '^subcommand=status ' \"\$HOME/chezmoi.log\")\" -eq 2 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
+    chez apply >/dev/null 2>&1 &&
+    head -n 1 \"\$HOME/chezmoi.log\" | grep -F 'subcommand=apply source=$repo_root config= state=' >/dev/null 2>&1 &&
+    tail -n 1 \"\$HOME/chezmoi.log\" | grep -F 'subcommand=apply source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb' >/dev/null 2>&1 &&
+    test \"\$(grep -c '^subcommand=apply ' \"\$HOME/chezmoi.log\")\" -eq 2 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
+    chez diff ~/.config/ravy/secrets.tsv >/dev/null 2>&1 &&
+    grep -F 'subcommand=diff source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    test \"\$(grep -c '^subcommand=diff ' \"\$HOME/chezmoi.log\")\" -eq 1 &&
+    rm -f \"\$HOME/chezmoi.log\" &&
+    chez private diff ~/.config/ravy/secrets.tsv >/dev/null 2>&1 &&
+    grep -F 'subcommand=diff source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
+    test \"\$(grep -c '^subcommand=diff ' \"\$HOME/chezmoi.log\")\" -eq 1 &&
     cd \"\$HOME\" &&
     ravycustom && test \"\$PWD\" = \"$private_home\" &&
-    grep -F 'subcommand=source-path source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
-    grep -F 'subcommand=init source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml' \"\$HOME/chezmoi.log\" >/dev/null 2>&1
+    true
   "
 
   local result

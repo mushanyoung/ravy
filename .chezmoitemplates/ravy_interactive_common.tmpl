@@ -41,6 +41,81 @@ function __ravy_chezmoi_seed_config --argument-names config_path
     end
 end
 
+function __ravy_chezmoi_flag_consumes_next --argument-names arg
+    switch "$arg"
+        case '--*=*'
+            return 1
+        case '--age-recipient' '--age-recipient-file' '--cache' '--color' '--config' '--config-format' '--destination' '--exclude' '--include' '--mode' '--output' '--override-data' '--override-data-file' '--pager' '--path-style' '--persistent-state' '--progress' '--refresh-externals' '--source' '--working-tree'
+            return 0
+        case '-c' '-D' '-i' '-o' '-p' '-R' '-S' '-W' '-x'
+            return 0
+        case '-c?*' '-D?*' '-i?*' '-o?*' '-p?*' '-R?*' '-S?*' '-W?*' '-x?*'
+            return 1
+    end
+
+    return 1
+end
+
+function __ravy_chezmoi_find_subcommand
+    set -l index 1
+    while test $index -le (count $argv)
+        set -l arg $argv[$index]
+        if test "$arg" = '--'
+            return 1
+        end
+
+        if string match -q -- '-*' "$arg"
+            if __ravy_chezmoi_flag_consumes_next "$arg"
+                set index (math $index + 2)
+            else
+                set index (math $index + 1)
+            end
+            continue
+        end
+
+        printf '%s\t%s\n' $index $arg
+        return 0
+    end
+
+    return 1
+end
+
+function __ravy_chezmoi_should_run_both
+    set -l subcommand_info (__ravy_chezmoi_find_subcommand $argv)
+    or return 1
+
+    set -l subcommand_parts (string split \t -- $subcommand_info)
+    set -l subcommand_index $subcommand_parts[1]
+    set -l subcommand_name $subcommand_parts[2]
+    contains -- $subcommand_name apply diff status
+    or return 1
+
+    set -l index (math $subcommand_index + 1)
+    while test $index -le (count $argv)
+        set -l arg $argv[$index]
+        if test "$arg" = '--'
+            set index (math $index + 1)
+            if test $index -le (count $argv)
+                return 1
+            end
+            break
+        end
+
+        if string match -q -- '-*' "$arg"
+            if __ravy_chezmoi_flag_consumes_next "$arg"
+                set index (math $index + 2)
+            else
+                set index (math $index + 1)
+            end
+            continue
+        end
+
+        return 1
+    end
+
+    return 0
+end
+
 function __ravy_chezmoi_run
     set -l source_dir "$argv[1]"
     set -l config_path "$argv[2]"
@@ -66,6 +141,32 @@ function ravy
 end
 
 function chez
+    if test (count $argv) -gt 0; and test "$argv[1]" = private
+        set -e argv[1]
+        if set -q RAVY_PRIVATE_HOME; and test -n "$RAVY_PRIVATE_HOME"
+            __ravy_chezmoi_run "$RAVY_PRIVATE_HOME" (__ravy_chezmoi_config_dir)/ravy-private.toml (__ravy_chezmoi_config_dir)/ravy-private-state.boltdb $argv
+        else
+            echo "RAVY_PRIVATE_HOME is not configured" >&2
+            return 1
+        end
+        return $status
+    end
+
+    if __ravy_chezmoi_should_run_both $argv
+        command chezmoi $argv
+        set -l public_status $status
+        if test $public_status -ne 0
+            return $public_status
+        end
+
+        if set -q RAVY_PRIVATE_HOME; and test -n "$RAVY_PRIVATE_HOME"
+            __ravy_chezmoi_run "$RAVY_PRIVATE_HOME" (__ravy_chezmoi_config_dir)/ravy-private.toml (__ravy_chezmoi_config_dir)/ravy-private-state.boltdb $argv
+            return $status
+        end
+
+        return 0
+    end
+
     command chezmoi $argv
 end
 
@@ -83,12 +184,7 @@ function ravyprivatecd
 end
 
 function chezp
-    if set -q RAVY_PRIVATE_HOME; and test -n "$RAVY_PRIVATE_HOME"
-        __ravy_chezmoi_run "$RAVY_PRIVATE_HOME" (__ravy_chezmoi_config_dir)/ravy-private.toml (__ravy_chezmoi_config_dir)/ravy-private-state.boltdb $argv
-    else
-        echo "RAVY_PRIVATE_HOME is not configured" >&2
-        return 1
-    end
+    chez private $argv
 end
 
 function ravysource
@@ -158,6 +254,106 @@ _ravy_chezmoi_seed_config() {
   done
 }
 
+_ravy_chezmoi_flag_consumes_next() {
+  case "$1" in
+    --*=*)
+      return 1
+      ;;
+    --age-recipient|--age-recipient-file|--cache|--color|--config|--config-format|--destination|--exclude|--include|--mode|--output|--override-data|--override-data-file|--pager|--path-style|--persistent-state|--progress|--refresh-externals|--source|--working-tree)
+      return 0
+      ;;
+    -c|-D|-i|-o|-p|-R|-S|-W|-x)
+      return 0
+      ;;
+    -c?*|-D?*|-i?*|-o?*|-p?*|-R?*|-S?*|-W?*|-x?*)
+      return 1
+      ;;
+  esac
+
+  return 1
+}
+
+_ravy_chezmoi_find_subcommand() {
+  while [ "$#" -gt 0 ]; do
+    arg=$1
+    if [ "$arg" = "--" ]; then
+      return 1
+    fi
+
+    case "$arg" in
+      -*)
+        if _ravy_chezmoi_flag_consumes_next "$arg"; then
+          shift
+          [ "$#" -gt 0 ] && shift
+        else
+          shift
+        fi
+        ;;
+      *)
+        printf '%s\n' "$arg"
+        return 0
+        ;;
+    esac
+  done
+
+  return 1
+}
+
+_ravy_chezmoi_should_run_both() {
+  subcommand="$(_ravy_chezmoi_find_subcommand "$@")" || return 1
+  case "$subcommand" in
+    apply|diff|status) ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  while [ "$#" -gt 0 ]; do
+    arg=$1
+    case "$arg" in
+      -*)
+        if _ravy_chezmoi_flag_consumes_next "$arg"; then
+          shift
+          [ "$#" -gt 0 ] && shift
+        else
+          shift
+        fi
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  [ "$#" -gt 0 ] || return 0
+  shift
+
+  while [ "$#" -gt 0 ]; do
+    arg=$1
+    if [ "$arg" = "--" ]; then
+      shift
+      [ "$#" -eq 0 ] && return 0
+      return 1
+    fi
+
+    case "$arg" in
+      -*)
+        if _ravy_chezmoi_flag_consumes_next "$arg"; then
+          shift
+          [ "$#" -gt 0 ] && shift
+        else
+          shift
+        fi
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+  done
+
+  return 0
+}
+
 _ravy_chezmoi_run() {
   source_dir=$1
   config_path=$2
@@ -184,6 +380,26 @@ ravy() {
 }
 
 chez() {
+  if [ "$#" -gt 0 ] && [ "$1" = "private" ]; then
+    shift
+    if [ -n "${RAVY_PRIVATE_HOME:-}" ]; then
+      _ravy_chezmoi_run "$RAVY_PRIVATE_HOME" "$(_ravy_chezmoi_config_dir)/ravy-private.toml" "$(_ravy_chezmoi_config_dir)/ravy-private-state.boltdb" "$@"
+    else
+      echo "RAVY_PRIVATE_HOME is not configured" >&2
+      return 1
+    fi
+    return $?
+  fi
+
+  if _ravy_chezmoi_should_run_both "$@"; then
+    command chezmoi "$@" || return $?
+    if [ -n "${RAVY_PRIVATE_HOME:-}" ]; then
+      _ravy_chezmoi_run "$RAVY_PRIVATE_HOME" "$(_ravy_chezmoi_config_dir)/ravy-private.toml" "$(_ravy_chezmoi_config_dir)/ravy-private-state.boltdb" "$@"
+      return $?
+    fi
+    return 0
+  fi
+
   command chezmoi "$@"
 }
 
@@ -201,12 +417,7 @@ ravyprivatecd() {
 }
 
 chezp() {
-  if [ -n "${RAVY_PRIVATE_HOME:-}" ]; then
-    _ravy_chezmoi_run "$RAVY_PRIVATE_HOME" "$(_ravy_chezmoi_config_dir)/ravy-private.toml" "$(_ravy_chezmoi_config_dir)/ravy-private-state.boltdb" "$@"
-  else
-    echo "RAVY_PRIVATE_HOME is not configured" >&2
-    return 1
-  fi
+  chez private "$@"
 }
 
 ravysource() {

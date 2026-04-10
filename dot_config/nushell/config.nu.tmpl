@@ -253,7 +253,155 @@ def ravy-chezmoi-seed-config [config_path: string] {
     }
 }
 
-def --wrapped chez [...args: string] {
+def ravy-chezmoi-private-home [] {
+    let private_home = (($env.RAVY_PRIVATE_HOME? | default "") | str trim)
+    if ($private_home | is-empty) {
+        error make { msg: "RAVY_PRIVATE_HOME is not configured" }
+    }
+
+    $private_home
+}
+
+def ravy-chezmoi-flag-consumes-next [arg: string] {
+    let long_value_flags = [
+        "--age-recipient"
+        "--age-recipient-file"
+        "--cache"
+        "--color"
+        "--config"
+        "--config-format"
+        "--destination"
+        "--exclude"
+        "--include"
+        "--mode"
+        "--output"
+        "--override-data"
+        "--override-data-file"
+        "--pager"
+        "--path-style"
+        "--persistent-state"
+        "--progress"
+        "--refresh-externals"
+        "--source"
+        "--working-tree"
+    ]
+    let short_value_flags = ["-c" "-D" "-i" "-o" "-p" "-R" "-S" "-W" "-x"]
+
+    if not ($arg | str starts-with "-") {
+        return false
+    }
+
+    if ($arg | str starts-with "--") {
+        if ($arg | str contains "=") {
+            return false
+        }
+
+        return ($long_value_flags | any {|flag| $flag == $arg })
+    }
+
+    if ($short_value_flags | any {|flag| $flag == $arg }) {
+        return true
+    }
+
+    false
+}
+
+def ravy-chezmoi-find-subcommand [args: list<string>] {
+    mut index = 0
+    while $index < ($args | length) {
+        let arg = ($args | get $index)
+        if $arg == "--" {
+            return null
+        }
+
+        if ($arg | str starts-with "-") {
+            $index = if (ravy-chezmoi-flag-consumes-next $arg) {
+                $index + 2
+            } else {
+                $index + 1
+            }
+            continue
+        }
+
+        return {
+            index: $index
+            name: $arg
+        }
+    }
+
+    null
+}
+
+def ravy-chezmoi-should-run-both [args: list<string>] {
+    let subcommand = (ravy-chezmoi-find-subcommand $args)
+    if $subcommand == null {
+        return false
+    }
+
+    if not (($subcommand.name | default "") in ["apply" "diff" "status"]) {
+        return false
+    }
+
+    mut index = ($subcommand.index + 1)
+    while $index < ($args | length) {
+        let arg = ($args | get $index)
+        if $arg == "--" {
+            $index = ($index + 1)
+            return $index >= ($args | length)
+        }
+
+        if ($arg | str starts-with "-") {
+            $index = if (ravy-chezmoi-flag-consumes-next $arg) {
+                $index + 2
+            } else {
+                $index + 1
+            }
+            continue
+        }
+
+        return false
+    }
+
+    true
+}
+
+def --env ravy-chezmoi-run-private [...args: string] {
+    let private_home = (ravy-chezmoi-private-home)
+    let config_dir = (ravy-chezmoi-config-dir)
+    let config_path = $"($config_dir)/ravy-private.toml"
+    let state_path = $"($config_dir)/ravy-private-state.boltdb"
+
+    if (($args | length) > 0) and (($args | first) == "init") {
+        do { run-external "mkdir" "-p" ($config_path | path dirname) } | complete | ignore
+        run-external "chezmoi" "-S" $private_home "-c" $config_path "--persistent-state" $state_path "init" "-C" $config_path ...($args | skip 1)
+        if not (path-is-file $config_path) {
+            ravy-chezmoi-seed-config $config_path
+        }
+    } else {
+        ravy-chezmoi-seed-config $config_path
+        run-external "chezmoi" "-S" $private_home "-c" $config_path "--persistent-state" $state_path ...$args
+    }
+}
+
+def --env chez [...args: string] {
+    if (($args | length) > 0) and (($args | first) == "private") {
+        ravy-chezmoi-run-private ...($args | skip 1)
+        return
+    }
+
+    if (ravy-chezmoi-should-run-both $args) {
+        run-external "chezmoi" ...$args
+        if (($env.LAST_EXIT_CODE? | default 0) != 0) {
+            return
+        }
+
+        let private_home = (($env.RAVY_PRIVATE_HOME? | default "") | str trim)
+        if not ($private_home | is-empty) {
+            ravy-chezmoi-run-private ...$args
+        }
+        return
+    }
+
     run-external "chezmoi" ...$args
 }
 
@@ -271,25 +419,7 @@ def --env ravycustom [] {
 }
 
 def --env chezp [...args: string] {
-    let private_home = (($env.RAVY_PRIVATE_HOME? | default "") | str trim)
-    if ($private_home | is-empty) {
-        error make { msg: "RAVY_PRIVATE_HOME is not configured" }
-    }
-
-    let config_dir = (ravy-chezmoi-config-dir)
-    let config_path = $"($config_dir)/ravy-private.toml"
-    let state_path = $"($config_dir)/ravy-private-state.boltdb"
-
-    if (($args | length) > 0) and (($args | first) == "init") {
-        do { run-external "mkdir" "-p" ($config_path | path dirname) } | complete | ignore
-        run-external "chezmoi" "-S" $private_home "-c" $config_path "--persistent-state" $state_path "init" "-C" $config_path ...($args | skip 1)
-        if not (path-is-file $config_path) {
-            ravy-chezmoi-seed-config $config_path
-        }
-    } else {
-        ravy-chezmoi-seed-config $config_path
-        run-external "chezmoi" "-S" $private_home "-c" $config_path "--persistent-state" $state_path ...$args
-    }
+    chez private ...$args
 }
 
 def --env ravysource [] {
