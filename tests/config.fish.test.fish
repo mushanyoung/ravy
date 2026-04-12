@@ -266,13 +266,16 @@ function setup_private_overlay
     mkdir -p \
         "$private_home/shell" \
         "$private_home/bin/common" \
+        "$private_home/ops" \
         "$HOME/.config/ravy"
 
     printf "%s\n" "set -gx __RAVY_PRIVATE_COMMON 1" > "$private_home/shell/config.fish"
     cat "$repo_root/custom/dot_config/ravy/private_secrets.fish" > "$HOME/.config/ravy/secrets.fish"
     printf "%s\t%s\n%s\t%s\n" __RAVY_SECRETS_FISH " 1" RAVY_TSV_VALUE " value" > "$HOME/.config/ravy/secrets.tsv"
     printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" > "$private_home/bin/common/private-helper"
+    printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" > "$private_home/ops/private-op-helper"
     chmod +x "$private_home/bin/common/private-helper"
+    chmod +x "$private_home/ops/private-op-helper"
     printf "%s\n" $private_home
 end
 
@@ -436,10 +439,12 @@ source $rendered_config
 assert_equal $RAVY_PRIVATE_HOME $private_home "RAVY_PRIVATE_HOME resolves to the explicit private repo"
 assert_equal $RAVY_CUSTOM $private_home "RAVY_CUSTOM compatibility variable follows RAVY_PRIVATE_HOME"
 assert_contains "$private_home/bin/common" $PATH "PATH includes private common bin directory"
+assert_contains "$private_home/ops" $PATH "PATH includes private ops directory"
 assert_true "test \"$__RAVY_PRIVATE_COMMON\" = 1" "private common overlay loaded"
 assert_true "test \"$__RAVY_SECRETS_FISH\" = 1" "managed secret fish overrides loaded"
 assert_equal "$RAVY_TSV_VALUE" value "managed secret fish loader trims delimiter padding"
 assert_true "command -v private-helper >/dev/null" "private helper command exists"
+assert_true "command -v private-op-helper >/dev/null" "private ops command exists"
 rm -f "$HOME/chezmoi.log"
 assert_equal (chez source-path) $expected_ravy_home "chez source-path stays public when private is present"
 grep -F "subcommand=source-path source=$expected_ravy_home config= state=" "$HOME/chezmoi.log" >/dev/null

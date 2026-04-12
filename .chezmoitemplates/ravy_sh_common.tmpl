@@ -89,6 +89,7 @@ _ravy_prepend_path "$HOME/.bun/bin"
 _ravy_prepend_path "$RAVY_HOME/bin"
 if [ -n "${RAVY_PRIVATE_HOME:-}" ]; then
   _ravy_append_path "$RAVY_PRIVATE_HOME/bin/common"
+  _ravy_append_path "$RAVY_PRIVATE_HOME/ops"
 fi
 
 # Homebrew / Linuxbrew detection (sets env + updates PATH/MANPATH/INFOPATH)

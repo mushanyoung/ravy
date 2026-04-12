@@ -322,6 +322,14 @@ mkdir $"($tmp_home)/dir-one"
 mkdir $"($tmp_home)/.hidden-dir"
 let private_home = $"($tmp_home)/private-repo"
 mkdir $private_home
+mkdir $"($private_home)/bin/common"
+mkdir $"($private_home)/ops"
+write-stub $"($private_home)/bin/common/private-helper" '#!/usr/bin/env sh
+exit 0
+'
+write-stub $"($private_home)/ops/private-op-helper" '#!/usr/bin/env sh
+exit 0
+'
 
 let rendered_env = $"($tmp_home)/.config/nushell/env.nu"
 let rendered_config = $"($tmp_home)/.config/nushell/config.nu"
@@ -493,8 +501,25 @@ let private_chez_probe = (run-probe $tmp_home $rendered_env $rendered_config '
     chez private diff ~/.config/ravy/secrets.tsv
     let scoped_private_diff_log = (open $"($env.HOME)/chezmoi.log" | lines)
 
+    let path = ($env.PATH? | default [])
+    let private_helper_matches = (which "private-helper" | where type == external | get path)
+    let private_helper_path = if ($private_helper_matches | is-empty) {
+        ""
+    } else {
+        $private_helper_matches | first
+    }
+    let private_op_matches = (which "private-op-helper" | where type == external | get path)
+    let private_op_path = if ($private_op_matches | is-empty) {
+        ""
+    } else {
+        $private_op_matches | first
+    }
+
     {
         private_state: $private_state
+        path: $path
+        private_helper_path: $private_helper_path
+        private_op_path: $private_op_path
         public_source_path: $public_source_path
         public_source_log: $public_source_log
         private_source_path: $private_source_path
@@ -519,6 +544,10 @@ if $private_chez_probe.exit_code == 0 and not (($private_chez_probe.stdout | def
     let private_config_path = $"($tmp_home)/.config/chezmoi/ravy-private.toml"
     let private_state_path = $"($tmp_home)/.config/chezmoi/ravy-private-state.boltdb"
 
+    assert-true (($private_chez.path | any {|entry| $entry == $"($private_home)/bin/common" })) "private PATH should include the private common bin directory"
+    assert-true (($private_chez.path | any {|entry| $entry == $"($private_home)/ops" })) "private PATH should include the private ops directory"
+    assert-equal $private_chez.private_helper_path $"($private_home)/bin/common/private-helper" "private helper command should resolve from the private common bin directory"
+    assert-equal $private_chez.private_op_path $"($private_home)/ops/private-op-helper" "private ops command should resolve from the private ops directory"
     assert-equal $private_chez.public_source_path $repo_root "chez source-path should stay public when private is configured"
     assert-equal ($private_chez.public_source_log | length) 1 "chez source-path should log one public invocation"
     assert-equal ($private_chez.public_source_log | first) $"subcommand=source-path source=($repo_root) config= state=" "chez source-path should keep the default public config/state"

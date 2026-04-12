@@ -316,6 +316,7 @@ setup_private_overlay() {
   guard_exec "$tmp_home" mkdir -p \
     "$private_home/shell" \
     "$private_home/bin/common" \
+    "$private_home/ops" \
     "$tmp_home/.config/ravy"
 
   printf '%s\n' 'export __RAVY_PRIVATE_COMMON=1' > "$private_home/shell/config.sh"
@@ -323,6 +324,9 @@ setup_private_overlay() {
   printf '%s\t%s\n%s\t%s\n' '__RAVY_SECRETS_SH' ' 1' 'RAVY_TSV_VALUE' ' value' > "$tmp_home/.config/ravy/secrets.tsv"
 
   write_stub "$private_home/bin/common/private-helper" "#!/usr/bin/env sh
+exit 0
+"
+  write_stub "$private_home/ops/private-op-helper" "#!/usr/bin/env sh
 exit 0
 "
 
@@ -746,10 +750,12 @@ check_private_surface() {
     test \"\$RAVY_PRIVATE_HOME\" = \"$private_home\" &&
     test \"\$RAVY_CUSTOM\" = \"$private_home\" &&
     case \":\$PATH:\" in *\":$private_home/bin/common:\"*) ;; *) exit 1 ;; esac &&
+    case \":\$PATH:\" in *\":$private_home/ops:\"*) ;; *) exit 1 ;; esac &&
     test \"\${__RAVY_PRIVATE_COMMON:-}\" = 1 &&
     test \"\${__RAVY_SECRETS_SH:-}\" = 1 &&
     test \"\${RAVY_TSV_VALUE:-}\" = value &&
     command -v private-helper >/dev/null 2>&1 &&
+    command -v private-op-helper >/dev/null 2>&1 &&
     rm -f \"\$HOME/chezmoi.log\" &&
     test \"\$(chez source-path)\" = \"$repo_root\" &&
     grep -F 'subcommand=source-path source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&

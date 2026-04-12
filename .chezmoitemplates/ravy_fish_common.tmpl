@@ -72,6 +72,7 @@ prepend_to_path "$HOME/.bun/bin"
 prepend_to_path "$RAVY_HOME/bin"
 if set -q RAVY_PRIVATE_HOME
     append_to_path "$RAVY_PRIVATE_HOME/bin/common"
+    append_to_path "$RAVY_PRIVATE_HOME/ops"
 end
 
 if not set -q RAVY_SKIP_BREW
