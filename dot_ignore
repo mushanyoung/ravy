@@ -8,3 +8,4 @@ tags.lock
 tags.temp
 node_modules
 RAVY_TMP
+.claude/
