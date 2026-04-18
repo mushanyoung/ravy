@@ -108,7 +108,7 @@ mkdir $"($tmp_home)/.local/bin"
 mkdir $"($tmp_home)/.local/share"
 
 "seed = 1\n" | save -f $"($tmp_home)/.config/chezmoi/chezmoi.toml"
-$"__RAVY_SECRETS_NU(char tab) 1\nRAVY_TSV_VALUE(char tab) value\n" | save -f $"($tmp_home)/.config/ravy/secrets.tsv"
+$"__RAVY_SECRETS_NU(char tab) 1\nRAVY_TSV_VALUE(char tab) value\nRAVY_TSV_HOME_PATH(char tab) ~/example\nRAVY_TSV_HOME_ROOT(char tab) ~\nRAVY_TSV_HOME_OTHER(char tab) ~otheruser/example\n" | save -f $"($tmp_home)/.config/ravy/secrets.tsv"
 
 write-stub $"($tmp_home)/bin/chezmoi" ([
     '#!/usr/bin/env sh'
@@ -367,6 +367,9 @@ let probe = (
                     __RAVY_MISE_INIT: ($env.__RAVY_MISE_INIT? | default null)
                     __RAVY_SECRETS_NU: ($env.__RAVY_SECRETS_NU? | default null)
                     RAVY_TSV_VALUE: ($env.RAVY_TSV_VALUE? | default null)
+                    RAVY_TSV_HOME_PATH: ($env.RAVY_TSV_HOME_PATH? | default null)
+                    RAVY_TSV_HOME_ROOT: ($env.RAVY_TSV_HOME_ROOT? | default null)
+                    RAVY_TSV_HOME_OTHER: ($env.RAVY_TSV_HOME_OTHER? | default null)
                     commands: (["ravysource" "ravy" "z" "zi" "mu" "rgh"] | each {|name| { name: $name, exists: ((which $name | length) > 0) } })
                     keybindings: ($env.config.keybindings | get name)
                     nearest: $nearest
@@ -396,6 +399,9 @@ if $probe.exit_code == 0 and not (($probe.stdout | default "" | str trim) | is-e
     assert-equal $data.__RAVY_MISE_INIT "1" "mise integration marker should be set"
     assert-equal $data.__RAVY_SECRETS_NU "1" "secrets.tsv should load the nu marker"
     assert-equal $data.RAVY_TSV_VALUE "value" "secrets.tsv loader should trim delimiter padding"
+    assert-equal $data.RAVY_TSV_HOME_PATH $"($tmp_home)/example" "secrets.tsv loader should expand ~/ paths"
+    assert-equal $data.RAVY_TSV_HOME_ROOT $tmp_home "secrets.tsv loader should expand bare ~"
+    assert-equal $data.RAVY_TSV_HOME_OTHER "~otheruser/example" "secrets.tsv loader should keep other-user tildes literal"
 
     for row in $data.commands {
         assert-true $row.exists $"command should exist: ($row.name)"

@@ -321,7 +321,13 @@ setup_private_overlay() {
 
   printf '%s\n' 'export __RAVY_PRIVATE_COMMON=1' > "$private_home/shell/config.sh"
   cat "$repo_root/custom/dot_config/ravy/private_secrets.sh" > "$tmp_home/.config/ravy/secrets.sh"
-  printf '%s\t%s\n%s\t%s\n' '__RAVY_SECRETS_SH' ' 1' 'RAVY_TSV_VALUE' ' value' > "$tmp_home/.config/ravy/secrets.tsv"
+  printf '%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n' \
+    '__RAVY_SECRETS_SH' ' 1' \
+    'RAVY_TSV_VALUE' ' value' \
+    'RAVY_TSV_HOME_PATH' ' ~/example' \
+    'RAVY_TSV_HOME_ROOT' ' ~' \
+    'RAVY_TSV_HOME_OTHER' ' ~otheruser/example' \
+    > "$tmp_home/.config/ravy/secrets.tsv"
 
   write_stub "$private_home/bin/common/private-helper" "#!/usr/bin/env sh
 exit 0
@@ -754,6 +760,9 @@ check_private_surface() {
     test \"\${__RAVY_PRIVATE_COMMON:-}\" = 1 &&
     test \"\${__RAVY_SECRETS_SH:-}\" = 1 &&
     test \"\${RAVY_TSV_VALUE:-}\" = value &&
+    test \"\${RAVY_TSV_HOME_PATH:-}\" = \"\$HOME/example\" &&
+    test \"\${RAVY_TSV_HOME_ROOT:-}\" = \"\$HOME\" &&
+    test \"\${RAVY_TSV_HOME_OTHER:-}\" = '~otheruser/example' &&
     command -v private-helper >/dev/null 2>&1 &&
     command -v private-op-helper >/dev/null 2>&1 &&
     rm -f \"\$HOME/chezmoi.log\" &&

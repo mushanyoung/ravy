@@ -54,6 +54,17 @@ def --env ensure-hook [field: cell-path, marker: string, hook: record] {
     $env.config = ($env.config | upsert $field ($filtered | append $hook))
 }
 
+def expand-secrets-home [value: string] {
+    let home = ($env.HOME | path expand)
+    if $value == "~" {
+        $home
+    } else if ($value | str starts-with "~/") {
+        $"($home)($value | str substring 1..)"
+    } else {
+        $value
+    }
+}
+
 def --env load-secrets-tsv [file: string] {
     let path = ($file | path expand)
     if not (path-is-file $path) {
@@ -72,7 +83,14 @@ def --env load-secrets-tsv [file: string] {
         }
 
         let key = (($entry | first) | str trim -c " \t\r")
-        let value = ($entry | skip 1 | str join (char tab) | str trim -l -c " \t" | str trim -r -c "\r")
+        let value = (
+            $entry
+            | skip 1
+            | str join (char tab)
+            | str trim -l -c " \t"
+            | str trim -r -c "\r"
+            | expand-secrets-home
+        )
         if ($key | is-empty) or ($key | str starts-with "#") {
             continue
         }

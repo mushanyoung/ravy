@@ -271,7 +271,12 @@ function setup_private_overlay
 
     printf "%s\n" "set -gx __RAVY_PRIVATE_COMMON 1" > "$private_home/shell/config.fish"
     cat "$repo_root/custom/dot_config/ravy/private_secrets.fish" > "$HOME/.config/ravy/secrets.fish"
-    printf "%s\t%s\n%s\t%s\n" __RAVY_SECRETS_FISH " 1" RAVY_TSV_VALUE " value" > "$HOME/.config/ravy/secrets.tsv"
+    printf "%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n" \
+        __RAVY_SECRETS_FISH " 1" \
+        RAVY_TSV_VALUE " value" \
+        RAVY_TSV_HOME_PATH " ~/example" \
+        RAVY_TSV_HOME_ROOT " ~" \
+        RAVY_TSV_HOME_OTHER " ~otheruser/example" > "$HOME/.config/ravy/secrets.tsv"
     printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" > "$private_home/bin/common/private-helper"
     printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" > "$private_home/ops/private-op-helper"
     chmod +x "$private_home/bin/common/private-helper"
@@ -443,6 +448,9 @@ assert_contains "$private_home/ops" $PATH "PATH includes private ops directory"
 assert_true "test \"$__RAVY_PRIVATE_COMMON\" = 1" "private common overlay loaded"
 assert_true "test \"$__RAVY_SECRETS_FISH\" = 1" "managed secret fish overrides loaded"
 assert_equal "$RAVY_TSV_VALUE" value "managed secret fish loader trims delimiter padding"
+assert_equal "$RAVY_TSV_HOME_PATH" "$HOME/example" "managed secret fish loader expands ~/ paths"
+assert_equal "$RAVY_TSV_HOME_ROOT" "$HOME" "managed secret fish loader expands bare ~"
+assert_equal "$RAVY_TSV_HOME_OTHER" "~otheruser/example" "managed secret fish loader keeps other-user tildes literal"
 assert_true "command -v private-helper >/dev/null" "private helper command exists"
 assert_true "command -v private-op-helper >/dev/null" "private ops command exists"
 rm -f "$HOME/chezmoi.log"
