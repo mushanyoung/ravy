@@ -1,0 +1,174 @@
+#!/bin/bash
+# Keep an active cloudtop connection and attach to a remote session.
+
+usage() {
+  cat <<'EOF'
+Usage: cloudtop [--ssh|--mosh] [--zellij|--tmux] [--] <host> [transport args...]
+
+Defaults to ssh transport and zellij on the remote host.
+
+Options:
+  --ssh       Use ssh transport (default)
+  --mosh      Use mosh transport
+  --zellij    Attach to a zellij session (default)
+  --tmux      Attach to a tmux session
+  -h, --help  Show this help
+EOF
+}
+
+print_command() {
+  printf '+'
+  for arg in "$@"; do
+    printf ' %q' "$arg"
+  done
+  printf '\n'
+}
+
+shell_quote() {
+  local quoted=${1//\'/\'\\\'\'}
+  printf "'%s'" "$quoted"
+}
+
+remote_attach_script() {
+  case "$1" in
+    zellij)
+      cat <<'EOF'
+for candidate in "$(command -v zellij 2>/dev/null)" \
+    /opt/homebrew/bin/zellij \
+    /home/linuxbrew/.linuxbrew/bin/zellij \
+    "$HOME/.linuxbrew/bin/zellij" \
+    "$HOME/.brew/bin/zellij" \
+    /usr/local/bin/zellij
+do
+    [ -n "$candidate" ] || continue
+    [ -x "$candidate" ] || continue
+    exec "$candidate" attach --create cloudtop
+done
+echo "zellij not found; checked PATH=$PATH and common Homebrew prefixes" >&2
+exit 127
+EOF
+      ;;
+    tmux)
+      cat <<'EOF'
+for candidate in "$(command -v tmux 2>/dev/null)" \
+    /opt/homebrew/bin/tmux \
+    /home/linuxbrew/.linuxbrew/bin/tmux \
+    "$HOME/.linuxbrew/bin/tmux" \
+    "$HOME/.brew/bin/tmux" \
+    /usr/local/bin/tmux
+do
+    [ -n "$candidate" ] || continue
+    [ -x "$candidate" ] || continue
+    exec "$candidate" new-session -A -s tmux
+done
+echo "tmux not found; checked PATH=$PATH and common Homebrew prefixes" >&2
+exit 127
+EOF
+      ;;
+  esac
+}
+
+build_remote_command() {
+  local script
+
+  if [ -n "${CLOUDTOP_EXEC_CMD:-}" ]; then
+    script=$CLOUDTOP_EXEC_CMD
+  elif [ "$transport" = "ssh" ] && [ -n "${SSH_EXEC_CMD:-}" ]; then
+    script=$SSH_EXEC_CMD
+  elif [ "$transport" = "mosh" ] && [ -n "${MOSH_EXEC_CMD:-}" ]; then
+    script=$MOSH_EXEC_CMD
+  else
+    script=$(remote_attach_script "$remote_program")
+  fi
+
+  remote_exec_cmd="/bin/sh -lc $(shell_quote "$script")"
+  remote_exec_argv=(/bin/sh -lc "$script")
+}
+
+run_once() {
+  local -a command
+
+  if [ "$transport" = "ssh" ]; then
+    command=("$ssh_command" "${ssh_default_opts[@]}" "${transport_args[@]}" -- "$remote_exec_cmd")
+  else
+    command=("$mosh_command")
+    if [ -n "$mosh_ssh_port" ]; then
+      command+=("--ssh=ssh -p $mosh_ssh_port")
+    fi
+    command+=("${mosh_default_opts[@]}" -- "${transport_args[@]}" "${remote_exec_argv[@]}")
+  fi
+
+  print_command "${command[@]}"
+  "${command[@]}"
+}
+
+transport=ssh
+remote_program=zellij
+transport_args=()
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --ssh)
+      transport=ssh
+      ;;
+    --mosh)
+      transport=mosh
+      ;;
+    --zellij)
+      remote_program=zellij
+      ;;
+    --tmux)
+      remote_program=tmux
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      transport_args+=("$@")
+      break
+      ;;
+    *)
+      transport_args+=("$1")
+      ;;
+  esac
+  shift
+done
+
+if [ "${#transport_args[@]}" -eq 0 ]; then
+  usage >&2
+  exit 2
+fi
+
+if [ -n "${SSH_CONNECTION:-}" ]; then
+  echo "It looks like you're already in a SSH connection: $SSH_CONNECTION" >&2
+  exit 1
+fi
+
+ssh_command=${SSH_COMMAND:-ssh}
+mosh_command=${MOSH_COMMAND:-mosh}
+mosh_ssh_port=${MOSH_SSH_PORT:-}
+ssh_alive_interval=${SSH_ALIVE_INTERVAL:-10}
+reconnect_interval=${RECONNECT_INTERVAL:-10}
+ssh_default_opts=("-t" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
+mosh_default_opts=("-a" "-o")
+
+build_remote_command
+
+while true; do
+  run_once
+  exit_code=$?
+  if [ "$transport" = "ssh" ]; then
+    echo "SSH exits with code $exit_code"
+  else
+    echo "MOSH exits with code $exit_code"
+  fi
+  case "$exit_code" in
+    0|255)
+      break
+      ;;
+  esac
+  echo "${transport} connection lost, reconnecting in ${reconnect_interval} seconds..."
+  sleep "${reconnect_interval}"
+done
