@@ -41,7 +41,7 @@ After `chez apply` or `./install.sh`, restart Nushell to pick up updated config.
 
 For SSH remote commands, note that `sshd` invokes the login shell with `-c`.
 When the login shell is `nu`, that path does not automatically load
-`~/.config/nushell/env.nu`, so PATH-dependent commands such as Homebrew `tmux`
+`~/.config/nushell/env.nu`, so PATH-dependent commands such as Homebrew installed binaries
 may be missing. The bundled `ssh-stay` and `mosh-stay` helpers route through
 `/bin/sh -lc` and probe common Homebrew install prefixes before attaching.
 

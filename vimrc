@@ -338,13 +338,6 @@ exec 'nnoremap <silent>  ' . s:AltMapKey('v') . ' :History<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey(';') . ' :History:<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('/') . ' :History/<CR>'
 
-" tmux navigator, window move & split
-let g:tmux_navigator_no_mappings = 1
-exec 'nnoremap <silent>  ' . s:AltMapKey('h') . ' :TmuxNavigateLeft<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('j') . ' :TmuxNavigateDown<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('k') . ' :TmuxNavigateUp<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('l') . ' :TmuxNavigateRight<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('p') . ' :TmuxNavigatePrevious<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('c') . ' :close<CR>'
 
 exec 'nnoremap <silent>  ' . s:AltMapKey('\') . ' :vsplit<CR>'
@@ -600,9 +593,6 @@ Plug 'andymass/vim-matchup'
 
 " show css color in code
 Plug 'ap/vim-css-color'
-
-" pane navigate integration with tmux
-Plug 'christoomey/vim-tmux-navigator'
 
 " copilot
 " Plug 'github/copilot.vim'
