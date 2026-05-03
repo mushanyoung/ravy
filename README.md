@@ -45,7 +45,9 @@ When the login shell is `nu`, that path does not automatically load
 may be missing. The bundled `cloudtop` helper routes through `/bin/sh -lc`
 and probes common Homebrew install prefixes before attaching to zellij by
 default. Use `cloudtop --mosh` for mosh transport and `cloudtop --tmux` for a
-tmux session.
+tmux session. The shorter `cl` command is a shim for `cloudtop`. Running
+`cloudtop` or `cl` without a host attaches to a local session without opening
+an SSH connection.
 
 ## Private Bootstrap
 

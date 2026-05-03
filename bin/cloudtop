@@ -1,11 +1,12 @@
 #!/bin/bash
-# Keep an active cloudtop connection and attach to a remote session.
+# Attach to a local or remote cloudtop session.
 
 usage() {
   cat <<'EOF'
-Usage: cloudtop [--ssh|--mosh] [--zellij|--tmux] [--] <host> [transport args...]
+Usage: cloudtop [--ssh|--mosh] [--zellij|--tmux] [--] [host] [transport args...]
 
-Defaults to ssh transport and zellij on the remote host.
+Without a host, attaches to a local zellij session.
+With a host, defaults to ssh transport and zellij on the remote host.
 
 Options:
   --ssh       Use ssh transport (default)
@@ -64,6 +65,45 @@ done
 echo "tmux not found; checked PATH=$PATH and common Homebrew prefixes" >&2
 exit 127
 EOF
+      ;;
+  esac
+}
+
+attach_local() {
+  local candidate
+
+  case "$remote_program" in
+    zellij)
+      for candidate in "$(command -v zellij 2>/dev/null)" \
+          /opt/homebrew/bin/zellij \
+          /home/linuxbrew/.linuxbrew/bin/zellij \
+          "$HOME/.linuxbrew/bin/zellij" \
+          "$HOME/.brew/bin/zellij" \
+          /usr/local/bin/zellij
+      do
+        [ -n "$candidate" ] || continue
+        [ -x "$candidate" ] || continue
+        print_command "$candidate" attach --create cloudtop
+        exec "$candidate" attach --create cloudtop
+      done
+      echo "zellij not found; checked PATH=$PATH and common Homebrew prefixes" >&2
+      exit 127
+      ;;
+    tmux)
+      for candidate in "$(command -v tmux 2>/dev/null)" \
+          /opt/homebrew/bin/tmux \
+          /home/linuxbrew/.linuxbrew/bin/tmux \
+          "$HOME/.linuxbrew/bin/tmux" \
+          "$HOME/.brew/bin/tmux" \
+          /usr/local/bin/tmux
+      do
+        [ -n "$candidate" ] || continue
+        [ -x "$candidate" ] || continue
+        print_command "$candidate" new-session -A -s tmux
+        exec "$candidate" new-session -A -s tmux
+      done
+      echo "tmux not found; checked PATH=$PATH and common Homebrew prefixes" >&2
+      exit 127
       ;;
   esac
 }
@@ -137,8 +177,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ "${#transport_args[@]}" -eq 0 ]; then
-  usage >&2
-  exit 2
+  attach_local
 fi
 
 if [ -n "${SSH_CONNECTION:-}" ]; then

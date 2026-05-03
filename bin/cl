@@ -1,0 +1,3 @@
+#!/bin/sh
+script_dir=$(CDPATH= cd "$(dirname "$0")" && pwd -P) || exit
+exec "$script_dir/cloudtop" "$@"
