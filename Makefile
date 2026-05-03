@@ -9,7 +9,7 @@ FISH ?= fish
 NU ?= nu
 CHEZMOI_ARGS ?=
 
-.PHONY: help install apply chezmoi-apply test test-fish test-sh test-nu test-nushell-harness test-install test-nvim
+.PHONY: help install apply chezmoi-apply test test-fish test-sh test-nu test-nushell-harness test-install test-nvim test-cloudtop
 
 help:
 	@echo 'Targets:'
@@ -23,6 +23,7 @@ help:
 	@echo '  make test-nushell-harness  Run macOS Nushell harness test'
 	@echo '  make test-install   Run installer regression test'
 	@echo '  make test-nvim      Run Neovim config rendering test'
+	@echo '  make test-cloudtop  Run cloudtop session naming test'
 
 install:
 	./install.sh
@@ -32,7 +33,7 @@ apply:
 
 chezmoi-apply: apply
 
-test: test-fish test-sh test-nu test-nushell-harness test-install test-nvim
+test: test-fish test-sh test-nu test-nushell-harness test-install test-nvim test-cloudtop
 
 test-fish:
 	$(FISH) tests/config.fish.test.fish
@@ -51,3 +52,6 @@ test-install:
 
 test-nvim:
 	$(BASH) tests/nvim.test.sh
+
+test-cloudtop:
+	$(BASH) tests/cloudtop.test.sh

@@ -30,10 +30,44 @@ shell_quote() {
   printf "'%s'" "$quoted"
 }
 
+zellij_session_name() {
+  local raw_name cleaned_name
+
+  raw_name=${RAVY_ZELLIJ_HOST:-${RAVY_HOST:-}}
+  if [ -z "$raw_name" ]; then
+    raw_name=$(hostname -s 2>/dev/null || hostname 2>/dev/null || true)
+  fi
+
+  cleaned_name=$(printf '%s' "$raw_name" |
+    LC_ALL=C tr '[:upper:]' '[:lower:]' |
+    LC_ALL=C sed 's/[^a-z0-9_-][^a-z0-9_-]*/-/g; s/^-*//; s/-*$//' |
+    cut -c 1-10 |
+    LC_ALL=C sed 's/^-*//; s/-*$//')
+
+  printf '%s\n' "${cleaned_name:-cloudtop}"
+}
+
 remote_attach_script() {
   case "$1" in
     zellij)
       cat <<'EOF'
+zellij_session_name() {
+    raw_name=${RAVY_ZELLIJ_HOST:-${RAVY_HOST:-}}
+    if [ -z "$raw_name" ]; then
+        raw_name=$(hostname -s 2>/dev/null || hostname 2>/dev/null || true)
+    fi
+
+    cleaned_name=$(printf '%s' "$raw_name" |
+        LC_ALL=C tr '[:upper:]' '[:lower:]' |
+        LC_ALL=C sed 's/[^a-z0-9_-][^a-z0-9_-]*/-/g; s/^-*//; s/-*$//' |
+        cut -c 1-10 |
+        LC_ALL=C sed 's/^-*//; s/-*$//')
+
+    printf '%s\n' "${cleaned_name:-cloudtop}"
+}
+
+session_name=$(zellij_session_name)
+
 for candidate in "$(command -v zellij 2>/dev/null)" \
     /opt/homebrew/bin/zellij \
     /home/linuxbrew/.linuxbrew/bin/zellij \
@@ -43,7 +77,7 @@ for candidate in "$(command -v zellij 2>/dev/null)" \
 do
     [ -n "$candidate" ] || continue
     [ -x "$candidate" ] || continue
-    exec "$candidate" attach --create cloudtop
+    exec "$candidate" attach --create "$session_name"
 done
 echo "zellij not found; checked PATH=$PATH and common Homebrew prefixes" >&2
 exit 127
@@ -71,9 +105,11 @@ EOF
 
 attach_local() {
   local candidate
+  local session_name
 
   case "$remote_program" in
     zellij)
+      session_name=$(zellij_session_name)
       for candidate in "$(command -v zellij 2>/dev/null)" \
           /opt/homebrew/bin/zellij \
           /home/linuxbrew/.linuxbrew/bin/zellij \
@@ -83,8 +119,8 @@ attach_local() {
       do
         [ -n "$candidate" ] || continue
         [ -x "$candidate" ] || continue
-        print_command "$candidate" attach --create cloudtop
-        exec "$candidate" attach --create cloudtop
+        print_command "$candidate" attach --create "$session_name"
+        exec "$candidate" attach --create "$session_name"
       done
       echo "zellij not found; checked PATH=$PATH and common Homebrew prefixes" >&2
       exit 127
