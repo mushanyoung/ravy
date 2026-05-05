@@ -96,11 +96,61 @@ eval "$last"
   assert_equal "$(cat "$tmp_root/remote-zellij.log")" "attach --create remote-mac" "remote cloudtop should compute host prefix on the remote side"
 }
 
+test_remote_ssh_auth_sock_bridge() {
+  local agent_cmd
+  local agent_sock
+
+  agent_cmd=$(command -v ssh-agent 2>/dev/null || true)
+  if [ -z "$agent_cmd" ]; then
+    printf '%s\n' 'SKIP remote SSH auth sock bridge: ssh-agent not found' >&2
+    return 0
+  fi
+
+  agent_sock="$tmp_root/agent.sock"
+  guard_exec "$tmp_root" mkdir -p "$tmp_root/home/.ssh"
+  guard_exec "$tmp_root" ln -s "$tmp_root/dead-agent.sock" "$tmp_root/home/.ssh/ssh_auth_sock"
+
+  write_stub "$tmp_root/bin/zellij" "#!/usr/bin/env sh
+{
+  printf '%s\n' \"env=\${SSH_AUTH_SOCK:-}\"
+  if [ -S \"\$HOME/.ssh/ssh_auth_sock\" ]; then
+    printf '%s\n' 'stable_socket=1'
+  else
+    printf '%s\n' 'stable_socket=0'
+  fi
+  target=\$(readlink \"\$HOME/.ssh/ssh_auth_sock\" 2>/dev/null || true)
+  printf '%s\n' \"target=\$target\"
+} > \"$tmp_root/remote-agent.log\"
+"
+  write_stub "$tmp_root/bin/ssh" "#!/usr/bin/env sh
+printf '%s\n' \"\$@\" > \"$tmp_root/remote-agent-ssh-args.log\"
+last=
+for arg do
+  last=\$arg
+done
+RAVY_ZELLIJ_HOST=Remote-Agent-Test
+export RAVY_ZELLIJ_HOST
+eval \"\$last\"
+"
+
+  env -i \
+    HOME="$tmp_root/home" \
+    PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    SSH_COMMAND="$tmp_root/bin/ssh" \
+    "$agent_cmd" -a "$agent_sock" "$repo_root/bin/cloudtop" remote.example.com >/dev/null
+
+  assert_equal "$(awk 'prev == "-S" && $0 == "none" { print "present"; exit } { prev = $0 }' "$tmp_root/remote-agent-ssh-args.log")" "present" "remote cloudtop should disable SSH ControlMaster reuse"
+  assert_equal "$(grep '^env=' "$tmp_root/remote-agent.log")" "env=$tmp_root/home/.ssh/ssh_auth_sock" "remote cloudtop should expose the stable SSH auth socket"
+  assert_equal "$(grep '^stable_socket=' "$tmp_root/remote-agent.log")" "stable_socket=1" "remote cloudtop should point the stable SSH auth socket at a live socket"
+  assert_equal "$(grep '^target=' "$tmp_root/remote-agent.log")" "target=$agent_sock" "remote cloudtop should repair a stale stable SSH auth socket target"
+}
+
 trap cleanup EXIT
 
 setup_tmp_root
 test_local_zellij_session_name
 test_remote_zellij_session_name
+test_remote_ssh_auth_sock_bridge
 
 if [ "$failures" -ne 0 ]; then
   exit 1

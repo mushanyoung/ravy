@@ -47,9 +47,42 @@ zellij_session_name() {
   printf '%s\n' "${cleaned_name:-cloudtop}"
 }
 
+remote_ssh_auth_sock_bridge_script() {
+  cat <<'EOF'
+cloudtop_refresh_ssh_auth_sock() {
+    stable_sock=${CLOUDTOP_SSH_AUTH_SOCK:-$HOME/.ssh/ssh_auth_sock}
+
+    [ -n "${SSH_AUTH_SOCK:-}" ] || return 0
+    [ -S "$SSH_AUTH_SOCK" ] || return 0
+    [ "$SSH_AUTH_SOCK" != "$stable_sock" ] || return 0
+    [ ! -d "$stable_sock" ] || return 0
+
+    stable_dir=${stable_sock%/*}
+    [ "$stable_dir" != "$stable_sock" ] || stable_dir=.
+    mkdir -p "$stable_dir" || return 0
+
+    tmp_sock="${stable_sock}.$$"
+    rm -f "$tmp_sock"
+    if ln -s "$SSH_AUTH_SOCK" "$tmp_sock" 2>/dev/null; then
+        mv -f "$tmp_sock" "$stable_sock" 2>/dev/null || rm -f "$tmp_sock"
+    fi
+
+    if [ -S "$stable_sock" ]; then
+        SSH_AUTH_SOCK=$stable_sock
+        export SSH_AUTH_SOCK
+    fi
+}
+
+cloudtop_refresh_ssh_auth_sock
+EOF
+}
+
 remote_attach_script() {
   case "$1" in
     zellij)
+      if [ "${2:-0}" = 1 ]; then
+        remote_ssh_auth_sock_bridge_script
+      fi
       cat <<'EOF'
 zellij_session_name() {
     raw_name=${RAVY_ZELLIJ_HOST:-${RAVY_HOST:-}}
@@ -84,6 +117,9 @@ exit 127
 EOF
       ;;
     tmux)
+      if [ "${2:-0}" = 1 ]; then
+        remote_ssh_auth_sock_bridge_script
+      fi
       cat <<'EOF'
 for candidate in "$(command -v tmux 2>/dev/null)" \
     /opt/homebrew/bin/tmux \
@@ -146,6 +182,7 @@ attach_local() {
 
 build_remote_command() {
   local script
+  local enable_agent_bridge=0
 
   if [ -n "${CLOUDTOP_EXEC_CMD:-}" ]; then
     script=$CLOUDTOP_EXEC_CMD
@@ -154,7 +191,10 @@ build_remote_command() {
   elif [ "$transport" = "mosh" ] && [ -n "${MOSH_EXEC_CMD:-}" ]; then
     script=$MOSH_EXEC_CMD
   else
-    script=$(remote_attach_script "$remote_program")
+    if [ "$transport" = "ssh" ]; then
+      enable_agent_bridge=1
+    fi
+    script=$(remote_attach_script "$remote_program" "$enable_agent_bridge")
   fi
 
   remote_exec_cmd="/bin/sh -lc $(shell_quote "$script")"
@@ -226,7 +266,7 @@ mosh_command=${MOSH_COMMAND:-mosh}
 mosh_ssh_port=${MOSH_SSH_PORT:-}
 ssh_alive_interval=${SSH_ALIVE_INTERVAL:-10}
 reconnect_interval=${RECONNECT_INTERVAL:-10}
-ssh_default_opts=("-t" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
+ssh_default_opts=("-t" "-S" "none" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
 mosh_default_opts=("-a" "-o")
 
 build_remote_command

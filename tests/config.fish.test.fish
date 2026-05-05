@@ -220,6 +220,7 @@ exit 0
         RAVY_HOST=test-host \
         RAVY_PRIVATE_HOME=$tmp_home/.missing-private \
         RAVY_SKIP_BREW=1 \
+        RAVY_TEST_FISH_CMD="$fish_cmd" \
         RAVY_TEST_CHILD=1 \
         $fish_cmd --private -i "$script_path"
 
@@ -261,6 +262,64 @@ function assert_contains --argument-names needle
     end
 end
 
+function check_ssh_auth_sock_bridge
+    set -l agent_cmd (command -s ssh-agent)
+    if test -z "$agent_cmd"
+        echo "SKIP fish SSH auth sock bridge: ssh-agent not found" >&2
+        return 0
+    end
+
+    set -l bridge_home "$HOME/ssh-auth-bridge-home"
+    set -l agent_sock "$bridge_home/agent.sock"
+    set -l fish_cmd "$RAVY_TEST_FISH_CMD"
+    mkdir -p "$bridge_home/.ssh" "$bridge_home/.config" "$bridge_home/.local/share"
+    ln -sfn "$agent_sock" "$bridge_home/.ssh/ssh_auth_sock"
+
+    set -l probe_output ($agent_cmd -a "$agent_sock" env \
+        HOME="$bridge_home" \
+        XDG_CONFIG_HOME="$bridge_home/.config" \
+        XDG_DATA_HOME="$bridge_home/.local/share" \
+        PATH="$stub_bin:/usr/bin:/bin" \
+        RAVY_HOST=test-host \
+        RAVY_PRIVATE_HOME="$bridge_home/.missing-private" \
+        RAVY_SKIP_BREW=1 \
+        SSH_CONNECTION="127.0.0.1 1 127.0.0.1 2" \
+        "$fish_cmd" --private -i -c "source '$rendered_config'; test \"\$SSH_AUTH_SOCK\" = \"\$HOME/.ssh/ssh_auth_sock\"" 2>&1)
+    set -l probe_status $status
+    if test $probe_status -ne 0
+        fail "fish should use stable forwarded SSH auth socket" "$probe_output"
+    end
+
+    set -l old_sock "$bridge_home/old-agent.sock"
+    set -l new_sock "$bridge_home/new-agent.sock"
+    set -l old_agent_output ($agent_cmd -a "$old_sock" -s 2>&1)
+    set -l old_agent_status $status
+    if test $old_agent_status -ne 0
+        fail "fish SSH auth sock bridge could not start old ssh-agent" "$old_agent_output"
+        return 0
+    end
+
+    set -l old_agent_pid (string match -rg 'SSH_AGENT_PID=([0-9]+)' $old_agent_output | head -n1)
+    ln -sfn "$old_sock" "$bridge_home/.ssh/ssh_auth_sock"
+    set -l noninteractive_output ($agent_cmd -a "$new_sock" env \
+        HOME="$bridge_home" \
+        XDG_CONFIG_HOME="$bridge_home/.config" \
+        XDG_DATA_HOME="$bridge_home/.local/share" \
+        PATH="$stub_bin:/usr/bin:/bin" \
+        RAVY_HOST=test-host \
+        RAVY_PRIVATE_HOME="$bridge_home/.missing-private" \
+        RAVY_SKIP_BREW=1 \
+        SSH_CONNECTION="127.0.0.1 1 127.0.0.1 2" \
+        "$fish_cmd" --private -c "source '$rendered_config'; test \"\$SSH_AUTH_SOCK\" = '$new_sock'" 2>&1)
+    set -l noninteractive_status $status
+    if test -n "$old_agent_pid"
+        kill "$old_agent_pid" >/dev/null 2>/dev/null
+    end
+    if test $noninteractive_status -ne 0
+        fail "fish non-interactive startup should preserve sshd forwarded SSH auth socket" "$noninteractive_output"
+    end
+end
+
 function setup_private_overlay
     set -l private_home "$HOME/.local/share/ravy-private"
     mkdir -p \
@@ -285,8 +344,8 @@ function setup_private_overlay
 end
 
 set -l expected_ravy_home (realpath "$repo_root")
-set -l rendered_config "$HOME/.config/fish/config.fish"
-set -l rendered_theme "$HOME/.config/fish/themes/ravy.theme"
+set -g rendered_config "$HOME/.config/fish/config.fish"
+set -g rendered_theme "$HOME/.config/fish/themes/ravy.theme"
 
 mkdir -p (dirname $rendered_config)
 mkdir -p (dirname $rendered_theme)
@@ -300,7 +359,8 @@ assert_true "not set -q RAVY_PRIVATE_HOME" "RAVY_PRIVATE_HOME stays unset when p
 assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
 assert_contains "$HOME/bin" $PATH "PATH includes HOME/bin"
 assert_contains "$HOME/.local/bin" $PATH "PATH includes HOME/.local/bin"
-assert_contains 005fd7 $fish_color_command "fish theme sets command color"
+check_ssh_auth_sock_bridge
+assert_contains green $fish_color_command "fish theme sets command color"
 assert_contains 555 $fish_color_autosuggestion "fish theme sets autosuggestion fallback color"
 assert_contains brblack $fish_color_autosuggestion "fish theme sets autosuggestion named fallback"
 assert_true "functions -q __starship_set_job_count" "starship prompt initialized"

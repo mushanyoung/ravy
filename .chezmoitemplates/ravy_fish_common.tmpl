@@ -42,6 +42,16 @@ if not set -q RAVY_OS
     set -gx RAVY_OS (uname -s 2>/dev/null | string lower)
 end
 
+if status --is-interactive; and set -q SSH_CONNECTION
+    set -l ravy_ssh_auth_sock "$HOME/.ssh/ssh_auth_sock"
+    if set -q CLOUDTOP_SSH_AUTH_SOCK
+        set ravy_ssh_auth_sock "$CLOUDTOP_SSH_AUTH_SOCK"
+    end
+    if test -S "$ravy_ssh_auth_sock"
+        set -gx SSH_AUTH_SOCK "$ravy_ssh_auth_sock"
+    end
+end
+
 # PATH operations
 function prepend_to_path
     for arg in $argv

@@ -49,6 +49,13 @@ tmux session. The shorter `cl` command is a shim for `cloudtop`. Running
 `cloudtop` or `cl` without a host attaches to a local session without opening
 an SSH connection.
 
+For SSH transport, `cloudtop` bypasses SSH connection sharing and refreshes or
+repairs a stable forwarded-agent socket at `~/.ssh/ssh_auth_sock` before
+attaching. New interactive shells in long-lived remote sessions prefer that
+socket when `SSH_CONNECTION` is present, so Git operations continue to use the
+current forwarded key after reconnects. Existing panes may need
+`export SSH_AUTH_SOCK=$HOME/.ssh/ssh_auth_sock` once.
+
 ## Private Bootstrap
 
 Private files are managed by the private `custom` repo as an `age`-encrypted

@@ -82,6 +82,17 @@ fi
 RAVY_OS="$(printf '%s' "${RAVY_OS:-unknown}" | tr '[:upper:]' '[:lower:]')"
 export RAVY_OS
 
+_ravy_use_forwarded_ssh_auth_sock() {
+  [ -n "${SSH_CONNECTION:-}" ] || return 0
+  __ravy_ssh_auth_sock="${CLOUDTOP_SSH_AUTH_SOCK:-$HOME/.ssh/ssh_auth_sock}"
+  if [ -S "$__ravy_ssh_auth_sock" ]; then
+    SSH_AUTH_SOCK="$__ravy_ssh_auth_sock"
+    export SSH_AUTH_SOCK
+  fi
+  unset __ravy_ssh_auth_sock
+}
+_ravy_use_forwarded_ssh_auth_sock
+
 # User scripts
 _ravy_prepend_path "$HOME/bin"
 _ravy_prepend_path "$HOME/.local/bin"

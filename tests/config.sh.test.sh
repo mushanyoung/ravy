@@ -345,6 +345,7 @@ run_shell() {
   local stub_bin=$3
   local private_home=$4
   local command=$5
+  local ssh_connection=${6:-}
   local output
   local status_code
 
@@ -356,6 +357,7 @@ run_shell() {
       RAVY_HOST="test-host" \
       RAVY_SKIP_BREW=1 \
       RAVY_PRIVATE_HOME="$private_home" \
+      SSH_CONNECTION="$ssh_connection" \
       "$bash_bin" --noprofile --rcfile "$tmp_home/.bashrc" -ic "$command" 2>&1)
     status_code=$?
     set -e
@@ -368,6 +370,7 @@ run_shell() {
       RAVY_HOST="test-host" \
       RAVY_SKIP_BREW=1 \
       RAVY_PRIVATE_HOME="$private_home" \
+      SSH_CONNECTION="$ssh_connection" \
       "$zsh_bin" -f -ic "source ~/.zshrc >/dev/null 2>&1; $command" 2>&1)
     status_code=$?
     set -e
@@ -500,6 +503,75 @@ check_public_surface() {
     output=$(strip_bash_noise "$output")
   fi
   assert_status_zero "$status_code" "$shell_name public surface check failed" "$output"
+}
+
+check_ssh_auth_sock_bridge() {
+  local shell_name=$1
+  local tmp_home=$2
+  local stub_bin=$3
+  local agent_cmd
+  local agent_output
+  local agent_sock
+  local old_auth_sock=''
+  local old_auth_sock_set=0
+  local old_agent_pid=''
+  local old_agent_pid_set=0
+  local result
+  local status_code
+  local output
+
+  agent_cmd=$(command -v ssh-agent 2>/dev/null || true)
+  if [ -z "$agent_cmd" ]; then
+    printf '%s\n' "SKIP $shell_name SSH auth sock bridge: ssh-agent not found" >&2
+    return 0
+  fi
+
+  if [ "${SSH_AUTH_SOCK+x}" = x ]; then
+    old_auth_sock_set=1
+    old_auth_sock=$SSH_AUTH_SOCK
+  fi
+  if [ "${SSH_AGENT_PID+x}" = x ]; then
+    old_agent_pid_set=1
+    old_agent_pid=$SSH_AGENT_PID
+  fi
+
+  agent_sock="$tmp_home/agent.sock"
+  set +e
+  agent_output=$("$agent_cmd" -a "$agent_sock" -s 2>&1)
+  status_code=$?
+  set -e
+  if [ "$status_code" -ne 0 ]; then
+    fail "$shell_name SSH auth sock bridge could not start ssh-agent: $agent_output"
+    return 0
+  fi
+
+  eval "$agent_output" >/dev/null
+  guard_exec "$tmp_home" mkdir -p "$tmp_home/.ssh"
+  guard_exec "$tmp_home" ln -sfn "$agent_sock" "$tmp_home/.ssh/ssh_auth_sock"
+
+  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" 'test "${SSH_AUTH_SOCK:-}" = "$HOME/.ssh/ssh_auth_sock"' '127.0.0.1 1 127.0.0.1 2')
+  status_code=${result%%$'\n'*}
+  output=${result#*$'\n__RAVY_OUTPUT__\n'}
+  output=${output%$'\n__RAVY_END__'}
+  if [ "$shell_name" = bash ]; then
+    output=$(strip_bash_noise "$output")
+  fi
+
+  "$agent_cmd" -k >/dev/null 2>&1 || true
+  if [ "$old_auth_sock_set" -eq 1 ]; then
+    SSH_AUTH_SOCK=$old_auth_sock
+    export SSH_AUTH_SOCK
+  else
+    unset SSH_AUTH_SOCK
+  fi
+  if [ "$old_agent_pid_set" -eq 1 ]; then
+    SSH_AGENT_PID=$old_agent_pid
+    export SSH_AGENT_PID
+  else
+    unset SSH_AGENT_PID
+  fi
+
+  assert_status_zero "$status_code" "$shell_name should use stable forwarded SSH auth socket" "$output"
 }
 
 check_mise_upgrade_helpers() {
@@ -852,6 +924,7 @@ check_clean_start bash "$bash_home" "$bash_home/bin" "$bash_home/.missing-privat
 setup_tool_stubs "$bash_home/bin"
 install_mise_stub "$bash_home" self
 check_public_surface bash "$bash_home" "$bash_home/bin"
+check_ssh_auth_sock_bridge bash "$bash_home" "$bash_home/bin"
 check_mise_upgrade_helpers bash "$bash_home" "$bash_home/bin"
 check_private_surface bash "$bash_home" "$bash_home/bin" "$(setup_private_overlay "$bash_home")"
 check_rendered_gitconfig "$bash_home"
@@ -871,6 +944,7 @@ check_clean_start zsh "$zsh_home" "$zsh_home/bin" "$zsh_home/.missing-private"
 setup_tool_stubs "$zsh_home/bin"
 install_mise_stub "$zsh_home" self
 check_public_surface zsh "$zsh_home" "$zsh_home/bin"
+check_ssh_auth_sock_bridge zsh "$zsh_home" "$zsh_home/bin"
 check_mise_upgrade_helpers zsh "$zsh_home" "$zsh_home/bin"
 check_private_surface zsh "$zsh_home" "$zsh_home/bin" "$(setup_private_overlay "$zsh_home")"
 check_rendered_gitconfig "$zsh_home"

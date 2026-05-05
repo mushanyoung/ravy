@@ -429,6 +429,68 @@ if $probe.exit_code == 0 and not (($probe.stdout | default "" | str trim) | is-e
     assert-true (($mise_log | any {|line| $line | str contains "upgrade" })) "mu should call mise upgrade"
 }
 
+let ssh_agent_matches = (which ssh-agent | where type == external | get path)
+if ($ssh_agent_matches | is-empty) {
+    print -e "SKIP nushell SSH auth sock bridge: ssh-agent not found"
+} else {
+    let ssh_agent = ($ssh_agent_matches | first)
+    let agent_sock = $"($tmp_home)/agent.sock"
+    let stable_sock = $"($tmp_home)/.ssh/ssh_auth_sock"
+
+    mkdir $"($tmp_home)/.ssh"
+    do { run-external "ln" "-sfn" $agent_sock $stable_sock } | complete | ignore
+
+    let ssh_bridge_probe = (
+        do {
+            run-external $ssh_agent "-a" $agent_sock "env" $"HOME=($tmp_home)" $"XDG_CONFIG_HOME=($tmp_home)/.config" $"XDG_DATA_HOME=($tmp_home)/.local/share" $"PATH=($tmp_home)/bin:/usr/bin:/bin" "RAVY_HOST=test-host" $"RAVY_PRIVATE_HOME=($tmp_home)/.missing-private" "RAVY_SKIP_BREW=1" "SSH_CONNECTION=127.0.0.1 1 127.0.0.1 2" $nu_bin "--env-config" $rendered_env "--config" $rendered_config "-i" "-c" '$env.SSH_AUTH_SOCK'
+        }
+        | complete
+    )
+
+    assert-equal $ssh_bridge_probe.exit_code 0 "nushell SSH auth sock bridge probe failed"
+    if $ssh_bridge_probe.exit_code != 0 {
+        if not (($ssh_bridge_probe.stderr | default "" | str trim) | is-empty) {
+            fail $"nushell SSH auth sock bridge stderr: ($ssh_bridge_probe.stderr | str trim)"
+        }
+    } else {
+        assert-equal ($ssh_bridge_probe.stdout | str trim) $stable_sock "nushell should use stable forwarded SSH auth socket"
+    }
+
+    let old_sock = $"($tmp_home)/old-agent.sock"
+    let new_sock = $"($tmp_home)/new-agent.sock"
+    let old_agent = (do { run-external $ssh_agent "-a" $old_sock "-s" } | complete)
+    assert-equal $old_agent.exit_code 0 "nushell SSH auth sock bridge old ssh-agent failed"
+    if $old_agent.exit_code == 0 {
+        let old_agent_pid = (
+            $old_agent.stdout
+            | lines
+            | where {|line| $line | str starts-with "SSH_AGENT_PID="}
+            | first
+            | str replace "SSH_AGENT_PID=" ""
+            | split row ";"
+            | first
+        )
+        do { run-external "ln" "-sfn" $old_sock $stable_sock } | complete | ignore
+
+        let noninteractive_bridge_probe = (
+            do {
+                run-external $ssh_agent "-a" $new_sock "env" $"HOME=($tmp_home)" $"XDG_CONFIG_HOME=($tmp_home)/.config" $"XDG_DATA_HOME=($tmp_home)/.local/share" $"PATH=($tmp_home)/bin:/usr/bin:/bin" "RAVY_HOST=test-host" $"RAVY_PRIVATE_HOME=($tmp_home)/.missing-private" "RAVY_SKIP_BREW=1" "SSH_CONNECTION=127.0.0.1 1 127.0.0.1 2" $nu_bin "--env-config" $rendered_env "--config" $rendered_config "-c" '$env.SSH_AUTH_SOCK'
+            }
+            | complete
+        )
+        do { run-external "kill" $old_agent_pid } | complete | ignore
+
+        assert-equal $noninteractive_bridge_probe.exit_code 0 "nushell non-interactive SSH auth sock bridge probe failed"
+        if $noninteractive_bridge_probe.exit_code != 0 {
+            if not (($noninteractive_bridge_probe.stderr | default "" | str trim) | is-empty) {
+                fail $"nushell non-interactive SSH auth sock bridge stderr: ($noninteractive_bridge_probe.stderr | str trim)"
+            }
+        } else {
+            assert-equal ($noninteractive_bridge_probe.stdout | str trim) $new_sock "nushell non-interactive startup should preserve sshd forwarded SSH auth socket"
+        }
+    }
+}
+
 let public_chez_probe = (run-probe $tmp_home $rendered_env $rendered_config '
     rm -f $"($env.HOME)/chezmoi.log"
     let source_path = (chez source-path | str trim)
