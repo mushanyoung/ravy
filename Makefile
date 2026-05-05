@@ -6,10 +6,9 @@ CHEZMOI ?= chezmoi
 SOURCE_DIR := $(CURDIR)
 BASH ?= bash
 FISH ?= fish
-NU ?= nu
 CHEZMOI_ARGS ?=
 
-.PHONY: help install apply chezmoi-apply test test-fish test-sh test-nu test-nushell-harness test-install test-nvim test-cloudtop
+.PHONY: help install apply chezmoi-apply test test-fish test-sh test-install test-nvim test-cloudtop
 
 help:
 	@echo 'Targets:'
@@ -19,8 +18,6 @@ help:
 	@echo '  make test           Run all shell config tests'
 	@echo '  make test-fish      Run fish config test'
 	@echo '  make test-sh        Run bash/zsh config test'
-	@echo '  make test-nu        Run Nushell config test'
-	@echo '  make test-nushell-harness  Run macOS Nushell harness test'
 	@echo '  make test-install   Run installer regression test'
 	@echo '  make test-nvim      Run Neovim config rendering test'
 	@echo '  make test-cloudtop  Run cloudtop session naming test'
@@ -33,19 +30,13 @@ apply:
 
 chezmoi-apply: apply
 
-test: test-fish test-sh test-nu test-nushell-harness test-install test-nvim test-cloudtop
+test: test-fish test-sh test-install test-nvim test-cloudtop
 
 test-fish:
 	$(FISH) tests/config.fish.test.fish
 
 test-sh:
 	$(BASH) tests/config.sh.test.sh
-
-test-nu:
-	$(NU) tests/config.nu.test.nu
-
-test-nushell-harness:
-	$(BASH) tests/nushell-harness.test.sh
 
 test-install:
 	$(BASH) tests/install.test.sh

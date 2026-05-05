@@ -29,25 +29,13 @@ If the private repo is already checked out locally, point the bootstrap at it:
 RAVY_PRIVATE_HOME="$HOME/.local/share/ravy-private" ./install.sh
 ```
 
-## Nushell Path
+## Cloudtop
 
-`~/.config/nushell` is the canonical Nushell config path on both Linux and macOS.
-
-- Linux reads `~/.config/nushell/{env,config,login}.nu` directly.
-- macOS keeps thin shims in `~/Library/Application Support/nushell/{env,config,login}.nu` that source the canonical files.
-- macOS keeps `~/Library/Application Support/nushell/history.txt` as a symlink back to `~/.config/nushell/history.txt`.
-
-After `chez apply` or `./install.sh`, restart Nushell to pick up updated config.
-
-For SSH remote commands, note that `sshd` invokes the login shell with `-c`.
-When the login shell is `nu`, that path does not automatically load
-`~/.config/nushell/env.nu`, so PATH-dependent commands such as Homebrew installed binaries
-may be missing. The bundled `cloudtop` helper routes through `/bin/sh -lc`
-and probes common Homebrew install prefixes before attaching to zellij by
-default. Use `cloudtop --mosh` for mosh transport and `cloudtop --tmux` for a
-tmux session. The shorter `cl` command is a shim for `cloudtop`. Running
-`cloudtop` or `cl` without a host attaches to a local session without opening
-an SSH connection.
+The bundled `cloudtop` helper routes through `/bin/sh -lc` and probes common
+Homebrew install prefixes before attaching to zellij by default. Use
+`cloudtop --mosh` for mosh transport and `cloudtop --tmux` for a tmux session.
+The shorter `cl` command is a shim for `cloudtop`. Running `cloudtop` or `cl`
+without a host attaches to a local session without opening an SSH connection.
 
 For SSH transport, `cloudtop` bypasses SSH connection sharing and refreshes or
 repairs a stable forwarded-agent socket at `~/.ssh/ssh_auth_sock` before
@@ -113,7 +101,7 @@ Once installed, open Neovim and install plugins:
 make test
 ```
 
-`make test` now covers bash, zsh, fish, Nushell, the macOS Nushell harness, install, and Neovim rendering.
+`make test` now covers bash, zsh, fish, install, Neovim rendering, and cloudtop.
 
 ## Recommended Setup
 
