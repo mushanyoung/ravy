@@ -30,6 +30,59 @@ shell_quote() {
   printf "'%s'" "$quoted"
 }
 
+find_zellij() {
+  local candidate
+  local install_dir
+  local version
+
+  version=${CLOUDTOP_ZELLIJ_VERSION:-0.44.1}
+
+  candidate=$(command -v zellij 2>/dev/null || true)
+  if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+
+  if command -v mise >/dev/null 2>&1; then
+    candidate=$(mise which zellij --tool "zellij@$version" 2>/dev/null || true)
+    if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+
+    install_dir=$(mise where "zellij@$version" 2>/dev/null || true)
+    for candidate in "$install_dir/zellij" "$install_dir/bin/zellij"; do
+      [ -n "$install_dir" ] || continue
+      [ -x "$candidate" ] || continue
+      printf '%s\n' "$candidate"
+      return 0
+    done
+  fi
+
+  for candidate in \
+    /opt/homebrew/bin/zellij \
+    /home/linuxbrew/.linuxbrew/bin/zellij \
+    "$HOME/.linuxbrew/bin/zellij" \
+    "$HOME/.brew/bin/zellij" \
+    /usr/local/bin/zellij
+  do
+    [ -n "$candidate" ] || continue
+    [ -x "$candidate" ] || continue
+    printf '%s\n' "$candidate"
+    return 0
+  done
+
+  return 1
+}
+
+zellij_not_found_message() {
+  local version
+
+  version=${CLOUDTOP_ZELLIJ_VERSION:-0.44.1}
+  echo "zellij not found; checked PATH, mise zellij@$version, and common Homebrew prefixes" >&2
+  echo "Install it with: mise install zellij@$version" >&2
+}
+
 zellij_session_name() {
   local raw_name cleaned_name
 
@@ -83,6 +136,7 @@ remote_attach_script() {
       if [ "${2:-0}" = 1 ]; then
         remote_ssh_auth_sock_bridge_script
       fi
+      printf 'CLOUDTOP_ZELLIJ_VERSION=%s\nexport CLOUDTOP_ZELLIJ_VERSION\n' "$(shell_quote "${CLOUDTOP_ZELLIJ_VERSION:-0.44.1}")"
       cat <<'EOF'
 zellij_session_name() {
     raw_name=${RAVY_ZELLIJ_HOST:-${RAVY_HOST:-}}
@@ -101,18 +155,53 @@ zellij_session_name() {
 
 session_name=$(zellij_session_name)
 
-for candidate in "$(command -v zellij 2>/dev/null)" \
-    /opt/homebrew/bin/zellij \
-    /home/linuxbrew/.linuxbrew/bin/zellij \
-    "$HOME/.linuxbrew/bin/zellij" \
-    "$HOME/.brew/bin/zellij" \
-    /usr/local/bin/zellij
-do
-    [ -n "$candidate" ] || continue
-    [ -x "$candidate" ] || continue
-    exec "$candidate" attach --create "$session_name"
-done
-echo "zellij not found; checked PATH=$PATH and common Homebrew prefixes" >&2
+find_zellij() {
+    version=${CLOUDTOP_ZELLIJ_VERSION:-0.44.1}
+
+    candidate=$(command -v zellij 2>/dev/null || true)
+    if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+        printf '%s\n' "$candidate"
+        return 0
+    fi
+
+    if command -v mise >/dev/null 2>&1; then
+        candidate=$(mise which zellij --tool "zellij@$version" 2>/dev/null || true)
+        if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+
+        install_dir=$(mise where "zellij@$version" 2>/dev/null || true)
+        for candidate in "$install_dir/zellij" "$install_dir/bin/zellij"; do
+            [ -n "$install_dir" ] || continue
+            [ -x "$candidate" ] || continue
+            printf '%s\n' "$candidate"
+            return 0
+        done
+    fi
+
+    for candidate in \
+        /opt/homebrew/bin/zellij \
+        /home/linuxbrew/.linuxbrew/bin/zellij \
+        "$HOME/.linuxbrew/bin/zellij" \
+        "$HOME/.brew/bin/zellij" \
+        /usr/local/bin/zellij
+    do
+        [ -n "$candidate" ] || continue
+        [ -x "$candidate" ] || continue
+        printf '%s\n' "$candidate"
+        return 0
+    done
+
+    return 1
+}
+
+candidate=$(find_zellij) || {
+    echo "zellij not found; checked PATH, mise zellij@${CLOUDTOP_ZELLIJ_VERSION:-0.44.1}, and common Homebrew prefixes" >&2
+    echo "Install it with: mise install zellij@${CLOUDTOP_ZELLIJ_VERSION:-0.44.1}" >&2
+    exit 127
+}
+exec "$candidate" attach --create "$session_name"
 exit 127
 EOF
       ;;
@@ -146,19 +235,12 @@ attach_local() {
   case "$remote_program" in
     zellij)
       session_name=$(zellij_session_name)
-      for candidate in "$(command -v zellij 2>/dev/null)" \
-          /opt/homebrew/bin/zellij \
-          /home/linuxbrew/.linuxbrew/bin/zellij \
-          "$HOME/.linuxbrew/bin/zellij" \
-          "$HOME/.brew/bin/zellij" \
-          /usr/local/bin/zellij
-      do
-        [ -n "$candidate" ] || continue
-        [ -x "$candidate" ] || continue
-        print_command "$candidate" attach --create "$session_name"
-        exec "$candidate" attach --create "$session_name"
-      done
-      echo "zellij not found; checked PATH=$PATH and common Homebrew prefixes" >&2
+      candidate=$(find_zellij) || {
+        zellij_not_found_message
+        exit 127
+      }
+      print_command "$candidate" attach --create "$session_name"
+      exec "$candidate" attach --create "$session_name"
       exit 127
       ;;
     tmux)

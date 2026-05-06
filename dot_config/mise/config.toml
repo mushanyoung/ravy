@@ -11,6 +11,7 @@ starship = "latest"
 ripgrep = "latest"
 process-compose = "latest"
 duckdb = "latest"
+zellij = "0.44.1"
 
 
 [settings]
