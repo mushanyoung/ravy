@@ -62,7 +62,7 @@
     git log --color=always --pretty='tformat:%C(green)%h|%C(magenta)(%ar)|%C(cyan)<%an>|%C(red)%d%C(reset) %s' $@ | \
     perl -pe 's/(\\(\\d+ \\w+)[^<)]*ago\\)/\\1)/' | \
     column -s '|' -t | \
-    ${GIT_PAGER:-less -FXRS}; }; gl"
+    LESS=FXRS ${GIT_PAGER:-less}; }; gl"
   r = !GIT_PAGER=cat git l -10
   h = !GIT_PAGER=cat git log -1
   ls = log --stat
