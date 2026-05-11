@@ -99,6 +99,9 @@ augroup BufferEdit
   " set the cursor position to the beginning when editing commit message
   autocmd BufReadPost COMMIT_EDITMSG normal gg0
 
+  " Treat chezmoi KDL templates as KDL.
+  autocmd BufReadPost,BufNewFile,BufWinEnter *.kdl.tmpl setlocal filetype=kdl
+
   " highlight cursorline only in insert mode
   autocmd InsertEnter * set cursorline
   autocmd InsertLeave * set nocursorline

@@ -201,7 +201,7 @@ candidate=$(find_zellij) || {
     echo "Install it with: mise install zellij@${CLOUDTOP_ZELLIJ_VERSION:-0.44.1}" >&2
     exit 127
 }
-exec "$candidate" attach --create "$session_name"
+exec "$candidate" attach --forget --create "$session_name"
 exit 127
 EOF
       ;;
@@ -239,8 +239,8 @@ attach_local() {
         zellij_not_found_message
         exit 127
       }
-      print_command "$candidate" attach --create "$session_name"
-      exec "$candidate" attach --create "$session_name"
+      print_command "$candidate" attach --forget --create "$session_name"
+      exec "$candidate" attach --forget --create "$session_name"
       exit 127
       ;;
     tmux)

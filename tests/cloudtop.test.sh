@@ -70,7 +70,7 @@ printf '%s\n' \"\$*\" > \"$tmp_root/zellij.log\"
     PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
     "$repo_root/bin/cloudtop" >/dev/null
 
-  assert_equal "$(cat "$tmp_root/zellij.log")" "attach --create my-remote" "local cloudtop should use 10-char host prefix"
+  assert_equal "$(cat "$tmp_root/zellij.log")" "attach --forget --create my-remote" "local cloudtop should use 10-char host prefix"
 }
 
 test_remote_zellij_session_name() {
@@ -93,7 +93,7 @@ eval "$last"
     SSH_COMMAND="$tmp_root/bin/ssh" \
     "$repo_root/bin/cloudtop" remote.example.com >/dev/null
 
-  assert_equal "$(cat "$tmp_root/remote-zellij.log")" "attach --create remote-mac" "remote cloudtop should compute host prefix on the remote side"
+  assert_equal "$(cat "$tmp_root/remote-zellij.log")" "attach --forget --create remote-mac" "remote cloudtop should compute host prefix on the remote side"
 }
 
 test_local_zellij_mise_fallback() {
@@ -129,7 +129,7 @@ exit 1
     "$repo_root/bin/cloudtop" >/dev/null
 
   assert_equal "$(head -n 1 "$tmp_root/mise.log")" "which zellij --tool zellij@0.44.1" "local cloudtop should ask mise for the pinned zellij version"
-  assert_equal "$(cat "$tmp_root/mise-zellij.log")" "attach --create my-remote" "local cloudtop should use mise zellij when PATH has no zellij"
+  assert_equal "$(cat "$tmp_root/mise-zellij.log")" "attach --forget --create my-remote" "local cloudtop should use mise zellij when PATH has no zellij"
 }
 
 test_remote_zellij_mise_fallback_with_version_override() {
@@ -170,7 +170,7 @@ eval "$last"
     "$repo_root/bin/cloudtop" remote.example.com >/dev/null
 
   assert_equal "$(head -n 1 "$tmp_root/remote-mise.log")" "which zellij --tool zellij@0.44.0" "remote cloudtop should embed CLOUDTOP_ZELLIJ_VERSION in the remote script"
-  assert_equal "$(cat "$tmp_root/remote-mise-zellij.log")" "attach --create remote-mis" "remote cloudtop should use mise zellij when PATH has no zellij"
+  assert_equal "$(cat "$tmp_root/remote-mise-zellij.log")" "attach --forget --create remote-mis" "remote cloudtop should use mise zellij when PATH has no zellij"
 }
 
 test_remote_ssh_auth_sock_bridge() {

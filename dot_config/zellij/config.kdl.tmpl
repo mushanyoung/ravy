@@ -49,7 +49,12 @@ keybinds clear-defaults=true {
         bind "j" { GoToNextTab; }
         bind "k" { GoToPreviousTab; }
         bind "l" { GoToNextTab; }
-        bind "n" { NewTab; SwitchToMode "normal"; }
+        bind "n" {
+            NewTab {
+                layout "ravy-follow-cwd"
+            }
+            SwitchToMode "normal"
+        }
         bind "r" { SwitchToMode "renametab"; TabNameInput 0; }
         bind "s" { ToggleActiveSyncTab; SwitchToMode "normal"; }
         bind "Ctrl t" { SwitchToMode "normal"; }
@@ -72,7 +77,7 @@ keybinds clear-defaults=true {
         bind "j" { Resize "Increase down"; }
         bind "k" { Resize "Increase up"; }
         bind "l" { Resize "Increase right"; }
-        bind "Ctrl z" { SwitchToMode "normal"; }
+        bind "Ctrl b" { SwitchToMode "normal"; }
     }
     move {
         bind "left" { MovePane "left"; }
@@ -196,7 +201,7 @@ keybinds clear-defaults=true {
         bind "Ctrl y" { SwitchToMode "pane"; }
     }
     shared_except "locked" "resize" {
-        bind "Ctrl z" { SwitchToMode "resize"; }
+        bind "Ctrl b" { SwitchToMode "resize"; }
     }
     shared_except "normal" "locked" "entersearch" {
         bind "enter" { SwitchToMode "normal"; }
@@ -253,12 +258,22 @@ keybinds clear-defaults=true {
         bind "," { SwitchToMode "renametab"; }
         bind "[" { SwitchToMode "scroll"; }
         bind "Ctrl space" { Write 2; SwitchToMode "normal"; }
-        bind "c" { NewTab; SwitchToMode "normal"; }
+        bind "c" {
+            NewTab {
+                cwd "{{ .chezmoi.homeDir }}"
+            }
+            SwitchToMode "normal"
+        }
         bind "h" { MoveFocus "left"; SwitchToMode "normal"; }
         bind "j" { MoveFocus "down"; SwitchToMode "normal"; }
         bind "k" { MoveFocus "up"; SwitchToMode "normal"; }
         bind "l" { MoveFocus "right"; SwitchToMode "normal"; }
-        bind "n" { GoToNextTab; SwitchToMode "normal"; }
+        bind "n" {
+            NewTab {
+                layout "ravy-follow-cwd"
+            }
+            SwitchToMode "normal"
+        }
         bind "o" { FocusNextPane; }
         bind "p" { GoToPreviousTab; SwitchToMode "normal"; }
         bind "z" { ToggleFocusFullscreen; SwitchToMode "normal"; }
@@ -412,7 +427,7 @@ web_client {
 
 // Path to the default editor to use to edit pane scrollbuffer
 // Default: $EDITOR or $VISUAL
-// scrollback_editor "/usr/bin/vim"
+scrollback_editor "nvim"
 
 // A fixed name to always give the Zellij session.
 // Consider also setting `attach_to_session true,`
@@ -439,7 +454,7 @@ web_client {
 //   - true (default)
 //   - false
 //
-// session_serialization false
+session_serialization false
 
 // Whether pane viewports are serialized along with the session, default is false
 // Options:
