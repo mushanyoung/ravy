@@ -126,9 +126,29 @@ function! s:osc52_yank() abort
   endif
 endfunction
 
+function! s:zellij_switch_mode(mode) abort
+  if empty($ZELLIJ) || empty($ZELLIJ_PANE_ID) || !executable('zellij')
+    return
+  endif
+
+  silent! call system(['zellij', 'action', 'switch-mode', a:mode])
+endfunction
+
 augroup osc52
   autocmd!
   autocmd TextYankPost * call s:osc52_yank()
+augroup END
+
+augroup zellij_lock
+  autocmd!
+  autocmd VimEnter * call s:zellij_switch_mode('locked')
+  autocmd VimLeavePre * call s:zellij_switch_mode('normal')
+  if exists('##VimSuspend')
+    autocmd VimSuspend * call s:zellij_switch_mode('normal')
+  endif
+  if exists('##VimResume')
+    autocmd VimResume * call s:zellij_switch_mode('locked')
+  endif
 augroup END
 
 function! ExtractMatches(pattern)

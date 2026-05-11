@@ -58,6 +58,9 @@ assert_file_lacks "$rendered_init" "~/.ravy" "init.vim no longer falls back to t
 
 assert_file_contains "$rendered_main" "set shadafile=~/.config/nvim/main.shada" "ravy.vim includes the main vimrc"
 assert_file_contains "$rendered_main" "let s:private_home = \$RAVY_PRIVATE_HOME" "ravy.vim preserves the existing private overlay hook"
+assert_file_contains "$rendered_main" "function! s:zellij_switch_mode(mode) abort" "ravy.vim includes the zellij mode helper"
+assert_file_contains "$rendered_main" "autocmd VimEnter * call s:zellij_switch_mode('locked')" "ravy.vim locks zellij while nvim is active"
+assert_file_contains "$rendered_main" "autocmd VimSuspend * call s:zellij_switch_mode('normal')" "ravy.vim unlocks zellij when nvim is suspended"
 
 if [ "$failures" -eq 0 ]; then
   echo 'All nvim config tests passed'
