@@ -12,7 +12,7 @@ set directory=~/.config/nvim/swap// swapfile
 set backupdir=~/.config/nvim/backup// nobackup writebackup
 set undodir=~/.config/nvim/undo// undofile undolevels=1000 undoreload=10000
 set wildignore+=*.png,*.jpg,*.gif,*.ico,*.mp3,*.mp4,*.avi,*.mkv,*.o,*.obj,*.pyc,*.swf,*.fla,*.git*,*.hg*,*.svn,log/**,tmp/**,*~,*~orig,*.DS_Store,tags,.tags,.tags_sorted_by_file,node_modules
-set encoding=utf-8 fileencoding=utf-8 fileencodings=ucs-bom,utf-8,default,latin1,utf-16le,big5,gbk,euc-jp,euc-kr,iso8859-1
+set fileencodings=ucs-bom,utf-8,default,latin1,utf-16le,big5,gbk,euc-jp,euc-kr,iso8859-1
 set formatoptions=nmMcroql
 set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
 set tabstop=2 softtabstop=2 shiftwidth=2 expandtab smarttab
@@ -32,10 +32,41 @@ set nostartofline                " does not move the cursor to start of line for
 set scrolloff=3 scrolljump=1     " 3 lines away from margins to scroll 1 line
 set sidescrolloff=8 sidescroll=2 " 8 columns away from margins to scroll 2 column
 
-" Register system clipboard
-if has('clipboard')
-  set clipboard+=unnamed,unnamedplus
-endif
+" Copy to the terminal clipboard with OSC 52 without querying paste support.
+lua << EOF
+local osc52 = require('vim.ui.clipboard.osc52')
+local cache = {
+  ['+'] = { {}, 'v' },
+  ['*'] = { {}, 'v' },
+}
+
+local function copy(reg)
+  local osc52_copy = osc52.copy(reg)
+  return function(lines, regtype)
+    cache[reg] = { lines, regtype }
+    return osc52_copy(lines, regtype)
+  end
+end
+
+local function paste(reg)
+  return function()
+    return cache[reg]
+  end
+end
+
+vim.g.clipboard = {
+  name = 'OSC 52 copy-only',
+  copy = {
+    ['+'] = copy('+'),
+    ['*'] = copy('*'),
+  },
+  paste = {
+    ['+'] = paste('+'),
+    ['*'] = paste('*'),
+  },
+}
+EOF
+set clipboard+=unnamed,unnamedplus
 
 " UI
 set number
@@ -87,12 +118,6 @@ augroup END
 
 " Functions {{
 
-function! s:osc52_yank() abort
-  if v:event.operator ==# 'y' && v:event.regname ==# ''
-    lua require('osc52').copy_register('"')
-  endif
-endfunction
-
 function! s:zellij_switch_mode(mode) abort
   if empty($ZELLIJ) || empty($ZELLIJ_PANE_ID) || !executable('zellij')
     return
@@ -100,11 +125,6 @@ function! s:zellij_switch_mode(mode) abort
 
   silent! call system(['zellij', 'action', 'switch-mode', a:mode])
 endfunction
-
-augroup osc52
-  autocmd!
-  autocmd TextYankPost * call s:osc52_yank()
-augroup END
 
 augroup zellij_lock
   autocmd!
@@ -158,10 +178,6 @@ function! FZFDirectories()
         \ 'options': ['+m', '--prompt', 'Dir> ', '--preview', 'eza --tree --color=always {}'],
         \ 'down': '~40%'}))
 endfunction
-
-function! s:AltMapKey(key)
-  return has('nvim')?  '<A-'. a:key . '>' : '<ESC>'. a:key
-endfun
 
 " }}
 
@@ -310,39 +326,39 @@ nmap <Space><CR> <PLUG>unimpairedBlankDown
 nmap <Space><Space> <PLUG>unimpairedBlankUp
 
 " FZF
-exec 'nnoremap           ' . s:AltMapKey('a') . ' :Ag<Space>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('d') . ' :call FZFDirectories()<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('b') . ' :Buffers<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('m') . ' :Marks<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('e') . ' :Lines<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
-exec 'nnoremap <silent> 1' . s:AltMapKey('o') . ' :Files %:p:h/..<CR>'
-exec 'nnoremap <silent> 2' . s:AltMapKey('o') . ' :Files %:p:h/../..<CR>'
-exec 'nnoremap <silent> 3' . s:AltMapKey('o') . ' :Files %:p:h/../../..<CR>'
-exec 'nnoremap <silent> 4' . s:AltMapKey('o') . ' :Files %:p:h/../../../..<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('f') . ' :Files<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('q') . ' :Snippets<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('t') . ' :Filetypes<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('v') . ' :History<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey(';') . ' :History:<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('/') . ' :History/<CR>'
+nnoremap <A-a> :Ag<Space>
+nnoremap <silent> <A-d> :call FZFDirectories()<CR>
+nnoremap <silent> <A-b> :Buffers<CR>
+nnoremap <silent> <A-m> :Marks<CR>
+nnoremap <silent> <A-e> :Lines<CR>
+nnoremap <silent> <A-o> :Files %:p:h<CR>
+nnoremap <silent> 1<A-o> :Files %:p:h/..<CR>
+nnoremap <silent> 2<A-o> :Files %:p:h/../..<CR>
+nnoremap <silent> 3<A-o> :Files %:p:h/../../..<CR>
+nnoremap <silent> 4<A-o> :Files %:p:h/../../../..<CR>
+nnoremap <silent> <A-f> :Files<CR>
+nnoremap <silent> <A-q> :Snippets<CR>
+nnoremap <silent> <A-t> :Filetypes<CR>
+nnoremap <silent> <A-v> :History<CR>
+nnoremap <silent> <A-;> :History:<CR>
+nnoremap <silent> <A-/> :History/<CR>
 
-exec 'nnoremap <silent>  ' . s:AltMapKey('c') . ' :close<CR>'
+nnoremap <silent> <A-c> :close<CR>
 
-exec 'nnoremap <silent>  ' . s:AltMapKey('\') . ' :vsplit<CR>'
-exec 'nnoremap <silent>  ' . s:AltMapKey('-') . ' :split<CR>'
+nnoremap <silent> <A-\> :vsplit<CR>
+nnoremap <silent> <A--> :split<CR>
 
 " Show unicode names
-exec 'nnoremap <silent>  ' . s:AltMapKey('u') . ' :UnicodeName<CR>'
+nnoremap <silent> <A-u> :UnicodeName<CR>
 
 " key pool
-exec 'nnoremap           ' . s:AltMapKey('g') . ' <NOP>'
-exec 'nnoremap           ' . s:AltMapKey('i') . ' <NOP>'
-exec 'nnoremap           ' . s:AltMapKey('n') . ' <NOP>'
-exec 'nnoremap           ' . s:AltMapKey('r') . ' <NOP>'
-exec 'nnoremap           ' . s:AltMapKey('w') . ' <NOP>'
-exec 'nnoremap           ' . s:AltMapKey('x') . ' <NOP>'
-exec 'nnoremap           ' . s:AltMapKey('y') . ' <NOP>'
+nnoremap <A-g> <NOP>
+nnoremap <A-i> <NOP>
+nnoremap <A-n> <NOP>
+nnoremap <A-r> <NOP>
+nnoremap <A-w> <NOP>
+nnoremap <A-x> <NOP>
+nnoremap <A-y> <NOP>
 
 nnoremap <Space>b <NOP>
 nnoremap <Space>e <NOP>
@@ -672,9 +688,6 @@ Plug 'honza/vim-snippets', !exists('g:vscode') ? {} : { 'on': [] }
 
 " ctags
 Plug 'ludovicchabant/vim-gutentags', executable('ctags') && !exists('g:vscode') ? {} : { 'on': [] }
-
-" osc52
-Plug 'ojroques/nvim-osc52'
 
 call plug#end()
 
