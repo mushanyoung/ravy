@@ -20,16 +20,12 @@ set copyindent smartindent nocindent
 set ignorecase smartcase
 set hlsearch incsearch
 set modeline modelines=9
-set history=10000
 set shell=bash
 set mouse=a
 set iskeyword+=-
 set updatetime=100
 set notimeout                    " no timeout for key map sequence
 set splitright splitbelow        " split window: vertical to the right and horizontal to the below
-set hidden                       " hidden buffers
-set nospell                      " no spell check
-set nobomb                       " no Byte Order Mark
 set synmaxcol=4096               " max columnlength for syntax parsing
 set switchbuf=useopen            " when switching to a buffer, jump to a window with it opened
 set nostartofline                " does not move the cursor to start of line for some commands
@@ -42,8 +38,8 @@ if has('clipboard')
 endif
 
 " UI
-set number numberwidth=4
-set nofoldenable foldmethod=indent foldlevel=0 foldnestmax=3
+set number
+set nofoldenable foldmethod=indent foldnestmax=3
 set list listchars=tab:›\ ,trail:•,extends:>,precedes:<,nbsp:.
 set showmatch matchpairs+=<:>
 set viewoptions=folds,options,cursor,unix,slash
@@ -52,13 +48,10 @@ set textwidth=120
 set winwidth=79 winheight=5 winminheight=5
 set linebreak breakindent showbreak=>>
 set noshowmode
-set showcmd
 set lazyredraw
-set nocursorline
-set visualbell noerrorbells
-set wildmenu wildmode=list:longest,full " completions: list matches, then longest common part, then all.
+set visualbell
+set wildmode=list:longest,full " completions: list matches, then longest common part, then all.
 set wrap whichwrap=b,s,h,l,<,>,[,]      " Backspace and cursor keys wrap too
-set showtabline=1                       " show tab when multi tabs exist
 set colorcolumn=+1                      " highlight over width boundary
 set virtualedit=onemore                 " cursor beyond last character
 set shortmess+=filmnrxoOtTI             " Abbreviation of file messages: try <C-G>
@@ -68,23 +61,6 @@ let &t_ti.="\e[2 q"
 let &t_te.="\e[2 q"
 let &t_SI="\e[6 q"
 let &t_EI="\e[2 q"
-
-" Bracketed Paste Mode:
-" [Vim Control Sequence Examples](https://web.archive.org/web/20221005051612/https://ttssh2.osdn.jp/manual/4/en/usage/tips/vim.html)
-if &term =~? 'tmux' || &term =~? 'screen'
-  let &t_BE="\e[?2004h"
-  let &t_BD="\e[?2004l"
-  let &t_PS="\e[200~"
-  let &t_PE="\e[201~"
-endif
-
-" title string reporting
-if !empty($ITERM_SESSION_ID) && empty($TMUX)
-  " iterm window title
-  set t_ts=]; t_fs=
-endif
-
-scriptencoding utf-8
 
 " }}
 
@@ -110,15 +86,6 @@ augroup END
 " }}
 
 " Functions {{
-
-" open a link remotely
-" function! RavyRemoteOpenLink(url)
-"   let t:url = substitute(a:url, "[\x0d\x0a].*", "", "")
-"   let t:url = substitute(t:url, '^\s\+', "", "")
-"   let t:url = (t:url =~ '.*://' ? '' : 'https://www.google.com/search?q=') . t:url
-"   call OSCYank("RAVY\x0dopen\x0d" . t:url)
-" endfunction
-" nnoremap <silent> \l :call RavyRemoteOpenLink(getreg('"'))<CR>
 
 function! s:osc52_yank() abort
   if v:event.operator ==# 'y' && v:event.regname ==# ''
@@ -349,7 +316,6 @@ exec 'nnoremap <silent>  ' . s:AltMapKey('b') . ' :Buffers<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('m') . ' :Marks<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('e') . ' :Lines<CR>'
 exec 'nnoremap <silent>  ' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
-" exec 'nnoremap <silent> 0' . s:AltMapKey('o') . ' :Files %:p:h<CR>'
 exec 'nnoremap <silent> 1' . s:AltMapKey('o') . ' :Files %:p:h/..<CR>'
 exec 'nnoremap <silent> 2' . s:AltMapKey('o') . ' :Files %:p:h/../..<CR>'
 exec 'nnoremap <silent> 3' . s:AltMapKey('o') . ' :Files %:p:h/../../..<CR>'
