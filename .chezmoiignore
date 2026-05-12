@@ -10,7 +10,6 @@ custom/
 scripts/
 
 # Non-dot duplicates (dot_ variants are the ones intended to be applied)
-tmux.conf.local
 vimrc
 
 # These are template partials and should never be applied
@@ -24,5 +23,4 @@ starship.toml
 tags
 tags.lock
 tags.temp
-tmux.conf.local
 vimrc

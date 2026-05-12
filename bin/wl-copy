@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mock xsel that uses OSC 52 to copy to local clipboard over SSH/tmux
+# Mock xsel that uses OSC 52 to copy to local clipboard over SSH
 if ! [ -t 0 ]; then
   content=$(cat)
   if [ -n "$content" ]; then

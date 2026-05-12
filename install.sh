@@ -224,14 +224,12 @@ if private_install_script="$(resolve_private_install_script)"; then
 fi
 
 if [ "$RAVY_BOOTSTRAP_OPTIONAL" = "1" ]; then
-  info "Optional bootstrap: tmux base config + vim-plug"
-  __el curl -sfLo "$HOME/.tmux.conf" https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf
-
+  info "Optional bootstrap: vim-plug"
   if [ ! -f "$HOME/.config/nvim/autoload/plug.vim" ]; then
     __el curl -fLo "$HOME/.config/nvim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   fi
 else
-  info "Skipping optional tmux/vim bootstrap (set RAVY_BOOTSTRAP_OPTIONAL=1 to enable)"
+  info "Skipping optional vim bootstrap (set RAVY_BOOTSTRAP_OPTIONAL=1 to enable)"
 fi
 
 success "Installation complete!"
