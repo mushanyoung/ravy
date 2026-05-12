@@ -2,6 +2,14 @@
 " vim: set foldmarker={{,}} foldlevel=0 foldmethod=marker:
 " }}
 
+"Plugin cleanup notes:
+"- vim-sayonara can be replaced with a native bdelete/bwipe mapping if buffer closing behavior does not need Sayonara's window/tab handling.
+"- vim-cool can be removed if manual :nohlsearch or the default <C-L> behavior is enough.
+"- vim-better-whitespace can be replaced with a small trailing-whitespace highlight and BufWritePre strip autocmd.
+"- vim-airline can be removed for Neovim's default statusline/tabline or a lighter native Lua statusline, but this changes visible UI.
+"- coc.nvim can be migrated to Neovim's built-in LSP/completion stack; this is a larger behavior change, not a simple deletion.
+"- vim-gitgutter can be replaced with a Neovim-native signs plugin such as gitsigns.nvim.
+
 " Settings {{
 
 " Neovim
@@ -322,8 +330,8 @@ vnoremap <TAB> >gv
 vnoremap <S-TAB> <gv
 
 " insert an empty line without entering insert mode
-nmap <Space><CR> <PLUG>unimpairedBlankDown
-nmap <Space><Space> <PLUG>unimpairedBlankUp
+nnoremap <silent> <Space><CR> :<C-U>call append(line('.'), repeat([''], v:count1))<CR>
+nnoremap <silent> <Space><Space> :<C-U>call append(line('.') - 1, repeat([''], v:count1))<CR>
 
 " FZF
 nnoremap <A-a> :Ag<Space>
@@ -337,7 +345,6 @@ nnoremap <silent> 2<A-o> :Files %:p:h/../..<CR>
 nnoremap <silent> 3<A-o> :Files %:p:h/../../..<CR>
 nnoremap <silent> 4<A-o> :Files %:p:h/../../../..<CR>
 nnoremap <silent> <A-f> :Files<CR>
-nnoremap <silent> <A-q> :Snippets<CR>
 nnoremap <silent> <A-t> :Filetypes<CR>
 nnoremap <silent> <A-v> :History<CR>
 nnoremap <silent> <A-;> :History:<CR>
@@ -593,9 +600,6 @@ Plug 'airblade/vim-gitgutter'
 " set proper working directory
 Plug 'airblade/vim-rooter'
 
-" even better % navigate and highlight matching words
-Plug 'andymass/vim-matchup'
-
 " show css color in code
 Plug 'ap/vim-css-color'
 
@@ -653,14 +657,8 @@ Plug 'terryma/vim-expand-region'
 " deal with multiple variants of a word
 Plug 'tpope/vim-abolish'
 
-" gc to comment codes
-Plug 'tpope/vim-commentary'
-
 " `.` supports to repeat mapped key sequence
 Plug 'tpope/vim-repeat'
-
-" default settings
-Plug 'tpope/vim-sensible'
 
 " Auto shiftwidth and expandtab
 Plug 'tpope/vim-sleuth'
@@ -671,9 +669,6 @@ Plug 'tpope/vim-speeddating'
 " `s`: manipulate surrounded symbols / texts
 Plug 'tpope/vim-surround'
 
-" a bunch of useful [, ] key bindings
-Plug 'tpope/vim-unimpaired'
-
 " color scheme
 Plug 'sainnhe/gruvbox-material'
 
@@ -682,9 +677,6 @@ Plug 'vim-airline/vim-airline',!exists('g:vscode') ? {} : { 'on': [] }
 
 " completions
 Plug 'neoclide/coc.nvim', !exists('g:vscode') ? {'branch': 'release'} : { 'on': [] }
-
-" snippets
-Plug 'honza/vim-snippets', !exists('g:vscode') ? {} : { 'on': [] }
 
 " ctags
 Plug 'ludovicchabant/vim-gutentags', executable('ctags') && !exists('g:vscode') ? {} : { 'on': [] }
