@@ -112,11 +112,11 @@ printf '%s\n' \"\$*\" > \"$tmp_root/mise-zellij.log\"
 "
   write_stub "$tmp_root/bin/mise" "#!/usr/bin/env sh
 printf '%s\n' \"\$*\" >> \"$tmp_root/mise.log\"
-if [ \"\$1\" = \"which\" ] && [ \"\$2\" = \"zellij\" ] && [ \"\$3\" = \"--tool\" ] && [ \"\$4\" = \"zellij@0.44.1\" ]; then
+if [ \"\$1\" = \"which\" ] && [ \"\$2\" = \"zellij\" ]; then
   printf '%s\n' \"$tmp_root/mise-zellij/zellij\"
   exit 0
 fi
-if [ \"\$1\" = \"where\" ] && [ \"\$2\" = \"zellij@0.44.1\" ]; then
+if [ \"\$1\" = \"where\" ] && [ \"\$2\" = \"zellij\" ]; then
   printf '%s\n' \"$tmp_root/mise-zellij\"
   exit 0
 fi
@@ -128,11 +128,11 @@ exit 1
     PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
     "$repo_root/bin/cloudtop" >/dev/null
 
-  assert_equal "$(head -n 1 "$tmp_root/mise.log")" "which zellij --tool zellij@0.44.1" "local cloudtop should ask mise for the pinned zellij version"
+  assert_equal "$(head -n 1 "$tmp_root/mise.log")" "which zellij" "local cloudtop should ask mise for zellij"
   assert_equal "$(cat "$tmp_root/mise-zellij.log")" "attach --forget --create my-remote" "local cloudtop should use mise zellij when PATH has no zellij"
 }
 
-test_remote_zellij_mise_fallback_with_version_override() {
+test_remote_zellij_mise_fallback() {
   guard_exec "$tmp_root" rm -f "$tmp_root/bin/zellij" "$tmp_root/remote-mise.log" "$tmp_root/remote-mise-zellij.log"
   guard_exec "$tmp_root" mkdir -p "$tmp_root/remote-mise-zellij"
 
@@ -141,11 +141,11 @@ printf '%s\n' \"\$*\" > \"$tmp_root/remote-mise-zellij.log\"
 "
   write_stub "$tmp_root/bin/mise" "#!/usr/bin/env sh
 printf '%s\n' \"\$*\" >> \"$tmp_root/remote-mise.log\"
-if [ \"\$1\" = \"which\" ] && [ \"\$2\" = \"zellij\" ] && [ \"\$3\" = \"--tool\" ] && [ \"\$4\" = \"zellij@0.44.0\" ]; then
+if [ \"\$1\" = \"which\" ] && [ \"\$2\" = \"zellij\" ]; then
   printf '%s\n' \"$tmp_root/remote-mise-zellij/zellij\"
   exit 0
 fi
-if [ \"\$1\" = \"where\" ] && [ \"\$2\" = \"zellij@0.44.0\" ]; then
+if [ \"\$1\" = \"where\" ] && [ \"\$2\" = \"zellij\" ]; then
   printf '%s\n' \"$tmp_root/remote-mise-zellij\"
   exit 0
 fi
@@ -158,7 +158,6 @@ for arg do
 done
 RAVY_ZELLIJ_HOST=Remote-Mise-Test
 export RAVY_ZELLIJ_HOST
-unset CLOUDTOP_ZELLIJ_VERSION
 eval "$last"
 '
 
@@ -166,10 +165,9 @@ eval "$last"
     HOME="$tmp_root/home" \
     PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
     SSH_COMMAND="$tmp_root/bin/ssh" \
-    CLOUDTOP_ZELLIJ_VERSION=0.44.0 \
     "$repo_root/bin/cloudtop" remote.example.com >/dev/null
 
-  assert_equal "$(head -n 1 "$tmp_root/remote-mise.log")" "which zellij --tool zellij@0.44.0" "remote cloudtop should embed CLOUDTOP_ZELLIJ_VERSION in the remote script"
+  assert_equal "$(head -n 1 "$tmp_root/remote-mise.log")" "which zellij" "remote cloudtop should ask mise for zellij"
   assert_equal "$(cat "$tmp_root/remote-mise-zellij.log")" "attach --forget --create remote-mis" "remote cloudtop should use mise zellij when PATH has no zellij"
 }
 
@@ -228,7 +226,7 @@ setup_tmp_root
 test_local_zellij_session_name
 test_remote_zellij_session_name
 test_local_zellij_mise_fallback
-test_remote_zellij_mise_fallback_with_version_override
+test_remote_zellij_mise_fallback
 test_remote_ssh_auth_sock_bridge
 
 if [ "$failures" -ne 0 ]; then

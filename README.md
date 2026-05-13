@@ -32,9 +32,8 @@ RAVY_PRIVATE_HOME="$HOME/.local/share/ravy-private" ./install.sh
 ## Cloudtop
 
 The bundled `cloudtop` helper routes through `/bin/sh -lc` and attaches to
-zellij by default. It checks `PATH`, `mise zellij@0.44.1`, and common Homebrew
-install prefixes; set `CLOUDTOP_ZELLIJ_VERSION` to choose a different mise
-fallback version. Use `cloudtop --mosh` for mosh transport.
+zellij by default. It checks `PATH`, `mise which zellij`, and common Homebrew
+install prefixes. Use `cloudtop --mosh` for mosh transport.
 The shorter `cl` command is a shim for `cloudtop`. Running `cloudtop` or `cl`
 without a host attaches to a local session without opening an SSH connection.
 
