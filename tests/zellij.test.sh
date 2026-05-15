@@ -34,6 +34,25 @@ assert_file_contains() {
   fi
 }
 
+write_locked_block() {
+  local source_config=$1
+  local locked_block=$2
+
+  awk '
+    /^[[:space:]]*locked[[:space:]]*\{/ {
+      in_locked = 1
+      print
+      next
+    }
+    in_locked {
+      print
+      if ($0 ~ /^[[:space:]]*\}[[:space:]]*$/) {
+        exit
+      }
+    }
+  ' "$source_config" >"$locked_block"
+}
+
 write_stub() {
   local target=$1
   local body=$2
@@ -65,10 +84,15 @@ cleanup() {
 
 render_zellij_config() {
   local rendered_config="$tmp_root/.config/zellij/config.kdl"
+  local locked_block="$tmp_root/locked-block.kdl"
 
   guard_exec "$tmp_root" mkdir -p "$(dirname "$rendered_config")"
   guard_assert_path "$tmp_root" "$rendered_config" create
   "$real_chezmoi" -S "$repo_root" -D "$tmp_root" cat "$rendered_config" >"$rendered_config"
+  write_locked_block "$rendered_config" "$locked_block"
+
+  assert_file_contains "$locked_block" 'bind "Ctrl space" { SwitchToMode "tmux"; }' \
+    "locked mode should allow Ctrl-space to enter tmux mode"
 
   for binding in \
     'bind "Alt 1" { GoToTab 1; }' \
@@ -82,7 +106,7 @@ render_zellij_config() {
     'bind "Alt 9" { GoToTab 9; }' \
     'bind "Alt 0" { GoToTab 10; }'
   do
-    assert_file_contains "$rendered_config" "$binding" "locked mode should include $binding"
+    assert_file_contains "$locked_block" "$binding" "locked mode should include $binding"
   done
 
   assert_file_contains "$rendered_config" 'bind "Alt 0" { GoToTab 10; SwitchToMode "normal"; }' \
