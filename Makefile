@@ -8,7 +8,7 @@ BASH ?= bash
 FISH ?= fish
 CHEZMOI_ARGS ?=
 
-.PHONY: help install apply chezmoi-apply test test-fish test-sh test-install test-nvim test-cloudtop
+.PHONY: help install apply chezmoi-apply test test-fish test-sh test-install test-nvim test-zellij test-cloudtop
 
 help:
 	@echo 'Targets:'
@@ -20,6 +20,7 @@ help:
 	@echo '  make test-sh        Run bash/zsh config test'
 	@echo '  make test-install   Run installer regression test'
 	@echo '  make test-nvim      Run Neovim config rendering test'
+	@echo '  make test-zellij    Run zellij config and watcher tests'
 	@echo '  make test-cloudtop  Run cloudtop session naming test'
 
 install:
@@ -30,7 +31,7 @@ apply:
 
 chezmoi-apply: apply
 
-test: test-fish test-sh test-install test-nvim test-cloudtop
+test: test-fish test-sh test-install test-nvim test-zellij test-cloudtop
 
 test-fish:
 	$(FISH) tests/config.fish.test.fish
@@ -43,6 +44,9 @@ test-install:
 
 test-nvim:
 	$(BASH) tests/nvim.test.sh
+
+test-zellij:
+	$(BASH) tests/zellij.test.sh
 
 test-cloudtop:
 	$(BASH) tests/cloudtop.test.sh

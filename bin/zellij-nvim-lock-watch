@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+set -u
+
+LOCK_DIR=
+
+quiet_exit() {
+  exit 0
+}
+
+cleanup() {
+  [ -n "${LOCK_DIR:-}" ] && rm -rf "$LOCK_DIR"
+}
+
+stop() {
+  cleanup
+  exit 0
+}
+
+require_runtime() {
+  [ -n "${ZELLIJ:-}" ] || quiet_exit
+  command -v zellij >/dev/null 2>&1 || quiet_exit
+  command -v jq >/dev/null 2>&1 || quiet_exit
+}
+
+lock_key() {
+  printf '%s' "${ZELLIJ_SESSION_NAME:-${ZELLIJ:-zellij}}" | tr -c 'A-Za-z0-9_.-' '_'
+}
+
+acquire_lock() {
+  local lock_root old_pid
+
+  lock_root="${TMPDIR:-/tmp}/zellij-nvim-lock-watch"
+  LOCK_DIR="$lock_root/$(lock_key).lock"
+
+  mkdir -p "$lock_root" 2>/dev/null || quiet_exit
+
+  if mkdir "$LOCK_DIR" 2>/dev/null; then
+    printf '%s\n' "$$" >"$LOCK_DIR/pid"
+  else
+    old_pid=$(cat "$LOCK_DIR/pid" 2>/dev/null || true)
+    if [ -n "$old_pid" ] && kill -0 "$old_pid" 2>/dev/null; then
+      quiet_exit
+    fi
+
+    rm -rf "$LOCK_DIR" 2>/dev/null || quiet_exit
+    mkdir "$LOCK_DIR" 2>/dev/null || quiet_exit
+    printf '%s\n' "$$" >"$LOCK_DIR/pid"
+  fi
+
+  trap cleanup EXIT
+  trap stop INT TERM
+}
+
+is_nvim_pane() {
+  local pane_command=$1
+  local pane_title=$2
+  local command_word command_base nvim_title_prefix
+
+  command_word=${pane_command%% *}
+  command_base=${command_word##*/}
+
+  case "$command_base" in
+    nvim* | vim* | view*)
+      return 0
+      ;;
+  esac
+
+  nvim_title_prefix=$(printf '\342\234\217\357\270\217')
+  case "$pane_title" in
+    "$nvim_title_prefix"*)
+      return 0
+      ;;
+  esac
+
+  return 1
+}
+
+desired_mode() {
+  local tabs_json active_tab_id panes_json pane_row pane_command pane_title
+
+  tabs_json=$(zellij action list-tabs --json --state 2>/dev/null) || return 1
+  active_tab_id=$(
+    printf '%s' "$tabs_json" |
+      jq -er 'map(select(.active == true) | .tab_id)[0] // empty' 2>/dev/null
+  ) || return 1
+
+  [[ $active_tab_id =~ ^[0-9]+$ ]] || return 1
+
+  panes_json=$(zellij action list-panes --json --all 2>/dev/null) || return 1
+  pane_row=$(
+    printf '%s' "$panes_json" |
+      jq -r --argjson tab_id "$active_tab_id" '
+        [.[] | select(
+          (.tab_id == $tab_id)
+          and (.is_focused == true)
+          and (.is_plugin == false)
+          and (.is_selectable == true)
+        )]
+        | if length == 0 then ["", ""] else .[0] | [(.pane_command // ""), (.title // "")] end
+        | @tsv
+      ' 2>/dev/null
+  ) || return 1
+
+  IFS=$'\t' read -r pane_command pane_title _ <<<"$pane_row"
+
+  if is_nvim_pane "$pane_command" "$pane_title"; then
+    printf '%s\n' locked
+  else
+    printf '%s\n' normal
+  fi
+}
+
+main() {
+  local interval iterations count last_mode mode failure_count
+
+  require_runtime
+  acquire_lock
+
+  interval=${ZELLIJ_NVIM_LOCK_INTERVAL:-0.2}
+  iterations=${ZELLIJ_NVIM_LOCK_ITERATIONS:-}
+  count=0
+  last_mode=
+  failure_count=0
+
+  while :; do
+    if mode=$(desired_mode); then
+      failure_count=0
+      if [ -n "$mode" ] && [ "$mode" != "$last_mode" ]; then
+        if zellij action switch-mode "$mode" >/dev/null 2>&1; then
+          last_mode=$mode
+        fi
+      fi
+    else
+      failure_count=$((failure_count + 1))
+      [ "$failure_count" -ge 5 ] && quiet_exit
+    fi
+
+    if [ -n "$iterations" ]; then
+      count=$((count + 1))
+      [ "$count" -ge "$iterations" ] && break
+    fi
+
+    sleep "$interval"
+  done
+}
+
+main "$@"

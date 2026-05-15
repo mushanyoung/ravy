@@ -134,15 +134,25 @@ function! s:zellij_switch_mode(mode) abort
   silent! call system(['zellij', 'action', 'switch-mode', a:mode])
 endfunction
 
+function! s:zellij_start_lock_watch() abort
+  if empty($ZELLIJ) || empty($ZELLIJ_PANE_ID) || !executable('zellij-nvim-lock-watch') || !exists('*jobstart')
+    return
+  endif
+
+  silent! call jobstart(['zellij-nvim-lock-watch'], {'detach': v:true})
+endfunction
+
 augroup zellij_lock
   autocmd!
   autocmd VimEnter * call s:zellij_switch_mode('locked')
+  autocmd VimEnter * call s:zellij_start_lock_watch()
   autocmd VimLeavePre * call s:zellij_switch_mode('normal')
   if exists('##VimSuspend')
     autocmd VimSuspend * call s:zellij_switch_mode('normal')
   endif
   if exists('##VimResume')
     autocmd VimResume * call s:zellij_switch_mode('locked')
+    autocmd VimResume * call s:zellij_start_lock_watch()
   endif
 augroup END
 
