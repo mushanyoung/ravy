@@ -562,10 +562,7 @@ let g:gutentags_file_list_command = "rg --files --hidden --glob '!.git' --glob '
 nmap <silent><nowait> <Space>cp <Plug>(coc-diagnostic-prev)
 nmap <silent><nowait> <Space>cn <Plug>(coc-diagnostic-next)
 
-inoremap <silent><expr> <TAB>
-      \ coc#pum#visible() ? coc#pum#next(1) :
-      \ CheckBackspace() ? "\<Tab>" :
-      \ coc#refresh()
+inoremap <silent><expr> <TAB> RavyTabComplete()
 inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
 inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
@@ -574,6 +571,16 @@ inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
 function! CheckBackspace() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+function! RavyTabComplete() abort
+  if exists('*luaeval') && luaeval('type(_G.ravy_codeium_has_completion) == "function" and _G.ravy_codeium_has_completion()')
+    return luaeval('_G.ravy_codeium_accept()')
+  endif
+
+  return coc#pum#visible() ? coc#pum#next(1) :
+        \ CheckBackspace() ? "\<Tab>" :
+        \ coc#refresh()
 endfunction
 
 noremap <Space>fm :call CocAction('format')<CR>
@@ -617,7 +624,8 @@ Plug 'ap/vim-css-color'
 " Plug 'github/copilot.vim'
 
 " windsurf
-Plug 'Exafunction/windsurf.vim', { 'branch': 'main' }
+Plug 'nvim-lua/plenary.nvim'
+Plug 'Exafunction/windsurf.nvim'
 
 " fzf integration
 Plug 'junegunn/fzf'
@@ -692,6 +700,43 @@ Plug 'neoclide/coc.nvim', !exists('g:vscode') ? {'branch': 'release'} : { 'on': 
 Plug 'ludovicchabant/vim-gutentags', executable('ctags') && !exists('g:vscode') ? {} : { 'on': [] }
 
 call plug#end()
+
+" windsurf.nvim {{
+if !exists('g:vscode')
+lua << EOF
+local ok, codeium = pcall(require, "codeium")
+if ok then
+  local setup_ok, setup_err = pcall(codeium.setup, {
+    enable_cmp_source = false,
+    virtual_text = {
+      enabled = true,
+      key_bindings = {
+        accept = false,
+      },
+    },
+  })
+
+  if not setup_ok then
+    vim.notify("windsurf.nvim setup failed: " .. tostring(setup_err), vim.log.levels.WARN)
+  end
+end
+
+function _G.ravy_codeium_has_completion()
+  local vt_ok, vt = pcall(require, "codeium.virtual_text")
+  return vt_ok and vt.get_current_completion_item() ~= nil
+end
+
+function _G.ravy_codeium_accept()
+  local vt_ok, vt = pcall(require, "codeium.virtual_text")
+  if vt_ok then
+    return vim.api.nvim_replace_termcodes(vt.accept(), true, true, true)
+  end
+  return vim.api.nvim_replace_termcodes("<Tab>", true, true, true)
+end
+EOF
+endif
+
+" }}
 
 " Color Scheme
 if !exists('g:colors_name')
