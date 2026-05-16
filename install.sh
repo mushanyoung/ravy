@@ -54,8 +54,25 @@ append_content_if_absent() {
 
 MISE_BIN=''
 HOMEBREW_BIN=''
+GIT_BIN=''
 CHEZMOI_TOOL="${RAVY_MISE_CHEZMOI_TOOL:-chezmoi@latest}"
 AGE_TOOL="${RAVY_MISE_AGE_TOOL:-age@latest}"
+
+ensure_git() {
+  if [ -n "${RAVY_GIT_BIN:-}" ]; then
+    if [ -x "$RAVY_GIT_BIN" ]; then
+      GIT_BIN="$RAVY_GIT_BIN"
+      return 0
+    fi
+    error "git is required to install Ravy"
+    return 1
+  fi
+
+  if ! GIT_BIN="$(command -v git 2>/dev/null)"; then
+    error "git is required to install Ravy"
+    return 1
+  fi
+}
 
 find_mise() {
   local candidate
@@ -99,6 +116,25 @@ ensure_mise() {
 
 is_macos() {
   [ "$(uname -s 2>/dev/null || true)" = "Darwin" ]
+}
+
+find_apt_get() {
+  local candidate
+
+  [ "$(uname -s 2>/dev/null || true)" = "Linux" ] || return 1
+
+  candidate="${RAVY_APT_GET:-}"
+  if [ -n "$candidate" ]; then
+    [ -x "$candidate" ] || return 1
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+
+  command -v apt-get 2>/dev/null
+}
+
+uses_apt_releases() {
+  find_apt_get >/dev/null 2>&1
 }
 
 homebrew_default_prefix() {
@@ -222,6 +258,138 @@ install_homebrew_bundle_macos() {
   __el "$HOMEBREW_BIN" bundle
 }
 
+install_fish_apt() {
+  local apt_get
+
+  apt_get="$(find_apt_get)" || return 0
+
+  info "Installing fish shell from official fish release PPA"
+  __el sudo "$apt_get" update
+  if ! command -v add-apt-repository >/dev/null 2>&1; then
+    __el sudo "$apt_get" install -y software-properties-common
+  fi
+  __el sudo add-apt-repository -y ppa:fish-shell/release-4
+  __el sudo "$apt_get" update
+  __el sudo "$apt_get" install -y fish
+  success "fish is installed via apt."
+}
+
+find_fish_shell() {
+  local candidate fish_prefix
+
+  if is_macos && [ -n "${HOMEBREW_BIN:-}" ]; then
+    fish_prefix="$("$HOMEBREW_BIN" --prefix fish 2>/dev/null || true)"
+    candidate="$fish_prefix/bin/fish"
+    if [ -n "$fish_prefix" ] && [ -x "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  fi
+
+  if candidate="$(command -v fish 2>/dev/null)"; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+
+  for candidate in /opt/homebrew/bin/fish /usr/local/bin/fish /usr/bin/fish /bin/fish; do
+    if [ -x "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+current_login_shell() {
+  local target_user shell_line
+
+  target_user="$1"
+
+  if command -v getent >/dev/null 2>&1; then
+    shell_line="$(getent passwd "$target_user" 2>/dev/null || true)"
+    if [ -n "$shell_line" ]; then
+      printf '%s\n' "${shell_line##*:}"
+      return 0
+    fi
+  fi
+
+  if command -v dscl >/dev/null 2>&1; then
+    shell_line="$(dscl . -read "/Users/$target_user" UserShell 2>/dev/null || true)"
+    shell_line="${shell_line#UserShell: }"
+    if [ -n "$shell_line" ]; then
+      printf '%s\n' "$shell_line"
+      return 0
+    fi
+  fi
+
+  printf '%s\n' "${SHELL:-}"
+}
+
+run_privileged() {
+  if [ "$(id -u)" = "0" ]; then
+    "$@"
+  else
+    sudo "$@"
+  fi
+}
+
+ensure_shell_list_contains() {
+  local fish_bin shells_file
+
+  fish_bin="$1"
+  shells_file="${RAVY_ETC_SHELLS:-/etc/shells}"
+
+  if [ -r "$shells_file" ] && grep -Fx "$fish_bin" "$shells_file" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  info "Adding $fish_bin to $shells_file"
+  if [ "$(id -u)" = "0" ]; then
+    printf '%s\n' "$fish_bin" >> "$shells_file"
+  else
+    printf '%s\n' "$fish_bin" | sudo tee -a "$shells_file" >/dev/null
+  fi
+}
+
+configure_default_fish_shell() {
+  local fish_bin target_user login_shell
+
+  [ "${RAVY_SKIP_CHSH:-0}" != "1" ] || {
+    warn "Skipping default shell change because RAVY_SKIP_CHSH=1."
+    return 0
+  }
+
+  if ! is_macos && ! uses_apt_releases; then
+    return 0
+  fi
+
+  if ! fish_bin="$(find_fish_shell)"; then
+    error "fish is required but was not found after package installation"
+    return 1
+  fi
+
+  ensure_shell_list_contains "$fish_bin"
+
+  target_user="${RAVY_CHSH_USER:-${SUDO_USER:-${USER:-${LOGNAME:-}}}}"
+  if [ -z "$target_user" ]; then
+    target_user="$(id -un 2>/dev/null || true)"
+  fi
+  if [ -z "$target_user" ]; then
+    error "Could not determine target user for chsh"
+    return 1
+  fi
+
+  login_shell="$(current_login_shell "$target_user")"
+  if [ "$login_shell" = "$fish_bin" ]; then
+    success "Default shell is already $fish_bin."
+    return 0
+  fi
+
+  info "Changing default shell for $target_user to $fish_bin"
+  __el run_privileged chsh -s "$fish_bin" "$target_user"
+}
+
 default_private_home() {
   for candidate in \
     "${RAVY_PRIVATE_HOME:-}" \
@@ -313,6 +481,7 @@ info "Bootstrapping Ravy with chezmoi"
 __el mkdir -p "$HOME/.local/bin"
 export PATH="$HOME/.local/bin:$PATH"
 
+ensure_git
 ensure_mise
 
 if ! "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi --version >/dev/null 2>&1; then
@@ -334,17 +503,12 @@ export RAVY_PRIVATE_HOME
 __el mkdir -p "$RAVY_CHEZMOI_CONFIG_DIR"
 
 if [ -n "$RAVY_PRIVATE_REPO" ]; then
-  if ! command -v git >/dev/null 2>&1; then
-    error "git is required to install the optional private overlay"
-    exit 1
-  fi
-
   info "Syncing optional private overlay"
   __el mkdir -p "$(dirname "$RAVY_PRIVATE_HOME")"
   if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
-    __el git -C "$RAVY_PRIVATE_HOME" pull --ff-only
+    __el "$GIT_BIN" -C "$RAVY_PRIVATE_HOME" pull --ff-only
   else
-    __el git clone "$RAVY_PRIVATE_REPO" "$RAVY_PRIVATE_HOME"
+    __el "$GIT_BIN" clone "$RAVY_PRIVATE_REPO" "$RAVY_PRIVATE_HOME"
   fi
 fi
 
@@ -361,6 +525,8 @@ else
 fi
 
 install_homebrew_bundle_macos
+install_fish_apt
+configure_default_fish_shell
 
 if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
   info "Applying private encrypted overlay"
