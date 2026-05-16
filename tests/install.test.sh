@@ -167,7 +167,7 @@ exit 0
   local fake_private="$tmp_home/private"
   guard_exec "$tmp_home" mkdir -p "$fake_private/.git" "$fake_private/bootstrap"
   guard_exec "$tmp_home" touch "$fake_private/bootstrap/key.txt.age"
-  
+
   write_stub "$fake_private/install.sh" "#!/usr/bin/env bash
 rm -f \"\$HOME/.ssh/config\"
 cp \"\$HOME/legacy-ssh.config\" \"\$HOME/.ssh/config\"
@@ -184,7 +184,6 @@ run_install() {
   output=$(env -i \
     HOME="$tmp_home" \
     PATH="$tmp_home/bin:/usr/bin:/bin" \
-    RAVY_BOOTSTRAP_OPTIONAL=0 \
     RAVY_PRIVATE_HOME="$tmp_home/private" \
     "$bash_bin" "$repo_root/install.sh" 2>&1)
   status_code=$?

@@ -17,12 +17,6 @@ curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh 
   RAVY_PRIVATE_REPO=git@github.com:mushanyoung/custom.git bash -s
 ```
 
-Optional bootstrap helpers stay opt-in:
-
-```sh
-RAVY_BOOTSTRAP_OPTIONAL=1 ./install.sh
-```
-
 If the private repo is already checked out locally, point the bootstrap at it:
 
 ```sh
@@ -92,7 +86,7 @@ chez private edit ~/.config/ravy/secrets.tsv
 Once installed, open Neovim and install plugins:
 
 ```
-:PlugUpdate
+:Lazy sync
 ```
 
 ## Testing

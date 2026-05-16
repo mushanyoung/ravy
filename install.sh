@@ -175,7 +175,6 @@ RAVY_REPO="${RAVY_REPO:-mushanyoung/ravy}"
 RAVY_PRIVATE_HOME="${RAVY_PRIVATE_HOME:-$(default_private_home)}"
 RAVY_PRIVATE_REPO="${RAVY_PRIVATE_REPO:-}"
 RAVY_CHEZMOI_FORCE="${RAVY_CHEZMOI_FORCE:-0}"
-RAVY_BOOTSTRAP_OPTIONAL="${RAVY_BOOTSTRAP_OPTIONAL:-1}"
 RAVY_CHEZMOI_CONFIG_DIR="${RAVY_CHEZMOI_CONFIG_DIR:-$(chezmoi_config_dir)}"
 RAVY_CHEZMOI_PRIVATE_CONFIG="${RAVY_CHEZMOI_PRIVATE_CONFIG:-$RAVY_CHEZMOI_CONFIG_DIR/ravy-private.toml}"
 RAVY_CHEZMOI_PRIVATE_STATE="${RAVY_CHEZMOI_PRIVATE_STATE:-$RAVY_CHEZMOI_CONFIG_DIR/ravy-private-state.boltdb}"
@@ -221,15 +220,6 @@ private_install_script=''
 if private_install_script="$(resolve_private_install_script)"; then
   info "Configuring optional private overlay"
   __el "$private_install_script"
-fi
-
-if [ "$RAVY_BOOTSTRAP_OPTIONAL" = "1" ]; then
-  info "Optional bootstrap: vim-plug"
-  if [ ! -f "$HOME/.config/nvim/autoload/plug.vim" ]; then
-    __el curl -fLo "$HOME/.config/nvim/autoload/plug.vim" --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  fi
-else
-  info "Skipping optional vim bootstrap (set RAVY_BOOTSTRAP_OPTIONAL=1 to enable)"
 fi
 
 success "Installation complete!"
