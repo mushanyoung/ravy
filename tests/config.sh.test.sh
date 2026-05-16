@@ -320,7 +320,7 @@ setup_private_overlay() {
     "$tmp_home/.config/ravy"
 
   printf '%s\n' 'export __RAVY_PRIVATE_COMMON=1' > "$private_home/shell/config.sh"
-  cat "$repo_root/custom/dot_config/ravy/private_secrets.sh" > "$tmp_home/.config/ravy/secrets.sh"
+  cat "$repo_root/tests/fixtures/private_secrets.sh" > "$tmp_home/.config/ravy/secrets.sh"
   printf '%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n' \
     '__RAVY_SECRETS_SH' ' 1' \
     'RAVY_TSV_VALUE' ' value' \

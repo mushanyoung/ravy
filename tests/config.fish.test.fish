@@ -329,7 +329,7 @@ function setup_private_overlay
         "$HOME/.config/ravy"
 
     printf "%s\n" "set -gx __RAVY_PRIVATE_COMMON 1" > "$private_home/shell/config.fish"
-    cat "$repo_root/custom/dot_config/ravy/private_secrets.fish" > "$HOME/.config/ravy/secrets.fish"
+    cat "$repo_root/tests/fixtures/private_secrets.fish" > "$HOME/.config/ravy/secrets.fish"
     printf "%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n" \
         __RAVY_SECRETS_FISH " 1" \
         RAVY_TSV_VALUE " value" \
