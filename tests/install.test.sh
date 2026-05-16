@@ -80,6 +80,65 @@ setup_home() {
   guard_assert_path "$tmp_home" "$tmp_home/.config/chezmoi/chezmoi.toml" create || return 1
   printf '%s\n' '# default config' > "$tmp_home/.config/chezmoi/chezmoi.toml"
 
+  write_stub "$tmp_home/mise-template" "#!/usr/bin/env sh
+log=\"\$HOME/mise.log\"
+
+if [ \"\${1:-}\" = \"exec\" ]; then
+  shift
+  tools=''
+  while [ \"\$#\" -gt 0 ]; do
+    case \"\$1\" in
+      --)
+        shift
+        break
+        ;;
+      *)
+        tools=\"\${tools}\${tools:+ }\$1\"
+        shift
+        ;;
+    esac
+  done
+  printf '%s\n' \"exec tools=\$tools command=\$*\" >> \"\$log\"
+  exec \"\$@\"
+fi
+
+if [ \"\${1:-}\" = \"install\" ]; then
+  shift
+  cd_path=''
+  if [ \"\${1:-}\" = \"-C\" ]; then
+    cd_path=\"\$2\"
+    shift 2
+  fi
+  printf '%s\n' \"install cd=\$cd_path tools=\$*\" >> \"\$log\"
+  exit 0
+fi
+
+if [ \"\${1:-}\" = \"--version\" ]; then
+  printf '%s\n' 'mise test'
+  exit 0
+fi
+
+printf '%s\n' \"mise \$*\" >> \"\$log\"
+exit 0
+"
+
+  write_stub "$tmp_home/bin/curl" "#!/usr/bin/env sh
+case \"\$*\" in
+  *https://mise.run*)
+    printf '%s\n' \
+      '#!/usr/bin/env sh' \
+      'set -eu' \
+      'mkdir -p \"\$HOME/.local/bin\"' \
+      'cp \"\$HOME/mise-template\" \"\$HOME/.local/bin/mise\"' \
+      'chmod +x \"\$HOME/.local/bin/mise\"'
+    exit 0
+    ;;
+esac
+
+printf '%s\n' \"unexpected curl args: \$*\" >&2
+exit 1
+"
+
   write_stub "$tmp_home/bin/chezmoi" "#!/usr/bin/env sh
 source_path=\"$repo_root\"
 config_path=''
@@ -127,6 +186,19 @@ if [ \"\$subcommand\" = \"init\" ]; then
         ;;
     esac
   done
+  if [ \"\$source_path\" = \"$repo_root\" ]; then
+    mkdir -p \"$tmp_home/.config/mise/conf.d\"
+    printf '%s\n' \
+      '[tools]' \
+      'chezmoi = \"latest\"' \
+      'age = \"latest\"' \
+      > \"$tmp_home/.config/mise/config.toml\"
+    printf '%s\n' \
+      '[tools]' \
+      'node = \"26\"' \
+      '\"npm:pyright\" = \"latest\"' \
+      > \"$tmp_home/.config/mise/conf.d/99-custom.toml\"
+  fi
   printf '%s\n' \"subcommand=init source=\$source_path config=\$config_path state=\$state_path config_path=\$init_config_path\" >> \"$tmp_home/chezmoi.log\"
   exit 0
 fi
@@ -219,6 +291,11 @@ assert_file_contains "$tmp_home/.ssh/config" "Include $tmp_home/.config/ravy/ssh
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$repo_root config= state= config_path="
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$tmp_home/private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml"
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$tmp_home/private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb"
+assert_file_contains "$tmp_home/mise.log" "exec tools=chezmoi@latest command=chezmoi --version"
+assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --version"
+assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/key.txt $tmp_home/private/bootstrap/key.txt.age"
+assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools=node"
+assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools="
 
 if [ "$failures" -eq 0 ]; then
   echo 'All install tests passed'

@@ -4,6 +4,10 @@
 
 ## Installation
 
+`install.sh` bootstraps `mise` into `~/.local/bin` when needed, uses mise to
+run `chezmoi` and `age`, applies the public and optional private sources, then
+installs the configured mise tools.
+
 Public-only install:
 
 ```sh
@@ -48,10 +52,13 @@ On a fresh machine:
 1. Clone the public repo and the private repo.
 2. Run `./install.sh` from the public repo.
 3. If `~/.config/chezmoi/key.txt` does not exist yet, the script decrypts the
-   private bootstrap key from `custom/bootstrap/key.txt.age` and prompts once
-   for its passphrase.
+   private bootstrap key from `custom/bootstrap/key.txt.age` with mise-managed
+   `age` and prompts once for its passphrase.
 4. The script applies the public repo, then applies the private repo with
    `chezmoi apply -S "$RAVY_PRIVATE_HOME"`.
+5. The script runs `custom/install.sh` when present, then runs `mise install`
+   from `$HOME`. The rendered mise config includes `custom/mise/config.toml`
+   when the private repo is available.
 
 Managed private targets now include:
 

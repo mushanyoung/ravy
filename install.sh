@@ -52,6 +52,87 @@ append_content_if_absent() {
   fi
 }
 
+MISE_BIN=''
+CHEZMOI_TOOL="${RAVY_MISE_CHEZMOI_TOOL:-chezmoi@latest}"
+AGE_TOOL="${RAVY_MISE_AGE_TOOL:-age@latest}"
+
+find_mise() {
+  local candidate
+
+  if candidate="$(command -v mise 2>/dev/null)"; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+
+  candidate="${MISE_INSTALL_PATH:-$HOME/.local/bin/mise}"
+  if [ -x "$candidate" ]; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+
+  return 1
+}
+
+ensure_mise() {
+  local install_path install_dir
+
+  if MISE_BIN="$(find_mise)"; then
+    success "mise is installed."
+    return 0
+  fi
+
+  warn "mise is not installed; installing it for current user."
+  install_path="${MISE_INSTALL_PATH:-$HOME/.local/bin/mise}"
+  install_dir="$(dirname "$install_path")"
+  __el mkdir -p "$install_dir"
+  __el env MISE_INSTALL_PATH="$install_path" sh -c 'curl -fsSL https://mise.run | sh'
+
+  if ! MISE_BIN="$(find_mise)"; then
+    error "mise install failed or not on PATH"
+    return 1
+  fi
+
+  export PATH="$(dirname "$MISE_BIN"):$PATH"
+  success "mise is installed."
+}
+
+run_chezmoi() {
+  __el "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi "$@"
+}
+
+run_chezmoi_quiet() {
+  "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi "$@"
+}
+
+run_age() {
+  __el "$MISE_BIN" exec "$AGE_TOOL" -- age "$@"
+}
+
+mise_config_dir() {
+  printf '%s\n' "${MISE_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/mise}"
+}
+
+mise_config_contains() {
+  local pattern config_dir
+
+  pattern="$1"
+  config_dir="$(mise_config_dir)"
+  [ -d "$config_dir" ] || return 1
+
+  grep -R -E "$pattern" "$config_dir" >/dev/null 2>&1
+}
+
+install_configured_mise_tools() {
+  info "Installing mise-managed tools"
+
+  if mise_config_contains '"npm:' && mise_config_contains '(^|[[:space:]])node[[:space:]]*='; then
+    info "Installing Node first for npm-backed mise tools"
+    __el "$MISE_BIN" install -C "$HOME" node
+  fi
+
+  __el "$MISE_BIN" install -C "$HOME"
+}
+
 default_private_home() {
   for candidate in \
     "${RAVY_PRIVATE_HOME:-}" \
@@ -95,7 +176,7 @@ resolve_private_install_script() {
     return 0
   fi
 
-  if chezmoi_source="$(chezmoi source-path 2>/dev/null)"; then
+  if chezmoi_source="$(run_chezmoi_quiet source-path 2>/dev/null)"; then
     if [ -x "$chezmoi_source/custom/install.sh" ]; then
       printf '%s\n' "$chezmoi_source/custom/install.sh"
       return 0
@@ -111,23 +192,13 @@ resolve_private_install_script() {
 }
 
 ensure_age() {
-  if command -v age >/dev/null 2>&1; then
-    success "age is installed."
-    return 0
-  fi
-
-  warn "age is not installed; installing it for current user."
-  if command -v brew >/dev/null 2>&1; then
-    __el brew install age
-  fi
-
-  if ! command -v age >/dev/null 2>&1; then
+  if ! "$MISE_BIN" exec "$AGE_TOOL" -- age --version >/dev/null 2>&1; then
     error "age is required for the private encrypted overlay"
-    error "Install age and rerun this bootstrap"
+    error "mise could not install or run age"
     return 1
   fi
 
-  success "age is installed."
+  success "age is installed via mise."
 }
 
 bootstrap_private_age_identity() {
@@ -143,7 +214,7 @@ bootstrap_private_age_identity() {
 
   info "Bootstrapping local age identity"
   __el mkdir -p "$target_dir"
-  __el sh -c 'umask 077 && age --decrypt -o "$1" "$2"' sh "$target_key" "$bootstrap_key"
+  (umask 077 && run_age --decrypt -o "$target_key" "$bootstrap_key")
   __el chmod 600 "$target_key"
 }
 
@@ -153,22 +224,13 @@ info "Bootstrapping Ravy with chezmoi"
 __el mkdir -p "$HOME/.local/bin"
 export PATH="$HOME/.local/bin:$PATH"
 
-if command -v chezmoi >/dev/null 2>&1; then
-  success "chezmoi is installed."
-else
-  warn "chezmoi is not installed; installing it for current user."
-  if command -v brew >/dev/null 2>&1; then
-    __el brew install chezmoi
-  else
-    # Official installer: https://www.chezmoi.io/install/
-    __el sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
-  fi
-fi
+ensure_mise
 
-if ! command -v chezmoi >/dev/null 2>&1; then
-  error "chezmoi install failed or not on PATH"
+if ! "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi --version >/dev/null 2>&1; then
+  error "chezmoi install failed via mise"
   exit 1
 fi
+success "chezmoi is installed via mise."
 
 info "Applying dotfiles (bash, zsh, and fish config files) for current user"
 RAVY_REPO="${RAVY_REPO:-mushanyoung/ravy}"
@@ -204,16 +266,16 @@ fi
 
 if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
   warn "Using --force to overwrite existing files managed by this setup."
-  __el chezmoi init --apply --force "$RAVY_REPO"
+  run_chezmoi init --apply --force "$RAVY_REPO"
 else
-  __el chezmoi init --apply "$RAVY_REPO"
+  run_chezmoi init --apply "$RAVY_REPO"
 fi
 
 if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
   info "Applying private encrypted overlay"
-  __el chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" init -C "$RAVY_CHEZMOI_PRIVATE_CONFIG"
+  run_chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" init -C "$RAVY_CHEZMOI_PRIVATE_CONFIG"
   seed_chezmoi_config "$RAVY_CHEZMOI_PRIVATE_CONFIG" "$RAVY_CHEZMOI_CONFIG_DIR/chezmoi.toml"
-  __el chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" apply
+  run_chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" apply
 fi
 
 private_install_script=''
@@ -221,6 +283,8 @@ if private_install_script="$(resolve_private_install_script)"; then
   info "Configuring optional private overlay"
   __el "$private_install_script"
 fi
+
+install_configured_mise_tools
 
 success "Installation complete!"
 

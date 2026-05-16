@@ -1,4 +1,6 @@
 [tools]
+chezmoi = "latest"
+age = "latest"
 "aqua:neovim" = "latest"
 python = "3.14.5"
 uv = "latest"
