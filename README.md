@@ -5,7 +5,8 @@
 ## Installation
 
 `install.sh` bootstraps `mise` into `~/.local/bin` when needed, uses mise to
-run `chezmoi` and `age`, applies the public and optional private sources, then
+run `chezmoi` and `age`, applies the public source, runs the public `Brewfile`
+on macOS with `HOMEBREW_BUNDLE_FILE`, applies the optional private source, then
 installs the configured mise tools.
 
 Public-only install:
@@ -19,12 +20,6 @@ Public + private install:
 ```sh
 curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh | \
   RAVY_PRIVATE_REPO=git@github.com:mushanyoung/custom.git bash -s
-```
-
-If the private repo is already checked out locally, point the bootstrap at it:
-
-```sh
-RAVY_PRIVATE_HOME="$HOME/.local/share/ravy-private" ./install.sh
 ```
 
 ## Cloudtop

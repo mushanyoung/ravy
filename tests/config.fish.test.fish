@@ -355,6 +355,7 @@ chezmoi cat "$rendered_theme" > $rendered_theme
 source $rendered_config
 
 assert_equal $RAVY_HOME $expected_ravy_home "RAVY_HOME set from chezmoi source-path"
+assert_equal $HOMEBREW_BUNDLE_FILE "$expected_ravy_home/Brewfile" "HOMEBREW_BUNDLE_FILE points at public Brewfile"
 assert_true "not set -q RAVY_PRIVATE_HOME" "RAVY_PRIVATE_HOME stays unset when private repo is missing"
 assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
 assert_contains "$HOME/bin" $PATH "PATH includes HOME/bin"

@@ -20,3 +20,5 @@ starship.toml
 tags
 tags.lock
 tags.temp
+
+Brewfile

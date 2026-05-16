@@ -53,6 +53,7 @@ append_content_if_absent() {
 }
 
 MISE_BIN=''
+HOMEBREW_BIN=''
 CHEZMOI_TOOL="${RAVY_MISE_CHEZMOI_TOOL:-chezmoi@latest}"
 AGE_TOOL="${RAVY_MISE_AGE_TOOL:-age@latest}"
 
@@ -96,6 +97,66 @@ ensure_mise() {
   success "mise is installed."
 }
 
+is_macos() {
+  [ "$(uname -s 2>/dev/null || true)" = "Darwin" ]
+}
+
+homebrew_default_prefix() {
+  case "$(uname -m 2>/dev/null || true)" in
+    arm64 | aarch64)
+      printf '%s\n' '/opt/homebrew'
+      ;;
+    *)
+      printf '%s\n' '/usr/local'
+      ;;
+  esac
+}
+
+find_homebrew() {
+  local candidate expected_prefix
+
+  if candidate="$(command -v brew 2>/dev/null)"; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+
+  expected_prefix="$(homebrew_default_prefix)"
+  candidate="$expected_prefix/bin/brew"
+  if [ -x "$candidate" ]; then
+    printf '%s\n' "$candidate"
+    return 0
+  fi
+
+  return 1
+}
+
+ensure_homebrew_macos() {
+  local brew_prefix expected_prefix
+
+  is_macos || return 0
+
+  expected_prefix="$(homebrew_default_prefix)"
+  if HOMEBREW_BIN="$(find_homebrew)"; then
+    brew_prefix="$("$HOMEBREW_BIN" --prefix 2>/dev/null || true)"
+    if [ -n "$brew_prefix" ] && [ "$brew_prefix" != "$expected_prefix" ]; then
+      warn "Homebrew prefix is $brew_prefix; expected macOS Tier 1 default $expected_prefix. Continuing with existing Homebrew."
+    fi
+    success "Homebrew is installed."
+    return 0
+  fi
+
+  warn "Homebrew is not installed; installing it at macOS Tier 1 default $expected_prefix."
+  __el /bin/bash -o pipefail -c 'curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | NONINTERACTIVE=1 /bin/bash'
+  export PATH="$expected_prefix/bin:$expected_prefix/sbin:$PATH"
+
+  if ! HOMEBREW_BIN="$(find_homebrew)"; then
+    error "Homebrew install failed or not found at $expected_prefix/bin/brew"
+    return 1
+  fi
+
+  success "Homebrew is installed."
+}
+
 run_chezmoi() {
   __el "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi "$@"
 }
@@ -131,6 +192,34 @@ install_configured_mise_tools() {
   fi
 
   __el "$MISE_BIN" install -C "$HOME"
+}
+
+resolve_public_brewfile() {
+  local source_path
+
+  source_path="$(run_chezmoi_quiet source-path 2>/dev/null || true)"
+  if [ -z "$source_path" ]; then
+    source_path="$SCRIPT_DIR"
+  fi
+
+  printf '%s\n' "$source_path/Brewfile"
+}
+
+install_homebrew_bundle_macos() {
+  local brewfile
+
+  is_macos || return 0
+
+  ensure_homebrew_macos
+  brewfile="$(resolve_public_brewfile)"
+  if [ ! -f "$brewfile" ]; then
+    error "Brewfile not found: $brewfile"
+    return 1
+  fi
+
+  export HOMEBREW_BUNDLE_FILE="$brewfile"
+  info "Installing Homebrew packages from $HOMEBREW_BUNDLE_FILE"
+  __el "$HOMEBREW_BIN" bundle
 }
 
 default_private_home() {
@@ -271,6 +360,8 @@ else
   run_chezmoi init --apply "$RAVY_REPO"
 fi
 
+install_homebrew_bundle_macos
+
 if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
   info "Applying private encrypted overlay"
   run_chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" init -C "$RAVY_CHEZMOI_PRIVATE_CONFIG"
@@ -293,6 +384,9 @@ echo "  - bash: sources ~/.bashrc (installed by chezmoi)"
 echo "  - zsh:  sources ~/.zshrc (installed by chezmoi)"
 echo "  - fish: uses ~/.config/fish/config.fish (installed by chezmoi)"
 echo "  - managed shell secrets: ~/.config/ravy/secrets.tsv with sh/fish wrappers"
+if [ -n "${HOMEBREW_BUNDLE_FILE:-}" ]; then
+  echo "  - Homebrew bundle: use brew bundle with HOMEBREW_BUNDLE_FILE=$HOMEBREW_BUNDLE_FILE"
+fi
 echo "  - private age identity: ~/.config/chezmoi/key.txt"
 echo "  - private chezmoi config/state: ~/.config/chezmoi/ravy-private.toml and ~/.config/chezmoi/ravy-private-state.boltdb"
 echo "  - optional private repo: set RAVY_PRIVATE_REPO before install"

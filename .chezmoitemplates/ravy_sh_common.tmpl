@@ -60,6 +60,10 @@ if [ -z "${RAVY_HOME:-}" ]; then
 fi
 export RAVY_HOME
 
+if [ -z "${HOMEBREW_BUNDLE_FILE:-}" ] && [ -f "$RAVY_HOME/Brewfile" ]; then
+  export HOMEBREW_BUNDLE_FILE="$RAVY_HOME/Brewfile"
+fi
+
 if [ -z "${RAVY_PRIVATE_HOME:-}" ]; then
   RAVY_PRIVATE_HOME="$(_ravy_default_private_home 2>/dev/null || true)"
 fi

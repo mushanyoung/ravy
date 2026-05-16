@@ -18,6 +18,12 @@ if not set -q RAVY_HOME
     end
 end
 
+if not set -q HOMEBREW_BUNDLE_FILE
+    if test -f "$RAVY_HOME/Brewfile"
+        set -gx HOMEBREW_BUNDLE_FILE "$RAVY_HOME/Brewfile"
+    end
+end
+
 if not set -q RAVY_PRIVATE_HOME
     for candidate in "$HOME/.local/share/ravy-private" "$HOME/.ravy-private" "$RAVY_HOME/custom"
         if test -d "$candidate"

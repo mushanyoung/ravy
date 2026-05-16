@@ -442,6 +442,7 @@ check_public_surface() {
 
   local command="
     test \"\$RAVY_HOME\" = \"$repo_root\" &&
+    test \"\${HOMEBREW_BUNDLE_FILE:-}\" = \"$repo_root/Brewfile\" &&
     test -z \"\${RAVY_PRIVATE_HOME:-}\" &&
     case \":\$PATH:\" in *\":$repo_root/bin:\"*) ;; *) exit 1 ;; esac &&
     case \":\$PATH:\" in *\":$tmp_home/.local/bin:\"*) ;; *) exit 1 ;; esac &&

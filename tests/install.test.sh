@@ -9,6 +9,7 @@ bash_bin=$(command -v bash)
 
 failures=0
 tmp_home=''
+tmp_homes=()
 
 fail() {
   echo "FAIL $1" >&2
@@ -72,13 +73,43 @@ assert_file_contains() {
   fi
 }
 
+assert_output_contains() {
+  local output=$1
+  local expected=$2
+  local msg=$3
+
+  if ! printf '%s' "$output" | grep -F "$expected" >/dev/null 2>&1; then
+    fail "$msg"
+  fi
+}
+
 setup_home() {
   tmp_home=$(mktemp -d "$repo_root/.tmp_install_home.XXXXXX")
+  tmp_homes+=("$tmp_home")
   guard_assert_repo_tmp_root "$repo_root" "$tmp_home" || return 1
   guard_exec "$tmp_home" mkdir -p "$tmp_home/bin" "$tmp_home/.ssh" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi"
   guard_install_wrappers "$tmp_home" "$tmp_home/bin"
   guard_assert_path "$tmp_home" "$tmp_home/.config/chezmoi/chezmoi.toml" create || return 1
   printf '%s\n' '# default config' > "$tmp_home/.config/chezmoi/chezmoi.toml"
+
+  write_stub "$tmp_home/bin/uname" "#!/usr/bin/env sh
+case \"\${1:-}\" in
+  -s)
+    printf '%s\n' 'Linux'
+    ;;
+  -m)
+    printf '%s\n' 'x86_64'
+    ;;
+  *)
+    printf '%s\n' 'Linux'
+    ;;
+esac
+"
+
+  write_stub "$tmp_home/bin/brew" "#!/usr/bin/env sh
+printf '%s\n' \"unexpected brew args: \$*\" >> \"\$HOME/brew.log\"
+exit 1
+"
 
   write_stub "$tmp_home/mise-template" "#!/usr/bin/env sh
 log=\"\$HOME/mise.log\"
@@ -266,9 +297,11 @@ run_install() {
 
 setup_home
 trap '
-  if [ -n "${tmp_home:-}" ] && [ -d "$tmp_home" ]; then
-    guard_exec "$tmp_home" rm -rf "$tmp_home"
-  fi
+  for __ravy_tmp_home in "${tmp_homes[@]}"; do
+    if [ -n "$__ravy_tmp_home" ] && [ -d "$__ravy_tmp_home" ]; then
+      guard_exec "$__ravy_tmp_home" rm -rf "$__ravy_tmp_home"
+    fi
+  done
 ' EXIT
 
 guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create
@@ -296,6 +329,51 @@ assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --v
 assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/key.txt $tmp_home/private/bootstrap/key.txt.age"
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools=node"
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools="
+if [ -e "$tmp_home/brew.log" ]; then
+  fail "non-macOS install should not call brew"
+fi
+
+setup_home
+write_stub "$tmp_home/bin/uname" "#!/usr/bin/env sh
+case \"\${1:-}\" in
+  -s)
+    printf '%s\n' 'Darwin'
+    ;;
+  -m)
+    printf '%s\n' 'arm64'
+    ;;
+  *)
+    printf '%s\n' 'Darwin'
+    ;;
+esac
+"
+write_stub "$tmp_home/bin/brew" "#!/usr/bin/env sh
+case \"\${1:-}\" in
+  --prefix)
+    printf '%s\n' \"\$HOME/non-default-homebrew\"
+    exit 0
+    ;;
+  bundle)
+    printf '%s\n' \"bundle file=\$HOMEBREW_BUNDLE_FILE\" >> \"\$HOME/brew.log\"
+    exit 0
+    ;;
+esac
+
+printf '%s\n' \"unexpected brew args: \$*\" >> \"\$HOME/brew.log\"
+exit 1
+"
+guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create
+printf '%s\n' 'Host legacy' '    HostName legacy.example' > "$tmp_home/legacy-ssh.config"
+guard_exec "$tmp_home" ln -s "$tmp_home/legacy-ssh.config" "$tmp_home/.ssh/config"
+
+result=$(run_install)
+status_code=${result%%$'\n'*}
+output=${result#*$'\n__RAVY_OUTPUT__\n'}
+output=${output%$'\n__RAVY_END__'}
+assert_status_zero "$status_code" 'macOS install.sh failed' "$output"
+assert_file_contains "$tmp_home/brew.log" "bundle file=$repo_root/Brewfile"
+assert_output_contains "$output" "Continuing with existing Homebrew." "macOS non-default Homebrew prefix should warn and continue"
+assert_output_contains "$output" "HOMEBREW_BUNDLE_FILE=$repo_root/Brewfile" "macOS install should report HOMEBREW_BUNDLE_FILE"
 
 if [ "$failures" -eq 0 ]; then
   echo 'All install tests passed'
