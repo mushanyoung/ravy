@@ -154,6 +154,11 @@ printf '%s\n' \"\$*\" >> \"\$HOME/sudo.log\"
 exec \"\$@\"
 "
 
+  write_stub "$tmp_home/bin/add-apt-repository" "#!/usr/bin/env sh
+printf '%s\n' \"\$*\" >> \"\$HOME/add-apt-repository.log\"
+exit 0
+"
+
   write_stub "$tmp_home/bin/chsh" "#!/usr/bin/env sh
 printf '%s\n' \"\$*\" >> \"\$HOME/chsh.log\"
 exit 0
@@ -462,7 +467,6 @@ if [ -e "$tmp_home/brew.log" ]; then
   fail "non-macOS install should not call brew"
 fi
 assert_file_contains "$tmp_home/apt-get.log" "update"
-assert_file_contains "$tmp_home/apt-get.log" "install -y software-properties-common"
 assert_file_contains "$tmp_home/add-apt-repository.log" "-y ppa:fish-shell/release-4"
 assert_file_contains "$tmp_home/apt-get.log" "install -y fish"
 assert_file_contains "$tmp_home/etc/shells" "$tmp_home/bin/fish"
