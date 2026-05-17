@@ -11,6 +11,7 @@ alias dls "docker system info"
 alias dry "docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry"
 
 alias ravys ravysource
+alias ravyc ravyprivate
 
 # Fish supports "=" aliases but bash/zsh do not.
 alias = "command -v"
@@ -175,10 +176,6 @@ function ravyprivate
         echo "RAVY_PRIVATE_HOME is not configured" >&2
         return 1
     end
-end
-
-function ravyc
-    ravyprivate
 end
 
 function chezp
