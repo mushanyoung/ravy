@@ -202,7 +202,7 @@ if [ \"\${1:-}\" = \"install\" ]; then
     cd_path=\"\$2\"
     shift 2
   fi
-  printf '%s\n' \"install cd=\$cd_path tools=\$*\" >> \"\$log\"
+  printf '%s\n' \"install cd=\$cd_path tools=\$* token=\${MISE_GITHUB_TOKEN:-}\" >> \"\$log\"
   exit 0
 fi
 
@@ -297,6 +297,11 @@ if [ \"\$subcommand\" = \"init\" ]; then
 fi
 
 if [ \"\$subcommand\" = \"apply\" ]; then
+  if [ \"\$source_path\" = \"$tmp_home/private\" ]; then
+    mkdir -p \"$tmp_home/.config/ravy\"
+    printf '%s\t%s\n' 'MISE_GITHUB_TOKEN' ' install-token' > \"$tmp_home/.config/ravy/secrets.tsv\"
+    printf '%s\n' 'export MISE_GITHUB_TOKEN=install-token' > \"$tmp_home/.config/ravy/secrets.sh\"
+  fi
   printf '%s\n' \"subcommand=apply source=\$source_path config=\$config_path state=\$state_path\" >> \"$tmp_home/chezmoi.log\"
   exit 0
 fi
@@ -411,6 +416,7 @@ assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --v
 assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/key.txt $tmp_home/private/bootstrap/key.txt.age"
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools=node"
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools="
+assert_file_contains "$tmp_home/mise.log" "token=install-token"
 if [ -e "$tmp_home/brew.log" ]; then
   fail "non-macOS install should not call brew"
 fi

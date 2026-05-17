@@ -230,6 +230,89 @@ install_configured_mise_tools() {
   __el "$MISE_BIN" install -C "$HOME"
 }
 
+load_managed_secrets_for_install() {
+  local config_home secrets_sh secrets_tsv tab cr line key value
+
+  config_home="${XDG_CONFIG_HOME:-$HOME/.config}/ravy"
+  secrets_sh="$config_home/secrets.sh"
+  secrets_tsv="$config_home/secrets.tsv"
+
+  if [ -f "$secrets_sh" ]; then
+    info "Loading managed shell secrets for installer"
+    # shellcheck disable=SC1090
+    . "$secrets_sh"
+    return 0
+  fi
+
+  [ -f "$secrets_tsv" ] || return 0
+
+  info "Loading managed TSV secrets for installer"
+  tab="$(printf '\t')"
+  cr="$(printf '\r')"
+
+  while IFS= read -r line || [ -n "${line:-}" ]; do
+    case "${line%"$cr"}" in
+      '' | \#*)
+        continue
+        ;;
+    esac
+    case "$line" in
+      *"$tab"*)
+        key=${line%%"$tab"*}
+        value=${line#*"$tab"}
+        ;;
+      *)
+        continue
+        ;;
+    esac
+
+    key="${key%"$cr"}"
+    while :; do
+      case "$key" in
+        ' '*)
+          key=${key# }
+          ;;
+        "$tab"*)
+          key=${key#"$tab"}
+          ;;
+        *' ')
+          key=${key% }
+          ;;
+        *"$tab")
+          key=${key%"$tab"}
+          ;;
+        *)
+          break
+          ;;
+      esac
+    done
+
+    value="${value%"$cr"}"
+    while :; do
+      case "$value" in
+        ' '*)
+          value=${value# }
+          ;;
+        "$tab"*)
+          value=${value#"$tab"}
+          ;;
+        *)
+          break
+          ;;
+      esac
+    done
+    case "$value" in
+      '~' | '~/'*)
+        value="$HOME${value#\~}"
+        ;;
+    esac
+
+    [ -n "$key" ] || continue
+    export "$key=$value"
+  done < "$secrets_tsv"
+
+}
+
 resolve_public_brewfile() {
   local source_path
 
@@ -541,6 +624,7 @@ if private_install_script="$(resolve_private_install_script)"; then
   __el "$private_install_script"
 fi
 
+load_managed_secrets_for_install
 install_configured_mise_tools
 
 success "Installation complete!"
