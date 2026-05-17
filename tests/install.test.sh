@@ -115,6 +115,15 @@ exit 1
 
   write_stub "$tmp_home/bin/git" "#!/usr/bin/env sh
 printf '%s\n' \"git \$*\" >> \"\$HOME/git.log\"
+if [ \"\${1:-}\" = clone ]; then
+  target=\"\${3:-}\"
+  if [ -n \"\$target\" ]; then
+    mkdir -p \"\$target/.git\" \"\$target/bootstrap\"
+    touch \"\$target/bootstrap/key.txt.age\"
+    printf '%s\n' '#!/usr/bin/env sh' 'exit 0' > \"\$target/install.sh\"
+    chmod +x \"\$target/install.sh\"
+  fi
+fi
 exit 0
 "
 
@@ -233,7 +242,7 @@ exit 1
 "
 
   write_stub "$tmp_home/bin/chezmoi" "#!/usr/bin/env sh
-source_path=\"$repo_root\"
+source_path=\"\${RAVY_HOME:-$repo_root}\"
 config_path=''
 state_path=''
 subcommand=''
@@ -262,7 +271,7 @@ while [ \"\$#\" -gt 0 ]; do
   esac
 done
 if [ \"\$subcommand\" = \"source-path\" ]; then
-  echo \"$repo_root\"
+  echo \"\$source_path\"
   exit 0
 fi
 
@@ -297,11 +306,13 @@ if [ \"\$subcommand\" = \"init\" ]; then
 fi
 
 if [ \"\$subcommand\" = \"apply\" ]; then
-  if [ \"\$source_path\" = \"$tmp_home/private\" ]; then
+  case \"\$source_path\" in
+    \"$tmp_home/private\"|\"$tmp_home/.local/share/chezmoi/custom\")
     mkdir -p \"$tmp_home/.config/ravy\"
     printf '%s\t%s\n' 'MISE_GITHUB_TOKEN' ' install-token' > \"$tmp_home/.config/ravy/secrets.tsv\"
     printf '%s\n' 'export MISE_GITHUB_TOKEN=install-token' > \"$tmp_home/.config/ravy/secrets.sh\"
-  fi
+      ;;
+  esac
   printf '%s\n' \"subcommand=apply source=\$source_path config=\$config_path state=\$state_path\" >> \"$tmp_home/chezmoi.log\"
   exit 0
 fi
@@ -350,19 +361,30 @@ run_install() {
   local output
   local status_code
   local install_path
+  local -a env_args
 
   install_path="${RAVY_TEST_PATH:-$tmp_home/bin:/usr/bin:/bin}"
+  env_args=(
+    HOME="$tmp_home"
+    PATH="$install_path"
+    RAVY_GIT_BIN="${RAVY_GIT_BIN:-}"
+    RAVY_APT_GET="${RAVY_APT_GET:-}"
+    RAVY_ETC_SHELLS="$tmp_home/etc/shells"
+    RAVY_CHSH_USER="test-user"
+    RAVY_SKIP_CHSH="${RAVY_SKIP_CHSH:-}"
+  )
+  if [ "${RAVY_TEST_WITHOUT_PRIVATE_HOME:-0}" != "1" ]; then
+    env_args+=(RAVY_PRIVATE_HOME="${RAVY_TEST_PRIVATE_HOME:-$tmp_home/private}")
+  fi
+  if [ -n "${RAVY_TEST_PRIVATE_REPO:-}" ]; then
+    env_args+=(RAVY_PRIVATE_REPO="$RAVY_TEST_PRIVATE_REPO")
+  fi
+  if [ -n "${RAVY_TEST_RAVY_HOME:-}" ]; then
+    env_args+=(RAVY_HOME="$RAVY_TEST_RAVY_HOME")
+  fi
+
   set +e
-  output=$(env -i \
-    HOME="$tmp_home" \
-    PATH="$install_path" \
-    RAVY_PRIVATE_HOME="$tmp_home/private" \
-    RAVY_GIT_BIN="${RAVY_GIT_BIN:-}" \
-    RAVY_APT_GET="${RAVY_APT_GET:-}" \
-    RAVY_ETC_SHELLS="$tmp_home/etc/shells" \
-    RAVY_CHSH_USER="test-user" \
-    RAVY_SKIP_CHSH="${RAVY_SKIP_CHSH:-}" \
-    "$bash_bin" "$repo_root/install.sh" 2>&1)
+  output=$(env -i "${env_args[@]}" "$bash_bin" "$repo_root/install.sh" 2>&1)
   status_code=$?
   set -e
 
@@ -388,6 +410,25 @@ if [ "$status_code" -eq 0 ]; then
   fail "install.sh should fail when git is missing"
 fi
 assert_output_contains "$output" "git is required to install Ravy" "missing git should report a clear error"
+
+setup_home
+
+RAVY_TEST_WITHOUT_PRIVATE_HOME=1
+RAVY_TEST_PRIVATE_REPO="git@example.com:mushanyoung/custom.git"
+RAVY_TEST_RAVY_HOME="$tmp_home/.local/share/chezmoi"
+result=$(run_install)
+unset RAVY_TEST_WITHOUT_PRIVATE_HOME RAVY_TEST_PRIVATE_REPO RAVY_TEST_RAVY_HOME
+status_code=${result%%$'\n'*}
+output=${result#*$'\n__RAVY_OUTPUT__\n'}
+output=${output%$'\n__RAVY_END__'}
+assert_status_zero "$status_code" 'install.sh default private clone path failed' "$output"
+
+default_private="$tmp_home/.local/share/chezmoi/custom"
+assert_file_contains "$tmp_home/git.log" "git clone git@example.com:mushanyoung/custom.git $default_private"
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$default_private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml"
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$default_private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb"
+assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/key.txt $default_private/bootstrap/key.txt.age"
+assert_file_contains "$tmp_home/mise.log" "token=install-token"
 
 setup_home
 

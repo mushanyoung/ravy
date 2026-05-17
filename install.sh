@@ -201,6 +201,20 @@ run_chezmoi_quiet() {
   "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi "$@"
 }
 
+resolve_public_source_path() {
+  local source_path
+
+  source_path="${RAVY_HOME:-}"
+  if [ -z "$source_path" ]; then
+    source_path="$(run_chezmoi_quiet source-path 2>/dev/null || true)"
+  fi
+  if [ -z "$source_path" ]; then
+    source_path="$HOME/.local/share/chezmoi"
+  fi
+
+  printf '%s\n' "$source_path"
+}
+
 run_age() {
   __el "$MISE_BIN" exec "$AGE_TOOL" -- age "$@"
 }
@@ -316,10 +330,7 @@ load_managed_secrets_for_install() {
 resolve_public_brewfile() {
   local source_path
 
-  source_path="$(run_chezmoi_quiet source-path 2>/dev/null || true)"
-  if [ -z "$source_path" ]; then
-    source_path="$SCRIPT_DIR"
-  fi
+  source_path="$(resolve_public_source_path)"
 
   printf '%s\n' "$source_path/Brewfile"
 }
@@ -474,11 +485,14 @@ configure_default_fish_shell() {
 }
 
 default_private_home() {
+  local public_source
+
+  public_source="$(resolve_public_source_path)"
   for candidate in \
     "${RAVY_PRIVATE_HOME:-}" \
+    "$public_source/custom" \
     "$HOME/.local/share/ravy-private" \
-    "$HOME/.ravy-private" \
-    "$SCRIPT_DIR/custom"
+    "$HOME/.ravy-private"
   do
     [ -n "${candidate:-}" ] || continue
     [ -d "$candidate/.git" ] || continue
@@ -486,7 +500,7 @@ default_private_home() {
     return 0
   done
 
-  printf '%s\n' "$HOME/.local/share/ravy-private"
+  printf '%s\n' "$public_source/custom"
 }
 
 chezmoi_config_dir() {
@@ -575,6 +589,7 @@ success "chezmoi is installed via mise."
 
 info "Applying dotfiles (bash, zsh, and fish config files) for current user"
 RAVY_REPO="${RAVY_REPO:-mushanyoung/ravy}"
+RAVY_HOME="${RAVY_HOME:-$(resolve_public_source_path)}"
 RAVY_PRIVATE_HOME="${RAVY_PRIVATE_HOME:-$(default_private_home)}"
 RAVY_PRIVATE_REPO="${RAVY_PRIVATE_REPO:-}"
 RAVY_CHEZMOI_FORCE="${RAVY_CHEZMOI_FORCE:-0}"
@@ -582,8 +597,16 @@ RAVY_CHEZMOI_CONFIG_DIR="${RAVY_CHEZMOI_CONFIG_DIR:-$(chezmoi_config_dir)}"
 RAVY_CHEZMOI_PRIVATE_CONFIG="${RAVY_CHEZMOI_PRIVATE_CONFIG:-$RAVY_CHEZMOI_CONFIG_DIR/ravy-private.toml}"
 RAVY_CHEZMOI_PRIVATE_STATE="${RAVY_CHEZMOI_PRIVATE_STATE:-$RAVY_CHEZMOI_CONFIG_DIR/ravy-private-state.boltdb}"
 export RAVY_PRIVATE_HOME
+export RAVY_HOME
 
 __el mkdir -p "$RAVY_CHEZMOI_CONFIG_DIR"
+
+if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
+  warn "Using --force to overwrite existing files managed by this setup."
+  run_chezmoi init --apply --force "$RAVY_REPO"
+else
+  run_chezmoi init --apply "$RAVY_REPO"
+fi
 
 if [ -n "$RAVY_PRIVATE_REPO" ]; then
   info "Syncing optional private overlay"
@@ -598,13 +621,6 @@ fi
 if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
   ensure_age
   bootstrap_private_age_identity "$RAVY_PRIVATE_HOME"
-fi
-
-if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
-  warn "Using --force to overwrite existing files managed by this setup."
-  run_chezmoi init --apply --force "$RAVY_REPO"
-else
-  run_chezmoi init --apply "$RAVY_REPO"
 fi
 
 install_homebrew_bundle_macos

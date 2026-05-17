@@ -33,9 +33,9 @@ _ravy_append_path() {
 
 _ravy_default_private_home() {
   for candidate in \
+    "${RAVY_HOME:-}/custom" \
     "$HOME/.local/share/ravy-private" \
-    "$HOME/.ravy-private" \
-    "${RAVY_HOME:-}/custom"
+    "$HOME/.ravy-private"
   do
     [ -n "$candidate" ] || continue
     [ -d "$candidate" ] || continue

@@ -370,12 +370,14 @@ assert_true "functions -q _atuin_preexec" "atuin hook initialized"
 assert_true "test \"$__RAVY_MISE_INIT\" = 1" "mise activated"
 assert_true "functions -q d" "cd helper function defined"
 assert_true "functions -q ravy" "ravy helper defined"
-assert_true "functions -q ravyprivatecd" "private repo helper defined"
+assert_true "functions -q ravyprivate" "private repo helper defined"
 assert_true "functions -q chez" "chez alias defined"
 assert_true "functions -q chezp" "chezp helper defined"
 assert_true "functions -q ravysource" "ravysource helper defined"
 assert_true "functions -q l" "generic alias 'l' defined"
-assert_true "functions -q ravyc" "compat alias 'ravyc' defined"
+assert_true "functions -q ravyc" "private repo short helper defined"
+assert_true "not functions -q ravycustom" "old private repo helper is removed"
+assert_true "not functions -q ravyprivatecd" "old private repo cd helper is removed"
 assert_true "functions -q rgh" "rgh alias defined"
 assert_true "functions -q mu" "mu alias defined"
 assert_true "command -v mumu >/dev/null" "mumu command defined"
@@ -483,9 +485,14 @@ or fail "chez does not create a dedicated public config file"
 grep -F "subcommand=init source=$expected_ravy_home config= state= config_path=" "$HOME/chezmoi.log" >/dev/null
 or fail "chez init keeps using the default chezmoi config/state"
 
-ravycustom >/dev/null 2>/dev/null
+ravyprivate >/dev/null 2>/dev/null
 if test $status -eq 0
-    fail "ravycustom should fail without a private repo"
+    fail "ravyprivate should fail without a private repo"
+end
+
+ravyc >/dev/null 2>/dev/null
+if test $status -eq 0
+    fail "ravyc should fail without a private repo"
 end
 
 chez private source-path >/dev/null 2>/dev/null
@@ -572,8 +579,11 @@ test (grep -c '^subcommand=diff ' "$HOME/chezmoi.log") -eq 1
 or fail "chez private diff should only run once"
 
 set -l orig_pwd $PWD
-ravycustom
-assert_equal $PWD $private_home "ravycustom jumps to private repo"
+ravyprivate
+assert_equal $PWD $private_home "ravyprivate jumps to private repo"
+cd $orig_pwd
+ravyc
+assert_equal $PWD $private_home "ravyc jumps to private repo"
 cd $orig_pwd
 
 set -l rendered_gitconfig "$HOME/.gitconfig"

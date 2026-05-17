@@ -25,6 +25,8 @@ curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh 
 
 For remote machines reached through SSH agent forwarding, the private clone uses
 the forwarded agent exactly like a normal `git clone git@github.com:...`.
+When `RAVY_PRIVATE_HOME` is not set, the private repo defaults to
+`$RAVY_HOME/custom`, which is normally `~/.local/share/chezmoi/custom`.
 
 ## Cloudtop
 
@@ -48,8 +50,11 @@ Private files are managed by the private `custom` repo as an `age`-encrypted
 
 On a fresh machine:
 
-1. Clone the public repo and the private repo.
-2. Run `./install.sh` from the public repo.
+1. Run `install.sh` with `RAVY_PRIVATE_REPO` set when the private repo should be
+   cloned automatically.
+2. The private repo is cloned into `$RAVY_HOME/custom` unless
+   `RAVY_PRIVATE_HOME` is set explicitly. Existing legacy checkouts at
+   `~/.local/share/ravy-private` or `~/.ravy-private` are still detected.
 3. If `~/.config/chezmoi/key.txt` does not exist yet, the script decrypts the
    private bootstrap key from `custom/bootstrap/key.txt.age` with mise-managed
    `age` and prompts once for its passphrase.
@@ -78,6 +83,7 @@ For day-to-day use after your shell reloads:
   is configured
 - `chez private ...` targets the private `RAVY_PRIVATE_HOME` source explicitly
 - `chezp` remains available as a compatibility alias for `chez private ...`
+- `ravyprivate` and `ravyc` jump to the private source directory
 
 Examples:
 

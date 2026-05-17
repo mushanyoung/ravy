@@ -42,7 +42,7 @@ function __fle_fzf_files
     test -n "$prompt"; or set prompt File
 
     set -l preview_cmd $FZF_FILES_PREVIEW_COMMAND
-    test -n "$preview_cmd"; or set preview_cmd 'ravy-file-preview {}'
+    test -n "$preview_cmd"; or set preview_cmd 'fzf-file-preview {}'
 
     test -n "$FZF_FILES_TAC"; and set -l tac_option --tac
 
@@ -173,5 +173,4 @@ bind \cz __fle_fg
 
 # sane <c-c>
 bind \cc 'commandline ""'
-
 

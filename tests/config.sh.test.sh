@@ -448,11 +448,14 @@ check_public_surface() {
     case \":\$PATH:\" in *\":$tmp_home/.local/bin:\"*) ;; *) exit 1 ;; esac &&
     $fn_check d >/dev/null &&
     $fn_check ravy >/dev/null &&
-    $fn_check ravycustom >/dev/null &&
-    $fn_check ravyprivatecd >/dev/null &&
+    $fn_check ravyprivate >/dev/null &&
+    $fn_check ravyc >/dev/null &&
+    ! $fn_check ravycustom >/dev/null &&
+    ! $fn_check ravyprivatecd >/dev/null &&
     $fn_check chezp >/dev/null &&
     $fn_check ravysource >/dev/null &&
     type chez >/dev/null 2>&1 &&
+    type ravyprivate >/dev/null 2>&1 &&
     type ravyc >/dev/null 2>&1 &&
     type ravys >/dev/null 2>&1 &&
     alias mu 2>/dev/null | grep -F 'mise upgrade' >/dev/null 2>&1 &&
@@ -488,7 +491,8 @@ check_public_surface() {
     test \"\$(grep -c '^subcommand=apply ' \"\$HOME/chezmoi.log\")\" -eq 1 &&
     rm -f \"\$HOME/chezmoi.log\" &&
     chez init >/dev/null 2>&1 &&
-    ! ravycustom >/dev/null 2>&1 &&
+    ! ravyprivate >/dev/null 2>&1 &&
+    ! ravyc >/dev/null 2>&1 &&
     ! chez private source-path >/dev/null 2>&1 &&
     ! chezp source-path >/dev/null 2>&1 &&
     test ! -f \"\$HOME/.config/chezmoi/ravy-public.toml\" &&
@@ -838,6 +842,10 @@ check_private_surface() {
     test \"\${RAVY_TSV_HOME_OTHER:-}\" = '~otheruser/example' &&
     command -v private-helper >/dev/null 2>&1 &&
     command -v private-op-helper >/dev/null 2>&1 &&
+    $fn_check ravyprivate >/dev/null &&
+    $fn_check ravyc >/dev/null &&
+    ! $fn_check ravycustom >/dev/null &&
+    ! $fn_check ravyprivatecd >/dev/null &&
     rm -f \"\$HOME/chezmoi.log\" &&
     test \"\$(chez source-path)\" = \"$repo_root\" &&
     grep -F 'subcommand=source-path source=$repo_root config= state=' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
@@ -876,7 +884,9 @@ check_private_surface() {
     grep -F 'subcommand=diff source=$private_home config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb' \"\$HOME/chezmoi.log\" >/dev/null 2>&1 &&
     test \"\$(grep -c '^subcommand=diff ' \"\$HOME/chezmoi.log\")\" -eq 1 &&
     cd \"\$HOME\" &&
-    ravycustom && test \"\$PWD\" = \"$private_home\" &&
+    ravyprivate && test \"\$PWD\" = \"$private_home\" &&
+    cd \"\$HOME\" &&
+    ravyc && test \"\$PWD\" = \"$private_home\" &&
     true
   "
 
