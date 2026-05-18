@@ -15,6 +15,7 @@ ripgrep = "latest"
 process-compose = "latest"
 duckdb = "latest"
 zellij = "latest"
+rclone = "latest"
 
 
 [settings]
