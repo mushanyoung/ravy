@@ -184,36 +184,8 @@ printf '%s\n' \"\$*\" >> \"\$HOME/sudo.log\"
 exec \"\$@\"
 "
 
-  write_stub "$tmp_home/bin/add-apt-repository" "#!/usr/bin/env sh
-printf '%s\n' \"\$*\" >> \"\$HOME/add-apt-repository.log\"
-exit 0
-"
-
   write_stub "$tmp_home/bin/chsh" "#!/usr/bin/env sh
 printf '%s\n' \"\$*\" >> \"\$HOME/chsh.log\"
-exit 0
-"
-
-  write_stub "$tmp_home/bin/apt-get" "#!/usr/bin/env sh
-printf '%s\n' \"\$*\" >> \"\$HOME/apt-get.log\"
-case \" \$* \" in
-  *' install '*' software-properties-common '*)
-    printf '%s\n' \
-      '#!/usr/bin/env sh' \
-      'printf '\\''%s\n'\\'' \"\$*\" >> \"\$HOME/add-apt-repository.log\"' \
-      'exit 0' \
-      > \"\$HOME/bin/add-apt-repository\"
-    chmod +x \"\$HOME/bin/add-apt-repository\"
-    ;;
-esac
-case \" \$* \" in
-  *' install '*' fish '*)
-    mkdir -p \"\$HOME/usr/bin\"
-    printf '%s\n' '#!/usr/bin/env sh' 'exit 0' > \"\$HOME/usr/bin/fish\"
-    chmod +x \"\$HOME/usr/bin/fish\"
-    ln -sfn \"\$HOME/usr/bin/fish\" \"\$HOME/bin/fish\"
-    ;;
-esac
 exit 0
 "
 
@@ -496,12 +468,6 @@ assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools=node"
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools="
 assert_file_contains "$tmp_home/mise.log" "token=install-token"
 assert_file_contains "$tmp_home/brew.log" "bundle install file=$repo_root/Brewfile env=$repo_root/Brewfile"
-if [ -e "$tmp_home/apt-get.log" ]; then
-  fail "Linux install should not call apt-get"
-fi
-if [ -e "$tmp_home/add-apt-repository.log" ]; then
-  fail "Linux install should not call add-apt-repository"
-fi
 assert_file_contains "$tmp_home/etc/shells" "$tmp_home/linuxbrew/opt/fish/bin/fish"
 assert_file_contains "$tmp_home/chsh.log" "-s $tmp_home/linuxbrew/opt/fish/bin/fish test-user"
 
@@ -518,9 +484,6 @@ output=${result#*$'\n__RAVY_OUTPUT__\n'}
 output=${output%$'\n__RAVY_END__'}
 assert_status_zero "$status_code" 'brew-managed install.sh with RAVY_SKIP_CHSH failed' "$output"
 assert_file_contains "$tmp_home/brew.log" "bundle install file=$repo_root/Brewfile env=$repo_root/Brewfile"
-if [ -e "$tmp_home/apt-get.log" ]; then
-  fail "RAVY_SKIP_CHSH install should not call apt-get"
-fi
 if grep -F "$tmp_home/linuxbrew/opt/fish/bin/fish" "$tmp_home/etc/shells" >/dev/null 2>&1; then
   fail "RAVY_SKIP_CHSH should not add fish to shells file"
 fi

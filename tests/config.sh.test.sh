@@ -219,11 +219,6 @@ printf '%s\n' \"\$*\" >> \"\$HOME/pacman.log\"
 exit 0
 "
 
-  write_stub "$stub_bin/apt" "#!/usr/bin/env sh
-printf '%s\n' \"\$*\" >> \"\$HOME/apt.log\"
-exit 0
-"
-
   write_stub "$stub_bin/sudo" "#!/usr/bin/env sh
 printf '%s\n' \"\$*\" >> \"\$HOME/sudo.log\"
 exec \"\$@\"
@@ -402,9 +397,10 @@ check_public_surface() {
     type ravys >/dev/null 2>&1 &&
     alias mu 2>/dev/null | grep -F 'mise upgrade' >/dev/null 2>&1 &&
     command -v mumu >/dev/null 2>&1 &&
+    command -v auau >/dev/null 2>&1 &&
+    ! alias auau >/dev/null 2>&1 &&
     alias rgh 2>/dev/null | grep -F 'rg -S --hidden' >/dev/null 2>&1 &&
     ( if command -v brew >/dev/null 2>&1; then type bi >/dev/null 2>&1; else ! type bi >/dev/null 2>&1; fi ) &&
-    ( if command -v apt >/dev/null 2>&1; then type au >/dev/null 2>&1; else ! type au >/dev/null 2>&1; fi ) &&
     ( if command -v pacman >/dev/null 2>&1; then type pupu >/dev/null 2>&1; else ! type pupu >/dev/null 2>&1; fi ) &&
     command -v ep >/dev/null 2>&1 &&
     command -v jl >/dev/null 2>&1 &&
@@ -552,12 +548,11 @@ check_mise_upgrade_helpers() {
   assert_status_zero "$status_code" "$shell_name mu upgrade path failed" "$output"
 
   result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/pacman.log" &&
+    rm -f "$HOME/mise.log" "$HOME/sudo.log" "$HOME/pacman.log" &&
     rm -rf "$HOME/opt/mise/lib" &&
     mumu &&
     grep -F "self-update" "$HOME/mise.log" >/dev/null 2>&1 &&
     grep -F "upgrade" "$HOME/mise.log" >/dev/null 2>&1 &&
-    test ! -e "$HOME/apt.log" &&
     test ! -e "$HOME/sudo.log" &&
     test ! -e "$HOME/pacman.log"
   ')

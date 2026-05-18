@@ -130,11 +130,6 @@ printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
 exit 0
 "
 
-    __write_stub apt "#!/usr/bin/env sh
-printf \"%s\n\" \"\$*\" >> \"\$HOME/apt.log\"
-exit 0
-"
-
     __write_stub sudo "#!/usr/bin/env sh
 printf \"%s\n\" \"\$*\" >> \"\$HOME/sudo.log\"
 exec \"\$@\"
@@ -377,6 +372,8 @@ assert_true "not functions -q ravyprivatecd" "old private repo cd helper is remo
 assert_true "functions -q rgh" "rgh alias defined"
 assert_true "functions -q mu" "mu alias defined"
 assert_true "command -v mumu >/dev/null" "mumu command defined"
+assert_true "command -v auau >/dev/null" "auau command defined"
+assert_true "not functions -q auau" "auau is not a fish function or alias"
 functions mu | string match -q '*mise upgrade*'
 or fail "mu expands to mise upgrade"
 functions rgh | string match -q '*rg -S --hidden*'
@@ -385,11 +382,6 @@ if command -q brew
     assert_true "functions -q bi" "brew alias is defined when command exists"
 else
     assert_true "not functions -q bi" "brew alias is gated behind command availability"
-end
-if command -q apt
-    assert_true "functions -q au" "apt alias is defined when command exists"
-else
-    assert_true "not functions -q au" "apt alias is gated behind command availability"
 end
 if command -q pacman
     assert_true "functions -q pupu" "pacman alias is defined when command exists"
@@ -418,15 +410,13 @@ mu
 grep -F "upgrade" "$HOME/mise.log" >/dev/null
 or fail "mu runs mise upgrade"
 
-rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log"
+rm -f "$HOME/mise.log" "$HOME/sudo.log"
 rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib"
 mumu
 grep -F "self-update" "$HOME/mise.log" >/dev/null
 or fail "mumu uses mise self-update"
 grep -F "upgrade" "$HOME/mise.log" >/dev/null
 or fail "mumu runs mise upgrade"
-test ! -f "$HOME/apt.log"
-or fail "mumu should not call apt"
 test ! -f "$HOME/sudo.log"
 or fail "mumu should not call sudo"
 

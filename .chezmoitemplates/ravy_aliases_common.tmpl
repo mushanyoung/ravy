@@ -48,11 +48,6 @@ alias blr "brew list --installed-on-request"
 alias bubu "brew update && brew outdated && brew upgrade && brew cleanup"
 end
 
-if command -q apt
-alias au "sudo apt update && sudo apt full-upgrade && sudo apt autoclean"
-alias auau "sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove"
-end
-
 if command -q pacman
 alias pupu "sudo pacman -Syuu --noconfirm"
 end
@@ -85,11 +80,6 @@ if command -v brew >/dev/null 2>&1; then
   alias bi='brew install --force-bottle'
   alias blr='brew list --installed-on-request'
   alias bubu='brew update && brew outdated && brew upgrade && brew cleanup'
-fi
-
-if command -v apt >/dev/null 2>&1; then
-  alias au='sudo apt update && sudo apt full-upgrade && sudo apt autoclean'
-  alias auau='sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove'
 fi
 
 if command -v pacman >/dev/null 2>&1; then

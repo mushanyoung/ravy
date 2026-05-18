@@ -19,7 +19,7 @@ fi
 if command -v ethtool >/dev/null 2>&1; then
   SPEED=$(ethtool "$IFACE" 2>/dev/null | awk -F': ' '/Speed:/ {print $2}')
 else
-  echo "ethtool not installed. Please install it (apt/yum/dnf)."
+  echo "ethtool not installed. Please install it with your system package manager."
   exit 1
 fi
 

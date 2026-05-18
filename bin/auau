@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -eu
+
+if ! command -v apt >/dev/null 2>&1; then
+  echo "apt is not installed" >&2
+  exit 1
+fi
+
+exec sh -c 'sudo apt update && sudo apt full-upgrade && sudo apt dist-upgrade && sudo apt autoclean && sudo apt autoremove'
