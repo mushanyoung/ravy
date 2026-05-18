@@ -109,6 +109,36 @@ esac
 "
 
   write_stub "$tmp_home/bin/brew" "#!/usr/bin/env sh
+prefix=\"\$HOME/linuxbrew\"
+
+if [ \"\${1:-}\" = --prefix ] && [ \"\${2:-}\" = fish ]; then
+  printf '%s\n' \"\$prefix/opt/fish\"
+  exit 0
+fi
+
+case \"\${1:-}\" in
+  --prefix)
+    printf '%s\n' \"\$prefix\"
+    exit 0
+    ;;
+  bundle)
+    file=''
+    if [ \"\${2:-}\" = install ]; then
+      case \"\${3:-}\" in
+        --file=*)
+          file=\"\${3#--file=}\"
+          ;;
+      esac
+      mkdir -p \"\$prefix/bin\" \"\$prefix/opt/fish/bin\"
+      printf '%s\n' '#!/usr/bin/env sh' 'exit 0' > \"\$prefix/opt/fish/bin/fish\"
+      chmod +x \"\$prefix/opt/fish/bin/fish\"
+      ln -sfn \"\$prefix/opt/fish/bin/fish\" \"\$prefix/bin/fish\"
+      printf '%s\n' \"bundle install file=\$file env=\$HOMEBREW_BUNDLE_FILE\" >> \"\$HOME/brew.log\"
+      exit 0
+    fi
+    ;;
+esac
+
 printf '%s\n' \"unexpected brew args: \$*\" >> \"\$HOME/brew.log\"
 exit 1
 "
@@ -373,7 +403,6 @@ run_install() {
     HOME="$tmp_home"
     PATH="$install_path"
     RAVY_GIT_BIN="${RAVY_GIT_BIN:-}"
-    RAVY_APT_GET="${RAVY_APT_GET:-}"
     RAVY_ETC_SHELLS="$tmp_home/etc/shells"
     RAVY_CHSH_USER="test-user"
     RAVY_SKIP_CHSH="${RAVY_SKIP_CHSH:-}"
@@ -421,6 +450,9 @@ setup_home
 RAVY_TEST_WITHOUT_PRIVATE_HOME=1
 RAVY_TEST_PRIVATE_REPO="git@example.com:mushanyoung/custom.git"
 RAVY_TEST_RAVY_HOME="$tmp_home/.local/share/chezmoi"
+guard_exec "$tmp_home" mkdir -p "$RAVY_TEST_RAVY_HOME"
+guard_assert_path "$tmp_home" "$RAVY_TEST_RAVY_HOME/Brewfile" create
+printf '%s\n' 'brew "fish"' > "$RAVY_TEST_RAVY_HOME/Brewfile"
 result=$(run_install)
 unset RAVY_TEST_WITHOUT_PRIVATE_HOME RAVY_TEST_PRIVATE_REPO RAVY_TEST_RAVY_HOME
 status_code=${result%%$'\n'*}
@@ -463,33 +495,15 @@ assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --d
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools=node"
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools="
 assert_file_contains "$tmp_home/mise.log" "token=install-token"
-if [ -e "$tmp_home/brew.log" ]; then
-  fail "non-macOS install should not call brew"
-fi
-assert_file_contains "$tmp_home/apt-get.log" "update"
-assert_file_contains "$tmp_home/add-apt-repository.log" "-y ppa:fish-shell/release-4"
-assert_file_contains "$tmp_home/apt-get.log" "install -y fish"
-assert_file_contains "$tmp_home/etc/shells" "$tmp_home/bin/fish"
-assert_file_contains "$tmp_home/chsh.log" "-s $tmp_home/bin/fish test-user"
-
-setup_home
-guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create
-printf '%s\n' 'Host legacy' '    HostName legacy.example' > "$tmp_home/legacy-ssh.config"
-guard_exec "$tmp_home" ln -s "$tmp_home/legacy-ssh.config" "$tmp_home/.ssh/config"
-
-RAVY_APT_GET="$tmp_home/missing-apt-get"
-result=$(run_install)
-unset RAVY_APT_GET
-status_code=${result%%$'\n'*}
-output=${result#*$'\n__RAVY_OUTPUT__\n'}
-output=${output%$'\n__RAVY_END__'}
-assert_status_zero "$status_code" 'non-apt Linux install.sh failed' "$output"
+assert_file_contains "$tmp_home/brew.log" "bundle install file=$repo_root/Brewfile env=$repo_root/Brewfile"
 if [ -e "$tmp_home/apt-get.log" ]; then
-  fail "non-apt Linux install should not call apt-get"
+  fail "Linux install should not call apt-get"
 fi
-if [ -e "$tmp_home/chsh.log" ]; then
-  fail "non-apt Linux install should not call chsh"
+if [ -e "$tmp_home/add-apt-repository.log" ]; then
+  fail "Linux install should not call add-apt-repository"
 fi
+assert_file_contains "$tmp_home/etc/shells" "$tmp_home/linuxbrew/opt/fish/bin/fish"
+assert_file_contains "$tmp_home/chsh.log" "-s $tmp_home/linuxbrew/opt/fish/bin/fish test-user"
 
 setup_home
 guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create
@@ -502,9 +516,12 @@ unset RAVY_SKIP_CHSH
 status_code=${result%%$'\n'*}
 output=${result#*$'\n__RAVY_OUTPUT__\n'}
 output=${output%$'\n__RAVY_END__'}
-assert_status_zero "$status_code" 'apt-managed install.sh with RAVY_SKIP_CHSH failed' "$output"
-assert_file_contains "$tmp_home/apt-get.log" "install -y fish"
-if grep -F "$tmp_home/bin/fish" "$tmp_home/etc/shells" >/dev/null 2>&1; then
+assert_status_zero "$status_code" 'brew-managed install.sh with RAVY_SKIP_CHSH failed' "$output"
+assert_file_contains "$tmp_home/brew.log" "bundle install file=$repo_root/Brewfile env=$repo_root/Brewfile"
+if [ -e "$tmp_home/apt-get.log" ]; then
+  fail "RAVY_SKIP_CHSH install should not call apt-get"
+fi
+if grep -F "$tmp_home/linuxbrew/opt/fish/bin/fish" "$tmp_home/etc/shells" >/dev/null 2>&1; then
   fail "RAVY_SKIP_CHSH should not add fish to shells file"
 fi
 if [ -e "$tmp_home/chsh.log" ]; then
@@ -536,10 +553,18 @@ case \"\${1:-}\" in
     exit 0
     ;;
   bundle)
+    file=''
+    if [ \"\${2:-}\" = install ]; then
+      case \"\${3:-}\" in
+        --file=*)
+          file=\"\${3#--file=}\"
+          ;;
+      esac
+    fi
     mkdir -p \"\$HOME/non-default-homebrew/opt/fish/bin\"
     printf '%s\n' '#!/usr/bin/env sh' 'exit 0' > \"\$HOME/non-default-homebrew/opt/fish/bin/fish\"
     chmod +x \"\$HOME/non-default-homebrew/opt/fish/bin/fish\"
-    printf '%s\n' \"bundle file=\$HOMEBREW_BUNDLE_FILE\" >> \"\$HOME/brew.log\"
+    printf '%s\n' \"bundle install file=\$file env=\$HOMEBREW_BUNDLE_FILE\" >> \"\$HOME/brew.log\"
     exit 0
     ;;
 esac
@@ -556,11 +581,11 @@ status_code=${result%%$'\n'*}
 output=${result#*$'\n__RAVY_OUTPUT__\n'}
 output=${output%$'\n__RAVY_END__'}
 assert_status_zero "$status_code" 'macOS install.sh failed' "$output"
-assert_file_contains "$tmp_home/brew.log" "bundle file=$repo_root/Brewfile"
+assert_file_contains "$tmp_home/brew.log" "bundle install file=$repo_root/Brewfile env=$repo_root/Brewfile"
 assert_file_contains "$tmp_home/etc/shells" "$tmp_home/non-default-homebrew/opt/fish/bin/fish"
 assert_file_contains "$tmp_home/chsh.log" "-s $tmp_home/non-default-homebrew/opt/fish/bin/fish test-user"
 assert_output_contains "$output" "Continuing with existing Homebrew." "macOS non-default Homebrew prefix should warn and continue"
-assert_output_contains "$output" "HOMEBREW_BUNDLE_FILE=$repo_root/Brewfile" "macOS install should report HOMEBREW_BUNDLE_FILE"
+assert_output_contains "$output" "brew bundle install --file=$repo_root/Brewfile" "macOS install should report brew bundle file"
 
 if [ "$failures" -eq 0 ]; then
   echo 'All install tests passed'

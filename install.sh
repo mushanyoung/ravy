@@ -114,37 +114,23 @@ ensure_mise() {
   success "mise is installed."
 }
 
-is_macos() {
-  [ "$(uname -s 2>/dev/null || true)" = "Darwin" ]
-}
-
-find_apt_get() {
-  local candidate
-
-  [ "$(uname -s 2>/dev/null || true)" = "Linux" ] || return 1
-
-  candidate="${RAVY_APT_GET:-}"
-  if [ -n "$candidate" ]; then
-    [ -x "$candidate" ] || return 1
-    printf '%s\n' "$candidate"
-    return 0
-  fi
-
-  command -v apt-get 2>/dev/null
-}
-
-uses_apt_releases() {
-  find_apt_get >/dev/null 2>&1
-}
-
 homebrew_default_prefix() {
-  case "$(uname -m 2>/dev/null || true)" in
-    arm64 | aarch64)
-      printf '%s\n' '/opt/homebrew'
+  case "$(uname -s 2>/dev/null || true)" in
+    Darwin)
+      case "$(uname -m 2>/dev/null || true)" in
+        arm64 | aarch64)
+          printf '%s\n' '/opt/homebrew'
+          ;;
+        *)
+          printf '%s\n' '/usr/local'
+          ;;
+      esac
+      ;;
+    Linux)
+      printf '%s\n' '/home/linuxbrew/.linuxbrew'
       ;;
     *)
-      printf '%s\n' '/usr/local'
-      ;;
+      return 1
   esac
 }
 
@@ -156,41 +142,78 @@ find_homebrew() {
     return 0
   fi
 
-  expected_prefix="$(homebrew_default_prefix)"
-  candidate="$expected_prefix/bin/brew"
-  if [ -x "$candidate" ]; then
+  if expected_prefix="$(homebrew_default_prefix)"; then
+    candidate="$expected_prefix/bin/brew"
+    if [ -x "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  fi
+
+  for candidate in \
+    /opt/homebrew/bin/brew \
+    /usr/local/bin/brew \
+    /home/linuxbrew/.linuxbrew/bin/brew \
+    "$HOME/.linuxbrew/bin/brew" \
+    "$HOME/.brew/bin/brew"
+  do
+    [ -x "$candidate" ] || continue
     printf '%s\n' "$candidate"
     return 0
-  fi
+  done
 
   return 1
 }
 
-ensure_homebrew_macos() {
-  local brew_prefix expected_prefix
+ensure_homebrew() {
+  local brew_prefix expected_prefix brew_name
 
-  is_macos || return 0
+  case "$(uname -s 2>/dev/null || true)" in
+    Darwin)
+      brew_name="Homebrew"
+      ;;
+    Linux)
+      brew_name="Linuxbrew"
+      ;;
+    *)
+      error "Homebrew installation is only supported on macOS and Linux"
+      return 1
+      ;;
+  esac
 
-  expected_prefix="$(homebrew_default_prefix)"
+  if ! expected_prefix="$(homebrew_default_prefix)"; then
+    error "Could not determine default Homebrew prefix"
+    return 1
+  fi
   if HOMEBREW_BIN="$(find_homebrew)"; then
     brew_prefix="$("$HOMEBREW_BIN" --prefix 2>/dev/null || true)"
     if [ -n "$brew_prefix" ] && [ "$brew_prefix" != "$expected_prefix" ]; then
-      warn "Homebrew prefix is $brew_prefix; expected macOS Tier 1 default $expected_prefix. Continuing with existing Homebrew."
+      warn "Homebrew prefix is $brew_prefix; expected default $expected_prefix. Continuing with existing Homebrew."
     fi
-    success "Homebrew is installed."
+    if [ -n "$brew_prefix" ]; then
+      export PATH="$brew_prefix/bin:$brew_prefix/sbin:$PATH"
+    fi
+    success "$brew_name is installed."
     return 0
   fi
 
-  warn "Homebrew is not installed; installing it at macOS Tier 1 default $expected_prefix."
+  warn "$brew_name is not installed; installing it at default $expected_prefix."
   __el /bin/bash -o pipefail -c 'curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | NONINTERACTIVE=1 /bin/bash'
   export PATH="$expected_prefix/bin:$expected_prefix/sbin:$PATH"
 
   if ! HOMEBREW_BIN="$(find_homebrew)"; then
-    error "Homebrew install failed or not found at $expected_prefix/bin/brew"
+    error "$brew_name install failed or not found at $expected_prefix/bin/brew"
     return 1
   fi
+  brew_prefix="$("$HOMEBREW_BIN" --prefix 2>/dev/null || true)"
+  if [ -n "$brew_prefix" ] && [ "$brew_prefix" != "$expected_prefix" ]; then
+    warn "Homebrew prefix is $brew_prefix; expected default $expected_prefix. Continuing with installed Homebrew."
+  fi
+  if [ -n "$brew_prefix" ]; then
+    export PATH="$brew_prefix/bin:$brew_prefix/sbin:$PATH"
+  fi
 
-  success "Homebrew is installed."
+  success "$brew_name is installed."
 }
 
 run_chezmoi() {
@@ -335,12 +358,10 @@ resolve_public_brewfile() {
   printf '%s\n' "$source_path/Brewfile"
 }
 
-install_homebrew_bundle_macos() {
+install_homebrew_bundle() {
   local brewfile
 
-  is_macos || return 0
-
-  ensure_homebrew_macos
+  ensure_homebrew
   brewfile="$(resolve_public_brewfile)"
   if [ ! -f "$brewfile" ]; then
     error "Brewfile not found: $brewfile"
@@ -349,43 +370,39 @@ install_homebrew_bundle_macos() {
 
   export HOMEBREW_BUNDLE_FILE="$brewfile"
   info "Installing Homebrew packages from $HOMEBREW_BUNDLE_FILE"
-  __el "$HOMEBREW_BIN" bundle
-}
-
-install_fish_apt() {
-  local apt_get
-
-  apt_get="$(find_apt_get)" || return 0
-
-  info "Installing fish shell from official fish release PPA"
-  __el sudo "$apt_get" update
-  if ! command -v add-apt-repository >/dev/null 2>&1; then
-    __el sudo "$apt_get" install -y software-properties-common
-  fi
-  __el sudo add-apt-repository -y ppa:fish-shell/release-4
-  __el sudo "$apt_get" update
-  __el sudo "$apt_get" install -y fish
-  success "fish is installed via apt."
+  __el "$HOMEBREW_BIN" bundle install --file="$brewfile"
 }
 
 find_fish_shell() {
-  local candidate fish_prefix
+  local candidate fish_prefix brew_prefix
 
-  if is_macos && [ -n "${HOMEBREW_BIN:-}" ]; then
+  if [ -z "${HOMEBREW_BIN:-}" ]; then
+    HOMEBREW_BIN="$(find_homebrew)" || return 1
+  fi
+
+  if [ -n "${HOMEBREW_BIN:-}" ]; then
     fish_prefix="$("$HOMEBREW_BIN" --prefix fish 2>/dev/null || true)"
     candidate="$fish_prefix/bin/fish"
     if [ -n "$fish_prefix" ] && [ -x "$candidate" ]; then
       printf '%s\n' "$candidate"
       return 0
     fi
+
+    brew_prefix="$("$HOMEBREW_BIN" --prefix 2>/dev/null || true)"
+    candidate="$brew_prefix/bin/fish"
+    if [ -n "$brew_prefix" ] && [ -x "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
   fi
 
-  if candidate="$(command -v fish 2>/dev/null)"; then
-    printf '%s\n' "$candidate"
-    return 0
-  fi
-
-  for candidate in /opt/homebrew/bin/fish /usr/local/bin/fish /usr/bin/fish /bin/fish; do
+  for candidate in \
+    /opt/homebrew/opt/fish/bin/fish \
+    /usr/local/opt/fish/bin/fish \
+    /home/linuxbrew/.linuxbrew/opt/fish/bin/fish \
+    "$HOME/.linuxbrew/opt/fish/bin/fish" \
+    "$HOME/.brew/opt/fish/bin/fish"
+  do
     if [ -x "$candidate" ]; then
       printf '%s\n' "$candidate"
       return 0
@@ -454,12 +471,8 @@ configure_default_fish_shell() {
     return 0
   }
 
-  if ! is_macos && ! uses_apt_releases; then
-    return 0
-  fi
-
   if ! fish_bin="$(find_fish_shell)"; then
-    error "fish is required but was not found after package installation"
+    error "brew-managed fish is required but was not found after package installation"
     return 1
   fi
 
@@ -623,8 +636,7 @@ if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
   bootstrap_private_age_identity "$RAVY_PRIVATE_HOME"
 fi
 
-install_homebrew_bundle_macos
-install_fish_apt
+install_homebrew_bundle
 configure_default_fish_shell
 
 if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
@@ -651,7 +663,7 @@ echo "  - zsh:  sources ~/.zshrc (installed by chezmoi)"
 echo "  - fish: uses ~/.config/fish/config.fish (installed by chezmoi)"
 echo "  - managed shell secrets: ~/.config/ravy/secrets.tsv with sh/fish wrappers"
 if [ -n "${HOMEBREW_BUNDLE_FILE:-}" ]; then
-  echo "  - Homebrew bundle: use brew bundle with HOMEBREW_BUNDLE_FILE=$HOMEBREW_BUNDLE_FILE"
+  echo "  - Homebrew bundle: use brew bundle install --file=$HOMEBREW_BUNDLE_FILE"
 fi
 echo "  - private age identity: ~/.config/chezmoi/key.txt"
 echo "  - private chezmoi config/state: ~/.config/chezmoi/ravy-private.toml and ~/.config/chezmoi/ravy-private-state.boltdb"

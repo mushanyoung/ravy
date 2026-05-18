@@ -5,10 +5,11 @@
 ## Installation
 
 `install.sh` requires `git`, bootstraps `mise` into `~/.local/bin` when needed,
-uses mise to run `chezmoi` and `age`, applies the public source, installs fish
-with Homebrew on macOS or apt on apt-managed Linux, switches the current user's
-login shell to fish, applies the optional private source, then installs the
-configured mise tools. Set `RAVY_SKIP_CHSH=1` to leave the login shell unchanged.
+uses mise to run `chezmoi` and `age`, applies the public source, installs
+Homebrew on macOS or Linuxbrew on Linux when needed, installs packages from the
+repo `Brewfile`, switches the current user's login shell to the brew-managed
+fish, applies the optional private source, then installs the configured mise
+tools. Set `RAVY_SKIP_CHSH=1` to leave the login shell unchanged.
 
 Public-only install:
 
