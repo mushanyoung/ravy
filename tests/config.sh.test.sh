@@ -7,7 +7,7 @@ repo_root=$(realpath "$(dirname "$script_path")/..")
 source "$repo_root/tests/prefix_guard_common.sh"
 real_chezmoi=$(command -v chezmoi)
 bash_bin=$(command -v bash)
-zsh_bin=$(command -v zsh)
+zsh_bin=$(command -v zsh || true)
 
 failures=0
 bash_home=''
@@ -206,6 +206,11 @@ __ravy_atuin_init() {
 EOF
   exit 0
 fi
+exit 0
+"
+
+  write_stub "$stub_bin/codex" "#!/usr/bin/env sh
+printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
 exit 0
 "
 
@@ -450,6 +455,7 @@ check_public_surface() {
     $fn_check ravy >/dev/null &&
     $fn_check ravyprivate >/dev/null &&
     $fn_check ravyc >/dev/null &&
+    $fn_check codex >/dev/null &&
     ! $fn_check ravycustom >/dev/null &&
     ! $fn_check ravyprivatecd >/dev/null &&
     $fn_check chezp >/dev/null &&
@@ -468,6 +474,14 @@ check_public_surface() {
     command -v jl >/dev/null 2>&1 &&
     command -v lines >/dev/null 2>&1 &&
     command -v downcase-exts >/dev/null 2>&1 &&
+    rm -f \"\$HOME/codex.log\" &&
+    unset ZELLIJ &&
+    codex resume abc123 >/dev/null &&
+    grep -Fx 'resume abc123' \"\$HOME/codex.log\" >/dev/null 2>&1 &&
+    rm -f \"\$HOME/codex.log\" &&
+    ZELLIJ=1 codex resume abc123 >/dev/null &&
+    grep -Fx -- '--no-alt-screen resume abc123' \"\$HOME/codex.log\" >/dev/null 2>&1 &&
+    unset ZELLIJ &&
     $fn_check __ravy_starship_init >/dev/null &&
     $fn_check __ravy_zoxide_init >/dev/null &&
     $fn_check __ravy_atuin_init >/dev/null &&
@@ -948,17 +962,21 @@ login_output=$(strip_bash_noise "$login_output")
 assert_status_zero "$login_status" 'bash login startup failed' "$login_output"
 assert_empty "$login_output" 'bash login startup emitted stderr'
 
-zsh_home=$(setup_home)
-render_config "$zsh_home" "$zsh_home/.zshrc"
-setup_base_stubs "$zsh_home/bin"
-check_clean_start zsh "$zsh_home" "$zsh_home/bin" "$zsh_home/.missing-private"
-setup_tool_stubs "$zsh_home/bin"
-install_mise_stub "$zsh_home" self
-check_public_surface zsh "$zsh_home" "$zsh_home/bin"
-check_ssh_auth_sock_bridge zsh "$zsh_home" "$zsh_home/bin"
-check_mise_upgrade_helpers zsh "$zsh_home" "$zsh_home/bin"
-check_private_surface zsh "$zsh_home" "$zsh_home/bin" "$(setup_private_overlay "$zsh_home")"
-check_rendered_gitconfig "$zsh_home"
+if [ -n "$zsh_bin" ]; then
+  zsh_home=$(setup_home)
+  render_config "$zsh_home" "$zsh_home/.zshrc"
+  setup_base_stubs "$zsh_home/bin"
+  check_clean_start zsh "$zsh_home" "$zsh_home/bin" "$zsh_home/.missing-private"
+  setup_tool_stubs "$zsh_home/bin"
+  install_mise_stub "$zsh_home" self
+  check_public_surface zsh "$zsh_home" "$zsh_home/bin"
+  check_ssh_auth_sock_bridge zsh "$zsh_home" "$zsh_home/bin"
+  check_mise_upgrade_helpers zsh "$zsh_home" "$zsh_home/bin"
+  check_private_surface zsh "$zsh_home" "$zsh_home/bin" "$(setup_private_overlay "$zsh_home")"
+  check_rendered_gitconfig "$zsh_home"
+else
+  echo 'SKIP zsh shell config tests: zsh not found' >&2
+fi
 
 if [ "$failures" -eq 0 ]; then
   echo 'All sh shell config tests passed'

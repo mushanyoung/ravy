@@ -16,6 +16,14 @@ alias ravyc ravyprivate
 # Fish supports "=" aliases but bash/zsh do not.
 alias = "command -v"
 
+function codex
+    if set -q ZELLIJ; and test -n "$ZELLIJ"
+        command codex --no-alt-screen $argv
+    else
+        command codex $argv
+    end
+end
+
 function __ravy_chezmoi_config_dir
     set -l config_home "$XDG_CONFIG_HOME"
     test -n "$config_home"; or set config_home "$HOME/.config"
@@ -228,6 +236,14 @@ alias dls='docker system info'
 alias dry='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock moncho/dry'
 
 alias ravys='ravysource'
+
+codex() {
+  if [ -n "${ZELLIJ:-}" ]; then
+    command codex --no-alt-screen "$@"
+  else
+    command codex "$@"
+  fi
+}
 
 _ravy_chezmoi_config_dir() {
   printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi"

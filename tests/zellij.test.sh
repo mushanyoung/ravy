@@ -111,6 +111,8 @@ render_zellij_config() {
 
   assert_file_contains "$rendered_config" 'bind "Alt 0" { GoToTab 10; SwitchToMode "normal"; }' \
     "non-locked modes should keep Alt 0 normal-mode behavior"
+  assert_file_contains "$rendered_config" 'support_kitty_keyboard_protocol false' \
+    "zellij should disable kitty keyboard protocol for Codex TUI stability across detach"
 }
 
 write_zellij_stub() {

@@ -127,6 +127,11 @@ fi
 exit 0
 "
 
+    __write_stub codex "#!/usr/bin/env sh
+printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
+exit 0
+"
+
     __write_stub dpkg-query "#!/usr/bin/env sh
 if [ \"\$1\" = \"-S\" ] && [ \"\${RAVY_MISE_OWNER:-}\" = apt ] && [ \"\$2\" = \"\$HOME/usr/bin/mise\" ]; then
   printf 'mise: %s\n' \"\$2\"
@@ -374,6 +379,7 @@ assert_true "functions -q ravyprivate" "private repo helper defined"
 assert_true "functions -q chez" "chez alias defined"
 assert_true "functions -q chezp" "chezp helper defined"
 assert_true "functions -q ravysource" "ravysource helper defined"
+assert_true "functions -q codex" "codex wrapper defined"
 assert_true "functions -q l" "generic alias 'l' defined"
 assert_true "functions -q ravyc" "private repo short helper defined"
 assert_true "not functions -q ravycustom" "old private repo helper is removed"
@@ -404,6 +410,18 @@ assert_true "command -v ep >/dev/null" "ep helper exists"
 assert_true "command -v jl >/dev/null" "jl helper exists"
 assert_true "command -v lines >/dev/null" "lines helper exists"
 assert_true "command -v downcase-exts >/dev/null" "downcase-exts helper exists"
+
+rm -f "$HOME/codex.log"
+set -e ZELLIJ
+codex resume abc123 >/dev/null
+grep -Fx "resume abc123" "$HOME/codex.log" >/dev/null
+or fail "codex wrapper should not add no-alt-screen outside Zellij"
+rm -f "$HOME/codex.log"
+set -gx ZELLIJ 1
+codex resume abc123 >/dev/null
+set -e ZELLIJ
+grep -Fx -- "--no-alt-screen resume abc123" "$HOME/codex.log" >/dev/null
+or fail "codex wrapper should add no-alt-screen inside Zellij"
 
 rm -f "$HOME/mise.log"
 mu
