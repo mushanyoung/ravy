@@ -293,6 +293,7 @@ run_shell() {
       RAVY_HOST="test-host" \
       RAVY_SKIP_BREW=1 \
       RAVY_PRIVATE_HOME="$private_home" \
+      HOMEBREW_BUNDLE_FILE="$repo_root/Brewfile" \
       SSH_CONNECTION="$ssh_connection" \
       "$bash_bin" --noprofile --rcfile "$tmp_home/.bashrc" -ic "$command" 2>&1)
     status_code=$?
@@ -306,6 +307,7 @@ run_shell() {
       RAVY_HOST="test-host" \
       RAVY_SKIP_BREW=1 \
       RAVY_PRIVATE_HOME="$private_home" \
+      HOMEBREW_BUNDLE_FILE="$repo_root/Brewfile" \
       SSH_CONNECTION="$ssh_connection" \
       "$zsh_bin" -f -ic "source ~/.zshrc >/dev/null 2>&1; $command" 2>&1)
     status_code=$?
@@ -331,6 +333,7 @@ run_bash_login() {
     RAVY_HOST="test-host" \
     RAVY_SKIP_BREW=1 \
     RAVY_PRIVATE_HOME="$private_home" \
+    HOMEBREW_BUNDLE_FILE="$repo_root/Brewfile" \
     "$bash_bin" --login -i -c "$command" 2>&1)
   status_code=$?
   set -e
@@ -378,7 +381,7 @@ check_public_surface() {
 
   local command="
     test \"\$RAVY_HOME\" = \"$repo_root\" &&
-    test \"\${HOMEBREW_BUNDLE_FILE:-}\" = \"$repo_root/Brewfile\" &&
+    test \"\${HOMEBREW_BUNDLE_FILE:-}\" = \"$tmp_home/.config/homebrew/Brewfile\" &&
     test -z \"\${RAVY_PRIVATE_HOME:-}\" &&
     case \":\$PATH:\" in *\":$repo_root/bin:\"*) ;; *) exit 1 ;; esac &&
     case \":\$PATH:\" in *\":$tmp_home/.local/bin:\"*) ;; *) exit 1 ;; esac &&

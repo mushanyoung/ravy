@@ -18,11 +18,7 @@ if not set -q RAVY_HOME
     end
 end
 
-if not set -q HOMEBREW_BUNDLE_FILE
-    if test -f "$RAVY_HOME/Brewfile"
-        set -gx HOMEBREW_BUNDLE_FILE "$RAVY_HOME/Brewfile"
-    end
-end
+set -gx HOMEBREW_BUNDLE_FILE "$HOME/.config/homebrew/Brewfile"
 
 if not set -q RAVY_PRIVATE_HOME
     for candidate in "$RAVY_HOME/custom" "$HOME/.local/share/ravy-private" "$HOME/.ravy-private"

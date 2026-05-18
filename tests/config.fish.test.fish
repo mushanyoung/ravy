@@ -210,6 +210,7 @@ exit 0
         RAVY_HOST=test-host \
         RAVY_PRIVATE_HOME=$tmp_home/.missing-private \
         RAVY_SKIP_BREW=1 \
+        HOMEBREW_BUNDLE_FILE="$repo_root/Brewfile" \
         RAVY_TEST_FISH_CMD="$fish_cmd" \
         RAVY_TEST_CHILD=1 \
         $fish_cmd --private -i "$script_path"
@@ -342,10 +343,11 @@ mkdir -p (dirname $rendered_theme)
 chezmoi cat "$rendered_config" > $rendered_config
 chezmoi cat "$rendered_theme" > $rendered_theme
 
+set -gx HOMEBREW_BUNDLE_FILE "$repo_root/Brewfile"
 source $rendered_config
 
 assert_equal $RAVY_HOME $expected_ravy_home "RAVY_HOME set from chezmoi source-path"
-assert_equal $HOMEBREW_BUNDLE_FILE "$expected_ravy_home/Brewfile" "HOMEBREW_BUNDLE_FILE points at public Brewfile"
+assert_equal $HOMEBREW_BUNDLE_FILE "$HOME/.config/homebrew/Brewfile" "HOMEBREW_BUNDLE_FILE points at applied Brewfile"
 assert_true "not set -q RAVY_PRIVATE_HOME" "RAVY_PRIVATE_HOME stays unset when private repo is missing"
 assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
 assert_contains "$HOME/bin" $PATH "PATH includes HOME/bin"

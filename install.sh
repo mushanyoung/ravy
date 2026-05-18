@@ -350,19 +350,20 @@ load_managed_secrets_for_install() {
 
 }
 
+resolve_public_brewfile_dir() {
+  printf '%s\n' "$HOME/.config/homebrew"
+}
+
 resolve_public_brewfile() {
-  local source_path
-
-  source_path="$(resolve_public_source_path)"
-
-  printf '%s\n' "$source_path/Brewfile"
+  printf '%s\n' "$(resolve_public_brewfile_dir)/Brewfile"
 }
 
 install_homebrew_bundle() {
-  local brewfile
+  local brewfile brewfile_dir
 
   ensure_homebrew
   brewfile="$(resolve_public_brewfile)"
+  brewfile_dir="$(resolve_public_brewfile_dir)"
   if [ ! -f "$brewfile" ]; then
     error "Brewfile not found: $brewfile"
     return 1
@@ -370,7 +371,7 @@ install_homebrew_bundle() {
 
   export HOMEBREW_BUNDLE_FILE="$brewfile"
   info "Installing Homebrew packages from $HOMEBREW_BUNDLE_FILE"
-  __el "$HOMEBREW_BIN" bundle install --file="$brewfile"
+  (cd "$brewfile_dir" && __el "$HOMEBREW_BIN" bundle install)
 }
 
 find_fish_shell() {
@@ -662,9 +663,7 @@ echo "  - bash: sources ~/.bashrc (installed by chezmoi)"
 echo "  - zsh:  sources ~/.zshrc (installed by chezmoi)"
 echo "  - fish: uses ~/.config/fish/config.fish (installed by chezmoi)"
 echo "  - managed shell secrets: ~/.config/ravy/secrets.tsv with sh/fish wrappers"
-if [ -n "${HOMEBREW_BUNDLE_FILE:-}" ]; then
-  echo "  - Homebrew bundle: use brew bundle install --file=$HOMEBREW_BUNDLE_FILE"
-fi
+echo "  - Homebrew bundle: HOMEBREW_BUNDLE_FILE=~/.config/homebrew/Brewfile"
 echo "  - private age identity: ~/.config/chezmoi/key.txt"
 echo "  - private chezmoi config/state: ~/.config/chezmoi/ravy-private.toml and ~/.config/chezmoi/ravy-private-state.boltdb"
 echo "  - optional private repo: set RAVY_PRIVATE_REPO before install"
