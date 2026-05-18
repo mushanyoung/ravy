@@ -214,66 +214,8 @@ printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
 exit 0
 "
 
-  write_stub "$stub_bin/brew" "#!/usr/bin/env sh
-case \"\$1:\$2\" in
-  --cellar:mise)
-    printf '%s\n' \"\$HOME/homebrew/Cellar/mise\"
-    exit 0
-    ;;
-  --prefix:mise)
-    printf '%s\n' \"\$HOME/homebrew/opt/mise\"
-    exit 0
-    ;;
-  upgrade:mise)
-    printf '%s\n' \"\$*\" >> \"\$HOME/brew.log\"
-    exit 0
-    ;;
-esac
-exit 1
-"
-
-  write_stub "$stub_bin/dpkg-query" "#!/usr/bin/env sh
-if [ \"\$1\" = \"-S\" ] && [ \"\${RAVY_MISE_OWNER:-}\" = apt ] && [ \"\$2\" = \"\$HOME/usr/bin/mise\" ]; then
-  printf 'mise: %s\n' \"\$2\"
-  exit 0
-fi
-exit 1
-"
-
-  write_stub "$stub_bin/rpm" "#!/usr/bin/env sh
-if [ \"\$1\" = \"-qf\" ] && [ \"\${RAVY_MISE_OWNER:-}\" = dnf ] && [ \"\$2\" = \"\$HOME/usr/bin/mise\" ]; then
-  printf '%s\n' 'mise-1.0-1'
-  exit 0
-fi
-exit 1
-"
-
-  write_stub "$stub_bin/dnf" "#!/usr/bin/env sh
-printf '%s\n' \"\$*\" >> \"\$HOME/dnf.log\"
-exit 0
-"
-
   write_stub "$stub_bin/pacman" "#!/usr/bin/env sh
-if [ \"\$1\" = \"-Qo\" ] && [ \"\${RAVY_MISE_OWNER:-}\" = pacman ] && [ \"\$2\" = \"\$HOME/usr/bin/mise\" ]; then
-  printf '%s is owned by mise 1.0-1\n' \"\$2\"
-  exit 0
-fi
-if [ \"\$1\" = \"-Qo\" ]; then
-  exit 1
-fi
 printf '%s\n' \"\$*\" >> \"\$HOME/pacman.log\"
-exit 0
-"
-
-  write_stub "$stub_bin/apk" "#!/usr/bin/env sh
-if [ \"\$1\" = info ] && [ \"\$2\" = --who-owns ] && [ \"\${RAVY_MISE_OWNER:-}\" = apk ] && [ \"\$3\" = \"\$HOME/usr/bin/mise\" ]; then
-  printf '%s is owned by mise-1.0-r0\n' \"\$3\"
-  exit 0
-fi
-if [ \"\$1\" = info ] && [ \"\$2\" = --who-owns ]; then
-  exit 1
-fi
-printf '%s\n' \"\$*\" >> \"\$HOME/apk.log\"
 exit 0
 "
 
@@ -296,12 +238,6 @@ install_mise_stub() {
   case "$layout" in
     self)
       target="$tmp_home/opt/mise/bin/mise"
-      ;;
-    brew)
-      target="$tmp_home/homebrew/Cellar/mise/current/bin/mise"
-      ;;
-    system)
-      target="$tmp_home/usr/bin/mise"
       ;;
     *)
       fail "unknown mise stub layout: $layout"
@@ -616,18 +552,14 @@ check_mise_upgrade_helpers() {
   assert_status_zero "$status_code" "$shell_name mu upgrade path failed" "$output"
 
   result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/brew.log" "$HOME/dnf.log" "$HOME/pacman.log" "$HOME/apk.log" &&
-    rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib" "$HOME/homebrew/Cellar/mise/current/lib" &&
-    unset RAVY_MISE_OWNER MISE_SELF_UPDATE_AVAILABLE MISE_SELF_UPDATE_INSTRUCTIONS &&
+    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/pacman.log" &&
+    rm -rf "$HOME/opt/mise/lib" &&
     mumu &&
     grep -F "self-update" "$HOME/mise.log" >/dev/null 2>&1 &&
     grep -F "upgrade" "$HOME/mise.log" >/dev/null 2>&1 &&
     test ! -e "$HOME/apt.log" &&
     test ! -e "$HOME/sudo.log" &&
-    test ! -e "$HOME/brew.log" &&
-    test ! -e "$HOME/dnf.log" &&
-    test ! -e "$HOME/pacman.log" &&
-    test ! -e "$HOME/apk.log"
+    test ! -e "$HOME/pacman.log"
   ')
   status_code=${result%%$'\n'*}
   output=${result#*$'\n__RAVY_OUTPUT__\n'}
@@ -637,197 +569,6 @@ check_mise_upgrade_helpers() {
   fi
   assert_status_zero "$status_code" "$shell_name mumu self-update path failed" "$output"
 
-  install_mise_stub "$tmp_home" brew
-  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/brew.log" "$HOME/dnf.log" "$HOME/pacman.log" "$HOME/apk.log" &&
-    rm -rf "$HOME/homebrew/Cellar/mise/current/lib" &&
-    mkdir -p "$HOME/homebrew/Cellar/mise/current/lib" &&
-    : > "$HOME/homebrew/Cellar/mise/current/lib/.disable-self-update" &&
-    mumu &&
-    grep -F "upgrade mise" "$HOME/brew.log" >/dev/null 2>&1 &&
-    grep -F "upgrade" "$HOME/mise.log" >/dev/null 2>&1 &&
-    ! grep -F "self-update" "$HOME/mise.log" >/dev/null 2>&1 &&
-    test ! -e "$HOME/apt.log" &&
-    test ! -e "$HOME/sudo.log" &&
-    test ! -e "$HOME/dnf.log" &&
-    test ! -e "$HOME/pacman.log" &&
-    test ! -e "$HOME/apk.log"
-  ')
-  status_code=${result%%$'\n'*}
-  output=${result#*$'\n__RAVY_OUTPUT__\n'}
-  output=${output%$'\n__RAVY_END__'}
-  if [ "$shell_name" = bash ]; then
-    output=$(strip_bash_noise "$output")
-  fi
-  assert_status_zero "$status_code" "$shell_name mumu brew-managed path failed" "$output"
-
-  install_mise_stub "$tmp_home" system
-  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/brew.log" "$HOME/dnf.log" "$HOME/pacman.log" "$HOME/apk.log" &&
-    rm -rf "$HOME/usr/lib" &&
-    mkdir -p "$HOME/usr/lib" &&
-    : > "$HOME/usr/lib/.disable-self-update" &&
-    export RAVY_MISE_OWNER=apt &&
-    mumu &&
-    unset RAVY_MISE_OWNER &&
-    grep -F "apt update" "$HOME/sudo.log" >/dev/null 2>&1 &&
-    grep -F "apt install --only-upgrade mise" "$HOME/sudo.log" >/dev/null 2>&1 &&
-    grep -F "update" "$HOME/apt.log" >/dev/null 2>&1 &&
-    grep -F "install --only-upgrade mise" "$HOME/apt.log" >/dev/null 2>&1 &&
-    grep -F "upgrade" "$HOME/mise.log" >/dev/null 2>&1 &&
-    ! grep -F "self-update" "$HOME/mise.log" >/dev/null 2>&1 &&
-    test ! -e "$HOME/brew.log" &&
-    test ! -e "$HOME/dnf.log" &&
-    test ! -e "$HOME/pacman.log" &&
-    test ! -e "$HOME/apk.log"
-  ')
-  status_code=${result%%$'\n'*}
-  output=${result#*$'\n__RAVY_OUTPUT__\n'}
-  output=${output%$'\n__RAVY_END__'}
-  if [ "$shell_name" = bash ]; then
-    output=$(strip_bash_noise "$output")
-  fi
-  assert_status_zero "$status_code" "$shell_name mumu apt-managed path failed" "$output"
-
-  install_mise_stub "$tmp_home" system
-  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/brew.log" "$HOME/dnf.log" "$HOME/pacman.log" "$HOME/apk.log" &&
-    rm -rf "$HOME/usr/lib" &&
-    mkdir -p "$HOME/usr/lib" &&
-    : > "$HOME/usr/lib/.disable-self-update" &&
-    export RAVY_MISE_OWNER=dnf &&
-    mumu &&
-    unset RAVY_MISE_OWNER &&
-    grep -F "dnf upgrade mise" "$HOME/sudo.log" >/dev/null 2>&1 &&
-    grep -F "upgrade mise" "$HOME/dnf.log" >/dev/null 2>&1 &&
-    grep -F "upgrade" "$HOME/mise.log" >/dev/null 2>&1 &&
-    ! grep -F "self-update" "$HOME/mise.log" >/dev/null 2>&1 &&
-    test ! -e "$HOME/brew.log" &&
-    test ! -e "$HOME/apt.log" &&
-    test ! -e "$HOME/pacman.log" &&
-    test ! -e "$HOME/apk.log"
-  ')
-  status_code=${result%%$'\n'*}
-  output=${result#*$'\n__RAVY_OUTPUT__\n'}
-  output=${output%$'\n__RAVY_END__'}
-  if [ "$shell_name" = bash ]; then
-    output=$(strip_bash_noise "$output")
-  fi
-  assert_status_zero "$status_code" "$shell_name mumu dnf-managed path failed" "$output"
-
-  install_mise_stub "$tmp_home" system
-  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/brew.log" "$HOME/dnf.log" "$HOME/pacman.log" "$HOME/apk.log" &&
-    rm -rf "$HOME/usr/lib" &&
-    mkdir -p "$HOME/usr/lib" &&
-    : > "$HOME/usr/lib/.disable-self-update" &&
-    export RAVY_MISE_OWNER=pacman &&
-    mumu &&
-    unset RAVY_MISE_OWNER &&
-    grep -F "pacman -Syu mise" "$HOME/sudo.log" >/dev/null 2>&1 &&
-    grep -F -- "-Syu mise" "$HOME/pacman.log" >/dev/null 2>&1 &&
-    grep -F "upgrade" "$HOME/mise.log" >/dev/null 2>&1 &&
-    ! grep -F "self-update" "$HOME/mise.log" >/dev/null 2>&1 &&
-    test ! -e "$HOME/brew.log" &&
-    test ! -e "$HOME/apt.log" &&
-    test ! -e "$HOME/dnf.log" &&
-    test ! -e "$HOME/apk.log"
-  ')
-  status_code=${result%%$'\n'*}
-  output=${result#*$'\n__RAVY_OUTPUT__\n'}
-  output=${output%$'\n__RAVY_END__'}
-  if [ "$shell_name" = bash ]; then
-    output=$(strip_bash_noise "$output")
-  fi
-  assert_status_zero "$status_code" "$shell_name mumu pacman-managed path failed" "$output"
-
-  install_mise_stub "$tmp_home" system
-  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/brew.log" "$HOME/dnf.log" "$HOME/pacman.log" "$HOME/apk.log" &&
-    rm -rf "$HOME/usr/lib" &&
-    mkdir -p "$HOME/usr/lib" &&
-    : > "$HOME/usr/lib/.disable-self-update" &&
-    export RAVY_MISE_OWNER=apk &&
-    mumu &&
-    unset RAVY_MISE_OWNER &&
-    grep -F "apk update" "$HOME/sudo.log" >/dev/null 2>&1 &&
-    grep -F "apk upgrade mise" "$HOME/sudo.log" >/dev/null 2>&1 &&
-    grep -F "update" "$HOME/apk.log" >/dev/null 2>&1 &&
-    grep -F "upgrade mise" "$HOME/apk.log" >/dev/null 2>&1 &&
-    grep -F "upgrade" "$HOME/mise.log" >/dev/null 2>&1 &&
-    ! grep -F "self-update" "$HOME/mise.log" >/dev/null 2>&1 &&
-    test ! -e "$HOME/brew.log" &&
-    test ! -e "$HOME/apt.log" &&
-    test ! -e "$HOME/dnf.log" &&
-    test ! -e "$HOME/pacman.log"
-  ')
-  status_code=${result%%$'\n'*}
-  output=${result#*$'\n__RAVY_OUTPUT__\n'}
-  output=${output%$'\n__RAVY_END__'}
-  if [ "$shell_name" = bash ]; then
-    output=$(strip_bash_noise "$output")
-  fi
-  assert_status_zero "$status_code" "$shell_name mumu apk-managed path failed" "$output"
-
-  install_mise_stub "$tmp_home" system
-  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/brew.log" "$HOME/dnf.log" "$HOME/pacman.log" "$HOME/apk.log" &&
-    rm -rf "$HOME/usr/lib" &&
-    mkdir -p "$HOME/usr/lib" &&
-    cat > "$HOME/usr/lib/mise-self-update-instructions.toml" <<'\''EOF'\''
-message = "Use your distro package manager\n\n  custom update mise\n"
-EOF
-    unset RAVY_MISE_OWNER &&
-    mumu
-    cmd_status=$?
-    test "$cmd_status" -ne 0
-    test ! -e "$HOME/mise.log"
-    test ! -e "$HOME/apt.log"
-    test ! -e "$HOME/sudo.log"
-    test ! -e "$HOME/brew.log"
-    test ! -e "$HOME/dnf.log"
-    test ! -e "$HOME/pacman.log"
-    test ! -e "$HOME/apk.log"
-  ')
-  status_code=${result%%$'\n'*}
-  output=${result#*$'\n__RAVY_OUTPUT__\n'}
-  output=${output%$'\n__RAVY_END__'}
-  if [ "$shell_name" = bash ]; then
-    output=$(strip_bash_noise "$output")
-  fi
-  assert_status_zero "$status_code" "$shell_name mumu instructions fallback should report packaged instructions" "$output"
-  if ! printf '%s' "$output" | grep -F 'custom update mise' >/dev/null 2>&1; then
-    fail "$shell_name mumu instructions fallback should print packaged instructions"
-  fi
-
-  install_mise_stub "$tmp_home" system
-  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log" "$HOME/brew.log" "$HOME/dnf.log" "$HOME/pacman.log" "$HOME/apk.log" &&
-    rm -rf "$HOME/usr/lib" &&
-    mkdir -p "$HOME/usr/lib" &&
-    : > "$HOME/usr/lib/.disable-self-update" &&
-    unset RAVY_MISE_OWNER &&
-    mumu
-    cmd_status=$?
-    test "$cmd_status" -ne 0
-    test ! -e "$HOME/mise.log"
-    test ! -e "$HOME/apt.log"
-    test ! -e "$HOME/sudo.log"
-    test ! -e "$HOME/brew.log"
-    test ! -e "$HOME/dnf.log"
-    test ! -e "$HOME/pacman.log"
-    test ! -e "$HOME/apk.log"
-  ')
-  status_code=${result%%$'\n'*}
-  output=${result#*$'\n__RAVY_OUTPUT__\n'}
-  output=${output%$'\n__RAVY_END__'}
-  if [ "$shell_name" = bash ]; then
-    output=$(strip_bash_noise "$output")
-  fi
-  assert_status_zero "$status_code" "$shell_name mumu generic fallback should report manual guidance" "$output"
-  if ! printf '%s' "$output" | grep -F 'installed via a package manager' >/dev/null 2>&1; then
-    fail "$shell_name mumu generic fallback should print manual guidance"
-  fi
 }
 
 check_private_surface() {

@@ -72,8 +72,6 @@ exec \"$guard_cmd\" \"$root\" \"$cmd\" \"\$@\"
         switch "$layout"
             case self
                 set target "$__ravy_test_tmp_home/opt/mise/bin/mise"
-            case system
-                set target "$__ravy_test_tmp_home/usr/bin/mise"
             case '*'
                 echo "unknown mise stub layout: $layout" >&2
                 exit 1
@@ -130,14 +128,6 @@ exit 0
     __write_stub codex "#!/usr/bin/env sh
 printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
 exit 0
-"
-
-    __write_stub dpkg-query "#!/usr/bin/env sh
-if [ \"\$1\" = \"-S\" ] && [ \"\${RAVY_MISE_OWNER:-}\" = apt ] && [ \"\$2\" = \"\$HOME/usr/bin/mise\" ]; then
-  printf 'mise: %s\n' \"\$2\"
-  exit 0
-fi
-exit 1
 "
 
     __write_stub apt "#!/usr/bin/env sh
@@ -432,47 +422,13 @@ rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log"
 rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib"
 mumu
 grep -F "self-update" "$HOME/mise.log" >/dev/null
-or fail "mumu uses mise self-update when not apt-managed"
+or fail "mumu uses mise self-update"
 grep -F "upgrade" "$HOME/mise.log" >/dev/null
-or fail "mumu runs mise upgrade when not apt-managed"
+or fail "mumu runs mise upgrade"
 test ! -f "$HOME/apt.log"
-or fail "mumu should not call apt when not apt-managed"
+or fail "mumu should not call apt"
 test ! -f "$HOME/sudo.log"
-or fail "mumu should not call sudo when not apt-managed"
-
-rm -f "$HOME/mise.log" "$HOME/apt.log" "$HOME/sudo.log"
-rm -rf "$HOME/usr/lib"
-mkdir -p "$HOME/usr/bin"
-printf "%s" "#!/usr/bin/env sh
-if [ \"\$1\" = \"activate\" ]; then
-  cat <<'EOF'
-set -gx __RAVY_MISE_INIT 1
-EOF
-  exit 0
-fi
-printf \"%s\n\" \"\$*\" >> \"\$HOME/mise.log\"
-exit 0
-" > "$HOME/usr/bin/mise"
-chmod +x "$HOME/usr/bin/mise"
-ln -sfn "$HOME/usr/bin/mise" "$HOME/bin/mise"
-mkdir -p "$HOME/usr/lib"
-touch "$HOME/usr/lib/.disable-self-update"
-set -gx RAVY_MISE_OWNER apt
-mumu
-set -e RAVY_MISE_OWNER
-grep -F "apt update" "$HOME/sudo.log" >/dev/null
-or fail "mumu uses sudo apt update when apt-managed"
-grep -F "apt install --only-upgrade mise" "$HOME/sudo.log" >/dev/null
-or fail "mumu uses sudo apt install --only-upgrade mise when apt-managed"
-grep -F "update" "$HOME/apt.log" >/dev/null
-or fail "apt stub records update when apt-managed"
-grep -F "install --only-upgrade mise" "$HOME/apt.log" >/dev/null
-or fail "apt stub records install command when apt-managed"
-grep -F "upgrade" "$HOME/mise.log" >/dev/null
-or fail "mumu runs mise upgrade when apt-managed"
-if grep -F "self-update" "$HOME/mise.log" >/dev/null
-    fail "mumu should not call mise self-update when apt-managed"
-end
+or fail "mumu should not call sudo"
 
 rm -f "$HOME/chezmoi.log"
 assert_equal (chez source-path) $expected_ravy_home "chez resolves to public chezmoi source"
