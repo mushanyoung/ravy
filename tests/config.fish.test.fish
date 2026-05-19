@@ -119,7 +119,15 @@ if [ \"\$1\" = \"init\" ] && [ \"\$2\" = \"fish\" ]; then
   cat <<'EOF'
 function _atuin_preexec
 end
+function _atuin_search
+end
+function _atuin_bind_up
+end
 EOF
+  exit 0
+fi
+if [ \"\$1\" = \"history\" ] && [ \"\$2\" = \"list\" ]; then
+  printf 'g pp\\0chez apply\\0ravy\\0G CIA\\0cd custom/\\0'
   exit 0
 fi
 exit 0
@@ -348,15 +356,19 @@ end
 
 set -l expected_ravy_home (realpath "$repo_root")
 set -g rendered_config "$HOME/.config/fish/config.fish"
+set -g rendered_key_bindings "$HOME/.config/fish/functions/fish_user_key_bindings.fish"
 set -g rendered_theme "$HOME/.config/fish/themes/ravy.theme"
 
 mkdir -p (dirname $rendered_config)
+mkdir -p (dirname $rendered_key_bindings)
 mkdir -p (dirname $rendered_theme)
 chezmoi cat "$rendered_config" > $rendered_config
+chezmoi cat "$rendered_key_bindings" > $rendered_key_bindings
 chezmoi cat "$rendered_theme" > $rendered_theme
 
 set -gx HOMEBREW_BUNDLE_FILE "$repo_root/Brewfile"
 source $rendered_config
+source $rendered_key_bindings
 
 assert_equal $RAVY_HOME $expected_ravy_home "RAVY_HOME set from chezmoi source-path"
 assert_equal $HOMEBREW_BUNDLE_FILE "$HOME/.config/homebrew/Brewfile" "HOMEBREW_BUNDLE_FILE points at applied Brewfile"
@@ -371,6 +383,23 @@ assert_contains brblack $fish_color_autosuggestion "fish theme sets autosuggesti
 assert_true "functions -q __starship_set_job_count" "starship prompt initialized"
 assert_true "functions -q __ravy_zoxide_init" "zoxide hook initialized"
 assert_true "functions -q _atuin_preexec" "atuin hook initialized"
+assert_true "functions -q _atuin_search" "atuin search function initialized"
+assert_true "functions -q _atuin_bind_up" "atuin up binding function initialized"
+assert_true "functions -q __fle_fzf_history" "fzf history helper defined"
+assert_true "functions -q __fle_atuin_contains_search_backward" "atuin contains backward helper defined"
+assert_true "functions -q __fle_atuin_contains_search_forward" "atuin contains forward helper defined"
+assert_equal (__fle_atuin_contains_candidates pp)[1] "g pp" "atuin contains search matches command middle"
+assert_equal (__fle_atuin_contains_candidates AP)[1] "chez apply" "atuin contains search is case-insensitive"
+bind \er | string match -q '*__fle_fzf_history*'
+or fail "Alt-r binds to fzf history helper"
+bind \cr | string match -q '*_atuin_search*'
+or fail "Ctrl-r binds to Atuin TUI search"
+bind \cp | string match -q '*__fle_atuin_contains_search_backward*'
+or fail "Ctrl-p binds to Atuin contains backward search"
+bind \cn | string match -q '*__fle_atuin_contains_search_forward*'
+or fail "Ctrl-n binds to Atuin contains forward search"
+bind up | string match -q '*_atuin_bind_up*'
+or fail "Up binds to Atuin up search"
 assert_true "functions -q __ravy_carapace_init" "carapace completions initialized"
 assert_equal "$CARAPACE_BRIDGES" zsh,fish,bash "carapace bridges default to zsh,fish,bash"
 assert_equal "$CARAPACE_EXCLUDES" brew,git "carapace excludes default to brew,git"

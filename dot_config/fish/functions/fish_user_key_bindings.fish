@@ -21,8 +21,24 @@ function __fle_type
     end
 end
 
+function __fle_history_source
+    if command -sq atuin
+        if command -sq perl
+            ATUIN_LOG=error atuin history list --cmd-only --print0 -r false 2>/dev/null | perl -0ne 'print unless $seen{$_}++'
+            if test "$pipestatus[1]" -eq 0
+                return 0
+            end
+        else
+            ATUIN_LOG=error atuin history list --cmd-only --print0 -r false 2>/dev/null
+            and return 0
+        end
+    end
+
+    history -z
+end
+
 function __fle_fzf_history
-    history -z | fzf -q (commandline) \
+    __fle_history_source | fzf -q (commandline) \
         -e +m --read0 --print0 --height=45% \
         --prompt="History> " \
         --preview='fish_indent --ansi < {+sf}' \
@@ -32,6 +48,126 @@ function __fle_fzf_history
 
     commandline -f repaint
     commandline -- $result
+end
+
+function __fle_atuin_contains_candidates --argument-names query
+    begin
+        if command -sq perl
+            set -lx __FLE_ATUIN_CONTAINS_QUERY "$query"
+            ATUIN_LOG=error atuin history list --cmd-only --print0 -r false 2>/dev/null | \
+                perl -0ne 'BEGIN { $q = lc($ENV{"__FLE_ATUIN_CONTAINS_QUERY"} // "") } next if $seen{$_}++; print if index(lc($_), $q) >= 0'
+        else
+            ATUIN_LOG=error atuin search \
+                --cmd-only \
+                --print0 \
+                --search-mode full-text \
+                --filter-mode global \
+                --limit 200 \
+                -- "$query" 2>/dev/null
+        end
+    end | string split0
+end
+
+function __fle_atuin_contains_reset
+    set -e __fle_atuin_contains_query
+    set -e __fle_atuin_contains_results
+    set -g __fle_atuin_contains_index 0
+end
+
+function __fle_atuin_contains_should_reuse --argument-names buffer
+    set -q __fle_atuin_contains_query
+    or return 1
+
+    if test "$buffer" = "$__fle_atuin_contains_query"
+        return 0
+    end
+
+    contains -- "$buffer" $__fle_atuin_contains_results
+end
+
+function __fle_atuin_contains_load --argument-names query
+    set -g __fle_atuin_contains_query "$query"
+    set -g __fle_atuin_contains_results (__fle_atuin_contains_candidates "$query")
+    set -g __fle_atuin_contains_index 0
+end
+
+function __fle_atuin_contains_search --argument-names direction
+    if commandline --search-mode
+        if test "$direction" = backward
+            commandline -f history-search-backward
+        else
+            commandline -f history-search-forward
+        end
+        return
+    end
+
+    if commandline --paging-mode
+        if test "$direction" = backward
+            commandline -f up-line
+        else
+            commandline -f down-line
+        end
+        return
+    end
+
+    set -l lineno (commandline --line)
+    if test "$direction" = backward
+        if test "$lineno" -ne 1
+            commandline -f up-line
+            return
+        end
+    else
+        set -l line_count (count (commandline))
+        if test "$lineno" -ne "$line_count"
+            commandline -f down-line
+            return
+        end
+    end
+
+    if not command -sq atuin
+        if test "$direction" = backward
+            up-or-search
+        else
+            down-or-search
+        end
+        return
+    end
+
+    set -l buffer (commandline -b)
+    if not __fle_atuin_contains_should_reuse "$buffer"
+        __fle_atuin_contains_load "$buffer"
+    end
+
+    set -l count (count $__fle_atuin_contains_results)
+    if test "$count" -eq 0
+        commandline -f repaint
+        return
+    end
+
+    if test "$__fle_atuin_contains_index" -eq 0
+        set -g __fle_atuin_contains_index 1
+    else if test "$direction" = backward
+        set -g __fle_atuin_contains_index (math $__fle_atuin_contains_index + 1)
+        if test "$__fle_atuin_contains_index" -gt "$count"
+            set -g __fle_atuin_contains_index 1
+        end
+    else
+        set -g __fle_atuin_contains_index (math $__fle_atuin_contains_index - 1)
+        if test "$__fle_atuin_contains_index" -lt 1
+            set -g __fle_atuin_contains_index "$count"
+        end
+    end
+
+    commandline -r "$__fle_atuin_contains_results[$__fle_atuin_contains_index]"
+    commandline -f repaint
+end
+
+function __fle_atuin_contains_search_backward
+    __fle_atuin_contains_search backward
+end
+
+function __fle_atuin_contains_search_forward
+    __fle_atuin_contains_search forward
 end
 
 function __fle_fzf_files
@@ -152,6 +288,26 @@ function __fle_prepend_last_history_line
     commandline -i $history[1]
 end
 
+if functions -q _atuin_search
+    bind \cr _atuin_search
+    if bind -M insert >/dev/null 2>&1
+        bind -M insert \cr _atuin_search
+    end
+end
+
+if functions -q _atuin_bind_up
+    bind up _atuin_bind_up 2>/dev/null
+    or bind -k up _atuin_bind_up
+    bind \eOA _atuin_bind_up
+    bind \e\[A _atuin_bind_up
+    if bind -M insert >/dev/null 2>&1
+        bind -M insert up _atuin_bind_up 2>/dev/null
+        or bind -M insert -k up _atuin_bind_up
+        bind -M insert \eOA _atuin_bind_up
+        bind -M insert \e\[A _atuin_bind_up
+    end
+end
+
 bind \er __fle_fzf_history
 bind \eo __fle_fzf_files_files
 bind \eO __fle_fzf_files_files_with_hidden
@@ -161,6 +317,13 @@ bind \ev __fle_fzf_files_nvim
 bind \eg __fle_fzf_files_rg
 
 bind \et __fle_type
+
+bind \cp __fle_atuin_contains_search_backward
+bind \cn __fle_atuin_contains_search_forward
+if bind -M insert >/dev/null 2>&1
+    bind -M insert \cp __fle_atuin_contains_search_backward
+    bind -M insert \cn __fle_atuin_contains_search_forward
+end
 
 bind \cf forward-word
 bind \cb backward-word
@@ -173,4 +336,3 @@ bind \cz __fle_fg
 
 # sane <c-c>
 bind \cc 'commandline ""'
-

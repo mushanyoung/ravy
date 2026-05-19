@@ -20,7 +20,7 @@ end
 
 # atuin
 if command -v atuin &>/dev/null
-    atuin init fish | source 2>/dev/null
+    atuin init fish --disable-ctrl-r --disable-up-arrow --disable-ai | source 2>/dev/null
 end
 
 # completions
