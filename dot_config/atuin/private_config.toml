@@ -1,7 +1,7 @@
 auto_sync = true
 sync_frequency = "30s"
 
-search_mode = "daemon-fuzzy"
+search_mode = "fuzzy"
 filter_mode = "global"
 search_mode_shell_up_key_binding = "prefix"
 filter_mode_shell_up_key_binding = "global"
@@ -11,6 +11,6 @@ enter_accept = true
 records = true
 
 [daemon]
-enabled = true
-autostart = true
+enabled = false
+autostart = false
 sync_frequency = 30
