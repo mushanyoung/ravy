@@ -125,6 +125,18 @@ fi
 exit 0
 "
 
+    __write_stub carapace "#!/usr/bin/env sh
+if [ \"\$1\" = \"_carapace\" ]; then
+  cat <<'EOF'
+function __ravy_carapace_init
+end
+complete -c bun -f -a 'install add run'
+EOF
+  exit 0
+fi
+exit 0
+"
+
     __write_stub codex "#!/usr/bin/env sh
 printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
 exit 0
@@ -359,6 +371,11 @@ assert_contains brblack $fish_color_autosuggestion "fish theme sets autosuggesti
 assert_true "functions -q __starship_set_job_count" "starship prompt initialized"
 assert_true "functions -q __ravy_zoxide_init" "zoxide hook initialized"
 assert_true "functions -q _atuin_preexec" "atuin hook initialized"
+assert_true "functions -q __ravy_carapace_init" "carapace completions initialized"
+assert_equal "$CARAPACE_BRIDGES" zsh,fish,bash "carapace bridges default to zsh,fish,bash"
+assert_equal "$CARAPACE_EXCLUDES" brew,git "carapace excludes default to brew,git"
+complete -C "bun " | string match -q '*install*'
+or fail "carapace provides bun completions"
 assert_true "test \"$__RAVY_MISE_INIT\" = 1" "mise activated"
 assert_true "functions -q d" "cd helper function defined"
 assert_true "functions -q ravy" "ravy helper defined"

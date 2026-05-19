@@ -23,6 +23,13 @@ if command -v atuin &>/dev/null
     atuin init fish | source 2>/dev/null
 end
 
+# completions
+if command -q carapace
+    set -q CARAPACE_BRIDGES; or set -gx CARAPACE_BRIDGES 'zsh,fish,bash'
+    set -q CARAPACE_EXCLUDES; or set -gx CARAPACE_EXCLUDES 'brew,git'
+    carapace _carapace | source
+end
+
 # functions
 function imv
     set -l src
