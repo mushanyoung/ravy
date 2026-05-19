@@ -17,6 +17,7 @@ process-compose = "latest"
 duckdb = "latest"
 zellij = "latest"
 rclone = "latest"
+atuin = "latest"
 
 
 [settings]
