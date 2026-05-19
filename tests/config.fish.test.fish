@@ -127,7 +127,7 @@ EOF
   exit 0
 fi
 if [ \"\$1\" = \"history\" ] && [ \"\$2\" = \"list\" ]; then
-  printf 'g pp\\0chez apply\\0ravy\\0G CIA\\0cd custom/\\0'
+  printf 'local latest\\0g pp\\0chez apply\\0ravy\\0G CIA\\0cd custom/\\0'
   exit 0
 fi
 exit 0
@@ -388,6 +388,9 @@ assert_true "functions -q _atuin_bind_up" "atuin up binding function initialized
 assert_true "functions -q __fle_fzf_history" "fzf history helper defined"
 assert_true "functions -q __fle_atuin_contains_search_backward" "atuin contains backward helper defined"
 assert_true "functions -q __fle_atuin_contains_search_forward" "atuin contains forward helper defined"
+history append "local latest"
+assert_equal (__fle_atuin_contains_candidates '')[1] "local latest" "empty atuin contains search starts from latest local history"
+assert_equal (__fle_atuin_contains_candidates '')[2] "g pp" "empty atuin contains search skips duplicate latest history"
 assert_equal (__fle_atuin_contains_candidates pp)[1] "g pp" "atuin contains search matches command middle"
 assert_equal (__fle_atuin_contains_candidates AP)[1] "chez apply" "atuin contains search is case-insensitive"
 bind \er | string match -q '*__fle_fzf_history*'

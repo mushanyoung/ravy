@@ -51,11 +51,19 @@ function __fle_fzf_history
 end
 
 function __fle_atuin_contains_candidates --argument-names query
+    set -l local_latest
+
     begin
+        if test -z "$query"; and set -q history[1]
+            set local_latest $history[1]
+            printf '%s\0' "$local_latest"
+        end
+
         if command -sq perl
             set -lx __FLE_ATUIN_CONTAINS_QUERY "$query"
+            set -lx __FLE_ATUIN_CONTAINS_SKIP "$local_latest"
             ATUIN_LOG=error atuin history list --cmd-only --print0 -r false 2>/dev/null | \
-                perl -0ne 'BEGIN { $q = lc($ENV{"__FLE_ATUIN_CONTAINS_QUERY"} // "") } next if $seen{$_}++; print if index(lc($_), $q) >= 0'
+                perl -0ne 'BEGIN { $q = lc($ENV{"__FLE_ATUIN_CONTAINS_QUERY"} // ""); $skip = $ENV{"__FLE_ATUIN_CONTAINS_SKIP"} // "" } chomp; next if length($skip) && $_ eq $skip; next if $seen{$_}++; print "$_\0" if index(lc($_), $q) >= 0'
         else
             ATUIN_LOG=error atuin search \
                 --cmd-only \
@@ -134,7 +142,9 @@ function __fle_atuin_contains_search --argument-names direction
     end
 
     set -l buffer (commandline -b)
-    if not __fle_atuin_contains_should_reuse "$buffer"
+    if test -z "$buffer"
+        __fle_atuin_contains_load "$buffer"
+    else if not __fle_atuin_contains_should_reuse "$buffer"
         __fle_atuin_contains_load "$buffer"
     end
 
