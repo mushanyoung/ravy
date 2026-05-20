@@ -421,12 +421,10 @@ assert_true "functions -q ravyc" "private repo short helper defined"
 assert_true "not functions -q ravycustom" "old private repo helper is removed"
 assert_true "not functions -q ravyprivatecd" "old private repo cd helper is removed"
 assert_true "functions -q rgh" "rgh alias defined"
-assert_true "functions -q mu" "mu alias defined"
-assert_true "command -v mumu >/dev/null" "mumu command defined"
+assert_true "command -v mu >/dev/null" "mu command defined"
+assert_true "not functions -q mu" "mu is not a fish function or alias"
 assert_true "command -v auau >/dev/null" "auau command defined"
 assert_true "not functions -q auau" "auau is not a fish function or alias"
-functions mu | string match -q '*mise upgrade*'
-or fail "mu expands to mise upgrade"
 functions rgh | string match -q '*rg -S --hidden*'
 or fail "rgh expands to hidden rg search"
 if command -q brew
@@ -456,20 +454,15 @@ set -e ZELLIJ
 grep -Fx -- "--no-alt-screen resume abc123" "$HOME/codex.log" >/dev/null
 or fail "codex wrapper should add no-alt-screen inside Zellij"
 
-rm -f "$HOME/mise.log"
-mu
-grep -F "upgrade" "$HOME/mise.log" >/dev/null
-or fail "mu runs mise upgrade"
-
 rm -f "$HOME/mise.log" "$HOME/sudo.log"
 rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib"
-mumu
+mu
 grep -F "self-update" "$HOME/mise.log" >/dev/null
-or fail "mumu uses mise self-update"
+or fail "mu uses mise self-update"
 grep -F "upgrade" "$HOME/mise.log" >/dev/null
-or fail "mumu runs mise upgrade"
+or fail "mu runs mise upgrade"
 test ! -f "$HOME/sudo.log"
-or fail "mumu should not call sudo"
+or fail "mu should not call sudo"
 
 rm -f "$HOME/chezmoi.log"
 assert_equal (chez source-path) $expected_ravy_home "chez resolves to public chezmoi source"

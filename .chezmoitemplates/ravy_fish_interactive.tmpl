@@ -7,12 +7,6 @@ set fish_greeting
 # theme
 fish_config theme choose ravy >/dev/null 2>/dev/null
 
-if set -q CURSOR_AGENT || set -q CURSOR_TRACE_ID
-    if command -v cursor
-        . (cursor --locate-shell-integration-path fish)
-    end
-end
-
 # starship
 if command -v starship &>/dev/null
     starship init fish | source

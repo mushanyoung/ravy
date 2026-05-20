@@ -398,8 +398,8 @@ check_public_surface() {
     type ravyprivate >/dev/null 2>&1 &&
     type ravyc >/dev/null 2>&1 &&
     type ravys >/dev/null 2>&1 &&
-    alias mu 2>/dev/null | grep -F 'mise upgrade' >/dev/null 2>&1 &&
-    command -v mumu >/dev/null 2>&1 &&
+    command -v mu >/dev/null 2>&1 &&
+    ! alias mu >/dev/null 2>&1 &&
     command -v auau >/dev/null 2>&1 &&
     ! alias auau >/dev/null 2>&1 &&
     alias rgh 2>/dev/null | grep -F 'rg -S --hidden' >/dev/null 2>&1 &&
@@ -538,22 +538,9 @@ check_mise_upgrade_helpers() {
 
   install_mise_stub "$tmp_home" self
   result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
-    rm -f "$HOME/mise.log" &&
-    eval mu &&
-    grep -F "upgrade" "$HOME/mise.log" >/dev/null 2>&1
-  ')
-  status_code=${result%%$'\n'*}
-  output=${result#*$'\n__RAVY_OUTPUT__\n'}
-  output=${output%$'\n__RAVY_END__'}
-  if [ "$shell_name" = bash ]; then
-    output=$(strip_bash_noise "$output")
-  fi
-  assert_status_zero "$status_code" "$shell_name mu upgrade path failed" "$output"
-
-  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
     rm -f "$HOME/mise.log" "$HOME/sudo.log" "$HOME/pacman.log" &&
     rm -rf "$HOME/opt/mise/lib" &&
-    mumu &&
+    mu &&
     grep -F "self-update" "$HOME/mise.log" >/dev/null 2>&1 &&
     grep -F "upgrade" "$HOME/mise.log" >/dev/null 2>&1 &&
     test ! -e "$HOME/sudo.log" &&
@@ -565,7 +552,7 @@ check_mise_upgrade_helpers() {
   if [ "$shell_name" = bash ]; then
     output=$(strip_bash_noise "$output")
   fi
-  assert_status_zero "$status_code" "$shell_name mumu self-update path failed" "$output"
+  assert_status_zero "$status_code" "$shell_name mu self-update path failed" "$output"
 
 }
 

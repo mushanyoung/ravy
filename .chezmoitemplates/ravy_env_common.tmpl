@@ -8,16 +8,9 @@ set -x LANGUAGE $LANG
 set -x EDITOR nvim
 set -x GIT_EDITOR nvim
 
-if set -q CURSOR_AGENT || set -q CURSOR_TRACE_ID
-    # Do not hang on cursor terminal executions
-    set -x PAGER cat
-    set -x MANPAGER cat
-    set -x GIT_PAGER cat
-else
-    set -x PAGER less
-    set -x MANPAGER less
-    set -x GIT_PAGER less
-end
+set -x PAGER less
+set -x MANPAGER less
+set -x GIT_PAGER less
 
 set -x LESS FRXMi
 set -x LESS_TERMCAP_mb (printf '\033[01;31m')
@@ -64,16 +57,9 @@ export LANGUAGE="$LANG"
 export EDITOR="nvim"
 export GIT_EDITOR="nvim"
 
-# Avoid hanging in Cursor Agent terminal executions.
-if [ -n "${CURSOR_AGENT:-}" ] || [ -n "${CURSOR_TRACE_ID:-}" ]; then
-  export PAGER="cat"
-  export MANPAGER="cat"
-  export GIT_PAGER="cat"
-else
-  export PAGER="less"
-  export MANPAGER="less"
-  export GIT_PAGER="less"
-fi
+export PAGER="less"
+export MANPAGER="less"
+export GIT_PAGER="less"
 
 export LESS="FRXMi"
 export LESS_TERMCAP_mb="$(printf '\033[01;31m')"
