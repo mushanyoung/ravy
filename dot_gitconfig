@@ -1,5 +1,7 @@
 [apply]
   whitespace = fix
+[init]
+  defaultBranch = main
 [core]
   autocrlf = input
   safecrlf = warn
@@ -129,3 +131,7 @@
   dd7 = !git dd HEAD~7 HEAD
   dd8 = !git dd HEAD~8 HEAD
   dd9 = !git dd HEAD~9 HEAD
+
+
+[include]
+  path = ~/.config/ravy/private.gitconfig
