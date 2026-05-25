@@ -1,12 +1,15 @@
 brew "cloudflare-speed-cli"
 brew "fish"
 brew "imagemagick"
+brew "universal-ctags"
+brew "pv"
 
 if OS.mac?
   tap "laishulu/homebrew"
 
   brew "socat"
   brew "macism"
+  brew "lftp"
 
   cask "cloudflare-warp"
   cask "font-inconsolata-nerd-font"
