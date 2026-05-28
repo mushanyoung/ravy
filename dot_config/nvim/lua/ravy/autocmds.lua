@@ -14,20 +14,6 @@ local function zellij_switch_mode(mode)
   vim.fn.jobstart({ "zellij", "action", "switch-mode", mode }, { detach = true })
 end
 
-local function zellij_start_lock_watch()
-  if vim.env.ZELLIJ == nil or vim.env.ZELLIJ == "" then
-    return
-  end
-  if vim.env.ZELLIJ_PANE_ID == nil or vim.env.ZELLIJ_PANE_ID == "" then
-    return
-  end
-  if vim.fn.executable("zellij-nvim-lock-watch") ~= 1 then
-    return
-  end
-
-  vim.fn.jobstart({ "zellij-nvim-lock-watch" }, { detach = true })
-end
-
 local function strip_whitespace()
   if vim.bo.buftype ~= "" or not vim.bo.modifiable or vim.bo.readonly or vim.bo.binary then
     return
@@ -186,7 +172,6 @@ function M.setup()
     group = zellij,
     callback = function()
       zellij_switch_mode("locked")
-      zellij_start_lock_watch()
     end,
   })
   vim.api.nvim_create_autocmd("VimLeavePre", {
@@ -205,7 +190,6 @@ function M.setup()
     group = zellij,
     callback = function()
       zellij_switch_mode("locked")
-      zellij_start_lock_watch()
     end,
   })
 end

@@ -29,7 +29,7 @@ lock_key() {
 acquire_lock() {
   local lock_root old_pid
 
-  lock_root="${TMPDIR:-/tmp}/zellij-nvim-lock-watch"
+  lock_root="${TMPDIR:-/tmp}/zellij-lock-watch"
   LOCK_DIR="$lock_root/$(lock_key).lock"
 
   mkdir -p "$lock_root" 2>/dev/null || quiet_exit
@@ -51,7 +51,7 @@ acquire_lock() {
   trap stop INT TERM
 }
 
-is_nvim_pane() {
+is_lock_mode_pane() {
   local pane_command=$1
   local pane_title=$2
   local command_word command_base nvim_title_prefix
@@ -60,7 +60,7 @@ is_nvim_pane() {
   command_base=${command_word##*/}
 
   case "$command_base" in
-    nvim* | vim* | view*)
+    codex* | nvim* | vim* | view*)
       return 0
       ;;
   esac
@@ -103,7 +103,7 @@ desired_mode() {
 
   IFS=$'\t' read -r pane_command pane_title _ <<<"$pane_row"
 
-  if is_nvim_pane "$pane_command" "$pane_title"; then
+  if is_lock_mode_pane "$pane_command" "$pane_title"; then
     printf '%s\n' locked
   else
     printf '%s\n' normal
@@ -116,8 +116,8 @@ main() {
   require_runtime
   acquire_lock
 
-  interval=${ZELLIJ_NVIM_LOCK_INTERVAL:-0.2}
-  iterations=${ZELLIJ_NVIM_LOCK_ITERATIONS:-}
+  interval=${ZELLIJ_LOCK_INTERVAL:-${ZELLIJ_NVIM_LOCK_INTERVAL:-0.2}}
+  iterations=${ZELLIJ_LOCK_ITERATIONS:-${ZELLIJ_NVIM_LOCK_ITERATIONS:-}}
   count=0
   last_mode=
   failure_count=0

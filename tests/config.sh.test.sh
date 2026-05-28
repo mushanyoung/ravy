@@ -214,6 +214,11 @@ printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
 exit 0
 "
 
+  write_stub "$stub_bin/zellij-lock-watch" "#!/usr/bin/env sh
+printf '%s\n' \"watch session=\${ZELLIJ_SESSION_NAME:-} pane=\${ZELLIJ_PANE_ID:-}\" >> \"\$HOME/zellij-lock-watch.log\"
+exit 0
+"
+
   write_stub "$stub_bin/pacman" "#!/usr/bin/env sh
 printf '%s\n' \"\$*\" >> \"\$HOME/pacman.log\"
 exit 0
@@ -389,7 +394,7 @@ check_public_surface() {
     $fn_check ravy >/dev/null &&
     $fn_check ravyprivate >/dev/null &&
     $fn_check ravyc >/dev/null &&
-    $fn_check codex >/dev/null &&
+    command -v codex >/dev/null 2>&1 &&
     ! $fn_check ravycustom >/dev/null &&
     ! $fn_check ravyprivatecd >/dev/null &&
     $fn_check chezp >/dev/null &&
@@ -414,9 +419,14 @@ check_public_surface() {
     codex resume abc123 >/dev/null &&
     grep -Fx 'resume abc123' \"\$HOME/codex.log\" >/dev/null 2>&1 &&
     rm -f \"\$HOME/codex.log\" &&
-    ZELLIJ=1 codex resume abc123 >/dev/null &&
-    grep -Fx -- '--no-alt-screen resume abc123' \"\$HOME/codex.log\" >/dev/null 2>&1 &&
+    ZELLIJ=1 ZELLIJ_PANE_ID=7 codex resume abc123 >/dev/null &&
+    grep -Fx -- 'resume abc123' \"\$HOME/codex.log\" >/dev/null 2>&1 &&
     unset ZELLIJ &&
+    unset ZELLIJ_PANE_ID &&
+    rm -f \"\$HOME/zellij-lock-watch.log\" &&
+    PATH=\"$stub_bin:\$PATH\" ZELLIJ=1 ZELLIJ_PANE_ID=7 ZELLIJ_SESSION_NAME=test-session __ravy_zellij_lock_watch_start &&
+    sleep 0.1 &&
+    grep -Fx 'watch session=test-session pane=7' \"\$HOME/zellij-lock-watch.log\" >/dev/null 2>&1 &&
     $fn_check __ravy_starship_init >/dev/null &&
     $fn_check __ravy_zoxide_init >/dev/null &&
     $fn_check __ravy_atuin_init >/dev/null &&

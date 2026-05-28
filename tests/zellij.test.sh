@@ -174,9 +174,9 @@ run_watcher_case() {
     ZELLIJ_STUB_TABS="$tmp_root/tabs.json" \
     ZELLIJ_STUB_PANES="$tmp_root/panes.json" \
     ZELLIJ_STUB_MODES="$tmp_root/modes.log" \
-    ZELLIJ_NVIM_LOCK_INTERVAL=0 \
-    ZELLIJ_NVIM_LOCK_ITERATIONS="$iterations" \
-    "$repo_root/bin/zellij-nvim-lock-watch"
+    ZELLIJ_LOCK_INTERVAL=0 \
+    ZELLIJ_LOCK_ITERATIONS="$iterations" \
+    "$repo_root/bin/zellij-lock-watch"
 
   actual_modes=$(cat "$tmp_root/modes.log")
   assert_equal "$actual_modes" "$expected_modes" "$name should switch to expected mode"
@@ -191,6 +191,7 @@ else
   render_zellij_config
   write_zellij_stub
   run_watcher_case "nvim-command" "nvim /tmp/file" "file" 1 "locked"
+  run_watcher_case "codex-command" "codex --yolo" "project" 1 "locked"
   run_watcher_case "normal-command" "/opt/homebrew/bin/fish" "~" 1 "normal"
   run_watcher_case "title-prefix" "/bin/sh" "$(printf '\342\234\217\357\270\217  file')" 1 "locked"
   run_watcher_case "deduplicates" "nvim /tmp/file" "file" 2 "locked"

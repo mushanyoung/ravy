@@ -16,13 +16,22 @@ alias ravyc ravyprivate
 # Fish supports "=" aliases but bash/zsh do not.
 alias = "command -v"
 
-function codex
-    if set -q ZELLIJ; and test -n "$ZELLIJ"
-        command codex --no-alt-screen $argv
-    else
-        command codex $argv
+function __ravy_zellij_lock_watch_start
+    if not set -q ZELLIJ; or test -z "$ZELLIJ"
+        return 0
     end
+    if not set -q ZELLIJ_PANE_ID; or test -z "$ZELLIJ_PANE_ID"
+        return 0
+    end
+    if not command -q zellij-lock-watch
+        return 0
+    end
+
+    command nohup zellij-lock-watch >/dev/null 2>&1 &
+    disown
 end
+
+__ravy_zellij_lock_watch_start
 
 function __ravy_chezmoi_config_dir
     set -l config_home "$XDG_CONFIG_HOME"
@@ -237,13 +246,16 @@ alias dry='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock monc
 
 alias ravys='ravysource'
 
-codex() {
-  if [ -n "${ZELLIJ:-}" ]; then
-    command codex --no-alt-screen "$@"
-  else
-    command codex "$@"
-  fi
+__ravy_zellij_lock_watch_start() {
+  [ -n "${ZELLIJ:-}" ] || return 0
+  [ -n "${ZELLIJ_PANE_ID:-}" ] || return 0
+  command -v zellij-lock-watch >/dev/null 2>&1 || return 0
+
+  nohup zellij-lock-watch >/dev/null 2>&1 &
+  disown "$!" 2>/dev/null || true
 }
+
+__ravy_zellij_lock_watch_start
 
 _ravy_chezmoi_config_dir() {
   printf '%s\n' "${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi"

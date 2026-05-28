@@ -150,6 +150,11 @@ printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
 exit 0
 "
 
+    __write_stub zellij-lock-watch "#!/usr/bin/env sh
+printf '%s\n' \"watch session=\${ZELLIJ_SESSION_NAME:-} pane=\${ZELLIJ_PANE_ID:-}\" >> \"\$HOME/zellij-lock-watch.log\"
+exit 0
+"
+
     __write_stub sudo "#!/usr/bin/env sh
 printf \"%s\n\" \"\$*\" >> \"\$HOME/sudo.log\"
 exec \"\$@\"
@@ -415,7 +420,7 @@ assert_true "functions -q ravyprivate" "private repo helper defined"
 assert_true "functions -q chez" "chez alias defined"
 assert_true "functions -q chezp" "chezp helper defined"
 assert_true "functions -q ravysource" "ravysource helper defined"
-assert_true "functions -q codex" "codex wrapper defined"
+assert_true "command -v codex >/dev/null" "codex command is available"
 assert_true "functions -q l" "generic alias 'l' defined"
 assert_true "functions -q ravyc" "private repo short helper defined"
 assert_true "not functions -q ravycustom" "old private repo helper is removed"
@@ -446,13 +451,28 @@ rm -f "$HOME/codex.log"
 set -e ZELLIJ
 codex resume abc123 >/dev/null
 grep -Fx "resume abc123" "$HOME/codex.log" >/dev/null
-or fail "codex wrapper should not add no-alt-screen outside Zellij"
+or fail "codex command should pass args through outside Zellij"
 rm -f "$HOME/codex.log"
 set -gx ZELLIJ 1
+set -gx ZELLIJ_PANE_ID 7
 codex resume abc123 >/dev/null
 set -e ZELLIJ
-grep -Fx -- "--no-alt-screen resume abc123" "$HOME/codex.log" >/dev/null
-or fail "codex wrapper should add no-alt-screen inside Zellij"
+set -e ZELLIJ_PANE_ID
+grep -Fx -- "resume abc123" "$HOME/codex.log" >/dev/null
+or fail "codex command should pass args through inside Zellij"
+
+rm -f "$HOME/zellij-lock-watch.log"
+set -gx PATH "$HOME/bin" $PATH
+set -gx ZELLIJ 1
+set -gx ZELLIJ_PANE_ID 7
+set -gx ZELLIJ_SESSION_NAME test-session
+__ravy_zellij_lock_watch_start
+sleep 0.1
+set -e ZELLIJ
+set -e ZELLIJ_PANE_ID
+set -e ZELLIJ_SESSION_NAME
+grep -Fx "watch session=test-session pane=7" "$HOME/zellij-lock-watch.log" >/dev/null
+or fail "interactive shell can start zellij-lock-watch inside Zellij"
 
 rm -f "$HOME/mise.log" "$HOME/sudo.log"
 rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib"
