@@ -248,7 +248,7 @@ build_cached_remote_command() {
   remote_helper_install_cmd="/bin/sh -lc $(shell_quote "$remote_install_script")"
 
   remote_exec_script="exec \"\$HOME/.cache/cloudtop/$helper_hash/attach\" $enable_agent_bridge"
-  remote_exec_cmd="exec ~/.cache/cloudtop/$helper_hash/attach $enable_agent_bridge"
+  remote_exec_cmd="/bin/sh -lc $(shell_quote "$remote_exec_script")"
   remote_exec_argv=(/bin/sh -lc "$remote_exec_script")
 }
 
