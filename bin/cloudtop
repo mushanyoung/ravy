@@ -3,7 +3,7 @@
 
 usage() {
   cat <<'EOF'
-Usage: cloudtop [--ssh|--mosh] [--zellij|--tmux] [--] [host] [transport args...]
+Usage: cloudtop [--ssh|--mosh] [--zellij] [--] [host] [transport args...]
 
 Without a host, attaches to a local zellij session.
 With a host, defaults to ssh transport and zellij on the remote host.
@@ -12,7 +12,6 @@ Options:
   --ssh       Use ssh transport (default)
   --mosh      Use mosh transport
   --zellij    Attach to a zellij session (default)
-  --tmux      Attach to a tmux session
   -h, --help  Show this help
 EOF
 }
@@ -94,8 +93,28 @@ zellij_session_name() {
   printf '%s\n' "${cleaned_name:-cloudtop}"
 }
 
-remote_ssh_auth_sock_bridge_script() {
+hash_text() {
+  local text=$1
+  local digest
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    digest=$(printf '%s' "$text" | sha256sum | awk '{ print $1 }') || return 1
+  elif command -v shasum >/dev/null 2>&1; then
+    digest=$(printf '%s' "$text" | shasum -a 256 | awk '{ print $1 }') || return 1
+  elif command -v openssl >/dev/null 2>&1; then
+    digest=$(printf '%s' "$text" | openssl dgst -sha256 | awk '{ print $NF }') || return 1
+  else
+    echo "cloudtop needs sha256sum, shasum, or openssl to cache the remote helper" >&2
+    return 1
+  fi
+
+  printf '%s\n' "$digest" | cut -c 1-5
+}
+
+cloudtop_remote_helper_script() {
   cat <<'EOF'
+#!/bin/sh
+
 cloudtop_refresh_ssh_auth_sock() {
     stable_sock=${CLOUDTOP_SSH_AUTH_SOCK:-$HOME/.ssh/ssh_auth_sock}
 
@@ -120,17 +139,6 @@ cloudtop_refresh_ssh_auth_sock() {
     fi
 }
 
-cloudtop_refresh_ssh_auth_sock
-EOF
-}
-
-remote_attach_script() {
-  case "$1" in
-    zellij)
-      if [ "${2:-0}" = 1 ]; then
-        remote_ssh_auth_sock_bridge_script
-      fi
-      cat <<'EOF'
 zellij_session_name() {
     raw_name=${RAVY_ZELLIJ_HOST:-${RAVY_HOST:-}}
     if [ -z "$raw_name" ]; then
@@ -145,8 +153,6 @@ zellij_session_name() {
 
     printf '%s\n' "${cleaned_name:-cloudtop}"
 }
-
-session_name=$(zellij_session_name)
 
 find_zellij() {
     candidate=$(command -v zellij 2>/dev/null || true)
@@ -187,75 +193,74 @@ find_zellij() {
     return 1
 }
 
-candidate=$(find_zellij) || {
-    echo "zellij not found; checked PATH, mise zellij, and common Homebrew prefixes" >&2
-    echo "Install it with: mise install zellij" >&2
+attach_zellij() {
+    session_name=$(zellij_session_name)
+
+    candidate=$(find_zellij) || {
+        echo "zellij not found; checked PATH, mise zellij, and common Homebrew prefixes" >&2
+        echo "Install it with: mise install zellij" >&2
+        exit 127
+    }
+    exec "$candidate" attach --forget --create "$session_name"
     exit 127
 }
-exec "$candidate" attach --forget --create "$session_name"
-exit 127
+
+enable_agent_bridge=${1:-0}
+
+if [ "$enable_agent_bridge" = 1 ]; then
+    cloudtop_refresh_ssh_auth_sock
+fi
+
+attach_zellij
 EOF
-      ;;
-    tmux)
-      if [ "${2:-0}" = 1 ]; then
-        remote_ssh_auth_sock_bridge_script
-      fi
-      cat <<'EOF'
-for candidate in "$(command -v tmux 2>/dev/null)" \
-    /opt/homebrew/bin/tmux \
-    /home/linuxbrew/.linuxbrew/bin/tmux \
-    "$HOME/.linuxbrew/bin/tmux" \
-    "$HOME/.brew/bin/tmux" \
-    /usr/local/bin/tmux
-do
-    [ -n "$candidate" ] || continue
-    [ -x "$candidate" ] || continue
-    exec "$candidate" new-session -A -s tmux
-done
-echo "tmux not found; checked PATH=$PATH and common Homebrew prefixes" >&2
-exit 127
-EOF
-      ;;
-  esac
 }
 
 attach_local() {
   local candidate
   local session_name
 
-  case "$remote_program" in
-    zellij)
-      session_name=$(zellij_session_name)
-      candidate=$(find_zellij) || {
-        zellij_not_found_message
-        exit 127
-      }
-      print_command "$candidate" attach --forget --create "$session_name"
-      exec "$candidate" attach --forget --create "$session_name"
-      exit 127
-      ;;
-    tmux)
-      for candidate in "$(command -v tmux 2>/dev/null)" \
-          /opt/homebrew/bin/tmux \
-          /home/linuxbrew/.linuxbrew/bin/tmux \
-          "$HOME/.linuxbrew/bin/tmux" \
-          "$HOME/.brew/bin/tmux" \
-          /usr/local/bin/tmux
-      do
-        [ -n "$candidate" ] || continue
-        [ -x "$candidate" ] || continue
-        print_command "$candidate" new-session -A -s tmux
-        exec "$candidate" new-session -A -s tmux
-      done
-      echo "tmux not found; checked PATH=$PATH and common Homebrew prefixes" >&2
-      exit 127
-      ;;
-  esac
+  session_name=$(zellij_session_name)
+  candidate=$(find_zellij) || {
+    zellij_not_found_message
+    exit 127
+  }
+  print_command "$candidate" attach --forget --create "$session_name"
+  exec "$candidate" attach --forget --create "$session_name"
+  exit 127
+}
+
+validate_mosh_helper_args() {
+  if [ "${#transport_args[@]}" -ne 1 ] || [[ ${transport_args[0]} == -* ]]; then
+    echo "cloudtop --mosh cached helper supports only a single [user@]host argument; use MOSH_SSH_PORT for the SSH port or MOSH_EXEC_CMD for a custom inline command" >&2
+    exit 2
+  fi
+}
+
+build_cached_remote_command() {
+  local enable_agent_bridge=$1
+  local remote_exec_script
+  local remote_install_script
+
+  remote_helper_script=$(cloudtop_remote_helper_script)
+  remote_helper_hash=$(hash_text "$remote_helper_script") || exit 1
+  remote_helper_enabled=1
+
+  remote_install_script="helper_dir=\$HOME/.cache/cloudtop/$remote_helper_hash; helper_path=\$helper_dir/attach; if [ -x \"\$helper_path\" ]; then exit 0; fi; umask 077; mkdir -p \"\$helper_dir\" || exit 1; tmp_path=\"\$helper_dir/attach.\$\$\"; rm -f \"\$tmp_path\"; cat > \"\$tmp_path\" || exit 1; chmod 700 \"\$tmp_path\" || { rm -f \"\$tmp_path\"; exit 1; }; if [ -x \"\$helper_path\" ]; then rm -f \"\$tmp_path\"; else mv -f \"\$tmp_path\" \"\$helper_path\" || { rm -f \"\$tmp_path\"; exit 1; }; fi"
+  remote_helper_install_cmd="/bin/sh -lc $(shell_quote "$remote_install_script")"
+
+  remote_exec_script="exec \"\$HOME/.cache/cloudtop/$remote_helper_hash/attach\" $enable_agent_bridge"
+  remote_exec_cmd="/bin/sh -lc $(shell_quote "$remote_exec_script")"
+  remote_exec_argv=(/bin/sh -lc "$remote_exec_script")
 }
 
 build_remote_command() {
   local script
   local enable_agent_bridge=0
+
+  remote_helper_enabled=0
+  remote_helper_script=
+  remote_helper_hash=
+  remote_helper_install_cmd=
 
   if [ -n "${CLOUDTOP_EXEC_CMD:-}" ]; then
     script=$CLOUDTOP_EXEC_CMD
@@ -267,11 +272,31 @@ build_remote_command() {
     if [ "$transport" = "ssh" ]; then
       enable_agent_bridge=1
     fi
-    script=$(remote_attach_script "$remote_program" "$enable_agent_bridge")
+    if [ "$transport" = "mosh" ]; then
+      validate_mosh_helper_args
+    fi
+    build_cached_remote_command "$enable_agent_bridge"
+    return
   fi
 
   remote_exec_cmd="/bin/sh -lc $(shell_quote "$script")"
   remote_exec_argv=(/bin/sh -lc "$script")
+}
+
+install_remote_helper() {
+  local -a command
+  local -a install_opts
+
+  [ "${remote_helper_enabled:-0}" = 1 ] || return 0
+
+  install_opts=("${ssh_install_opts[@]}")
+  if [ "$transport" = "mosh" ] && [ -n "$mosh_ssh_port" ]; then
+    install_opts+=("-p" "$mosh_ssh_port")
+  fi
+
+  command=("$ssh_command" "${install_opts[@]}" "${transport_args[@]}" -- "$remote_helper_install_cmd")
+  print_command "${command[@]}"
+  printf '%s' "$remote_helper_script" | "${command[@]}"
 }
 
 run_once() {
@@ -292,7 +317,6 @@ run_once() {
 }
 
 transport=ssh
-remote_program=zellij
 transport_args=()
 
 while [ "$#" -gt 0 ]; do
@@ -304,10 +328,10 @@ while [ "$#" -gt 0 ]; do
       transport=mosh
       ;;
     --zellij)
-      remote_program=zellij
       ;;
     --tmux)
-      remote_program=tmux
+      echo "cloudtop no longer supports tmux" >&2
+      exit 2
       ;;
     -h|--help)
       usage
@@ -340,9 +364,11 @@ mosh_ssh_port=${MOSH_SSH_PORT:-}
 ssh_alive_interval=${SSH_ALIVE_INTERVAL:-10}
 reconnect_interval=${RECONNECT_INTERVAL:-10}
 ssh_default_opts=("-t" "-S" "none" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
+ssh_install_opts=("-T" "-S" "none" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
 mosh_default_opts=("-a" "-o")
 
 build_remote_command
+install_remote_helper || exit $?
 
 while true; do
   run_once

@@ -425,7 +425,12 @@ check_public_surface() {
     unset ZELLIJ_PANE_ID &&
     rm -f \"\$HOME/zellij-lock-watch.log\" &&
     PATH=\"$stub_bin:\$PATH\" ZELLIJ=1 ZELLIJ_PANE_ID=7 ZELLIJ_SESSION_NAME=test-session __ravy_zellij_lock_watch_start &&
-    sleep 0.1 &&
+    __ravy_wait_i=0 &&
+    while [ \"\$__ravy_wait_i\" -lt 50 ]; do
+      grep -Fx 'watch session=test-session pane=7' \"\$HOME/zellij-lock-watch.log\" >/dev/null 2>&1 && break
+      __ravy_wait_i=\$((__ravy_wait_i + 1))
+      sleep 0.1
+    done &&
     grep -Fx 'watch session=test-session pane=7' \"\$HOME/zellij-lock-watch.log\" >/dev/null 2>&1 &&
     $fn_check __ravy_starship_init >/dev/null &&
     $fn_check __ravy_zoxide_init >/dev/null &&

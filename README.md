@@ -32,9 +32,10 @@ When `RAVY_PRIVATE_HOME` is not set, the private repo defaults to
 
 ## Cloudtop
 
-The bundled `cloudtop` helper routes through `/bin/sh -lc` and attaches to
-zellij by default. It checks `PATH`, `mise which zellij`, and common Homebrew
-install prefixes. Use `cloudtop --mosh` for mosh transport.
+The bundled `cloudtop` helper caches a small attach script on remote machines
+under `~/.cache/cloudtop/<5-char-hash>/attach`, then routes through
+`/bin/sh -lc` and attaches to zellij. It checks `PATH`, `mise which zellij`,
+and common Homebrew install prefixes. Use `cloudtop --mosh` for mosh transport.
 The shorter `cl` command is a shim for `cloudtop`. Running `cloudtop` or `cl`
 without a host attaches to a local session without opening an SSH connection.
 

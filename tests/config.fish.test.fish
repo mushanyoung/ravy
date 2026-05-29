@@ -278,6 +278,16 @@ function assert_contains --argument-names needle
     end
 end
 
+function wait_for_file_line --argument-names file expected
+    for wait_attempt in (seq 1 50)
+        if grep -Fx -- "$expected" "$file" >/dev/null 2>/dev/null
+            return 0
+        end
+        sleep 0.1
+    end
+    return 1
+end
+
 function check_ssh_auth_sock_bridge
     set -l agent_cmd (command -s ssh-agent)
     if test -z "$agent_cmd"
@@ -467,12 +477,11 @@ set -gx ZELLIJ 1
 set -gx ZELLIJ_PANE_ID 7
 set -gx ZELLIJ_SESSION_NAME test-session
 __ravy_zellij_lock_watch_start
-sleep 0.1
+wait_for_file_line "$HOME/zellij-lock-watch.log" "watch session=test-session pane=7"
+or fail "interactive shell can start zellij-lock-watch inside Zellij"
 set -e ZELLIJ
 set -e ZELLIJ_PANE_ID
 set -e ZELLIJ_SESSION_NAME
-grep -Fx "watch session=test-session pane=7" "$HOME/zellij-lock-watch.log" >/dev/null
-or fail "interactive shell can start zellij-lock-watch inside Zellij"
 
 rm -f "$HOME/mise.log" "$HOME/sudo.log"
 rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib"
