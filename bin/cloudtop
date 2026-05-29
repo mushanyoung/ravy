@@ -3,7 +3,7 @@
 
 usage() {
   cat <<'EOF'
-Usage: cloudtop [--ssh|--mosh] [--zellij] [--] [host] [transport args...]
+Usage: cloudtop [--ssh|--mosh] [--] [host] [transport args...]
 
 Without a host, attaches to a local zellij session.
 With a host, defaults to ssh transport and zellij on the remote host.
@@ -11,7 +11,6 @@ With a host, defaults to ssh transport and zellij on the remote host.
 Options:
   --ssh       Use ssh transport (default)
   --mosh      Use mosh transport
-  --zellij    Attach to a zellij session (default)
   -h, --help  Show this help
 EOF
 }
@@ -47,12 +46,13 @@ find_zellij() {
     fi
 
     install_dir=$(mise where zellij 2>/dev/null || true)
-    for candidate in "$install_dir/zellij" "$install_dir/bin/zellij"; do
-      [ -n "$install_dir" ] || continue
-      [ -x "$candidate" ] || continue
-      printf '%s\n' "$candidate"
-      return 0
-    done
+    if [ -n "$install_dir" ]; then
+      for candidate in "$install_dir/zellij" "$install_dir/bin/zellij"; do
+        [ -x "$candidate" ] || continue
+        printf '%s\n' "$candidate"
+        return 0
+      done
+    fi
   fi
 
   for candidate in \
@@ -62,7 +62,6 @@ find_zellij() {
     "$HOME/.brew/bin/zellij" \
     /usr/local/bin/zellij
   do
-    [ -n "$candidate" ] || continue
     [ -x "$candidate" ] || continue
     printf '%s\n' "$candidate"
     return 0
@@ -169,12 +168,13 @@ find_zellij() {
         fi
 
         install_dir=$(mise where zellij 2>/dev/null || true)
-        for candidate in "$install_dir/zellij" "$install_dir/bin/zellij"; do
-            [ -n "$install_dir" ] || continue
-            [ -x "$candidate" ] || continue
-            printf '%s\n' "$candidate"
-            return 0
-        done
+        if [ -n "$install_dir" ]; then
+            for candidate in "$install_dir/zellij" "$install_dir/bin/zellij"; do
+                [ -x "$candidate" ] || continue
+                printf '%s\n' "$candidate"
+                return 0
+            done
+        fi
     fi
 
     for candidate in \
@@ -184,7 +184,6 @@ find_zellij() {
         "$HOME/.brew/bin/zellij" \
         /usr/local/bin/zellij
     do
-        [ -n "$candidate" ] || continue
         [ -x "$candidate" ] || continue
         printf '%s\n' "$candidate"
         return 0
@@ -238,18 +237,18 @@ validate_mosh_helper_args() {
 
 build_cached_remote_command() {
   local enable_agent_bridge=$1
+  local helper_hash
   local remote_exec_script
   local remote_install_script
 
   remote_helper_script=$(cloudtop_remote_helper_script)
-  remote_helper_hash=$(hash_text "$remote_helper_script") || exit 1
-  remote_helper_enabled=1
+  helper_hash=$(hash_text "$remote_helper_script") || exit 1
 
-  remote_install_script="helper_dir=\$HOME/.cache/cloudtop/$remote_helper_hash; helper_path=\$helper_dir/attach; if [ -x \"\$helper_path\" ]; then exit 0; fi; umask 077; mkdir -p \"\$helper_dir\" || exit 1; tmp_path=\"\$helper_dir/attach.\$\$\"; rm -f \"\$tmp_path\"; cat > \"\$tmp_path\" || exit 1; chmod 700 \"\$tmp_path\" || { rm -f \"\$tmp_path\"; exit 1; }; if [ -x \"\$helper_path\" ]; then rm -f \"\$tmp_path\"; else mv -f \"\$tmp_path\" \"\$helper_path\" || { rm -f \"\$tmp_path\"; exit 1; }; fi"
+  remote_install_script="helper_dir=\$HOME/.cache/cloudtop/$helper_hash; helper_path=\$helper_dir/attach; if [ -x \"\$helper_path\" ]; then exit 0; fi; umask 077; mkdir -p \"\$helper_dir\" || exit 1; tmp_path=\"\$helper_dir/attach.\$\$\"; rm -f \"\$tmp_path\"; cat > \"\$tmp_path\" || exit 1; chmod 700 \"\$tmp_path\" || { rm -f \"\$tmp_path\"; exit 1; }; if [ -x \"\$helper_path\" ]; then rm -f \"\$tmp_path\"; else mv -f \"\$tmp_path\" \"\$helper_path\" || { rm -f \"\$tmp_path\"; exit 1; }; fi"
   remote_helper_install_cmd="/bin/sh -lc $(shell_quote "$remote_install_script")"
 
-  remote_exec_script="exec \"\$HOME/.cache/cloudtop/$remote_helper_hash/attach\" $enable_agent_bridge"
-  remote_exec_cmd="/bin/sh -lc $(shell_quote "$remote_exec_script")"
+  remote_exec_script="exec \"\$HOME/.cache/cloudtop/$helper_hash/attach\" $enable_agent_bridge"
+  remote_exec_cmd="exec ~/.cache/cloudtop/$helper_hash/attach $enable_agent_bridge"
   remote_exec_argv=(/bin/sh -lc "$remote_exec_script")
 }
 
@@ -257,9 +256,7 @@ build_remote_command() {
   local script
   local enable_agent_bridge=0
 
-  remote_helper_enabled=0
   remote_helper_script=
-  remote_helper_hash=
   remote_helper_install_cmd=
 
   if [ -n "${CLOUDTOP_EXEC_CMD:-}" ]; then
@@ -287,7 +284,7 @@ install_remote_helper() {
   local -a command
   local -a install_opts
 
-  [ "${remote_helper_enabled:-0}" = 1 ] || return 0
+  [ -n "${remote_helper_script:-}" ] || return 0
 
   install_opts=("${ssh_install_opts[@]}")
   if [ "$transport" = "mosh" ] && [ -n "$mosh_ssh_port" ]; then
@@ -363,8 +360,9 @@ mosh_command=${MOSH_COMMAND:-mosh}
 mosh_ssh_port=${MOSH_SSH_PORT:-}
 ssh_alive_interval=${SSH_ALIVE_INTERVAL:-10}
 reconnect_interval=${RECONNECT_INTERVAL:-10}
-ssh_default_opts=("-t" "-S" "none" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
-ssh_install_opts=("-T" "-S" "none" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
+ssh_common_opts=("-S" "none" "-oCompression=yes" "-oCheckHostIP=no" "-oServerAliveInterval=${ssh_alive_interval}")
+ssh_default_opts=("-t" "${ssh_common_opts[@]}")
+ssh_install_opts=("-T" "${ssh_common_opts[@]}")
 mosh_default_opts=("-a" "-o")
 
 build_remote_command

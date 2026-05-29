@@ -296,6 +296,7 @@ eval \"\$last\"
   assert_equal "$(awk 'END { print NR }' "$tmp_root/cache-zellij.log")" "2" "remote cloudtop should attach through the cached helper on both runs"
   assert_file_contains "$tmp_root/cache-ssh-args.log" '\.cache/cloudtop/[0-9a-f]{5}/attach' "remote cloudtop should execute the cached helper path"
   assert_file_not_contains "$tmp_root/cache-ssh-args.log" 'find_zellij' "remote cloudtop should not inline helper function bodies in SSH argv"
+  assert_file_contains "$tmp_root/cache-ssh-args.log" '^exec ~/[.]cache/cloudtop/[0-9a-f]{5}/attach 1$' "remote cloudtop should exec the cached helper directly over SSH"
 }
 
 test_mosh_uses_cached_helper() {
