@@ -60,7 +60,7 @@ is_lock_mode_pane() {
   command_base=${command_word##*/}
 
   case "$command_base" in
-    codex* | nvim* | vim* | view*)
+    codex* | claude* | nvim* | vim* | view*)
       return 0
       ;;
   esac
