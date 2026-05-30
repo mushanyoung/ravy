@@ -11,6 +11,5 @@ if OS.mac?
   brew "macism"
   brew "lftp"
 
-  cask "cloudflare-warp"
   cask "font-inconsolata-nerd-font"
 end
