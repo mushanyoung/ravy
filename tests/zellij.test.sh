@@ -34,6 +34,15 @@ assert_file_contains() {
   fi
 }
 
+assert_file_not_contains() {
+  local path=$1
+  local unexpected=$2
+  local msg=$3
+  if grep -F "$unexpected" "$path" >/dev/null 2>&1; then
+    fail "$msg"
+  fi
+}
+
 write_locked_block() {
   local source_config=$1
   local locked_block=$2
@@ -113,6 +122,14 @@ render_zellij_config() {
     "non-locked modes should keep Alt 0 normal-mode behavior"
   assert_file_contains "$rendered_config" 'support_kitty_keyboard_protocol false' \
     "zellij should disable kitty keyboard protocol for Codex TUI stability across detach"
+  assert_file_contains "$rendered_config" 'Run "zellij-safe-detach" {' \
+    "detach binding should run the safe detach helper"
+  assert_file_contains "$rendered_config" 'floating true' \
+    "safe detach helper should run in a floating pane"
+  assert_file_contains "$rendered_config" 'close_on_exit true' \
+    "safe detach helper pane should close after detach"
+  assert_file_not_contains "$rendered_config" 'bind "d" { Detach; }' \
+    "detach binding should not detach directly from the focused app pane"
 }
 
 write_zellij_stub() {
@@ -182,6 +199,30 @@ run_watcher_case() {
   assert_equal "$actual_modes" "$expected_modes" "$name should switch to expected mode"
 }
 
+run_safe_detach_case() {
+  local name=$1
+  local zellij_env=$2
+  local expected_log=$3
+  local actual_log
+
+  : >"$tmp_root/safe-detach.log"
+
+  if [ -n "$zellij_env" ]; then
+    PATH="$tmp_root/bin:$PATH" \
+      ZELLIJ="$zellij_env" \
+      ZELLIJ_STUB_LOG="$tmp_root/safe-detach.log" \
+      "$repo_root/bin/zellij-safe-detach"
+  else
+    env -u ZELLIJ \
+      PATH="$tmp_root/bin:$PATH" \
+      ZELLIJ_STUB_LOG="$tmp_root/safe-detach.log" \
+      "$repo_root/bin/zellij-safe-detach"
+  fi
+
+  actual_log=$(cat "$tmp_root/safe-detach.log")
+  assert_equal "$actual_log" "$expected_log" "$name should call expected zellij actions"
+}
+
 setup_tmp_root
 trap cleanup EXIT
 
@@ -195,6 +236,14 @@ else
   run_watcher_case "normal-command" "/opt/homebrew/bin/fish" "~" 1 "normal"
   run_watcher_case "title-prefix" "/bin/sh" "$(printf '\342\234\217\357\270\217  file')" 1 "locked"
   run_watcher_case "deduplicates" "nvim /tmp/file" "file" 2 "locked"
+
+  write_stub "$tmp_root/bin/zellij" '#!/usr/bin/env bash
+set -euo pipefail
+
+printf "%s\n" "$*" >>"$ZELLIJ_STUB_LOG"
+'
+  run_safe_detach_case "safe-detach-outside-zellij" "" ""
+  run_safe_detach_case "safe-detach-inside-zellij" "0" $'action switch-mode normal\naction detach'
 fi
 
 if [ "$failures" -eq 0 ]; then

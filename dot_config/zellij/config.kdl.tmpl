@@ -256,7 +256,18 @@ keybinds clear-defaults=true {
         bind "esc" { UndoRenamePane; SwitchToMode "pane"; }
     }
     shared_among "session" "tmux" {
-        bind "d" { Detach; }
+        bind "d" {
+            Run "zellij-safe-detach" {
+                floating true
+                close_on_exit true
+                borderless true
+                width 1
+                height 1
+                x 0
+                y 0
+                name "detach"
+            }
+        }
     }
     tmux {
         bind "left" { MoveFocus "left"; SwitchToMode "normal"; }

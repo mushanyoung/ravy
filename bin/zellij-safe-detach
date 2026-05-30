@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -u
+
+[ -n "${ZELLIJ:-}" ] || exit 0
+command -v zellij >/dev/null 2>&1 || exit 0
+
+zellij action switch-mode normal >/dev/null 2>&1 || true
+zellij action detach >/dev/null 2>&1 || true
