@@ -111,6 +111,7 @@ make test
 ```
 
 `make test` now covers bash, zsh, fish, install, Neovim rendering, and cloudtop.
+Use a narrower target such as `make test-nvim` when iterating on one area.
 
 ## Recommended Setup
 
