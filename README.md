@@ -100,7 +100,7 @@ chez private edit ~/.config/ravy/secrets.tsv
 
 Once installed, open Neovim and install plugins:
 
-```
+```vim
 :Lazy sync
 ```
 
