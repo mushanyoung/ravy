@@ -117,5 +117,5 @@ Use a narrower target such as `make test-nvim` when iterating on one area.
 
 For the best experience, we recommend:
 
-- [**iTerm2**](https://www.iterm2.com/)
+- [**iTerm2**](https://iterm2.com/)
 - [**nerd-fonts**](https://github.com/ryanoasis/nerd-fonts)
