@@ -15,13 +15,13 @@ unchanged.
 Public-only install:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh | bash -s
+curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/main/install.sh | bash -s
 ```
 
 Public + private install:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/master/install.sh | \
+curl -fsSL https://raw.githubusercontent.com/mushanyoung/ravy/main/install.sh | \
   RAVY_PRIVATE_REPO=git@github.com:mushanyoung/custom.git bash -s
 ```
 
