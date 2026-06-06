@@ -6,9 +6,9 @@ brew "pv"
 
 if OS.mac?
   tap "laishulu/homebrew"
+  brew "laishulu/homebrew/macism"
 
   brew "socat"
-  brew "macism"
   brew "lftp"
 
   cask "font-inconsolata-nerd-font"
