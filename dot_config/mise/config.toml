@@ -22,3 +22,4 @@ atuin = "latest"
 
 [settings]
 python.uv_venv_auto = false
+minimum_release_age = "0d"
