@@ -3,6 +3,7 @@ brew "fish"
 brew "imagemagick"
 brew "universal-ctags"
 brew "pv"
+brew "gpg"
 
 if OS.mac?
   tap "laishulu/homebrew"
