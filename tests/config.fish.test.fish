@@ -145,6 +145,16 @@ fi
 exit 0
 "
 
+    __write_stub hermes "#!/usr/bin/env sh
+if [ \"\$1\" = \"completion\" ] && [ \"\$2\" = \"fish\" ]; then
+  cat <<'EOF'
+complete -c hermes -f -a 'chat config model auth'
+EOF
+  exit 0
+fi
+exit 0
+"
+
     __write_stub codex "#!/usr/bin/env sh
 printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
 exit 0
@@ -423,6 +433,8 @@ assert_equal "$CARAPACE_BRIDGES" zsh,fish,bash "carapace bridges default to zsh,
 assert_equal "$CARAPACE_EXCLUDES" brew,git "carapace excludes default to brew,git"
 complete -C "bun " | string match -q '*install*'
 or fail "carapace provides bun completions"
+complete -C "hermes " | string match -q '*chat*'
+or fail "Hermes fish completions are initialized when hermes exists"
 assert_true "test \"$__RAVY_MISE_INIT\" = 1" "mise activated"
 assert_true "functions -q d" "cd helper function defined"
 assert_true "functions -q ravy" "ravy helper defined"

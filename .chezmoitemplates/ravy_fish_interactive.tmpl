@@ -24,6 +24,10 @@ if command -q carapace
     carapace _carapace | source
 end
 
+if command -q hermes
+    hermes completion fish | source
+end
+
 # functions
 function imv
     set -l src
