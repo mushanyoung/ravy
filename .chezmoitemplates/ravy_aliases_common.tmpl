@@ -40,7 +40,7 @@ alias {{ .name }}='{{ .cmd }}'
 if command -q brew
 alias bi "brew install --force-bottle"
 alias blr "brew list --installed-on-request"
-alias bubu "brew update && brew outdated && brew upgrade && brew cleanup"
+alias bubu "brew update && brew upgrade -y && brew cleanup"
 end
 
 if command -q pacman
