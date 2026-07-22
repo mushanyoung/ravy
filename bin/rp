@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Use passed arguments, or default to current directory "."
+targets=("${@:-.}")
+
+for target in "${targets[@]}"; do
+  if p="$(realpath "$target" 2>/dev/null)"; then
+    echo "${p/#"$HOME"/~}"
+  else
+    # Output error if realpath fails (e.g., file doesn't exist)
+    realpath "$target"
+  fi
+done
