@@ -88,7 +88,7 @@ assert_mode() {
   local expected=$2
   local actual
 
-  actual=$(stat -f '%Lp' "$path" 2>/dev/null || stat -c '%a' "$path" 2>/dev/null) || {
+  actual=$(stat -c '%a' "$path" 2>/dev/null || stat -f '%Lp' "$path" 2>/dev/null) || {
     fail "could not read mode for $path"
     return
   }
@@ -160,7 +160,7 @@ exit 1
   write_stub "$tmp_home/bin/git" "#!/usr/bin/env sh
 printf '%s\n' \"git \$*\" >> \"\$HOME/git.log\"
 file_mode() {
-  stat -f '%Lp' \"\$1\" 2>/dev/null || stat -c '%a' \"\$1\"
+  stat -c '%a' \"\$1\" 2>/dev/null || stat -f '%Lp' \"\$1\"
 }
 if [ \"\${1:-}\" = -C ] && [ \"\${3:-}\" = pull ]; then
   printf 'git pull_source_path=%s mode=%s\\n' \"\$2\" \"\$(file_mode \"\$2\")\" >> \"\$HOME/git.log\"
@@ -318,7 +318,7 @@ if [ \"\$subcommand\" = \"init\" ]; then
   done
   if [ \"\$source_path\" = \"$repo_root\" ]; then
     if [ -n \"\${RAVY_PRIVATE_HOME:-}\" ] && [ -d \"\$RAVY_PRIVATE_HOME\" ]; then
-      private_mode=\$(stat -f '%Lp' \"\$RAVY_PRIVATE_HOME\" 2>/dev/null || stat -c '%a' \"\$RAVY_PRIVATE_HOME\")
+      private_mode=\$(stat -c '%a' \"\$RAVY_PRIVATE_HOME\" 2>/dev/null || stat -f '%Lp' \"\$RAVY_PRIVATE_HOME\")
       printf 'public_init_private_mode=%s\\n' \"\$private_mode\" >> \"$tmp_home/chezmoi.log\"
     fi
     mkdir -p \"$tmp_home/.config/mise/conf.d\"
@@ -439,6 +439,31 @@ trap '
     fi
   done
 ' EXIT
+
+# GNU stat accepts -f but prints filesystem details, so a successful -f call
+# cannot be used as the portability probe for file mode detection.
+write_stub "$tmp_home/bin/stat" "#!/usr/bin/env sh
+case \"\${1:-}\" in
+  -f)
+    printf '%s\\n' 'GNU filesystem details, not a file mode'
+    exit 0
+    ;;
+  -c)
+    printf '%s\\n' '700'
+    exit 0
+    ;;
+esac
+exit 1
+"
+old_path=$PATH
+PATH="$tmp_home/bin:$PATH"
+mode_failures_before=$failures
+assert_mode "$tmp_home" 700
+PATH=$old_path
+if [ "$failures" -ne "$mode_failures_before" ]; then
+  fail "assert_mode should prefer GNU stat -c over GNU stat -f"
+fi
+guard_exec "$tmp_home" rm -f "$tmp_home/bin/stat"
 
 RAVY_GIT_BIN="$tmp_home/missing-git"
 result=$(run_install)
