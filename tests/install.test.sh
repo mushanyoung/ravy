@@ -83,6 +83,20 @@ assert_output_contains() {
   fi
 }
 
+assert_mode() {
+  local path=$1
+  local expected=$2
+  local actual
+
+  actual=$(stat -f '%Lp' "$path" 2>/dev/null || stat -c '%a' "$path" 2>/dev/null) || {
+    fail "could not read mode for $path"
+    return
+  }
+  if [ "$actual" != "$expected" ]; then
+    fail "$path mode is $actual, expected $expected"
+  fi
+}
+
 setup_home() {
   tmp_home=$(mktemp -d "$repo_root/.tmp_install_home.XXXXXX")
   tmp_homes+=("$tmp_home")
@@ -145,10 +159,17 @@ exit 1
 
   write_stub "$tmp_home/bin/git" "#!/usr/bin/env sh
 printf '%s\n' \"git \$*\" >> \"\$HOME/git.log\"
+file_mode() {
+  stat -f '%Lp' \"\$1\" 2>/dev/null || stat -c '%a' \"\$1\"
+}
+if [ \"\${1:-}\" = -C ] && [ \"\${3:-}\" = pull ]; then
+  printf 'git pull_source_path=%s mode=%s\\n' \"\$2\" \"\$(file_mode \"\$2\")\" >> \"\$HOME/git.log\"
+fi
 if [ \"\${1:-}\" = clone ]; then
   target=\"\${3:-}\"
   if [ -n \"\$target\" ]; then
     mkdir -p \"\$target/.git\" \"\$target/bootstrap\"
+    printf 'git clone_target_mode=%s\\n' \"\$(file_mode \"\$target\")\" >> \"\$HOME/git.log\"
     touch \"\$target/bootstrap/key.txt.age\"
     printf '%s\n' '#!/usr/bin/env sh' 'exit 0' > \"\$target/install.sh\"
     chmod +x \"\$target/install.sh\"
@@ -296,6 +317,10 @@ if [ \"\$subcommand\" = \"init\" ]; then
     esac
   done
   if [ \"\$source_path\" = \"$repo_root\" ]; then
+    if [ -n \"\${RAVY_PRIVATE_HOME:-}\" ] && [ -d \"\$RAVY_PRIVATE_HOME\" ]; then
+      private_mode=\$(stat -f '%Lp' \"\$RAVY_PRIVATE_HOME\" 2>/dev/null || stat -c '%a' \"\$RAVY_PRIVATE_HOME\")
+      printf 'public_init_private_mode=%s\\n' \"\$private_mode\" >> \"$tmp_home/chezmoi.log\"
+    fi
     mkdir -p \"$tmp_home/.config/mise/conf.d\"
     printf '%s\n' \
       '[tools]' \
@@ -442,7 +467,9 @@ output=${output%$'\n__RAVY_END__'}
 assert_status_zero "$status_code" 'install.sh default private clone path failed' "$output"
 
 default_private="$tmp_home/.local/share/chezmoi/custom"
+assert_mode "$default_private" 700
 assert_file_contains "$tmp_home/git.log" "git clone git@example.com:mushanyoung/custom.git $default_private"
+assert_file_contains "$tmp_home/git.log" "git clone_target_mode=700"
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$default_private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml"
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$default_private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb"
 assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/key.txt $default_private/bootstrap/key.txt.age"
@@ -453,13 +480,17 @@ setup_home
 guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create
 printf '%s\n' 'Host legacy' '    HostName legacy.example' > "$tmp_home/legacy-ssh.config"
 guard_exec "$tmp_home" ln -s "$tmp_home/legacy-ssh.config" "$tmp_home/.ssh/config"
+guard_exec "$tmp_home" chmod 755 "$tmp_home/private"
+assert_mode "$tmp_home/private" 755
 
 result=$(run_install)
 status_code=${result%%$'\n'*}
 output=${result#*$'\n__RAVY_OUTPUT__\n'}
 output=${output%$'\n__RAVY_END__'}
 assert_status_zero "$status_code" 'install.sh failed' "$output"
+assert_file_contains "$tmp_home/chezmoi.log" "public_init_private_mode=700"
 
+assert_mode "$tmp_home/private" 700
 assert_not_symlink "$tmp_home/.config/ravy/private.gitconfig"
 assert_not_symlink "$tmp_home/.config/ravy/ssh.config"
 assert_not_symlink "$tmp_home/.ssh/config"
@@ -479,6 +510,18 @@ assert_file_contains "$tmp_home/mise.log" "token=install-token"
 assert_file_contains "$tmp_home/brew.log" "bundle install file=$tmp_home/.config/homebrew/Brewfile env=$tmp_home/.config/homebrew/Brewfile cwd=$tmp_home/.config/homebrew"
 assert_file_contains "$tmp_home/etc/shells" "$tmp_home/linuxbrew/opt/fish/bin/fish"
 assert_file_contains "$tmp_home/chsh.log" "-s $tmp_home/linuxbrew/opt/fish/bin/fish test-user"
+
+# Existing private checkout must be protected before git pull reads it.
+guard_exec "$tmp_home" chmod 755 "$tmp_home/private"
+: > "$tmp_home/git.log"
+RAVY_TEST_PRIVATE_REPO="git@example.com:mushanyoung/custom.git"
+result=$(run_install)
+unset RAVY_TEST_PRIVATE_REPO
+status_code=${result%%$'\n'*}
+output=${result#*$'\n__RAVY_OUTPUT__\n'}
+output=${output%$'\n__RAVY_END__'}
+assert_status_zero "$status_code" 'existing private checkout reinstall failed' "$output"
+assert_file_contains "$tmp_home/git.log" "git pull_source_path=$tmp_home/private mode=700"
 
 setup_home
 guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create

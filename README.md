@@ -67,12 +67,18 @@ On a fresh machine:
    from `$HOME`. The rendered mise config includes `custom/mise/config.toml`
    when the private repo is available.
 
+The optional private source is applied with its own chezmoi config/state files and
+its checkout root is forced to mode `0700` before any private material is read.
 Managed private targets now include:
 
 - `~/.config/ravy/secrets.tsv`
 - `~/.config/ravy/secrets.sh`
 - `~/.config/ravy/secrets.fish`
 - `~/.config/ravy/private.gitconfig`
+- `~/.config/ravy/max-insights.gitconfig`
+- `~/.config/ravy/git-allowed-signers`
+- `~/.config/ravy/git-signing-key.pub`
+- `~/.config/ravy/local-signing.gitconfig` (host-specific signing override)
 - `~/.config/ravy/ssh.config`
 - `~/.config/ravy/docker-compose.yml`
 - `~/.config/ravy/singbox/singbox.base.jsont`

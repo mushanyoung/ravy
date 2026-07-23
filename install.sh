@@ -29,6 +29,17 @@ warn() {
   echo -e "${YELLOW}${BOLD}==>${RESET} ${BOLD}$1${RESET}"
 }
 
+protect_private_source_root() {
+  local path=$1
+  if { [ -e "$path" ] || [ -L "$path" ]; } && [ ! -d "$path" ]; then
+    error "Private Ravy source path exists but is not a directory: $path"
+    return 1
+  fi
+  if [ -d "$path" ]; then
+    __el chmod 700 "$path"
+  fi
+}
+
 # execute with log
 __el() {
   echo -e "${BOLD}  > $*${RESET}"
@@ -612,6 +623,7 @@ RAVY_CHEZMOI_PRIVATE_CONFIG="${RAVY_CHEZMOI_PRIVATE_CONFIG:-$RAVY_CHEZMOI_CONFIG
 RAVY_CHEZMOI_PRIVATE_STATE="${RAVY_CHEZMOI_PRIVATE_STATE:-$RAVY_CHEZMOI_CONFIG_DIR/ravy-private-state.boltdb}"
 export RAVY_PRIVATE_HOME
 export RAVY_HOME
+protect_private_source_root "$RAVY_PRIVATE_HOME"
 
 __el mkdir -p "$RAVY_CHEZMOI_CONFIG_DIR"
 
@@ -622,17 +634,20 @@ else
   run_chezmoi init --apply "$RAVY_REPO"
 fi
 
-if [ -n "$RAVY_PRIVATE_REPO" ]; then
+if [ -n "${RAVY_PRIVATE_REPO:-}" ]; then
   info "Syncing optional private overlay"
   __el mkdir -p "$(dirname "$RAVY_PRIVATE_HOME")"
+  protect_private_source_root "$RAVY_PRIVATE_HOME"
   if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
     __el "$GIT_BIN" -C "$RAVY_PRIVATE_HOME" pull --ff-only
   else
-    __el "$GIT_BIN" clone "$RAVY_PRIVATE_REPO" "$RAVY_PRIVATE_HOME"
+    (umask 077 && __el "$GIT_BIN" clone "$RAVY_PRIVATE_REPO" "$RAVY_PRIVATE_HOME")
+    __el chmod 700 "$RAVY_PRIVATE_HOME"
   fi
 fi
 
 if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
+  __el chmod 700 "$RAVY_PRIVATE_HOME"
   ensure_age
   bootstrap_private_age_identity "$RAVY_PRIVATE_HOME"
 fi

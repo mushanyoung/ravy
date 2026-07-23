@@ -1,5 +1,3 @@
-[url "git@github.com:"]
-    insteadOf = https://github.com/
 [apply]
   whitespace = fix
 [init]
@@ -135,5 +133,20 @@
   dd9 = !git dd HEAD~9 HEAD
 
 
+; Personal author identity is the fallback for unmapped owners.
 [include]
   path = ~/.config/ravy/private.gitconfig
+
+; max-insights worktrees override only the author profile. GitHub authentication
+; remains the active mushanyoung gh account for every owner.
+[includeIf "gitdir:~/worktrees/github.com/max-insights/**"]
+  path = ~/.config/ravy/max-insights.gitconfig
+
+; Use the authenticated GitHub CLI account as the HTTPS credential helper
+; without storing a token in this file or in remote URLs.
+[credential "https://github.com"]
+  helper =
+  helper = !/usr/bin/env gh auth git-credential
+[credential "https://gist.github.com"]
+  helper =
+  helper = !/usr/bin/env gh auth git-credential
