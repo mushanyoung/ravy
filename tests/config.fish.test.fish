@@ -41,6 +41,7 @@ if not set -q RAVY_TEST_CHILD
 
     __guard_exec "$tmp_home" mkdir -p $stub_bin \
         "$tmp_home/.config/fish" \
+        "$tmp_home/.config/fish/completions" \
         "$tmp_home/.config/chezmoi" \
         "$tmp_home/.config/ravy" \
         "$tmp_home/.local/bin" \
@@ -146,6 +147,7 @@ exit 0
 "
 
     __write_stub hermes "#!/usr/bin/env sh
+printf '%s\n' \"\$*\" >> \"\$HOME/hermes.log\"
 if [ \"\$1\" = \"completion\" ] && [ \"\$2\" = \"fish\" ]; then
   cat <<'EOF'
 complete -c hermes -f -a 'chat config model auth'
@@ -381,13 +383,16 @@ end
 
 set -l expected_ravy_home (realpath "$repo_root")
 set -g rendered_config "$HOME/.config/fish/config.fish"
+set -g rendered_hermes_completion "$HOME/.config/fish/completions/hermes.fish"
 set -g rendered_key_bindings "$HOME/.config/fish/functions/fish_user_key_bindings.fish"
 set -g rendered_theme "$HOME/.config/fish/themes/ravy.theme"
 
 mkdir -p (dirname $rendered_config)
+mkdir -p (dirname $rendered_hermes_completion)
 mkdir -p (dirname $rendered_key_bindings)
 mkdir -p (dirname $rendered_theme)
 chezmoi cat "$rendered_config" > $rendered_config
+chezmoi cat "$rendered_hermes_completion" > $rendered_hermes_completion
 chezmoi cat "$rendered_key_bindings" > $rendered_key_bindings
 chezmoi cat "$rendered_theme" > $rendered_theme
 
@@ -435,6 +440,9 @@ complete -C "bun " | string match -q '*install*'
 or fail "carapace provides bun completions"
 complete -C "hermes " | string match -q '*chat*'
 or fail "Hermes fish completions are initialized when hermes exists"
+if test -e "$HOME/hermes.log"
+    fail "Fish startup must not execute Hermes to initialize completions"
+end
 assert_true "test \"$__RAVY_MISE_INIT\" = 1" "mise activated"
 assert_true "functions -q d" "cd helper function defined"
 assert_true "functions -q ravy" "ravy helper defined"
