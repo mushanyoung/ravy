@@ -1,18 +1,31 @@
-#!/usr/bin/env sh
+#!/bin/sh
 #
 # docker compose wrapper
 #
 # If $RAVY_DOCKER_COMPOSE_CONFIG is set, use it as the compose file.
+# Resolve Docker only from fixed installation paths; this wrapper may receive
+# command-scoped credentials and must never delegate executable lookup to PATH.
 #
 set -eu
 
+if [ -x /usr/local/bin/docker ]; then
+  DOCKER=/usr/local/bin/docker
+elif [ -x /opt/homebrew/bin/docker ]; then
+  DOCKER=/opt/homebrew/bin/docker
+elif [ -x /usr/bin/docker ]; then
+  DOCKER=/usr/bin/docker
+else
+  printf '%s\n' 'docker command is unavailable' >&2
+  exit 127
+fi
+
 if [ -n "${RAVY_DOCKER_COMPOSE_CONFIG:-}" ]; then
   if [ -f ./compose.yml ] || [ -f ./compose.yaml ] || [ -f ./docker-compose.yml ] || [ -f ./docker-compose.yaml ]; then
-    exec docker compose "$@"
+    exec "$DOCKER" compose "$@"
   else
-    exec docker compose --file "$RAVY_DOCKER_COMPOSE_CONFIG" "$@"
+    exec "$DOCKER" compose --file "$RAVY_DOCKER_COMPOSE_CONFIG" "$@"
   fi
 else
-  exec docker compose "$@"
+  exec "$DOCKER" compose "$@"
 fi
 
