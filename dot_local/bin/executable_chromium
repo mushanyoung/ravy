@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+chromium='/Applications/Chromium.app/Contents/MacOS/Chromium'
+
+if [ ! -x "$chromium" ]; then
+  printf '%s\n' "chromium: Ungoogled Chromium is not installed at $chromium" >&2
+  exit 127
+fi
+
+exec "$chromium" "$@"
