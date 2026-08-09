@@ -3,3 +3,6 @@
 {{- else if not (stat "/Applications/Chromium.app/Contents/MacOS/Chromium") }}
 .local/bin/chromium
 {{- end }}
+{{- if not (stat (joinPath .chezmoi.homeDir ".local/share/mise/installs/npm-agent-browser/latest/node_modules/.bin/agent-browser")) }}
+.local/bin/agent-browser
+{{- end }}

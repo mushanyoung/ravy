@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+: "${HOME:?HOME is required}"
+agent_browser="$HOME/.local/share/mise/installs/npm-agent-browser/latest/node_modules/.bin/agent-browser"
+
+if [ ! -x "$agent_browser" ]; then
+  printf '%s\n' "agent-browser: mise-managed executable is not installed at $agent_browser" >&2
+  exit 127
+fi
+
+exec "$agent_browser" "$@"
