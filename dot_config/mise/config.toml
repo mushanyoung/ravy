@@ -2,7 +2,7 @@
 chezmoi = "latest"
 age = "latest"
 "aqua:neovim" = "latest"
-python = "3.14.5"
+python = "3.14.7"
 uv = "latest"
 jq = "latest"
 bat = "latest"
