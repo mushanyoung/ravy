@@ -162,11 +162,6 @@ printf '%s\n' \"\$*\" >> \"\$HOME/codex.log\"
 exit 0
 "
 
-    __write_stub zellij-lock-watch "#!/usr/bin/env sh
-printf '%s\n' \"watch session=\${ZELLIJ_SESSION_NAME:-} pane=\${ZELLIJ_PANE_ID:-}\" >> \"\$HOME/zellij-lock-watch.log\"
-exit 0
-"
-
     __write_stub sudo "#!/usr/bin/env sh
 printf \"%s\n\" \"\$*\" >> \"\$HOME/sudo.log\"
 exec \"\$@\"
@@ -490,18 +485,6 @@ set -e ZELLIJ
 set -e ZELLIJ_PANE_ID
 grep -Fx -- "resume abc123" "$HOME/codex.log" >/dev/null
 or fail "codex command should pass args through inside Zellij"
-
-rm -f "$HOME/zellij-lock-watch.log"
-set -gx PATH "$HOME/bin" $PATH
-set -gx ZELLIJ 1
-set -gx ZELLIJ_PANE_ID 7
-set -gx ZELLIJ_SESSION_NAME test-session
-__ravy_zellij_lock_watch_start
-wait_for_file_line "$HOME/zellij-lock-watch.log" "watch session=test-session pane=7"
-or fail "interactive shell can start zellij-lock-watch inside Zellij"
-set -e ZELLIJ
-set -e ZELLIJ_PANE_ID
-set -e ZELLIJ_SESSION_NAME
 
 rm -f "$HOME/mise.log" "$HOME/sudo.log"
 rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib"

@@ -130,73 +130,58 @@ render_zellij_config() {
     "safe detach helper pane should close after detach"
   assert_file_not_contains "$rendered_config" 'bind "d" { Detach; }' \
     "detach binding should not detach directly from the focused app pane"
+
+  # Mode locking is done by the headless autolock plugin, in-process inside the
+  # zellij server. It replaced a 5 Hz shell poller whose liveness probes could
+  # get a live session's socket deleted; see README.
+  assert_file_contains "$rendered_config" 'autolock location="file:/' \
+    "autolock plugin should be referenced by an absolute path, not a bare ~"
+  assert_file_contains "$rendered_config" '/.config/zellij/plugins/zellij-autolock.wasm"' \
+    "autolock plugin should resolve to the zellij plugin dir"
+  assert_file_contains "$rendered_config" 'triggers "nvim|vim|vimdiff|view|codex|claude"' \
+    "autolock should lock for editors and coding agents"
+  assert_file_contains "$rendered_config" 'is_enabled true' \
+    "autolock should be enabled"
+
+  awk '
+    /^[[:space:]]*load_plugins[[:space:]]*\{/ { in_block = 1; next }
+    in_block && /^[[:space:]]*\}[[:space:]]*$/ { exit }
+    in_block { print }
+  ' "$rendered_config" >"$tmp_root/load-plugins.kdl"
+  assert_file_contains "$tmp_root/load-plugins.kdl" 'autolock' \
+    "autolock should be started in the background on every new session"
 }
 
-write_zellij_stub() {
-  write_stub "$tmp_root/bin/zellij" '#!/usr/bin/env bash
-set -euo pipefail
+assert_no_polling_watcher() {
+  if [ -e "$repo_root/bin/zellij-lock-watch" ]; then
+    fail "bin/zellij-lock-watch should be gone: its zellij action polling could delete a live session socket"
+  fi
 
-case "$*" in
-  "action list-tabs --json --state")
-    cat "$ZELLIJ_STUB_TABS"
-    ;;
-  "action list-panes --json --all")
-    cat "$ZELLIJ_STUB_PANES"
-    ;;
-  action\ switch-mode\ *)
-    printf "%s\n" "$3" >>"$ZELLIJ_STUB_MODES"
-    ;;
-  *)
-    printf "unexpected zellij args: %s\n" "$*" >&2
-    exit 1
-    ;;
-esac
-'
+  # Comments may still explain why the poller is gone; nothing may still run it.
+  local hits
+  hits=$(grep -rn 'zellij-lock-watch' \
+    "$repo_root/bin" "$repo_root/.chezmoitemplates" "$repo_root/dot_config" 2>/dev/null |
+    grep -vE ':[[:space:]]*(#|//)' || true)
+  if [ -n "$hits" ]; then
+    fail "zellij-lock-watch is still invoked by: $(echo "$hits" | cut -d: -f1,2 | tr '\n' ' ')"
+  fi
 }
 
-write_watcher_fixture() {
-  local pane_command=$1
-  local pane_title=$2
+assert_plugin_external_is_pinned() {
+  local external="$repo_root/.chezmoiexternal.toml"
 
-  jq -n '[{tab_id: 1, active: true}, {tab_id: 2, active: false}]' >"$tmp_root/tabs.json"
-  jq -n --arg command "$pane_command" --arg title "$pane_title" '
-    [
-      {
-        tab_id: 1,
-        is_focused: true,
-        is_plugin: false,
-        is_selectable: true,
-        pane_command: $command,
-        title: $title
-      }
-    ]
-  ' >"$tmp_root/panes.json"
-}
+  if [ ! -f "$external" ]; then
+    fail ".chezmoiexternal.toml should declare the autolock plugin download"
+    return
+  fi
 
-run_watcher_case() {
-  local name=$1
-  local pane_command=$2
-  local pane_title=$3
-  local iterations=$4
-  local expected_modes=$5
-  local actual_modes
-
-  write_watcher_fixture "$pane_command" "$pane_title"
-  : >"$tmp_root/modes.log"
-
-  PATH="$tmp_root/bin:$PATH" \
-    TMPDIR="$tmp_root/tmp" \
-    ZELLIJ=0 \
-    ZELLIJ_SESSION_NAME="zellij-test-$name" \
-    ZELLIJ_STUB_TABS="$tmp_root/tabs.json" \
-    ZELLIJ_STUB_PANES="$tmp_root/panes.json" \
-    ZELLIJ_STUB_MODES="$tmp_root/modes.log" \
-    ZELLIJ_LOCK_INTERVAL=0 \
-    ZELLIJ_LOCK_ITERATIONS="$iterations" \
-    "$repo_root/bin/zellij-lock-watch"
-
-  actual_modes=$(cat "$tmp_root/modes.log")
-  assert_equal "$actual_modes" "$expected_modes" "$name should switch to expected mode"
+  assert_file_contains "$external" '.config/zellij/plugins/zellij-autolock.wasm' \
+    "autolock plugin should be fetched into the zellij plugin dir"
+  assert_file_contains "$external" 'checksum.sha256' \
+    "autolock plugin download should be checksum-pinned"
+  if grep -E 'url = ".*/(latest|main|master)/' "$external" >/dev/null 2>&1; then
+    fail "autolock plugin download should pin an exact release, not a moving ref"
+  fi
 }
 
 run_safe_detach_case() {
@@ -226,25 +211,17 @@ run_safe_detach_case() {
 setup_tmp_root
 trap cleanup EXIT
 
-if ! command -v jq >/dev/null 2>&1; then
-  fail "jq is required for zellij watcher tests"
-else
-  render_zellij_config
-  write_zellij_stub
-  run_watcher_case "nvim-command" "nvim /tmp/file" "file" 1 "locked"
-  run_watcher_case "codex-command" "codex --yolo" "project" 1 "locked"
-  run_watcher_case "normal-command" "/opt/homebrew/bin/fish" "~" 1 "normal"
-  run_watcher_case "title-prefix" "/bin/sh" "$(printf '\342\234\217\357\270\217  file')" 1 "locked"
-  run_watcher_case "deduplicates" "nvim /tmp/file" "file" 2 "locked"
+render_zellij_config
+assert_no_polling_watcher
+assert_plugin_external_is_pinned
 
-  write_stub "$tmp_root/bin/zellij" '#!/usr/bin/env bash
+write_stub "$tmp_root/bin/zellij" '#!/usr/bin/env bash
 set -euo pipefail
 
 printf "%s\n" "$*" >>"$ZELLIJ_STUB_LOG"
 '
-  run_safe_detach_case "safe-detach-outside-zellij" "" ""
-  run_safe_detach_case "safe-detach-inside-zellij" "0" $'action switch-mode normal\naction detach'
-fi
+run_safe_detach_case "safe-detach-outside-zellij" "" ""
+run_safe_detach_case "safe-detach-inside-zellij" "0" $'action switch-mode normal\naction detach'
 
 if [ "$failures" -eq 0 ]; then
   echo 'All zellij config tests passed'

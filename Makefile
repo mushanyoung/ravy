@@ -20,7 +20,7 @@ help:
 	@echo '  make test-sh        Run bash/zsh config test'
 	@echo '  make test-install   Run installer regression test'
 	@echo '  make test-nvim      Run Neovim config rendering test'
-	@echo '  make test-zellij    Run zellij config and watcher tests'
+	@echo '  make test-zellij    Run zellij config and plugin wiring tests'
 	@echo '  make test-cloudtop  Run cloudtop session naming test'
 
 install:

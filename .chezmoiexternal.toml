@@ -1,0 +1,25 @@
+# External assets downloaded by `chezmoi apply`.
+
+# zellij-autolock: a headless Zellij plugin that switches between "normal" and
+# "locked" mode based on the command running in the focused pane.
+#
+# It replaces bin/zellij-lock-watch, a 5 Hz shell poller that ran two
+# `zellij action` processes per tick, forever, in every session. Each of those
+# opens two IPC connections to the session socket -- one liveness probe from
+# get_sessions() and one real connection -- which measured ~18 connections per
+# second per session, or ~600k over a 9 hour session.
+#
+# That matters because zellij deletes a session's socket file whenever a probe
+# gets ECONNREFUSED (zellij-utils/src/sessions.rs, assert_socket). A live but
+# momentarily busy server returns ECONNREFUSED once its 128-deep accept backlog
+# fills, so a healthy session can lose its socket and become permanently
+# unreachable while its server keeps running. The plugin runs in-process inside
+# the server and opens no sockets at all.
+#
+# Pinned to a release asset and checksummed, so refreshPeriod is long.
+[".config/zellij/plugins/zellij-autolock.wasm"]
+type = "file"
+url = "https://github.com/fresh2dev/zellij-autolock/releases/download/0.2.2/zellij-autolock.wasm"
+refreshPeriod = "8760h"
+checksum.sha256 = "69c95607bfd97e075d6762a44fdbc703a82a3c4909dbbbe43952f020487b8ea4"
+checksum.size = 1118118

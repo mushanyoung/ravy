@@ -46,6 +46,39 @@ socket when `SSH_CONNECTION` is present, so Git operations continue to use the
 current forwarded key after reconnects. Existing panes may need
 `export SSH_AUTH_SOCK=$HOME/.ssh/ssh_auth_sock` once.
 
+## Zellij Mode Locking
+
+Panes running an editor or a coding agent need raw keys, so zellij has to switch
+to `locked` mode while one of them is focused and back to `normal` otherwise.
+That is done by [`zellij-autolock`](https://github.com/fresh2dev/zellij-autolock),
+a headless plugin declared in `dot_config/zellij/config.kdl.tmpl` and downloaded
+by `chezmoi apply` through `.chezmoiexternal.toml` (pinned to a release asset and
+verified by sha256). Add executables to its `triggers` list to lock for them —
+they are matched by exact equality against the focused pane's full command and
+against its executable basename, so list `vimdiff`, not `vim*`.
+
+The first zellij session after installing it asks once to grant the plugin
+`ReadApplicationState` and `ChangeApplicationState`; the grant is cached in
+`permissions.kdl` under zellij's cache dir.
+
+This replaced `bin/zellij-lock-watch`, a shell poller that ran two
+`zellij action` commands every 0.2s in every session, forever. Each of those
+opens two IPC connections to the session socket — one liveness probe from
+`get_sessions()` plus one real connection — which measured about 18 connections
+per second per session, roughly 600k over a 9 hour session.
+
+Every one of those probes could destroy the session. `assert_socket()` in
+`zellij-utils/src/sessions.rs` deletes the socket file when a connect returns
+`ECONNREFUSED`, which is correct for a dead server but also happens on a live
+one whose 128-deep accept backlog is momentarily full. The server then keeps
+running with no socket, no client can ever reach it again, and the next
+`zellij attach --create` silently starts a second server under the same name.
+The plugin runs in-process inside the zellij server and opens no sockets.
+
+Neovim also switches modes directly from `VimEnter`/`VimLeavePre` autocmds. That
+is kept as a fallback for machines where the plugin is missing; it costs a couple
+of connections per editor session rather than a steady stream.
+
 ## Private Bootstrap
 
 Private files are managed by the private `custom` repo as an `age`-encrypted
@@ -116,7 +149,8 @@ Once installed, open Neovim and install plugins:
 make test
 ```
 
-`make test` now covers bash, zsh, fish, install, Neovim rendering, and cloudtop.
+`make test` now covers bash, zsh, fish, install, Neovim rendering, zellij, and
+cloudtop.
 Use a narrower target such as `make test-nvim` when iterating on one area.
 
 ## Recommended Setup

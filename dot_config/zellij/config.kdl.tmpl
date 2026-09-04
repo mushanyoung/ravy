@@ -306,6 +306,19 @@ keybinds clear-defaults=true {
 // changing these requires a restart to take effect
 plugins {
     about location="zellij:about"
+    // Headless plugin that switches between "normal" and "locked" mode based on
+    // the command running in the focused pane, so TUIs that need raw keys
+    // (editors, coding agents) are not intercepted by zellij keybindings.
+    //
+    // This replaces bin/zellij-lock-watch, a 5 Hz shell poller. See README.
+    autolock location="file:{{ .chezmoi.homeDir }}/.config/zellij/plugins/zellij-autolock.wasm" {
+        is_enabled true
+        // Matched by exact equality against the focused pane's full command and
+        // against its executable basename, so list executables, not prefixes.
+        triggers "nvim|vim|vimdiff|view|codex|claude"
+        reaction_seconds "0.3"
+        print_to_log false
+    }
     compact-bar location="zellij:compact-bar"
     configuration location="zellij:configuration"
     filepicker location="zellij:strider" {
@@ -326,6 +339,7 @@ plugins {
 // eg. "https://example.com/my-plugin.wasm"
 load_plugins {
     zellij:link
+    autolock
 }
 web_client {
     font "monospace"
