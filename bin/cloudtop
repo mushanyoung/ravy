@@ -110,6 +110,64 @@ hash_text() {
   printf '%s\n' "$digest" | cut -c 1-5
 }
 
+# Keep this function POSIX-compatible: it is also embedded in the remote helper.
+zellij_attach_checked() {
+    guard_candidate=$1
+    guard_session=$2
+    guard_uid=$(id -u) || return 78
+    guard_processes=$(ps -axo uid=,pid=,command=) || {
+        echo "cloudtop: cannot inspect Zellij servers; refusing to create a session" >&2
+        return 78
+    }
+    guard_servers=$(printf '%s\n' "$guard_processes" | awk -v uid="$guard_uid" -v name="$guard_session" '
+        $1 == uid && $3 ~ /(^|\/)zellij$/ && $4 == "--server" {
+            path = $5
+            for (i = 6; i <= NF; i++) path = path " " $i
+            n = split(path, parts, "/")
+            if (parts[n] == name) print path
+        }
+    ')
+    set -- attach --create "$guard_session"
+    if [ -n "$guard_servers" ]; then
+        guard_paths=$(printf '%s\n' "$guard_servers" | sort -u)
+        guard_path_count=$(printf '%s\n' "$guard_paths" | wc -l | tr -d ' ')
+        if [ "$guard_path_count" -ne 1 ]; then
+            echo "cloudtop: multiple socket locations for '$guard_session'; inspect the running servers before attaching" >&2
+            return 78
+        fi
+        if [ ! -S "$guard_paths" ]; then
+            echo "cloudtop: '$guard_session' still has a running server, but its socket is missing: $guard_paths" >&2
+            echo "Refusing to create a replacement. Preserve the server and inspect ~/.local/state/cloudtop/sockets for recovery links." >&2
+            return 78
+        fi
+        guard_count=$(printf '%s\n' "$guard_servers" | wc -l | tr -d ' ')
+        if [ "$guard_count" -gt 1 ]; then
+            echo "cloudtop: warning: $guard_count servers share '$guard_session'; attaching only to the reachable one" >&2
+        fi
+        guard_contract_dir=${guard_paths%/*}
+        ZELLIJ_SOCKET_DIR=${guard_contract_dir%/*}
+        export ZELLIJ_SOCKET_DIR
+        # A hard link remains usable if a liveness probe unlinks the original.
+        # Keep generations separate; do not overwrite an earlier recovery link.
+        guard_backup_dir=$HOME/.local/state/cloudtop/sockets
+        # Only the numeric inode is consumed, not the filename.
+        # shellcheck disable=SC2012
+        guard_inode=$(ls -id "$guard_paths" | awk '{print $1}')
+        if (umask 077; mkdir -p "$guard_backup_dir"); then
+            guard_backup=$guard_backup_dir/$guard_session-$guard_inode.socket
+            if [ ! -e "$guard_backup" ]; then
+                ln "$guard_paths" "$guard_backup" 2>/dev/null ||
+                    echo "cloudtop: socket recovery link unavailable (possibly different filesystems)" >&2
+            fi
+        fi
+        set -- attach "$guard_session"
+    fi
+    printf '+ %s' "$guard_candidate"
+    printf ' %s' "$@"
+    printf '\n'
+    exec "$guard_candidate" "$@"
+}
+
 cloudtop_remote_helper_script() {
   cat <<'EOF'
 #!/bin/sh
@@ -192,6 +250,10 @@ find_zellij() {
     return 1
 }
 
+EOF
+  declare -f zellij_attach_checked
+  cat <<'EOF'
+
 attach_zellij() {
     session_name=$(zellij_session_name)
 
@@ -200,8 +262,8 @@ attach_zellij() {
         echo "Install it with: mise install zellij" >&2
         exit 127
     }
-    exec "$candidate" attach --forget --create "$session_name"
-    exit 127
+    zellij_attach_checked "$candidate" "$session_name"
+    exit $?
 }
 
 enable_agent_bridge=${1:-0}
@@ -223,9 +285,8 @@ attach_local() {
     zellij_not_found_message
     exit 127
   }
-  print_command "$candidate" attach --forget --create "$session_name"
-  exec "$candidate" attach --forget --create "$session_name"
-  exit 127
+  zellij_attach_checked "$candidate" "$session_name"
+  exit $?
 }
 
 validate_mosh_helper_args() {
@@ -377,10 +438,12 @@ while true; do
     echo "MOSH exits with code $exit_code"
   fi
   case "$exit_code" in
-    0|255)
+    0|78|127|255)
       break
       ;;
   esac
   echo "${transport} connection lost, reconnecting in ${reconnect_interval} seconds..."
   sleep "${reconnect_interval}"
 done
+
+exit "$exit_code"

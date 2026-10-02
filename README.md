@@ -39,6 +39,18 @@ install prefixes. Use `cloudtop --mosh` for mosh transport.
 The shorter `cl` command is a shim for `cloudtop`. Running `cloudtop` or `cl`
 without a host attaches to a local session without opening an SSH connection.
 
+Before attaching, the helper checks for this user's running Zellij servers.
+If a server exists but its socket is missing, it stops instead of silently
+creating a replacement session. A reachable server uses attach without
+`--create`; duplicate servers produce a warning. The live server's socket
+directory is reused even if the caller has a different temporary directory.
+Existing sockets are hard-linked into `~/.local/state/cloudtop/sockets/` for
+manual recovery if the original pathname is removed. Hard links require the
+same filesystem. They preserve access to a running server, not a dead process.
+Session serialization is also enabled for layout/cwd recovery after a restart;
+resurrection cannot restore running process memory. `--forget` was removed:
+in Zellij 0.45.1 it only concerns remote web authentication, not local sessions.
+
 For SSH transport, `cloudtop` bypasses SSH connection sharing and refreshes or
 repairs a stable forwarded-agent socket at `~/.ssh/ssh_auth_sock` before
 attaching. New interactive shells in long-lived remote sessions prefer that

@@ -90,7 +90,7 @@ printf '%s\n' \"\$*\" > \"$tmp_root/zellij.log\"
     PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
     "$repo_root/bin/cloudtop" >/dev/null
 
-  assert_equal "$(cat "$tmp_root/zellij.log")" "attach --forget --create my-remote" "local cloudtop should use 10-char host prefix"
+  assert_equal "$(cat "$tmp_root/zellij.log")" "attach --create my-remote" "local cloudtop should use 10-char host prefix"
 }
 
 test_remote_zellij_session_name() {
@@ -113,7 +113,7 @@ eval "$last"
     SSH_COMMAND="$tmp_root/bin/ssh" \
     "$repo_root/bin/cloudtop" remote.example.com >/dev/null
 
-  assert_equal "$(cat "$tmp_root/remote-zellij.log")" "attach --forget --create remote-mac" "remote cloudtop should compute host prefix on the remote side"
+  assert_equal "$(cat "$tmp_root/remote-zellij.log")" "attach --create remote-mac" "remote cloudtop should compute host prefix on the remote side"
 }
 
 test_local_zellij_mise_fallback() {
@@ -149,7 +149,7 @@ exit 1
     "$repo_root/bin/cloudtop" >/dev/null
 
   assert_equal "$(head -n 1 "$tmp_root/mise.log")" "which zellij" "local cloudtop should ask mise for zellij"
-  assert_equal "$(cat "$tmp_root/mise-zellij.log")" "attach --forget --create my-remote" "local cloudtop should use mise zellij when PATH has no zellij"
+  assert_equal "$(cat "$tmp_root/mise-zellij.log")" "attach --create my-remote" "local cloudtop should use mise zellij when PATH has no zellij"
 }
 
 test_remote_zellij_mise_fallback() {
@@ -188,7 +188,7 @@ eval "$last"
     "$repo_root/bin/cloudtop" remote.example.com >/dev/null
 
   assert_equal "$(head -n 1 "$tmp_root/remote-mise.log")" "which zellij" "remote cloudtop should ask mise for zellij"
-  assert_equal "$(cat "$tmp_root/remote-mise-zellij.log")" "attach --forget --create remote-mis" "remote cloudtop should use mise zellij when PATH has no zellij"
+  assert_equal "$(cat "$tmp_root/remote-mise-zellij.log")" "attach --create remote-mis" "remote cloudtop should use mise zellij when PATH has no zellij"
 }
 
 test_remote_ssh_auth_sock_bridge() {
@@ -293,7 +293,7 @@ eval \"\$last\"
   guard_exec "$tmp_root" chmod 700 "$helper_dir"
 
   assert_equal "$(grep -c '^-- invocation --$' "$tmp_root/cache-ssh-args.log")" "4" "remote cloudtop should run one install check and one attach command per SSH run"
-  assert_equal "$(grep -c '^attach --forget --create cache-test$' "$tmp_root/cache-zellij.log")" "2" "remote cloudtop should attach through the cached helper on both runs"
+  assert_equal "$(grep -c '^attach --create cache-test$' "$tmp_root/cache-zellij.log")" "2" "remote cloudtop should attach through the cached helper on both runs"
   assert_file_contains "$tmp_root/cache-ssh-args.log" '\.cache/cloudtop/[0-9a-f]{5}/attach' "remote cloudtop should execute the cached helper path"
   assert_file_not_contains "$tmp_root/cache-ssh-args.log" 'find_zellij' "remote cloudtop should not inline helper function bodies in SSH argv"
   assert_file_contains "$tmp_root/cache-ssh-args.log" '^/bin/sh -lc '\''exec "\$HOME/[.]cache/cloudtop/[0-9a-f]{5}/attach" 1'\''$' "remote cloudtop should enter /bin/sh login shell before the cached helper"
@@ -355,7 +355,7 @@ export RAVY_ZELLIJ_HOST
     MOSH_COMMAND="$tmp_root/bin/mosh" \
     "$repo_root/bin/cloudtop" --mosh remote.example.com >/dev/null
 
-  assert_equal "$(cat "$tmp_root/mosh-zellij.log")" "attach --forget --create remote-mos" "mosh cloudtop should attach through the cached helper"
+  assert_equal "$(cat "$tmp_root/mosh-zellij.log")" "attach --create remote-mos" "mosh cloudtop should attach through the cached helper"
   assert_equal "$(grep -c '^-- ssh invocation --$' "$tmp_root/mosh-ssh-args.log")" "1" "mosh cloudtop should use SSH once to install the cached helper"
   assert_file_contains "$tmp_root/mosh-args.log" '\.cache/cloudtop/[0-9a-f]{5}/attach" 0' "mosh cloudtop should run the cached helper with agent bridge disabled"
   assert_file_not_contains "$tmp_root/mosh-args.log" 'find_zellij' "mosh cloudtop should not inline helper function bodies in mosh argv"
@@ -376,6 +376,78 @@ test_tmux_is_rejected() {
   assert_file_contains "$tmp_root/tmux-error.log" 'no longer supports tmux' "cloudtop should explain that tmux mode was removed"
 }
 
+test_live_server_guard() {
+  local socket_path="$tmp_root/s/guard-test"
+  local fixture="$tmp_root/processes.fixture"
+  local uid
+  uid=$(id -u)
+  guard_exec "$tmp_root" mkdir -p "$tmp_root/s"
+  python3 - "$socket_path" <<'PYTHON'
+import socket, sys
+with socket.socket(socket.AF_UNIX) as server:
+    server.bind(sys.argv[1])
+PYTHON
+  write_stub "$tmp_root/bin/ps" "#!/bin/sh
+cat '$fixture'
+"
+  write_stub "$tmp_root/bin/zellij" "#!/bin/sh
+printf '%s\\n' \"\$*\" > '$tmp_root/guard-zellij.log'
+printf '%s\\n' \"\${ZELLIJ_SOCKET_DIR:-}\" > '$tmp_root/guard-socket-dir.log'
+"
+  write_stub "$tmp_root/bin/ssh" '#!/bin/sh
+for arg do last=$arg; done
+# Avoid the host login profile prepending real ps ahead of the test stub.
+# The login-shell command itself is covered by the cache test above.
+case "$last" in
+  /bin/sh\ -lc\ *) last="/bin/sh -c ${last#/bin/sh -lc }" ;;
+esac
+RAVY_ZELLIJ_HOST=guard-test
+export RAVY_ZELLIJ_HOST
+eval "$last"
+'
+  printf '%s\n' "$uid 88888 /opt/bin/zellij --server $socket_path" > "$fixture"
+  env -i HOME="$tmp_root/home" PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    RAVY_ZELLIJ_HOST=guard-test "$repo_root/bin/cloudtop" >/dev/null
+  assert_equal "$(cat "$tmp_root/guard-zellij.log")" 'attach guard-test' 'live server must disable automatic creation'
+  assert_equal "$(cat "$tmp_root/guard-socket-dir.log")" "$tmp_root" 'attach must use the live server socket directory'
+
+  printf '%s\n' "$uid 99999 /opt/bin/zellij --server $socket_path" >> "$fixture"
+  env -i HOME="$tmp_root/home" PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    SSH_COMMAND="$tmp_root/bin/ssh" "$repo_root/bin/cloudtop" guard.example.com \
+    >/dev/null 2>"$tmp_root/guard-error.log"
+  assert_equal "$(cat "$tmp_root/guard-zellij.log")" 'attach guard-test' 'remote duplicate servers must not create another session'
+  assert_file_contains "$tmp_root/guard-error.log" '2 servers share' 'duplicate server warning'
+
+  guard_exec "$tmp_root" rm "$socket_path" "$tmp_root/guard-zellij.log"
+  if env -i HOME="$tmp_root/home" PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    SSH_COMMAND="$tmp_root/bin/ssh" "$repo_root/bin/cloudtop" guard.example.com \
+    >/dev/null 2>"$tmp_root/guard-error.log"
+  then
+    fail 'missing live server socket must stop remote attach'
+  fi
+  [ ! -e "$tmp_root/guard-zellij.log" ] || fail 'orphan guard must run before Zellij can resurrect or replace the session'
+  assert_file_contains "$tmp_root/guard-error.log" 'socket is missing' 'missing socket diagnostic'
+  local backup
+  backup=$(find "$tmp_root/home/.local/state/cloudtop/sockets" -type s -print | head -n 1)
+  [ -n "$backup" ] && [ -S "$backup" ] || fail 'recovery link must survive removal of the original socket'
+
+  printf '%s\n' "$((uid + 1)) 88888 /opt/bin/zellij --server $socket_path" > "$fixture"
+  env -i HOME="$tmp_root/home" PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    RAVY_ZELLIJ_HOST=guard-test "$repo_root/bin/cloudtop" >/dev/null
+  assert_equal "$(cat "$tmp_root/guard-zellij.log")" 'attach --create guard-test' 'another user must not block session creation'
+
+  write_stub "$tmp_root/bin/ps" '#!/bin/sh
+exit 1
+'
+  guard_exec "$tmp_root" rm "$tmp_root/guard-zellij.log"
+  if env -i HOME="$tmp_root/home" PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    RAVY_ZELLIJ_HOST=guard-test "$repo_root/bin/cloudtop" >/dev/null 2>"$tmp_root/guard-error.log"
+  then
+    fail 'process inspection failure must stop attach'
+  fi
+  [ ! -e "$tmp_root/guard-zellij.log" ] || fail 'failed process inspection must not launch Zellij'
+}
+
 trap cleanup EXIT
 
 setup_tmp_root
@@ -387,6 +459,7 @@ test_remote_ssh_auth_sock_bridge
 test_remote_helper_cache_short_command_and_reuse
 test_mosh_uses_cached_helper
 test_tmux_is_rejected
+test_live_server_guard
 
 if [ "$failures" -ne 0 ]; then
   exit 1
