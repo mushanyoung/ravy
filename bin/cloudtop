@@ -161,6 +161,22 @@ zellij_attach_checked() {
             fi
         fi
         set -- attach "$guard_session"
+    else
+        # Disabling serialization does not remove older resurrection layouts.
+        # Never force deletion: Zellij must refuse if a server appeared meanwhile.
+        guard_delete_status=0
+        guard_delete_output=$("$guard_candidate" delete-session "$guard_session" 2>&1) || guard_delete_status=$?
+        case "$guard_delete_status" in
+            0)
+                echo "cloudtop: discarded saved state for exited session '$guard_session'"
+                ;;
+            2) ;; # No saved session exists.
+            *)
+                printf '%s\n' "$guard_delete_output" >&2
+                echo "cloudtop: could not clear saved state for '$guard_session'; refusing to resurrect it" >&2
+                return "$guard_delete_status"
+                ;;
+        esac
     fi
     printf '+ %s' "$guard_candidate"
     printf ' %s' "$@"

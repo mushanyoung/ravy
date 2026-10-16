@@ -47,9 +47,12 @@ directory is reused even if the caller has a different temporary directory.
 Existing sockets are hard-linked into `~/.local/state/cloudtop/sockets/` for
 manual recovery if the original pathname is removed. Hard links require the
 same filesystem. They preserve access to a running server, not a dead process.
-Session serialization is also enabled for layout/cwd recovery after a restart;
-resurrection cannot restore running process memory. `--forget` was removed:
-in Zellij 0.45.1 it only concerns remote web authentication, not local sessions.
+Session serialization is disabled: reconnect to running sessions, and start
+fresh after a session ends. When no matching server is running, the helper
+discards that session's saved state before creating it, including snapshots
+left by older configurations. It never uses forced deletion, and stops if
+cleanup fails (except when no saved state exists). `--forget` only concerns
+remote web authentication in Zellij 0.45.1, not local session resurrection.
 
 For SSH transport, `cloudtop` bypasses SSH connection sharing and refreshes or
 repairs a stable forwarded-agent socket at `~/.ssh/ssh_auth_sock` before

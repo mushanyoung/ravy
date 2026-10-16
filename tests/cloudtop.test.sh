@@ -448,6 +448,61 @@ exit 1
   [ ! -e "$tmp_root/guard-zellij.log" ] || fail 'failed process inspection must not launch Zellij'
 }
 
+test_exited_session_starts_fresh() {
+  write_stub "$tmp_root/bin/ps" '#!/bin/sh
+exit 0
+'
+  write_stub "$tmp_root/bin/zellij" '#!/bin/sh
+printf "%s\n" "$*" >> "$CLOUDTOP_TEST_LOG"
+case "$1" in
+  delete-session) exit "$CLOUDTOP_TEST_DELETE_STATUS" ;;
+  attach) exit 0 ;;
+  *) exit 99 ;;
+esac
+'
+  local delete_status
+  for delete_status in 0 2; do
+    : > "$tmp_root/fresh-zellij.log"
+    env -i HOME="$tmp_root/home" PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+      RAVY_ZELLIJ_HOST=fresh-test CLOUDTOP_TEST_LOG="$tmp_root/fresh-zellij.log" \
+      CLOUDTOP_TEST_DELETE_STATUS="$delete_status" "$repo_root/bin/cloudtop" >/dev/null
+    assert_equal "$(cat "$tmp_root/fresh-zellij.log")" \
+      $'delete-session fresh-test\nattach --create fresh-test' \
+      "exited or absent session should start fresh (delete status $delete_status)"
+  done
+
+  # A newly active session (status 1) or a cleanup error must not be forced away
+  # or followed by attach --create, which could resurrect an uncleared snapshot.
+  for delete_status in 1 3; do
+    : > "$tmp_root/fresh-zellij.log"
+    if env -i HOME="$tmp_root/home" PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+      RAVY_ZELLIJ_HOST=fresh-test CLOUDTOP_TEST_LOG="$tmp_root/fresh-zellij.log" \
+      CLOUDTOP_TEST_DELETE_STATUS="$delete_status" "$repo_root/bin/cloudtop" \
+      >/dev/null 2>"$tmp_root/fresh-error.log"
+    then
+      fail "failed cleanup must stop creation (delete status $delete_status)"
+    fi
+    assert_equal "$(cat "$tmp_root/fresh-zellij.log")" 'delete-session fresh-test' \
+      'failed cleanup must not force deletion or attach'
+    assert_file_contains "$tmp_root/fresh-error.log" 'refusing to resurrect' \
+      'failed cleanup diagnostic'
+  done
+
+  # Reuse the live socket fixture to verify that attaching never deletes state.
+  local backup
+  backup=$(find "$tmp_root/home/.local/state/cloudtop/sockets" -type s -print | head -n 1)
+  guard_exec "$tmp_root" ln "$backup" "$tmp_root/s/fresh-test"
+  write_stub "$tmp_root/bin/ps" "#!/bin/sh
+printf '%s\\n' '$(id -u) 88888 /opt/bin/zellij --server $tmp_root/s/fresh-test'
+"
+  : > "$tmp_root/fresh-zellij.log"
+  env -i HOME="$tmp_root/home" PATH="$tmp_root/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    RAVY_ZELLIJ_HOST=fresh-test CLOUDTOP_TEST_LOG="$tmp_root/fresh-zellij.log" \
+    CLOUDTOP_TEST_DELETE_STATUS=99 "$repo_root/bin/cloudtop" >/dev/null
+  assert_equal "$(cat "$tmp_root/fresh-zellij.log")" 'attach fresh-test' \
+    'live session should only attach without deleting saved state'
+}
+
 trap cleanup EXIT
 
 setup_tmp_root
@@ -460,6 +515,7 @@ test_remote_helper_cache_short_command_and_reuse
 test_mosh_uses_cached_helper
 test_tmux_is_rejected
 test_live_server_guard
+test_exited_session_starts_fresh
 
 if [ "$failures" -ne 0 ]; then
   exit 1
