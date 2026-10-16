@@ -30,6 +30,13 @@ the forwarded agent exactly like a normal `git clone git@github.com:...`.
 When `RAVY_PRIVATE_HOME` is not set, the private repo defaults to
 `$RAVY_HOME/custom`, which is normally `~/.local/share/chezmoi/custom`.
 
+Shell startup uses the source directory and Homebrew metadata resolved by
+`chezmoi apply`; it discovers them again if the checkout moves or a different
+`brew` executable is found. `RAVY_HOME` remains an explicit override. Reapply
+after moving either installation to refresh the generated paths. Noninteractive
+fish uses `mise activate fish --shims`, which respects mise's configured shims
+directory without installing interactive hooks.
+
 Neovim preserves trailing blank lines and leaves Markdown and diff whitespace
 intact. A project's EditorConfig takes precedence; other buffers can opt out of
 the default trailing-space cleanup with `vim.b.ravy_trim_whitespace = false`.

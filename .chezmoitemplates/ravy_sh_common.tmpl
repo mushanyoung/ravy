@@ -45,12 +45,12 @@ _ravy_default_private_home() {
   return 1
 }
 
-# Resolve RAVY_HOME:
-# - Prefer chezmoi source-path when available
-# - Fall back to the default source dir used by chezmoi
-# - Fall back to legacy ~/.ravy
-if command -v chezmoi >/dev/null 2>&1; then
-  RAVY_HOME="$(chezmoi source-path 2>/dev/null || true)"
+# Resolve the checkout at apply time, with a runtime fallback after relocation.
+if [ -z "${RAVY_HOME:-}" ]; then
+  RAVY_HOME={{ template "ravy_shell_quote.tmpl" (dict "value" .chezmoi.sourceDir "shell" .shell) }}
+  if [ ! -d "$RAVY_HOME" ] && command -v chezmoi >/dev/null 2>&1; then
+    RAVY_HOME="$(chezmoi source-path 2>/dev/null || true)"
+  fi
 fi
 if [ -z "${RAVY_HOME:-}" ] && [ -d "$HOME/.local/share/chezmoi" ]; then
   RAVY_HOME="$HOME/.local/share/chezmoi"

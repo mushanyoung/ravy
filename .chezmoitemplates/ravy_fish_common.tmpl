@@ -1,20 +1,21 @@
 {{- /* Fish common setup (non-interactive safe): RAVY_HOME, PATH, Homebrew env. */ -}}
 #
-# Resolve RAVY_HOME:
-# - Prefer chezmoi source-path when available
-# - Fall back to the default source dir used by chezmoi
-# - Fall back to legacy ~/.ravy
-if command -v chezmoi >/dev/null
-    set -l sp (chezmoi source-path 2>/dev/null)
-    if test -n "$sp"
-        set -gx RAVY_HOME $sp
+# Use the source directory resolved by chezmoi at apply time. Honor an explicit
+# override; query chezmoi again only if the rendered checkout has moved.
+if not set -q RAVY_HOME; or test -z "$RAVY_HOME"
+    set -gx RAVY_HOME {{ template "ravy_shell_quote.tmpl" (dict "value" .chezmoi.sourceDir "shell" "fish") }}
+    if not test -d "$RAVY_HOME"; and command -q chezmoi
+        set -l sp (chezmoi source-path 2>/dev/null)
+        if test -n "$sp"
+            set -gx RAVY_HOME "$sp"
+        end
     end
-end
-if not set -q RAVY_HOME
-    if test -d "$HOME/.local/share/chezmoi"
-        set -gx RAVY_HOME "$HOME/.local/share/chezmoi"
-    else
-        set -gx RAVY_HOME "$HOME/.ravy"
+    if not test -d "$RAVY_HOME"
+        if test -d "$HOME/.local/share/chezmoi"
+            set -gx RAVY_HOME "$HOME/.local/share/chezmoi"
+        else
+            set -gx RAVY_HOME "$HOME/.ravy"
+        end
     end
 end
 
@@ -90,6 +91,11 @@ end
 {{ template "ravy_homebrew_common.tmpl" (dict "chezmoi" .chezmoi "shell" "fish") }}
 
 # mise
-if command -v mise &>/dev/null
-    mise activate fish | source
+if command -q mise
+    if status --is-interactive
+        mise activate fish | source
+    else
+        # Let mise resolve custom data/shims directories without installing hooks.
+        mise activate fish --shims | source
+    end
 end

@@ -35,10 +35,6 @@ if test -n "$MAMBA_EXE"
   true
 else if command -q mamba
   set -gx MAMBA_EXE (command -s mamba)
-else if test -e /opt/homebrew/bin/mamba
-  set -gx MAMBA_EXE "/opt/homebrew/bin/mamba"
-else if test -e /home/linuxbrew/.linuxbrew/bin/mamba
-  set -gx MAMBA_EXE "/home/linuxbrew/.linuxbrew/bin/mamba"
 end
 
 if set -q MAMBA_EXE

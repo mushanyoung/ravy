@@ -38,6 +38,7 @@ test-fish:
 
 test-sh:
 	$(BASH) tests/config.sh.test.sh
+	python3 tests/shell-startup.test.py
 
 test-install:
 	$(BASH) tests/install.test.sh
