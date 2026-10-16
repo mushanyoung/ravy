@@ -6,7 +6,7 @@ _ravy_prepend_path() {
   [ -d "$1" ] || return 0
   if [ -n "${PATH:-}" ]; then
     __ravy_temp_path=":$PATH:"
-    __ravy_temp_path="${__ravy_temp_path//:$1:/:}"
+    __ravy_temp_path="${__ravy_temp_path//":$1:"/:}"
     __ravy_temp_path="${__ravy_temp_path#:}"
     __ravy_temp_path="${__ravy_temp_path%:}"
     PATH="$__ravy_temp_path"
@@ -21,7 +21,7 @@ _ravy_append_path() {
   [ -d "$1" ] || return 0
   if [ -n "${PATH:-}" ]; then
     __ravy_temp_path=":$PATH:"
-    __ravy_temp_path="${__ravy_temp_path//:$1:/:}"
+    __ravy_temp_path="${__ravy_temp_path//":$1:"/:}"
     __ravy_temp_path="${__ravy_temp_path#:}"
     __ravy_temp_path="${__ravy_temp_path%:}"
     PATH="$__ravy_temp_path"
@@ -105,45 +105,7 @@ if [ -n "${RAVY_PRIVATE_HOME:-}" ]; then
   _ravy_append_path "$RAVY_PRIVATE_HOME/ops"
 fi
 
-# Homebrew / Linuxbrew detection (sets env + updates PATH/MANPATH/INFOPATH)
-if [ -z "${RAVY_SKIP_BREW:-}" ]; then
-  brewprefix=""
-  if command -v brew >/dev/null 2>&1; then
-    brewprefix="$(brew --prefix 2>/dev/null || true)"
-  fi
-  if [ -z "$brewprefix" ]; then
-    for candidate in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"; do
-      if [ -x "$candidate/bin/brew" ]; then
-        brewprefix="$candidate"
-        break
-      fi
-    done
-  fi
-
-  if [ -n "$brewprefix" ]; then
-    HOMEBREW_PREFIX="$brewprefix"
-    HOMEBREW_CELLAR="$brewprefix/Cellar"
-    HOMEBREW_REPOSITORY="$brewprefix/Homebrew"
-    HOMEBREW_NO_ANALYTICS=1
-    export HOMEBREW_PREFIX HOMEBREW_CELLAR HOMEBREW_REPOSITORY HOMEBREW_NO_ANALYTICS
-
-    if [ -d "$HOMEBREW_PREFIX/share/man" ]; then
-      MANPATH="${MANPATH:-}"
-      export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH:+:$MANPATH}"
-    fi
-    if [ -d "$HOMEBREW_PREFIX/share/info" ]; then
-      INFOPATH="${INFOPATH:-}"
-      export INFOPATH="$HOMEBREW_PREFIX/share/info${INFOPATH:+:$INFOPATH}"
-    fi
-
-    if [ -d "$brewprefix/opt/ruby/bin" ]; then
-      _ravy_prepend_path "$brewprefix/opt/ruby/bin"
-    fi
-
-    _ravy_prepend_path "$HOMEBREW_PREFIX/sbin"
-    _ravy_prepend_path "$HOMEBREW_PREFIX/bin"
-  fi
-fi
+{{ template "ravy_homebrew_common.tmpl" . }}
 
 export PATH
 

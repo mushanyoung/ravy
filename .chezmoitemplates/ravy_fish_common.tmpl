@@ -87,37 +87,7 @@ if set -q RAVY_PRIVATE_HOME
     append_to_path "$RAVY_PRIVATE_HOME/ops"
 end
 
-if not set -q RAVY_SKIP_BREW
-    set -l brewprefix ''
-    if command -q brew
-        set brewprefix (brew --prefix 2>/dev/null)
-    end
-    if test -z "$brewprefix"
-        for candidate in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.brew" "$HOME/.linuxbrew"
-            if test -x "$candidate/bin/brew"
-                set brewprefix "$candidate"
-                break
-            end
-        end
-    end
-
-    if test -n "$brewprefix"
-        set -gx HOMEBREW_PREFIX "$brewprefix"
-        set -gx HOMEBREW_CELLAR "$brewprefix/Cellar"
-        set -gx HOMEBREW_REPOSITORY "$brewprefix/Homebrew"
-        set -gx HOMEBREW_NO_ANALYTICS 1
-        set -q MANPATH; or set MANPATH ''
-        set -gx MANPATH "$HOMEBREW_PREFIX/share/man" $MANPATH
-        set -q INFOPATH; or set INFOPATH ''
-        set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
-
-        if test -d "$brewprefix/opt/ruby/bin"
-            prepend_to_path "$brewprefix/opt/ruby/bin"
-        end
-
-        prepend_to_path "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin"
-    end
-end
+{{ template "ravy_homebrew_common.tmpl" (dict "chezmoi" .chezmoi "shell" "fish") }}
 
 # mise
 if command -v mise &>/dev/null

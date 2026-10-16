@@ -1,0 +1,6 @@
+{{- /* Quote a literal without allowing shell expansion. */ -}}
+{{- if eq .shell "fish" -}}
+{{- .value | replace "\\" "\\\\" | replace "'" "\\'" | printf "'%s'" -}}
+{{- else -}}
+{{- .value | replace "'" "'\\''" | printf "'%s'" -}}
+{{- end -}}

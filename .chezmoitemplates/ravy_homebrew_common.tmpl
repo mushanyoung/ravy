@@ -1,0 +1,94 @@
+{{- /* Resolve installation metadata at apply time, not on every shell startup. */ -}}
+{{- $shell := .shell -}}
+{{- $brew := lookPath "brew" -}}
+{{- $prefix := "" -}}
+{{- $cellar := "" -}}
+{{- $repository := "" -}}
+{{- if $brew -}}
+{{- $prefix = output $brew "--prefix" | trim -}}
+{{- $cellar = output $brew "--cellar" | trim -}}
+{{- $repository = output $brew "--repository" | trim -}}
+{{- end -}}
+# Homebrew: reuse resolved metadata while the executable is unchanged.
+{{ if eq $shell "fish" -}}
+if not set -q RAVY_SKIP_BREW
+    begin
+        set -l brew_bin (command -s brew)
+        set -l rendered_brew {{ template "ravy_shell_quote.tmpl" (dict "value" $brew "shell" $shell) }}
+        if test -z "$brew_bin"
+            # Explicit/inferred installations take precedence over platform defaults.
+            for candidate in "$HOMEBREW_PREFIX/bin/brew" "$rendered_brew" {{ if eq .chezmoi.os "darwin" }} /opt/homebrew/bin/brew /usr/local/bin/brew {{ else }} /home/linuxbrew/.linuxbrew/bin/brew {{ end }} "$HOME/.brew/bin/brew" "$HOME/.linuxbrew/bin/brew"
+                if test -x "$candidate"
+                    set brew_bin "$candidate"
+                    break
+                end
+            end
+        end
+        if test -n "$brew_bin"
+            if test "$brew_bin" = "$rendered_brew"
+                set -gx HOMEBREW_PREFIX {{ template "ravy_shell_quote.tmpl" (dict "value" $prefix "shell" $shell) }}
+                set -gx HOMEBREW_CELLAR {{ template "ravy_shell_quote.tmpl" (dict "value" $cellar "shell" $shell) }}
+                set -gx HOMEBREW_REPOSITORY {{ template "ravy_shell_quote.tmpl" (dict "value" $repository "shell" $shell) }}
+            else
+                # A newly installed or relocated Brew needs fresh metadata.
+                set -gx HOMEBREW_PREFIX ("$brew_bin" --prefix)
+                set -gx HOMEBREW_CELLAR ("$brew_bin" --cellar)
+                set -gx HOMEBREW_REPOSITORY ("$brew_bin" --repository)
+            end
+            if test -n "$HOMEBREW_PREFIX"
+                prepend_to_path "$HOMEBREW_PREFIX/opt/ruby/bin"
+                prepend_to_path "$HOMEBREW_PREFIX/sbin" "$HOMEBREW_PREFIX/bin"
+                # The empty entry retains the system's default search directories.
+                set -q MANPATH; or set -gx MANPATH ''
+                contains -- "$HOMEBREW_PREFIX/share/man" $MANPATH; or set -gx MANPATH "$HOMEBREW_PREFIX/share/man" $MANPATH
+                set -q INFOPATH; or set -gx INFOPATH ''
+                contains -- "$HOMEBREW_PREFIX/share/info" $INFOPATH; or set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
+                set -gx HOMEBREW_NO_ANALYTICS 1
+            end
+        end
+    end
+end
+{{ else -}}
+_ravy_setup_homebrew() {
+  local brew_bin rendered_brew candidate
+  {{ if eq $shell "zsh" }}brew_bin="$(whence -p brew 2>/dev/null)"{{ else }}brew_bin="$(type -P brew 2>/dev/null)"{{ end }}
+  rendered_brew={{ template "ravy_shell_quote.tmpl" (dict "value" $brew "shell" $shell) }}
+  if [ -z "$brew_bin" ]; then
+    for candidate in "${HOMEBREW_PREFIX:-}/bin/brew" "$rendered_brew" {{ if eq .chezmoi.os "darwin" }} /opt/homebrew/bin/brew /usr/local/bin/brew {{ else }} /home/linuxbrew/.linuxbrew/bin/brew {{ end }} "$HOME/.brew/bin/brew" "$HOME/.linuxbrew/bin/brew"; do
+      if [ -x "$candidate" ]; then
+        brew_bin="$candidate"
+        break
+      fi
+    done
+  fi
+  [ -n "$brew_bin" ] || return 0
+  if [ "$brew_bin" = "$rendered_brew" ]; then
+    HOMEBREW_PREFIX={{ template "ravy_shell_quote.tmpl" (dict "value" $prefix "shell" $shell) }}
+    HOMEBREW_CELLAR={{ template "ravy_shell_quote.tmpl" (dict "value" $cellar "shell" $shell) }}
+    HOMEBREW_REPOSITORY={{ template "ravy_shell_quote.tmpl" (dict "value" $repository "shell" $shell) }}
+  else
+    HOMEBREW_PREFIX="$("$brew_bin" --prefix)"
+    HOMEBREW_CELLAR="$("$brew_bin" --cellar)"
+    HOMEBREW_REPOSITORY="$("$brew_bin" --repository)"
+  fi
+  [ -n "$HOMEBREW_PREFIX" ] || return 0
+  export HOMEBREW_PREFIX HOMEBREW_CELLAR HOMEBREW_REPOSITORY
+  _ravy_prepend_path "$HOMEBREW_PREFIX/opt/ruby/bin"
+  _ravy_prepend_path "$HOMEBREW_PREFIX/sbin"
+  _ravy_prepend_path "$HOMEBREW_PREFIX/bin"
+  case ":${MANPATH-}:" in
+    *:"$HOMEBREW_PREFIX/share/man":*) ;;
+    *) MANPATH="$HOMEBREW_PREFIX/share/man:${MANPATH-}" ;;
+  esac
+  case ":${INFOPATH-}:" in
+    *:"$HOMEBREW_PREFIX/share/info":*) ;;
+    *) INFOPATH="$HOMEBREW_PREFIX/share/info:${INFOPATH-}" ;;
+  esac
+  export MANPATH INFOPATH
+  export HOMEBREW_NO_ANALYTICS=1
+}
+if [ -z "${RAVY_SKIP_BREW:-}" ]; then
+  _ravy_setup_homebrew
+fi
+unset -f _ravy_setup_homebrew
+{{ end -}}
