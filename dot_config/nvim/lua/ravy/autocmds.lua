@@ -19,27 +19,29 @@ local function strip_whitespace()
     return
   end
 
+  -- Let the project's EditorConfig own its whitespace policy and write hook.
+  local editorconfig = vim.b.editorconfig
+  if type(editorconfig) == "table" and editorconfig.trim_trailing_whitespace ~= nil then
+    return
+  end
+  -- Markdown hard breaks and patch context can contain meaningful trailing spaces.
+  -- Other filetypes can opt out per buffer without extending a global exception list.
+  if vim.b.ravy_trim_whitespace == false or vim.bo.filetype == "markdown" or vim.bo.filetype == "diff" then
+    return
+  end
+
   local view = vim.fn.winsaveview()
   local lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
-  local changed = false
 
   for i, line in ipairs(lines) do
-    local stripped = line:gsub("%s+$", "")
-    if stripped ~= line then
-      lines[i] = stripped
-      changed = true
+    local trailing = line:find("%s+$")
+    if trailing ~= nil then
+      -- Editing only the suffix preserves marks and extmarks in unaffected text.
+      vim.api.nvim_buf_set_text(0, i - 1, trailing - 1, i - 1, #line, {})
     end
   end
 
-  while #lines > 1 and lines[#lines] == "" do
-    table.remove(lines)
-    changed = true
-  end
-
-  if changed then
-    vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
-    vim.fn.winrestview(view)
-  end
+  vim.fn.winrestview(view)
 end
 
 local function show_whitespace()

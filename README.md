@@ -30,6 +30,10 @@ the forwarded agent exactly like a normal `git clone git@github.com:...`.
 When `RAVY_PRIVATE_HOME` is not set, the private repo defaults to
 `$RAVY_HOME/custom`, which is normally `~/.local/share/chezmoi/custom`.
 
+Neovim preserves trailing blank lines and leaves Markdown and diff whitespace
+intact. A project's EditorConfig takes precedence; other buffers can opt out of
+the default trailing-space cleanup with `vim.b.ravy_trim_whitespace = false`.
+
 ## Cloudtop
 
 The bundled `cloudtop` helper caches a small attach script on remote machines

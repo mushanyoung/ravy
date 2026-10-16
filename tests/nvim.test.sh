@@ -161,6 +161,22 @@ if ! RAVY_NVIM_SKIP_PLUGINS=1 \
   fail "Neovim preserves cutlass-style delete and cut register behavior"
 fi
 
+save_root="$tmp_home/save-fixtures"
+guard_exec "$tmp_home" mkdir -p "$save_root"
+guard_assert_path "$tmp_home" "$tmp_home/nvim-save.log" create
+if ! RAVY_NVIM_SKIP_PLUGINS=1 ZELLIJ='' ZELLIJ_PANE_ID='' \
+  RAVY_NVIM_TEST_ROOT="$save_root" \
+  RAVY_NVIM_SAVE_TEST="$repo_root/tests/nvim-save.test.lua" \
+  XDG_CONFIG_HOME="$tmp_home/.config" \
+  XDG_DATA_HOME="$tmp_home/.local/share" \
+  XDG_STATE_HOME="$tmp_home/.local/state" \
+  XDG_CACHE_HOME="$tmp_home/.cache" \
+  nvim --headless -c "lua local ok, err = pcall(dofile, vim.env.RAVY_NVIM_SAVE_TEST); if not ok then print(err); vim.cmd('cquit 1') end" \
+  +qa! >"$tmp_home/nvim-save.log" 2>&1; then
+  cat "$tmp_home/nvim-save.log" >&2
+  fail "Neovim save policies preserve content and extmarks"
+fi
+
 if [ "$failures" -eq 0 ]; then
   echo 'All nvim config tests passed'
 fi
