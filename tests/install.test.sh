@@ -6,6 +6,7 @@ repo_root=$(realpath "$(dirname "$script_path")/..")
 # shellcheck source=tests/prefix_guard_common.sh
 source "$repo_root/tests/prefix_guard_common.sh"
 bash_bin=$(command -v bash)
+real_chezmoi=$(command -v chezmoi)
 
 failures=0
 tmp_home=''
@@ -108,6 +109,17 @@ setup_home() {
   guard_assert_path "$tmp_home" "$tmp_home/etc/shells" create || return 1
   printf '%s\n' '/bin/sh' '/bin/bash' > "$tmp_home/etc/shells"
 
+  # Use the real template in an isolated public checkout. The real repository's
+  # custom/ directory must not hide a missing private clone in this fixture.
+  guard_exec "$tmp_home" mkdir -p "$tmp_home/public-source/dot_config/mise/conf.d"
+  guard_assert_path "$tmp_home" "$tmp_home/public-source/dot_config/mise/conf.d/99-custom.toml.tmpl" create
+  cat "$repo_root/dot_config/mise/conf.d/99-custom.toml.tmpl" > "$tmp_home/public-source/dot_config/mise/conf.d/99-custom.toml.tmpl"
+  write_stub "$tmp_home/render-mise" "#!/usr/bin/env sh
+set -eu
+mkdir -p \"\$HOME/.config/mise/conf.d\"
+\"$real_chezmoi\" -S \"\$HOME/public-source\" -D \"\$HOME\" cat \"\$HOME/.config/mise/conf.d/99-custom.toml\" > \"\$HOME/.config/mise/conf.d/99-custom.toml\"
+"
+
   write_stub "$tmp_home/bin/uname" "#!/usr/bin/env sh
 case \"\${1:-}\" in
   -s)
@@ -168,7 +180,8 @@ fi
 if [ \"\${1:-}\" = clone ]; then
   target=\"\${3:-}\"
   if [ -n \"\$target\" ]; then
-    mkdir -p \"\$target/.git\" \"\$target/bootstrap\"
+    mkdir -p \"\$target/.git\" \"\$target/bootstrap\" \"\$target/mise\"
+    printf '%s\n' '[tools]' 'node = \"26\"' '\"npm:pyright\" = \"latest\"' > \"\$target/mise/config.toml\"
     printf 'git clone_target_mode=%s\\n' \"\$(file_mode \"\$target\")\" >> \"\$HOME/git.log\"
     touch \"\$target/bootstrap/key.txt.age\"
     printf '%s\n' '#!/usr/bin/env sh' 'exit 0' > \"\$target/install.sh\"
@@ -240,6 +253,9 @@ if [ \"\${1:-}\" = \"install\" ]; then
     shift 2
   fi
   printf '%s\n' \"install cd=\$cd_path tools=\$* token=\${MISE_GITHUB_TOKEN:-}\" >> \"\$log\"
+  if grep -F 'node = \"26\"' \"\$HOME/.config/mise/conf.d/99-custom.toml\" >/dev/null 2>&1; then
+    printf '%s\n' 'private tools present before mise install' >> \"\$log\"
+  fi
   exit 0
 fi
 
@@ -327,16 +343,13 @@ if [ \"\$subcommand\" = \"init\" ]; then
       'chezmoi = \"latest\"' \
       'age = \"latest\"' \
       > \"$tmp_home/.config/mise/config.toml\"
-    printf '%s\n' \
-      '[tools]' \
-      'node = \"26\"' \
-      '\"npm:pyright\" = \"latest\"' \
-      > \"$tmp_home/.config/mise/conf.d/99-custom.toml\"
   fi
   case \"\$source_path\" in
     \"$tmp_home/private\"|\"$tmp_home/.local/share/chezmoi/custom\")
       ;;
     *)
+      \"\$HOME/render-mise\" || exit 1
+      cp \"\$HOME/.config/mise/conf.d/99-custom.toml\" \"\$HOME/99-custom.initial.toml\"
       mkdir -p \"$tmp_home/.config/homebrew\"
       printf '%s\n' 'brew \"fish\"' > \"$tmp_home/.config/homebrew/Brewfile\"
       ;;
@@ -352,8 +365,11 @@ if [ \"\$subcommand\" = \"apply\" ]; then
     printf '%s\t%s\n' 'MISE_GITHUB_TOKEN' ' install-token' > \"$tmp_home/.config/ravy/secrets.tsv\"
     printf '%s\n' 'export MISE_GITHUB_TOKEN=install-token' > \"$tmp_home/.config/ravy/secrets.sh\"
       ;;
+    *)
+      \"\$HOME/render-mise\" || exit 1
+      ;;
   esac
-  printf '%s\n' \"subcommand=apply source=\$source_path config=\$config_path state=\$state_path\" >> \"$tmp_home/chezmoi.log\"
+  printf '%s\n' \"subcommand=apply source=\$source_path config=\$config_path state=\$state_path args=\$*\" >> \"$tmp_home/chezmoi.log\"
   exit 0
 fi
 
@@ -386,7 +402,9 @@ exit 0
 
   # Create a fake private repo for testing
   local fake_private="$tmp_home/private"
-  guard_exec "$tmp_home" mkdir -p "$fake_private/.git" "$fake_private/bootstrap"
+  guard_exec "$tmp_home" mkdir -p "$fake_private/.git" "$fake_private/bootstrap" "$fake_private/mise"
+  guard_assert_path "$tmp_home" "$fake_private/mise/config.toml" create
+  printf '%s\n' '[tools]' 'node = "26"' '"npm:pyright" = "latest"' > "$fake_private/mise/config.toml"
   guard_exec "$tmp_home" touch "$fake_private/bootstrap/key.txt.age"
 
   write_stub "$fake_private/install.sh" "#!/usr/bin/env bash
@@ -499,6 +517,13 @@ assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$default_pr
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$default_private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb"
 assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/key.txt $default_private/bootstrap/key.txt.age"
 assert_file_contains "$tmp_home/mise.log" "token=install-token"
+if [ -s "$tmp_home/99-custom.initial.toml" ]; then
+  fail "fresh public apply should not already have the private tool configuration"
+fi
+assert_file_contains "$tmp_home/.config/mise/conf.d/99-custom.toml" 'node = "26"'
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$tmp_home/.local/share/chezmoi config= state= args=--source-path $tmp_home/.local/share/chezmoi/dot_config/mise/conf.d/99-custom.toml.tmpl"
+assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools=node"
+assert_file_contains "$tmp_home/mise.log" 'private tools present before mise install'
 
 setup_home
 

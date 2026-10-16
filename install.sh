@@ -668,6 +668,18 @@ if private_install_script="$(resolve_private_install_script)"; then
   __el "$private_install_script"
 fi
 
+# The first public apply can precede the private clone. Render its mise include
+# again now that the overlay is available, before installing configured tools.
+if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
+  info "Refreshing mise configuration from the private overlay"
+  mise_source="$RAVY_HOME/dot_config/mise/conf.d/99-custom.toml.tmpl"
+  if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
+    run_chezmoi -S "$RAVY_HOME" apply --force --source-path "$mise_source"
+  else
+    run_chezmoi -S "$RAVY_HOME" apply --source-path "$mise_source"
+  fi
+fi
+
 load_managed_secrets_for_install
 install_configured_mise_tools
 

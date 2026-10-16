@@ -118,9 +118,9 @@ On a fresh machine:
    `age` and prompts once for its passphrase.
 4. The script applies the public repo, then applies the private repo with
    `chezmoi apply -S "$RAVY_PRIVATE_HOME"`.
-5. The script runs `custom/install.sh` when present, then runs `mise install`
-   from `$HOME`. The rendered mise config includes `custom/mise/config.toml`
-   when the private repo is available.
+5. The script runs `custom/install.sh` when present, refreshes the public mise
+   include after the private checkout is available, then runs `mise install`
+   from `$HOME`. This includes private tools on the first installation too.
 
 The optional private source is applied with its own chezmoi config/state files and
 its checkout root is forced to mode `0700` before any private material is read.
