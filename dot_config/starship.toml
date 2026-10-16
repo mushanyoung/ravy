@@ -1,5 +1,4 @@
 # Disable the default blank line at the start of the prompt
-scan_timeout=30_000
 add_newline = false
 
 format = """
@@ -32,7 +31,8 @@ show_notifications = false
 min_time_to_notify = 15_000
 
 [status]
-format = "[$symbol$status:$signal_name]($style)"
+disabled = false
+format = "[$symbol$status(:$signal_name)]($style)"
 symbol = ""
 style = "fg:#d70000"
 map_symbol = true
@@ -106,4 +106,6 @@ style = "bg:#222222"
 # ------------------------------------------------------------------------------
 
 [character]
-format = "[❯ ](fg:#666666)"
+format = "$symbol "
+success_symbol = "[❯](fg:#666666)"
+error_symbol = "[❯](fg:#d70000)"
