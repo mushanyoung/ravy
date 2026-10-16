@@ -1,5 +1,8 @@
 {{- /* Common bash/zsh env + PATH setup. */ -}}
 
+# Disallow group/other writes while preserving stricter inherited permissions.
+umask go-w
+
 # --- PATH helpers -------------------------------------------------------------
 _ravy_prepend_path() {
   [ -n "${1:-}" ] || return 0

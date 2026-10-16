@@ -3,6 +3,7 @@
 
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import tempfile
 
@@ -150,6 +151,34 @@ printf '%s\n' "$RAVY_HOME" "$HOMEBREW_PREFIX" "$HOMEBREW_CELLAR" "$HOMEBREW_REPO
         check({**shell_env, "PATH": f"{other_bin}:{env['PATH']}", "TEST_PREFIX": str(other_prefix)}, source, other_prefix)
         assert "--repository" in log.read_text().splitlines(), shell
         print(f"PASS {shell}: derived paths, quoting, startup fast path, overrides and relocation")
+
+        # Exercise real file creation after repeated startup, including stricter
+        # inherited masks that must not be relaxed by the shared config.
+        for inherited, expected_file, expected_directory in (
+            ("0000", 0o644, 0o755),
+            ("0002", 0o644, 0o755),
+            ("0022", 0o644, 0o755),
+            ("0027", 0o640, 0o750),
+            ("0077", 0o600, 0o700),
+            ("0177", 0o600, 0o600),
+        ):
+            permissions_root = root / f"permissions-{shell}-{inherited}"
+            permissions_root.mkdir()
+            probe_env = {
+                **shell_env, "TEST_UMASK": inherited,
+                "TEST_FILE": str(permissions_root / "file"),
+                "TEST_DIRECTORY": str(permissions_root / "directory"),
+            }
+            creation_probe = '''umask "$TEST_UMASK"
+source "$TEST_CONFIG"
+source "$TEST_CONFIG"
+printf 'test\\n' > "$TEST_FILE"
+command mkdir "$TEST_DIRECTORY"
+'''
+            run([binary, *flags, "-c", creation_probe], probe_env)
+            assert stat.S_IMODE((permissions_root / "file").stat().st_mode) == expected_file, (shell, inherited)
+            assert stat.S_IMODE((permissions_root / "directory").stat().st_mode) == expected_directory, (shell, inherited)
+        print(f"PASS {shell}: new file/directory permissions and stricter inherited umasks")
 
     # When installed, exercise the actual prompt integrations, including their
     # hook composition. A successful query proves that changing directory was

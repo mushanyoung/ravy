@@ -1,4 +1,8 @@
 {{- /* Fish common setup (non-interactive safe): RAVY_HOME, PATH, Homebrew env. */ -}}
+
+# Disallow group/other writes while preserving stricter inherited permissions.
+umask go-w
+
 #
 # Use the source directory resolved by chezmoi at apply time. Honor an explicit
 # override; query chezmoi again only if the rendered checkout has moved.

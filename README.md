@@ -37,6 +37,12 @@ after moving either installation to refresh the generated paths. Noninteractive
 fish uses `mise activate fish --shims`, which respects mise's configured shims
 directory without installing interactive hooks.
 
+The shared Bash, Zsh and Fish setup runs `umask go-w` to prevent group/other
+writes on new files. An inherited `0002` becomes `0022`, while stricter masks
+such as `0027` and `0077` are preserved. Child processes inherit the resulting
+mask; existing shells need their config reloaded, and existing file permissions
+are unaffected.
+
 Neovim preserves trailing blank lines and leaves Markdown and diff whitespace
 intact. A project's EditorConfig takes precedence; other buffers can opt out of
 the default trailing-space cleanup with `vim.b.ravy_trim_whitespace = false`.
