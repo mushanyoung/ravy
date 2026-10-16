@@ -163,6 +163,15 @@ fi
 
 save_root="$tmp_home/save-fixtures"
 guard_exec "$tmp_home" mkdir -p "$save_root"
+# Encode fixtures independently of Neovim's decoder.
+python3 - "$save_root" <<'PY'
+from pathlib import Path
+import sys
+root = Path(sys.argv[1])
+for name, encoding in (("utf8.txt", "utf-8"), ("bom.txt", "utf-16"),
+                       ("legacy.txt", "gbk"), ("no-bom.txt", "utf-16le")):
+    (root / name).write_bytes("中文测试".encode(encoding))
+PY
 guard_assert_path "$tmp_home" "$tmp_home/nvim-save.log" create
 if ! RAVY_NVIM_SKIP_PLUGINS=1 ZELLIJ='' ZELLIJ_PANE_ID='' \
   RAVY_NVIM_TEST_ROOT="$save_root" \
@@ -174,7 +183,7 @@ if ! RAVY_NVIM_SKIP_PLUGINS=1 ZELLIJ='' ZELLIJ_PANE_ID='' \
   nvim --headless -c "lua local ok, err = pcall(dofile, vim.env.RAVY_NVIM_SAVE_TEST); if not ok then print(err); vim.cmd('cquit 1') end" \
   +qa! >"$tmp_home/nvim-save.log" 2>&1; then
   cat "$tmp_home/nvim-save.log" >&2
-  fail "Neovim save policies preserve content and extmarks"
+  fail "Neovim save policies preserve content and extmarks and respect explicit encodings"
 fi
 
 if [ "$failures" -eq 0 ]; then

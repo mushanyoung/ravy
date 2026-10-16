@@ -41,3 +41,13 @@ edit("keep.txt", { "project choice  " })
 eq(save(), { "project choice  " }, "EditorConfig false overrides cleanup")
 edit("trim.md", { "project choice  " })
 eq(save(), { "project choice" }, "EditorConfig true owns cleanup, including Markdown")
+
+local text = "中文测试"
+edit("utf8.txt")
+eq(vim.api.nvim_get_current_line(), text, "UTF-8 is read correctly")
+edit("bom.txt")
+eq(vim.api.nvim_get_current_line(), text, "Unicode BOM is detected before fallback encodings")
+vim.cmd("edit ++enc=gbk " .. vim.fn.fnameescape(root .. "/legacy.txt"))
+eq(vim.api.nvim_get_current_line(), text, "legacy encodings remain available explicitly")
+vim.cmd("edit ++enc=utf-16le " .. vim.fn.fnameescape(root .. "/no-bom.txt"))
+eq(vim.api.nvim_get_current_line(), text, "BOM-less UTF-16 can be selected explicitly")

@@ -33,6 +33,9 @@ When `RAVY_PRIVATE_HOME` is not set, the private repo defaults to
 Neovim preserves trailing blank lines and leaves Markdown and diff whitespace
 intact. A project's EditorConfig takes precedence; other buffers can opt out of
 the default trailing-space cleanup with `vim.b.ravy_trim_whitespace = false`.
+Unicode BOMs and UTF-8 are detected automatically, with Latin-1 as a fallback.
+Open ambiguous legacy encodings explicitly, for example `:edit ++enc=gbk file`
+or `:edit ++enc=utf-16le file`.
 
 ## Cloudtop
 

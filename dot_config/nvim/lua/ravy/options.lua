@@ -51,18 +51,10 @@ function M.setup()
     "node_modules",
   })
 
-  vim.opt.fileencodings = {
-    "ucs-bom",
-    "utf-8",
-    "default",
-    "latin1",
-    "utf-16le",
-    "big5",
-    "gbk",
-    "euc-jp",
-    "euc-kr",
-    "iso8859-1",
-  }
+  -- Only auto-detect Unicode; legacy encodings are ambiguous without metadata.
+  -- Reopen those files explicitly, e.g. :edit ++enc=gbk or ++enc=utf-16le.
+  -- latin1 accepts every byte sequence, so it must remain the final fallback.
+  vim.opt.fileencodings = { "ucs-bom", "utf-8", "latin1" }
   vim.opt.formatoptions = "nmMcroql"
   vim.opt.sessionoptions = { "blank", "buffers", "curdir", "folds", "tabpages", "winsize" }
   vim.opt.tabstop = 2
