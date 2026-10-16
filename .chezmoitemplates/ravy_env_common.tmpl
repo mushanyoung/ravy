@@ -1,6 +1,6 @@
 {{- /* Shared environment variables across shells.
-      Expects .shell to be "sh" or "fish". */ -}}
-{{- $shell := .shell | default "sh" -}}
+      Expects .shell to be "bash", "zsh", or "fish". */ -}}
+{{- $shell := .shell -}}
 
 {{- if eq $shell "fish" }}
 set -x LANG en_US.UTF-8
@@ -95,6 +95,6 @@ fi
 
 export _ZO_DATA_DIR="$HOME/.local/share/zoxide"
 if command -v zoxide >/dev/null 2>&1; then
-  eval "$(zoxide init posix --hook prompt)"
+  eval "$(zoxide init {{ $shell }})"
 fi
 {{- end }}

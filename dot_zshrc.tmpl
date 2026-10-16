@@ -3,7 +3,7 @@
 # Only for interactive shells
 [[ -o interactive ]] || return 0
 
-{{ template "ravy_sh_common.tmpl" . }}
+{{ template "ravy_sh_common.tmpl" (dict "chezmoi" .chezmoi "shell" "zsh") }}
 {{ template "ravy_ls_eza_common.tmpl" (dict "shell" "sh") }}
 {{ template "ravy_aliases_common.tmpl" (dict "shell" "sh") }}
 {{ template "ravy_interactive_common.tmpl" (dict "shell" "zsh") }}

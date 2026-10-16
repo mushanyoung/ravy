@@ -7,7 +7,7 @@ case "$-" in
   *) return 0 ;;
 esac
 
-{{ template "ravy_sh_common.tmpl" . }}
+{{ template "ravy_sh_common.tmpl" (dict "chezmoi" .chezmoi "shell" "bash") }}
 {{ template "ravy_ls_eza_common.tmpl" (dict "shell" "sh") }}
 {{ template "ravy_aliases_common.tmpl" (dict "shell" "sh") }}
 {{ template "ravy_interactive_common.tmpl" (dict "shell" "bash") }}
