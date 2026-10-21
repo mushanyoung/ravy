@@ -2,7 +2,7 @@
 chezmoi = "latest"
 age = "latest"
 "aqua:neovim" = "latest"
-python = "3.14"
+python = "3.15"
 uv = "latest"
 jq = "latest"
 bat = "latest"
@@ -24,4 +24,5 @@ atuin = "latest"
 
 [settings]
 python.uv_venv_auto = false
-minimum_release_age = "0d"
+python.compile = false
+minimum_release_age = "1d"
