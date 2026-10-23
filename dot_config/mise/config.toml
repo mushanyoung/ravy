@@ -15,7 +15,7 @@ carapace = "latest"
 usage = "latest"
 ripgrep = "latest"
 process-compose = "latest"
-duckdb = "latest"
+"github:duckdb/duckdb" = { version = "latest", matching = "cli" }
 zellij = "latest"
 herdr = "latest"
 rclone = "latest"
