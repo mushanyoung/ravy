@@ -9,7 +9,6 @@ if OS.mac?
   tap "laishulu/homebrew"
   brew "laishulu/homebrew/macism"
 
-  brew "socat"
   brew "lftp"
 
   cask "font-inconsolata-nerd-font"
