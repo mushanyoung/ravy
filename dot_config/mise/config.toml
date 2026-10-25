@@ -1,8 +1,8 @@
 [tools]
+python = "3.15"
 chezmoi = "latest"
 age = "latest"
-"aqua:neovim" = "latest"
-python = "3.15"
+neovim = "latest"
 uv = "latest"
 jq = "latest"
 bat = "latest"
@@ -14,8 +14,7 @@ starship = "latest"
 carapace = "latest"
 usage = "latest"
 ripgrep = "latest"
-process-compose = "latest"
-"github:duckdb/duckdb" = { version = "latest", matching = "cli" }
+duckdb = "latest"
 zellij = "latest"
 herdr = "latest"
 rclone = "latest"
@@ -25,4 +24,4 @@ atuin = "latest"
 [settings]
 python.uv_venv_auto = false
 python.compile = false
-minimum_release_age = "1d"
+minimum_release_age = "0d"
