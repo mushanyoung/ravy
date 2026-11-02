@@ -50,4 +50,4 @@ test-zellij:
 	$(BASH) tests/zellij.test.sh
 
 test-cloudtop:
-	$(BASH) tests/cloudtop.test.sh
+	python3 -m unittest discover -s tests -p test_cloudtop.py
