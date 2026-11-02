@@ -1,6 +1,5 @@
 """Cloudtop is an argv-only adapter; Herdr owns transport and session state."""
 import json
-import os
 from pathlib import Path
 import subprocess
 import tempfile

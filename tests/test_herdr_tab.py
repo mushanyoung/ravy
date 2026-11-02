@@ -1,6 +1,5 @@
 """The tab-10 adapter only translates an index into native opaque IDs."""
 import json
-import os
 from pathlib import Path
 import subprocess
 import sys

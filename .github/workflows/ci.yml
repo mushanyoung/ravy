@@ -15,12 +15,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
 
       - name: Install dependencies (Ubuntu)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y bash fish zsh curl gpg wget neovim
+          sudo apt-get install -y bash fish zsh curl gpg wget neovim shellcheck
           wget -qO- https://apt.fury.io/nushell/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/fury-nushell.gpg
           echo "deb [signed-by=/etc/apt/keyrings/fury-nushell.gpg] https://apt.fury.io/nushell/ /" | sudo tee /etc/apt/sources.list.d/fury.list
           sudo apt-get update
@@ -31,7 +36,12 @@ jobs:
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install chezmoi fish nushell neovim
+          brew install chezmoi fish nushell neovim shellcheck
+
+      - name: Lint Herdr migration
+        run: |
+          python3 -m pip install --disable-pip-version-check ruff==0.14.3
+          make lint-herdr
 
       - name: Test shell config
         run: make test

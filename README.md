@@ -75,6 +75,18 @@ The old `--mosh`, `--tmux`, `--zellij`, and `--ssh` transport selectors are reje
 Mosh roaming is not provided by this SSH migration. `CLOUDTOP_*` overrides no
 longer control transport, sessions, or agent sockets.
 
+### Current promotion blocker
+
+This migration candidate is **not ready for live rollout**. Real Linux SSH tests
+found that Herdr 0.9.5 can reuse an SSH ControlMaster whose forwarded agent still
+points to a terminated local agent. If the local agent is replaced at a new socket,
+reattaching alone does not restore signing in existing panes. Keeping the original
+agent works; starting a fresh SSH connection also works, including old and new
+panes. The strict regression remains failing (not skipped/xfail), so developer
+E2E CI must remain red until this is resolved or the acceptance policy changes.
+There is no production repair wrapper. macOS has a real-runner CI job but has not
+yet been executed for this candidate. See [test details](tests/README.herdr.md).
+
 ### Familiar keys
 
 Press `Ctrl+Space` and release before the next key:
@@ -195,6 +207,12 @@ make test
 `make test` covers bash, zsh, fish, install, Neovim rendering, Herdr configuration,
 the tab adapter, and Cloudtop argv compatibility. Python 3.11+ is required.
 Use a narrower target such as `make test-nvim` when iterating on one area.
+
+`make lint-herdr` runs ShellCheck and Ruff (CI pins Ruff 0.14.3).
+`make test-e2e-server` uses real Herdr, PTYs, Neovim and a private loopback sshd on
+Linux. `make test-e2e-developer` uses real SSH/agent signing and runs on macOS or
+Linux. These are separate from fast unit tests and fail when a prerequisite is
+missing. See [isolation, coverage and current results](tests/README.herdr.md).
 
 ## Recommended Setup
 

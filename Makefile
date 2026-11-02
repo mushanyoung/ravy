@@ -22,6 +22,9 @@ help:
 	@echo '  make test-nvim      Run Neovim config rendering test'
 	@echo '  make test-herdr    Run Herdr config and compatibility tests'
 	@echo '  make test-cloudtop  Run native Herdr entrypoint tests'
+	@echo '  make lint-herdr     Run ShellCheck and Ruff for migration code'
+	@echo '  make test-e2e-server     Real Linux server / PTY / SSH tests'
+	@echo '  make test-e2e-developer  Real macOS/Linux SSH development tests'
 
 install:
 	./install.sh
@@ -30,6 +33,18 @@ apply:
 	$(CHEZMOI) -S "$(SOURCE_DIR)" apply $(CHEZMOI_ARGS)
 
 chezmoi-apply: apply
+
+.PHONY: lint-herdr test-e2e-developer test-e2e-server
+
+lint-herdr:
+	shellcheck bin/cloudtop bin/cl
+	ruff check --no-cache tests/test_cloudtop.py tests/test_herdr_config.py tests/test_herdr_tab.py tests/e2e_herdr.py dot_local/bin/executable_ravy-herdr-tab-10
+
+test-e2e-developer:
+	python3 tests/e2e_herdr.py --series developer
+
+test-e2e-server:
+	python3 tests/e2e_herdr.py --series server
 
 test: test-fish test-sh test-install test-nvim test-herdr test-cloudtop
 

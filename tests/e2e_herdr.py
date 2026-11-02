@@ -1,0 +1,522 @@
+#!/usr/bin/env python3
+"""Real Herdr/PTY/OpenSSH tests. Never use live sessions or developer credentials.
+
+--series server: headless Linux lifecycle and keyboard contracts.
+--series developer: native SSH to a disposable same-OS macOS/Linux dev fixture.
+Missing prerequisites are errors, never silent skips. No model/agent calls.
+"""
+import argparse
+import errno
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import pty
+import pwd
+import select
+import shlex
+import shutil
+import signal
+import socket
+import struct
+import subprocess
+import sys
+import tempfile
+import termios
+import threading
+import time
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+TOOLS = {}
+SERIES = "server"
+
+
+def until(fn, timeout=10, message="timed out waiting for verified state"):
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        result = fn()
+        if result:
+            return result
+        time.sleep(0.05)
+    raise AssertionError(message)
+
+
+def stop(process):
+    if process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=5)
+
+
+class Client:
+    def __init__(self, argv, env):
+        self.master, slave = pty.openpty()
+        fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 140, 0, 0))
+        self.process = subprocess.Popen(argv, env=env, stdin=slave, stdout=slave,
+                                        stderr=slave, start_new_session=True)
+        os.close(slave)
+        self.closed = False
+        self.output = bytearray()
+        self.thread = threading.Thread(target=self.drain, daemon=True)
+        self.thread.start()
+
+    def drain(self):
+        while not self.closed:
+            try:
+                ready, _, _ = select.select([self.master], [], [], 0.1)
+                if not ready:
+                    continue
+                data = os.read(self.master, 65536)
+                if not data:
+                    return
+                self.output.extend(data)
+                if len(self.output) > 200000:
+                    del self.output[:-100000]
+                # Minimal xterm responses; input assertions go through real PTY bytes.
+                if b"\x1b[6n" in data:
+                    os.write(self.master, b"\x1b[1;1R")
+                if b"\x1b[c" in data:
+                    os.write(self.master, b"\x1b[?1;2c")
+                if b"\x1b]11;?" in data:
+                    os.write(self.master, b"\x1b]11;rgb:0000/0000/0000\x1b\\")
+            except OSError as exc:
+                if exc.errno in (errno.EIO, errno.EBADF):
+                    return
+                raise
+
+    def key(self, data):
+        if self.process.poll() is not None:
+            raise AssertionError("TUI exited before input: " + self.output.decode(errors="replace")[-3000:])
+        os.write(self.master, data)
+
+    def prefix(self, key):
+        self.key(b"\x00")  # Ctrl+Space in legacy terminal encoding
+        time.sleep(0.1)
+        self.key(key)
+
+    def close(self):
+        stop(self.process)
+        self.closed = True
+        self.thread.join(timeout=2)
+        os.close(self.master)
+
+
+class Fixture:
+    def __init__(self, root):
+        self.root = root
+        self.home = root / "home"
+        self.home.mkdir(parents=True)
+        self.config = root / "config.toml"
+        self.config.write_bytes((ROOT / "dot_config/herdr/config.toml").read_bytes())
+        self.env = {"HOME": str(self.home), "PATH": os.environ["PATH"],
+                    "TERM": "xterm-256color", "LC_ALL": "en_US.UTF-8" if sys.platform == "darwin" else "C.UTF-8",
+                    "SHELL": TOOLS["fish"], "TMPDIR": str(root),
+                    "HERDR_CONFIG_PATH": str(self.config),
+                    "RAVY_PRIVATE_HOME": str(root / "no-private"), "RAVY_SKIP_BREW": "1"}
+        # Real rendered Fish startup, not a hand-written imitation.
+        target = self.home / ".config/fish/config.fish"
+        target.parent.mkdir(parents=True)
+        rendered = subprocess.run([TOOLS["chezmoi"], "-S", str(ROOT), "-D", str(self.home),
+                                   "cat", str(target)], env=self.env, capture_output=True,
+                                  text=True, timeout=15, check=True)
+        target.write_text(rendered.stdout)
+        helper = self.home / ".local/bin/ravy-herdr-tab-10"
+        helper.parent.mkdir(parents=True)
+        helper.write_bytes((ROOT / "dot_local/bin/executable_ravy-herdr-tab-10").read_bytes())
+        helper.chmod(0o700)
+        self.server = None
+        self.clients = []
+        self.log = None
+
+    def raw(self, *args):
+        result = subprocess.run([TOOLS["herdr"], *args], env=self.env,
+                                text=True, capture_output=True, timeout=10)
+        return result
+
+    def api(self, *args):
+        result = self.raw(*args)
+        if result.returncode:
+            raise AssertionError(f"Herdr {args}: {result.stderr}")
+        return json.loads(result.stdout)["result"] if result.stdout.strip() else {}
+
+    def start(self):
+        self.log = open(self.root / "server.log", "a")
+        self.server = subprocess.Popen([TOOLS["herdr"], "server"], env=self.env,
+                                       stdout=self.log, stderr=self.log)
+        until(lambda: self.raw("api", "snapshot").returncode == 0)
+
+    def snapshot(self):
+        return self.api("api", "snapshot")["snapshot"]
+
+    def client(self, *args):
+        client = Client([str(ROOT / "bin/cloudtop"), *args], self.env)
+        self.clients.append(client)
+        return client
+
+    def pane(self):
+        return next(p for p in self.snapshot()["panes"] if p["focused"])
+
+    def run(self, pane, command, marker):
+        self.api("pane", "run", pane, command)
+        self.api("pane", "wait-output", pane, "--match", marker, "--timeout", "8000")
+
+    def close_ssh_master(self):
+        # v0.9.5 namespaces shared sockets by config path + target. Stop only
+        # this disposable fixture's master; never glob all a user's sockets.
+        config = self.home / ".ssh/config"
+        if not config.exists():
+            return
+        prefix = hashlib.sha256(os.fsencode(self.config) + b"\0ravy-e2e").hexdigest()[:24]
+        directory = Path(f"/tmp/hssh-{os.getuid()}")  # Native Herdr location, not our temp root.
+        for path in directory.glob(prefix + "-*"):
+            if path.is_symlink() or path.stat().st_uid != os.getuid() or not path.is_socket():
+                raise AssertionError("unsafe fixture control socket")
+            result = subprocess.run(["ssh", "-F", str(config), "-S", str(path),
+                                     "-O", "exit", "ravy-e2e"], env=self.env,
+                                    capture_output=True, timeout=5)
+            if result.returncode != 0 and path.exists():
+                raise AssertionError("could not stop fixture SSH master")
+            until(lambda: not path.exists())
+
+    def close(self):
+        for client in self.clients:
+            client.close()
+        self.close_ssh_master()
+        self.raw("server", "stop")
+        until(lambda: self.raw("api", "snapshot").returncode != 0, message="fixture server did not stop")
+        if self.server:
+            self.server.wait(timeout=5)
+        if self.log:
+            self.log.close()
+        # Configuration warnings are test failures, not successful fallback defaults.
+        text = "\n".join(p.read_text(errors="replace") for p in self.root.glob("*.log"))
+        if "config diagnostic" in text or "failed to parse config" in text.lower():
+            raise AssertionError("Herdr rejected configuration: " + text[-4000:])
+
+
+class ServerTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="he-")
+        self.addCleanup(self.temp.cleanup)
+        self.fx = Fixture(Path(self.temp.name))
+        self.addCleanup(self.fx.close)
+        self.fx.start()
+
+    def test_keyboard_cwd_splits_tabs_and_detach(self):
+        fx = self.fx
+        project = fx.home / "project with spaces"
+        project.mkdir()
+        fx.api("workspace", "create", "--cwd", str(project))
+        client = fx.client()
+        until(lambda: b"\x1b[" in client.output)
+        time.sleep(1)
+        client.prefix(b"n")
+        until(lambda: len(fx.snapshot()["tabs"]) == 2)
+        self.assertEqual(fx.pane()["cwd"], str(project))
+        client.prefix(b"c")
+        until(lambda: len(fx.snapshot()["tabs"]) == 3)
+        self.assertEqual(fx.pane()["cwd"], str(fx.home))
+        client.prefix(b"%")
+        until(lambda: len(fx.snapshot()["panes"]) == 4)
+        right = fx.pane()["pane_id"]
+        client.prefix(b"h")
+        until(lambda: fx.pane()["pane_id"] != right)
+        client.prefix(b"l")
+        until(lambda: fx.pane()["pane_id"] == right)
+        client.prefix(b'"')
+        until(lambda: len(fx.snapshot()["panes"]) == 5)
+        for _ in range(7):
+            fx.api("tab", "create")
+        tabs = fx.snapshot()["tabs"]
+        tenth = next(t["tab_id"] for t in tabs if t["number"] == 10)
+        client.key(b"\x1b1")
+        until(lambda: next(t for t in fx.snapshot()["tabs"] if t["focused"])["number"] == 1)
+        client.key(b"\x1b0")
+        until(lambda: next(t for t in fx.snapshot()["tabs"] if t["focused"])["tab_id"] == tenth)
+        client.prefix(b"d")
+        self.assertEqual(client.process.wait(timeout=5), 0)
+        self.assertEqual(len(fx.snapshot()["tabs"]), 10)
+        reconnect = fx.client()
+        time.sleep(1)
+        self.assertIsNone(reconnect.process.poll())
+        self.assertEqual(len(fx.snapshot()["tabs"]), 10)
+
+    def test_real_neovim_input_and_detach(self):
+        fx = self.fx
+        fx.api("workspace", "create", "--cwd", str(fx.home))
+        client = fx.client()
+        time.sleep(1)
+        output = fx.root / "editor.txt"
+        ready = fx.root / "editor-ready"
+        script = fx.root / "ready.vim"
+        script.write_text(f"call writefile(['ready'], '{ready}')\n")
+        fx.api("pane", "run", fx.pane()["pane_id"],
+               f"{shlex.quote(TOOLS['nvim'])} -u NONE -n -S {shlex.quote(str(script))} {shlex.quote(str(output))}")
+        until(ready.exists)
+        client.prefix(b"d")
+        self.assertEqual(client.process.wait(timeout=5), 0)
+        reconnect = fx.client()
+        time.sleep(1)
+        reconnect.key("i中文 input survives detach".encode())
+        time.sleep(0.1)
+        reconnect.key(b"\x1b:wq\r")
+        until(output.exists)
+        self.assertEqual(output.read_text(), "中文 input survives detach\n")
+
+    def test_headless_process_survives_client_loss_and_restart_restores_layout(self):
+        fx = self.fx
+        created = fx.api("workspace", "create", "--cwd", str(fx.home))
+        pane = created["root_pane"]["pane_id"]
+        marker = fx.root / "counter"
+        fx.run(pane, f"sh -c 'while :; do date +%s > {shlex.quote(str(marker))}; sleep 1; done'", "while")
+        until(marker.exists)
+        client = fx.client()
+        time.sleep(1)
+        stop(client.process)  # Lost client, not a clean detach.
+        before = marker.stat().st_mtime_ns
+        until(lambda: marker.stat().st_mtime_ns > before)
+        self.assertEqual(len(fx.snapshot()["panes"]), 1)
+        fx.api("server", "stop")
+        assert fx.server is not None and fx.log is not None
+        fx.server.wait(timeout=5)
+        fx.log.close()
+        fx.start()
+        until(lambda: len(fx.snapshot()["panes"]) == 1)
+        self.assertEqual(fx.pane()["cwd"], str(fx.home))
+        before = marker.stat().st_mtime_ns
+        time.sleep(1.2)
+        self.assertEqual(marker.stat().st_mtime_ns, before, "restart must not resurrect commands")
+
+
+class SSHTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="hd-")
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.remote = Fixture(self.root / "r")
+        self.local = Fixture(self.root / "l")
+        self.addCleanup(self.remote.close)
+        self.addCleanup(self.local.close)
+        self.setup_ssh()
+
+    def setup_ssh(self):
+        root = self.root
+        env = {"HOME": str(root), "PATH": "/usr/bin:/bin"}
+        for name in ("host", "identity"):
+            subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(root / name)],
+                           env=env, check=True, timeout=5)
+        # The forced command serves only this generated test identity, isolating
+        # HOME/config/PATH from the account running sshd, on both macOS and Linux.
+        launcher = root / "remote.py"
+        launcher.write_text("#!" + sys.executable + "\nimport os\n"
+                            + "env = " + repr(self.remote.env) + "\n"
+                            + "for k in ('SSH_AUTH_SOCK','SSH_CONNECTION','SSH_TTY','TERM'):\n"
+                            + " if k in os.environ: env[k] = os.environ[k]\n"
+                            + "os.chdir(env['HOME'])\n"
+                            + "os.execve('/bin/sh', ['sh','-c',os.environ.get('SSH_ORIGINAL_COMMAND','exit 2')],env)\n")
+        launcher.chmod(0o700)
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            port = sock.getsockname()[1]
+        config = root / "sshd.conf"
+        text = f"""ListenAddress 127.0.0.1
+Port {port}
+HostKey {root}/host
+PidFile {root}/sshd.pid
+AuthorizedKeysFile {root}/identity.pub
+StrictModes yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+UsePAM no
+AllowAgentForwarding yes
+AllowUsers {pwd.getpwuid(os.getuid()).pw_name}
+ForceCommand {launcher}
+"""
+        # Optional relocated OpenSSH package support for rootless Linux testing.
+        for option, var in (("SshdSessionPath", "RAVY_TEST_SSHD_SESSION"),
+                            ("SshdAuthPath", "RAVY_TEST_SSHD_AUTH")):
+            if os.environ.get(var):
+                text += f"{option} {os.environ[var]}\n"
+        if os.environ.get("RAVY_TEST_SSHD_LIB_DIR"):
+            env["LD_LIBRARY_PATH"] = os.environ["RAVY_TEST_SSHD_LIB_DIR"]
+        config.write_text(text)
+        log = open(root / "sshd.log", "w")
+        self.addCleanup(log.close)
+        daemon = subprocess.Popen([TOOLS["sshd"], "-D", "-e", "-f", str(config)],
+                                  env=env, stdout=log, stderr=log)
+        self.addCleanup(stop, daemon)
+        time.sleep(0.3)
+        self.assertIsNone(daemon.poll(), (root / "sshd.log").read_text())
+        sshdir = self.local.home / ".ssh"
+        sshdir.mkdir(mode=0o700)
+        public_host = (root / "host.pub").read_text().split()
+        known = sshdir / "known_hosts"
+        known.write_text(f"[127.0.0.1]:{port} {public_host[0]} {public_host[1]}\n")
+        (sshdir / "config").write_text(f"""Host ravy-e2e
+  HostName 127.0.0.1
+  Port {port}
+  User {pwd.getpwuid(os.getuid()).pw_name}
+  IdentityFile {root}/identity
+  IdentitiesOnly yes
+  ForwardAgent yes
+  StrictHostKeyChecking yes
+  UserKnownHostsFile {known}
+  BatchMode yes
+""")
+        # A foreground ssh-agent owns only a generated, short-lived test key.
+        self.start_agent("identity", "agent")
+
+    def start_agent(self, identity, name):
+        root = self.root
+        env = {"HOME": str(root), "PATH": "/usr/bin:/bin"}
+        self.agent_sock = root / name
+        agent = subprocess.Popen(["ssh-agent", "-D", "-a", str(self.agent_sock)], env=env,
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.agent = agent
+        self.addCleanup(stop, agent)
+        until(self.agent_sock.is_socket)
+        self.local.env["SSH_AUTH_SOCK"] = str(self.agent_sock)
+        subprocess.run(["ssh-add", str(root / identity)], env=self.local.env,
+                       check=True, capture_output=True, timeout=5)
+
+
+class DeveloperTests(SSHTests):
+    def test_native_remote_keys_forwarding_and_reattach(self):
+        self.exercise_reattach(rotate=False, fresh_connection=False)
+
+    def test_replaced_agent_with_fresh_transport(self):
+        self.exercise_reattach(rotate=True, fresh_connection=True)
+
+    def test_replaced_agent_with_reused_transport(self):
+        # Strict promotion gate: v0.9.5 currently fails this. Do not xfail/skip it
+        # or put a custom SSH repair mechanism back into production to hide it.
+        self.exercise_reattach(rotate=True, fresh_connection=False)
+
+    def exercise_reattach(self, rotate, fresh_connection):
+        remote, local = self.remote, self.local
+        client = local.client("ravy-e2e")
+        until(lambda: remote.raw("api", "snapshot").returncode == 0)
+        time.sleep(2)
+        self.assertIsNone(client.process.poll(), client.output.decode(errors="replace")[-3000:])
+        client.prefix(b"n")
+        until(lambda: len(remote.snapshot()["tabs"]) == 2)
+        pane = remote.pane()["pane_id"]
+        # Native remote attach supplies the stable address to panes created after attach.
+        signature = remote.root / "signed"
+        public = self.root / "identity.pub"
+        payload = self.root / "payload"
+        payload.write_text("synthetic E2E payload\n")
+        command = (f"ssh-add -T {shlex.quote(str(public))}; and "
+                   f"ssh-keygen -Y sign -n ravy-e2e -f {shlex.quote(str(public))} "
+                   f"{shlex.quote(str(payload))}; and touch {shlex.quote(str(signature))}")
+        remote.api("pane", "run", pane, command)
+        until(signature.exists)
+        # Verify an actual agent-backed signature, not merely socket presence.
+        allowed = self.root / "allowed"
+        fields = public.read_text().split()
+        allowed.write_text(f"test {fields[0]} {fields[1]}\n")
+        with payload.open("rb") as data:
+            verified = subprocess.run(["ssh-keygen", "-Y", "verify", "-f", str(allowed),
+                                       "-I", "test", "-n", "ravy-e2e", "-s", str(payload) + ".sig"],
+                                      stdin=data, capture_output=True, timeout=5)
+        self.assertEqual(verified.returncode, 0)
+        stop(client.process)
+        if rotate:
+            stop(self.agent)
+            # A fresh agent holds a different key. A stale socket cannot pass this.
+            subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f",
+                            str(self.root / "identity2")], env=local.env, check=True, timeout=5)
+            self.start_agent("identity2", "agent2")
+            public = self.root / "identity2.pub"
+        if fresh_connection:
+            # Explicit test condition and diagnostic control, never production repair.
+            local.close_ssh_master()
+        reconnect = local.client("ravy-e2e")
+        time.sleep(2)
+        self.assertIsNone(reconnect.process.poll())
+        marker = remote.root / "after-reconnect"
+        remote.api("pane", "run", pane,
+                   f"ssh-add -T {shlex.quote(str(public))}; and touch {shlex.quote(str(marker))}")
+        until(marker.exists, message=f"SSH signing failed after reconnect: rotated_agent={rotate}, fresh_transport={fresh_connection}")
+        reconnect.prefix(b"n")
+        until(lambda: len(remote.snapshot()["tabs"]) == 3)
+        marker2 = remote.root / "new-pane"
+        remote.api("pane", "run", remote.pane()["pane_id"],
+                   f"ssh-add -T {shlex.quote(str(public))}; and touch {shlex.quote(str(marker2))}")
+        until(marker2.exists)
+        self.assertFalse((remote.home / ".ssh/ssh_auth_sock").exists())
+        reconnect.prefix(b"d")
+        self.assertEqual(reconnect.process.wait(timeout=5), 0)
+        self.assertEqual(len(remote.snapshot()["tabs"]), 3)
+
+
+class LinuxServerRemoteTests(SSHTests):
+    def test_native_server_survives_broken_ssh_transport(self):
+        remote, local = self.remote, self.local
+        client = local.client("ravy-e2e")
+        until(lambda: remote.raw("api", "snapshot").returncode == 0)
+        time.sleep(1)
+        pane = remote.pane()["pane_id"]
+        marker = remote.root / "heartbeat"
+        remote.api("pane", "run", pane,
+                   f"sh -c 'while :; do date +%s > {shlex.quote(str(marker))}; sleep 1; done'")
+        until(marker.exists)
+        # Kill only ssh processes descended from this fixture's exact client.
+        # This breaks a real SSH transport; no simulated network or fake server.
+        tree = subprocess.check_output(["ps", "-eo", "pid=,ppid=,comm="], text=True)
+        rows = [line.split(None, 2) for line in tree.splitlines()]
+        descendants = {client.process.pid}
+        while True:
+            added = {int(pid) for pid, parent, _ in rows if int(parent) in descendants}
+            if added <= descendants:
+                break
+            descendants |= added
+        targets = [int(pid) for pid, _, name in rows
+                   if int(pid) in descendants and Path(name).name == "ssh"]
+        self.assertTrue(targets, "must break an actual fixture SSH transport")
+        before = marker.stat().st_mtime_ns
+        for pid in targets:
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        until(lambda: marker.stat().st_mtime_ns > before)
+        self.assertEqual(remote.pane()["pane_id"], pane)
+        stop(client.process)
+        reconnect = local.client("ravy-e2e")
+        time.sleep(1)
+        self.assertIsNone(reconnect.process.poll())
+        reconnect.prefix(b"n")
+        until(lambda: len(remote.snapshot()["tabs"]) == 2)
+        self.assertIn(pane, [p["pane_id"] for p in remote.snapshot()["panes"]])
+        reconnect.prefix(b"d")
+        self.assertEqual(reconnect.process.wait(timeout=5), 0)
+        before = marker.stat().st_mtime_ns
+        until(lambda: marker.stat().st_mtime_ns > before)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--series", choices=("server", "developer"), required=True)
+    args = parser.parse_args()
+    SERIES = args.series
+    if SERIES == "server" and sys.platform != "linux":
+        parser.error("the Linux server suite requires a real Linux host")
+    required = ["herdr", "fish", "chezmoi", "sshd"] + (["nvim"] if SERIES == "server" else [])
+    for name in required:
+        TOOLS[name] = os.environ.get("RAVY_TEST_SSHD") if name == "sshd" else shutil.which(name)
+        TOOLS[name] = TOOLS[name] or shutil.which(name) or ("/usr/sbin/sshd" if name == "sshd" else None)
+        if not TOOLS[name] or not Path(TOOLS[name]).is_file():
+            parser.error(f"required real executable missing: {name}")
+    version = subprocess.run([TOOLS["herdr"], "--version"], capture_output=True, text=True, timeout=5)
+    if version.returncode or version.stdout.strip() != "herdr 0.9.5":
+        parser.error("this version-bound suite requires Herdr 0.9.5; audit fixtures before upgrading")
+    cases = [ServerTests, LinuxServerRemoteTests] if SERIES == "server" else [DeveloperTests]
+    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromTestCase(case) for case in cases)
+    result = unittest.TextTestRunner(verbosity=2).run(suite)
+    sys.exit(not result.wasSuccessful())

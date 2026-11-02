@@ -1,0 +1,101 @@
+name: herdr-e2e
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terminal:
+    name: ${{ matrix.os }} / ${{ matrix.series }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            series: server
+          - os: ubuntu-24.04
+            series: developer
+          - os: macos-15
+            series: developer
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install OS test prerequisites (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fish neovim openssh-client openssh-server
+      - name: Install OS test prerequisites (macOS)
+        if: runner.os == 'macOS'
+        run: brew install fish
+      - name: Install verified test binaries
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import io
+          import os
+          from pathlib import Path
+          import platform
+          import tarfile
+          import urllib.request
+
+          system = platform.system()
+          arch = platform.machine()
+          arch = {'arm64': 'aarch64', 'AMD64': 'x86_64'}.get(arch, arch)
+          herdr = {
+              ('Linux', 'aarch64'): ('linux-aarch64', '17d7536f2da50859523680ef279dffcac8e4a235f4e46fe8da6c2ec44141897c'),
+              ('Linux', 'x86_64'): ('linux-x86_64', '14d9e8bc8b4a9e0118d77c32266f76d461f09b40342eb23752960bd89f59929d'),
+              ('Darwin', 'aarch64'): ('macos-aarch64', 'fb77c2232a05a8035421382c894392f4174e4e38a18e48af3dd0290157c3a7e2'),
+              ('Darwin', 'x86_64'): ('macos-x86_64', '5fb0a908ec7f6745e3e245738b06bfad56c46391c391ab3c0955fbead01f1369'),
+          }
+          chezmoi = {
+              ('Linux', 'aarch64'): ('linux_arm64', 'bf89495d1aab5e4fa0fc1ba9457837b34ee8dec9b787570f2de3e1c12a5835a5'),
+              ('Linux', 'x86_64'): ('linux_amd64', '1b98a567f726f41540414aea4caf912699d53e248b29ccf8369cf553657b2374'),
+              ('Darwin', 'aarch64'): ('darwin_arm64', '9d89672a597a9333ab47ea5173fcececb85c04864205686a7aa5699c3d8bd98c'),
+              ('Darwin', 'x86_64'): ('darwin_amd64', '3d30cb05efae2f4a68519d6d0e8856765f2b21a0686e66498ee6d2de7707e5e6'),
+          }
+          dest = Path(os.environ['RUNNER_TEMP']) / 'herdr-test-bin'
+          dest.mkdir(mode=0o700)
+
+          def download(url, expected):
+              with urllib.request.urlopen(url, timeout=60) as response:
+                  data = response.read()
+              if hashlib.sha256(data).hexdigest() != expected:
+                  raise SystemExit('test dependency checksum mismatch')
+              return data
+
+          suffix, digest = herdr[system, arch]
+          binary = download(f'https://github.com/herdrdev/herdr/releases/download/v0.9.5/herdr-{suffix}', digest)
+          (dest / 'herdr').write_bytes(binary)
+          suffix, digest = chezmoi[system, arch]
+          archive = download(f'https://github.com/twpayne/chezmoi/releases/download/v2.74.0/chezmoi_2.74.0_{suffix}.tar.gz', digest)
+          with tarfile.open(fileobj=io.BytesIO(archive)) as package:
+              member = package.getmember('chezmoi')
+              if not member.isfile():
+                  raise SystemExit('chezmoi archive member must be a regular file')
+              with package.extractfile(member) as source:
+                  (dest / 'chezmoi').write_bytes(source.read())
+          for name in ('herdr', 'chezmoi'):
+              (dest / name).chmod(0o700)
+          with open(os.environ['GITHUB_PATH'], 'a') as output:
+              output.write(str(dest) + '\n')
+          PY
+      - name: Real PTY and isolated SSH tests
+        env:
+          SERIES: ${{ matrix.series }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/herdr-test-home"
+          env -i HOME="$RUNNER_TEMP/herdr-test-home" TMPDIR="$RUNNER_TEMP" \
+            PATH="$PATH" PYTHONDONTWRITEBYTECODE=1 \
+            python3 tests/e2e_herdr.py --series "$SERIES"
