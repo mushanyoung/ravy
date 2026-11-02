@@ -282,6 +282,7 @@ run_shell() {
   local private_home=$4
   local command=$5
   local ssh_connection=${6:-}
+  local test_auth_sock=${7:-}
   local output
   local status_code
 
@@ -295,6 +296,7 @@ run_shell() {
       RAVY_PRIVATE_HOME="$private_home" \
       HOMEBREW_BUNDLE_FILE="$repo_root/Brewfile" \
       SSH_CONNECTION="$ssh_connection" \
+      SSH_AUTH_SOCK="$test_auth_sock" \
       "$bash_bin" --noprofile --rcfile "$tmp_home/.bashrc" -ic "$command" 2>&1)
     status_code=$?
     set -e
@@ -309,6 +311,7 @@ run_shell() {
       RAVY_PRIVATE_HOME="$private_home" \
       HOMEBREW_BUNDLE_FILE="$repo_root/Brewfile" \
       SSH_CONNECTION="$ssh_connection" \
+      SSH_AUTH_SOCK="$test_auth_sock" \
       "$zsh_bin" -f -ic "source ~/.zshrc >/dev/null 2>&1; $command" 2>&1)
     status_code=$?
     set -e
@@ -460,7 +463,7 @@ check_public_surface() {
   assert_status_zero "$status_code" "$shell_name public surface check failed" "$output"
 }
 
-check_ssh_auth_sock_bridge() {
+check_inherited_ssh_auth_sock() {
   local shell_name=$1
   local tmp_home=$2
   local stub_bin=$3
@@ -504,7 +507,7 @@ check_ssh_auth_sock_bridge() {
   guard_exec "$tmp_home" mkdir -p "$tmp_home/.ssh"
   guard_exec "$tmp_home" ln -sfn "$agent_sock" "$tmp_home/.ssh/ssh_auth_sock"
 
-  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" 'test "${SSH_AUTH_SOCK:-}" = "$HOME/.ssh/ssh_auth_sock"' '127.0.0.1 1 127.0.0.1 2')
+  result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" 'test "${SSH_AUTH_SOCK:-}" = "$HOME/agent.sock"' '127.0.0.1 1 127.0.0.1 2' "$agent_sock")
   status_code=${result%%$'\n'*}
   output=${result#*$'\n__RAVY_OUTPUT__\n'}
   output=${output%$'\n__RAVY_END__'}
@@ -526,7 +529,7 @@ check_ssh_auth_sock_bridge() {
     unset SSH_AGENT_PID
   fi
 
-  assert_status_zero "$status_code" "$shell_name should use stable forwarded SSH auth socket" "$output"
+  assert_status_zero "$status_code" "$shell_name must preserve the inherited SSH auth socket" "$output"
 }
 
 check_mise_upgrade_helpers() {
@@ -676,7 +679,7 @@ check_clean_start bash "$bash_home" "$bash_home/bin" "$bash_home/.missing-privat
 setup_tool_stubs "$bash_home/bin"
 install_mise_stub "$bash_home" self
 check_public_surface bash "$bash_home" "$bash_home/bin"
-check_ssh_auth_sock_bridge bash "$bash_home" "$bash_home/bin"
+check_inherited_ssh_auth_sock bash "$bash_home" "$bash_home/bin"
 check_mise_upgrade_helpers bash "$bash_home" "$bash_home/bin"
 check_private_surface bash "$bash_home" "$bash_home/bin" "$(setup_private_overlay "$bash_home")"
 check_rendered_gitconfig "$bash_home"
@@ -697,7 +700,7 @@ if [ -n "$zsh_bin" ]; then
   setup_tool_stubs "$zsh_home/bin"
   install_mise_stub "$zsh_home" self
   check_public_surface zsh "$zsh_home" "$zsh_home/bin"
-  check_ssh_auth_sock_bridge zsh "$zsh_home" "$zsh_home/bin"
+  check_inherited_ssh_auth_sock zsh "$zsh_home" "$zsh_home/bin"
   check_mise_upgrade_helpers zsh "$zsh_home" "$zsh_home/bin"
   check_private_surface zsh "$zsh_home" "$zsh_home/bin" "$(setup_private_overlay "$zsh_home")"
   check_rendered_gitconfig "$zsh_home"

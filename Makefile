@@ -8,7 +8,7 @@ BASH ?= bash
 FISH ?= fish
 CHEZMOI_ARGS ?=
 
-.PHONY: help install apply chezmoi-apply test test-fish test-sh test-install test-nvim test-zellij test-cloudtop
+.PHONY: help install apply chezmoi-apply test test-fish test-sh test-install test-nvim test-herdr test-cloudtop
 
 help:
 	@echo 'Targets:'
@@ -20,8 +20,8 @@ help:
 	@echo '  make test-sh        Run bash/zsh config test'
 	@echo '  make test-install   Run installer regression test'
 	@echo '  make test-nvim      Run Neovim config rendering test'
-	@echo '  make test-zellij    Run zellij config and plugin wiring tests'
-	@echo '  make test-cloudtop  Run cloudtop session naming test'
+	@echo '  make test-herdr    Run Herdr config and compatibility tests'
+	@echo '  make test-cloudtop  Run native Herdr entrypoint tests'
 
 install:
 	./install.sh
@@ -31,7 +31,7 @@ apply:
 
 chezmoi-apply: apply
 
-test: test-fish test-sh test-install test-nvim test-zellij test-cloudtop
+test: test-fish test-sh test-install test-nvim test-herdr test-cloudtop
 
 test-fish:
 	$(FISH) tests/config.fish.test.fish
@@ -46,8 +46,8 @@ test-install:
 test-nvim:
 	$(BASH) tests/nvim.test.sh
 
-test-zellij:
-	$(BASH) tests/zellij.test.sh
+test-herdr:
+	python3 -m unittest discover -s tests -p 'test_herdr*.py'
 
 test-cloudtop:
 	python3 -m unittest discover -s tests -p test_cloudtop.py

@@ -295,15 +295,15 @@ function wait_for_file_line --argument-names file expected
     return 1
 end
 
-function check_ssh_auth_sock_bridge
+function check_inherited_ssh_auth_sock
     set -l agent_cmd (command -s ssh-agent)
     if test -z "$agent_cmd"
         echo "SKIP fish SSH auth sock bridge: ssh-agent not found" >&2
         return 0
     end
 
-    set -l bridge_home "$HOME/ssh-auth-bridge-home"
-    set -l agent_sock "$bridge_home/agent.sock"
+    set -l bridge_home "$HOME/a"
+    set -l agent_sock "$bridge_home/a"
     set -l fish_cmd "$RAVY_TEST_FISH_CMD"
     mkdir -p "$bridge_home/.ssh" "$bridge_home/.config" "$bridge_home/.local/share"
     ln -sfn "$agent_sock" "$bridge_home/.ssh/ssh_auth_sock"
@@ -317,14 +317,14 @@ function check_ssh_auth_sock_bridge
         RAVY_PRIVATE_HOME="$bridge_home/.missing-private" \
         RAVY_SKIP_BREW=1 \
         SSH_CONNECTION="127.0.0.1 1 127.0.0.1 2" \
-        "$fish_cmd" --private -i -c "source '$rendered_config'; test \"\$SSH_AUTH_SOCK\" = \"\$HOME/.ssh/ssh_auth_sock\"" 2>&1)
+        "$fish_cmd" --private -i -c "source '$rendered_config'; test \"\$SSH_AUTH_SOCK\" = '$agent_sock'" 2>&1)
     set -l probe_status $status
     if test $probe_status -ne 0
-        fail "fish should use stable forwarded SSH auth socket" "$probe_output"
+        fail "fish must preserve the inherited SSH auth socket" "$probe_output"
     end
 
-    set -l old_sock "$bridge_home/old-agent.sock"
-    set -l new_sock "$bridge_home/new-agent.sock"
+    set -l old_sock "$bridge_home/b"
+    set -l new_sock "$bridge_home/c"
     set -l old_agent_output ($agent_cmd -a "$old_sock" -s 2>&1)
     set -l old_agent_status $status
     if test $old_agent_status -ne 0
@@ -401,7 +401,7 @@ assert_true "not set -q RAVY_PRIVATE_HOME" "RAVY_PRIVATE_HOME stays unset when p
 assert_contains "$RAVY_HOME/bin" $PATH "PATH includes RAVY_HOME/bin"
 assert_contains "$HOME/bin" $PATH "PATH includes HOME/bin"
 assert_contains "$HOME/.local/bin" $PATH "PATH includes HOME/.local/bin"
-check_ssh_auth_sock_bridge
+check_inherited_ssh_auth_sock
 assert_contains green $fish_color_command "fish theme sets command color"
 assert_contains 555 $fish_color_autosuggestion "fish theme sets autosuggestion fallback color"
 assert_contains brblack $fish_color_autosuggestion "fish theme sets autosuggestion named fallback"

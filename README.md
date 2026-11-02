@@ -50,69 +50,77 @@ Unicode BOMs and UTF-8 are detected automatically, with Latin-1 as a fallback.
 Open ambiguous legacy encodings explicitly, for example `:edit ++enc=gbk file`
 or `:edit ++enc=utf-16le file`.
 
-## Cloudtop
+## Herdr TUI and Cloudtop
 
-The bundled `cloudtop` helper caches a small attach script on remote machines
-under `~/.cache/cloudtop/<5-char-hash>/attach`, then enters `/bin/sh -lc` and
-attaches to zellij. It checks `PATH`, `mise which zellij`, and common Homebrew
-install prefixes. Use `cloudtop --mosh` for mosh transport.
-The shorter `cl` command is a shim for `cloudtop`. Running `cloudtop` or `cl`
-without a host attaches to a local session without opening an SSH connection.
+Ravy uses **Herdr TUI 0.9.5**, pinned in mise. Herdr owns SSH connections,
+agent forwarding renewal, session discovery, and reconnect. `cloudtop` and `cl`
+are argv-only aliases; there is no custom SSH transport, socket repair, polling
+plugin, or editor mode-switching hook.
 
-Before attaching, the helper checks for this user's running Zellij servers.
-If a server exists but its socket is missing, it stops instead of silently
-creating a replacement session. A reachable server uses attach without
-`--create`; duplicate servers produce a warning. The live server's socket
-directory is reused even if the caller has a different temporary directory.
-Existing sockets are hard-linked into `~/.local/state/cloudtop/sockets/` for
-manual recovery if the original pathname is removed. Hard links require the
-same filesystem. They preserve access to a running server, not a dead process.
-Session serialization is disabled: reconnect to running sessions, and start
-fresh after a session ends. When no matching server is running, the helper
-discards that session's saved state before creating it, including snapshots
-left by older configurations. It never uses forced deletion, and stops if
-cleanup fails (except when no saved state exists). `--forget` only concerns
-remote web authentication in Zellij 0.45.1, not local session resurrection.
+```sh
+cl                            # local Herdr session
+cl dev-host                   # herdr --remote dev-host (SSH config alias)
+cl dev-host --session work     # named remote session
+cl --session work             # named local session
+```
 
-For SSH transport, `cloudtop` bypasses SSH connection sharing and refreshes or
-repairs a stable forwarded-agent socket at `~/.ssh/ssh_auth_sock` before
-attaching. New interactive shells in long-lived remote sessions prefer that
-socket when `SSH_CONNECTION` is present, so Git operations continue to use the
-current forwarded key after reconnects. Existing panes may need
-`export SSH_AUTH_SOCK=$HOME/.ssh/ssh_auth_sock` once.
+Install Ravy and its mise tools on each endpoint before use. `cloudtop` requires
+Herdr on PATH; remote shell discovery and any remote-binary preparation are native
+Herdr behavior. Herdr's managed SSH configuration is enabled; keep host aliases
+and intended `ForwardAgent yes` policy in your existing SSH config. Forward keys
+only to trusted hosts. Shell startup preserves inherited `SSH_AUTH_SOCK`; it no
+longer overrides it with `~/.ssh/ssh_auth_sock`. No private keys are copied.
 
-## Zellij Mode Locking
+The old `--mosh`, `--tmux`, `--zellij`, and `--ssh` transport selectors are rejected.
+Mosh roaming is not provided by this SSH migration. `CLOUDTOP_*` overrides no
+longer control transport, sessions, or agent sockets.
 
-Panes running an editor or a coding agent need raw keys, so zellij has to switch
-to `locked` mode while one of them is focused and back to `normal` otherwise.
-That is done by [`zellij-autolock`](https://github.com/fresh2dev/zellij-autolock),
-a headless plugin declared in `dot_config/zellij/config.kdl.tmpl` and downloaded
-by `chezmoi apply` through `.chezmoiexternal.toml` (pinned to a release asset and
-verified by sha256). Add executables to its `triggers` list to lock for them —
-they are matched by exact equality against the focused pane's full command and
-against its executable basename, so list `vimdiff`, not `vim*`.
+### Familiar keys
 
-The first zellij session after installing it asks once to grant the plugin
-`ReadApplicationState` and `ChangeApplicationState`; the grant is cached in
-`permissions.kdl` under zellij's cache dir.
+Press `Ctrl+Space` and release before the next key:
 
-This replaced `bin/zellij-lock-watch`, a shell poller that ran two
-`zellij action` commands every 0.2s in every session, forever. Each of those
-opens two IPC connections to the session socket — one liveness probe from
-`get_sessions()` plus one real connection — which measured about 18 connections
-per second per session, roughly 600k over a 9 hour session.
+- `n`: new tab following cwd; `c`: new tab in home.
+- `h/j/k/l` or arrows: focus pane; `%` / `"`: vertical / horizontal split.
+- `o`: next pane; `z`: zoom; `x`: close pane with confirmation.
+- `p` / `Shift+n`: previous / next tab; `,`: rename tab.
+- `1…9`, or direct `Alt+1…9`: numbered tab; direct `Alt+0`: tab 10.
+- `d`: detach; `[`: copy mode; `e`: edit scrollback.
+- `Shift+w`: new workspace; native `w`: workspace picker.
 
-Every one of those probes could destroy the session. `assert_socket()` in
-`zellij-utils/src/sessions.rs` deletes the socket file when a connect returns
-`ECONNREFUSED`, which is correct for a dead server but also happens on a live
-one whose 128-deep accept backlog is momentarily full. The server then keeps
-running with no socket, no client can ever reach it again, and the next
-`zellij attach --create` silently starts a second server under the same name.
-The plugin runs in-process inside the zellij server and opens no sockets.
+Herdr uses prefix commands instead of the old Zellij modal/autolock machinery.
+Direct Alt keys remain reserved even inside editors and agents. The tiny managed
+`~/.local/bin/ravy-herdr-tab-10` helper fills the native 1…9 range gap using native
+list/focus commands; it does not manage sessions. The home-tab command also calls
+the native CLI. Python 3 is needed for the tab-10 adapter. Built-in worktree
+create/delete shortcuts are disabled: open canonical worktrees created outside
+Herdr instead. Ctrl+V is left to terminal applications.
 
-Neovim also switches modes directly from `VimEnter`/`VimLeavePre` autocmds. That
-is kept as a fallback for machines where the plugin is missing; it costs a couple
-of connections per editor session rather than a steady stream.
+### Persistence and deliberate updates
+
+Detach or client loss leaves live server processes running. A server restart
+restores layout with fresh shells; it cannot preserve the old processes.
+Automatic agent resume and experimental pane-history persistence are disabled.
+Layout restoration is still native Herdr behavior, unlike the old policy of
+removing saved Zellij state. No automatic agent or paid-model invocation is added.
+Version and agent-manifest background checks are disabled; this is not a claim
+that every possible Herdr feature is network-free. Upgrade the pinned version
+only after rerunning the real-terminal and SSH tests.
+
+### Moving an existing installation
+
+Review/apply the Herdr config, tab helper, shell templates, Neovim changes and mise
+pin together through the normal chezmoi workflow. Finish or deliberately stop old
+Zellij work first: live PTYs cannot be moved into Herdr. Start **fresh Herdr
+sessions** so they receive native agent-socket management; do not import an old
+shell's exported stable-socket override.
+
+Removing source entries does not necessarily remove previously deployed files.
+After old sessions finish, inspect and explicitly retire stale Zellij config/plugin
+files, the old `zellij-safe-detach` entrypoint, Cloudtop caches/socket backups and
+any obsolete Zellij package installation. This branch does not automatically
+kill old sessions, delete caches, or change a live machine. Leave private SSH/Git
+identity configuration untouched. Rollback requires the old repository ref and
+its tool version; it does not transfer newly running Herdr processes back.
 
 ## Private Bootstrap
 
@@ -184,8 +192,8 @@ Once installed, open Neovim and install plugins:
 make test
 ```
 
-`make test` now covers bash, zsh, fish, install, Neovim rendering, zellij, and
-cloudtop.
+`make test` covers bash, zsh, fish, install, Neovim rendering, Herdr configuration,
+the tab adapter, and Cloudtop argv compatibility. Python 3.11+ is required.
 Use a narrower target such as `make test-nvim` when iterating on one area.
 
 ## Recommended Setup

@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+"""Fill the one native keybinding gap: Alt+0 selects tab number 10."""
+import json
+import os
+import subprocess
+import sys
+
+
+def main():
+    # Commands execute on the selected Herdr server. Never guess the default
+    # session or workspace, and never derive an opaque tab ID from its number.
+    binary = os.environ.get("HERDR_BIN_PATH")
+    workspace = os.environ.get("HERDR_ACTIVE_WORKSPACE_ID")
+    if not binary or not workspace or not os.environ.get("HERDR_SOCKET_PATH"):
+        print("tab 10: Herdr custom-command context required", file=sys.stderr)
+        return 2
+    try:
+        result = subprocess.run([binary, "tab", "list", "--workspace", workspace],
+                                check=True, capture_output=True, text=True, timeout=5)
+        tabs = json.loads(result.stdout)["result"]["tabs"]
+        matches = [tab["tab_id"] for tab in tabs
+                   if tab["workspace_id"] == workspace and tab["number"] == 10]
+        if not matches:
+            return 0
+        if len(matches) != 1 or not isinstance(matches[0], str):
+            raise ValueError("ambiguous tab")
+        return subprocess.run([binary, "tab", "focus", matches[0]],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                              timeout=5, check=False).returncode
+    except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+        print("tab 10: could not resolve or focus the current workspace tab", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

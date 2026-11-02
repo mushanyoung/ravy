@@ -88,7 +88,7 @@ assert_file_contains "$rendered_nvim_dir/lua/ravy/plugins.lua" "neoclide/coc.nvi
 assert_file_contains "$rendered_nvim_dir/lua/ravy/plugins.lua" "https://codeberg.org/andyg/leap.nvim" "plugins.lua uses the Codeberg leap.nvim URL"
 assert_file_contains "$rendered_nvim_dir/lua/ravy/plugins.lua" "<Plug>(leap-forward)" "plugins.lua uses explicit leap.nvim mappings"
 assert_file_lacks "$rendered_nvim_dir/lua/ravy/plugins.lua" "create_default_mappings" "plugins.lua avoids deprecated leap.nvim default mappings"
-assert_file_contains "$rendered_nvim_dir/lua/ravy/autocmds.lua" "zellij_lock" "autocmds.lua keeps zellij lock integration"
+assert_file_lacks "$rendered_nvim_dir/lua/ravy/autocmds.lua" "zellij" "editors do not change multiplexer modes"
 assert_file_contains "$rendered_nvim_dir/lua/ravy/private.lua" "RAVY_PRIVATE_HOME" "private.lua loads the private Lua overlay"
 assert_file_lacks "$rendered_init" "ravy.vim" "init.lua no longer sources the old rendered vimrc"
 
@@ -173,7 +173,7 @@ for name, encoding in (("utf8.txt", "utf-8"), ("bom.txt", "utf-16"),
     (root / name).write_bytes("中文测试".encode(encoding))
 PY
 guard_assert_path "$tmp_home" "$tmp_home/nvim-save.log" create
-if ! RAVY_NVIM_SKIP_PLUGINS=1 ZELLIJ='' ZELLIJ_PANE_ID='' \
+if ! RAVY_NVIM_SKIP_PLUGINS=1 \
   RAVY_NVIM_TEST_ROOT="$save_root" \
   RAVY_NVIM_SAVE_TEST="$repo_root/tests/nvim-save.test.lua" \
   XDG_CONFIG_HOME="$tmp_home/.config" \

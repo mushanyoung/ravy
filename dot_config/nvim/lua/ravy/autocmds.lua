@@ -1,19 +1,5 @@
 local M = {}
 
-local function zellij_switch_mode(mode)
-  if vim.env.ZELLIJ == nil or vim.env.ZELLIJ == "" then
-    return
-  end
-  if vim.env.ZELLIJ_PANE_ID == nil or vim.env.ZELLIJ_PANE_ID == "" then
-    return
-  end
-  if vim.fn.executable("zellij") ~= 1 then
-    return
-  end
-
-  vim.fn.jobstart({ "zellij", "action", "switch-mode", mode }, { detach = true })
-end
-
 local function strip_whitespace()
   if vim.bo.buftype ~= "" or not vim.bo.modifiable or vim.bo.readonly or vim.bo.binary then
     return
@@ -167,32 +153,6 @@ function M.setup()
   vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
     group = rooter,
     callback = root_current_buffer,
-  })
-
-  local zellij = vim.api.nvim_create_augroup("zellij_lock", { clear = true })
-  vim.api.nvim_create_autocmd("VimEnter", {
-    group = zellij,
-    callback = function()
-      zellij_switch_mode("locked")
-    end,
-  })
-  vim.api.nvim_create_autocmd("VimLeavePre", {
-    group = zellij,
-    callback = function()
-      zellij_switch_mode("normal")
-    end,
-  })
-  vim.api.nvim_create_autocmd("VimSuspend", {
-    group = zellij,
-    callback = function()
-      zellij_switch_mode("normal")
-    end,
-  })
-  vim.api.nvim_create_autocmd("VimResume", {
-    group = zellij,
-    callback = function()
-      zellij_switch_mode("locked")
-    end,
   })
 end
 

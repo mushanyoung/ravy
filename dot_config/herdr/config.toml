@@ -1,0 +1,80 @@
+# Herdr TUI 0.9.5. Native session/SSH/agent management; no custom reconnect loop.
+onboarding = false
+
+[terminal]
+default_shell = "fish"
+shell_mode = "auto"
+new_cwd = "follow"
+
+[remote]
+manage_ssh_config = true
+
+[update]
+# Updates are deliberate and owned by mise; no background network checks.
+version_check = false
+manifest_check = false
+
+[session]
+# Keep live processes on detach. Restart restores layout, not old processes.
+# Do not automatically relaunch agents or incur model usage on attach.
+resume_agents_on_restore = false
+
+[experimental]
+allow_nested = false
+pane_history = false
+
+[ui]
+prompt_new_tab_name = false
+confirm_close = true
+copy_on_select = true
+
+[ui.sound]
+enabled = false
+
+[ui.toast]
+delivery = "herdr"
+
+[keys]
+prefix = "ctrl+space"
+detach = "prefix+d"
+new_tab = "prefix+n"
+next_tab = "prefix+shift+n"
+previous_tab = "prefix+p"
+rename_tab = "prefix+comma"
+switch_tab = ["alt+1..9", "prefix+1..9"]
+focus_pane_left = ["prefix+h", "prefix+left"]
+focus_pane_down = ["prefix+j", "prefix+down"]
+focus_pane_up = ["prefix+k", "prefix+up"]
+focus_pane_right = ["prefix+l", "prefix+right"]
+split_vertical = "prefix+%"
+split_horizontal = 'prefix+"'
+cycle_pane_next = "prefix+o"
+open_notification_target = "prefix+shift+o"
+close_pane = "prefix+x"
+zoom = "prefix+z"
+copy_mode = "prefix+["
+edit_scrollback = "prefix+e"
+move_tab_previous = "alt+u"
+move_tab_next = "alt+i"
+# Avoid collision with new-tab; use W for a new workspace, w for the picker.
+new_workspace = "prefix+shift+w"
+rename_workspace = "prefix+shift+r"
+reload_config = "prefix+ctrl+r"
+# Existing canonical worktrees are opened, never created/deleted by a UI shortcut.
+new_worktree = ""
+remove_worktree = ""
+# Preserve raw Ctrl+V for terminal apps; image paste remains in the native menu.
+remote_image_paste = ""
+
+[[keys.command]]
+key = "prefix+c"
+type = "shell"
+command = '"${HERDR_BIN_PATH:?}" tab create --workspace "${HERDR_ACTIVE_WORKSPACE_ID:?}" --cwd "$HOME" --focus'
+description = "new tab in home (n follows cwd)"
+
+[[keys.command]]
+key = "alt+0"
+type = "shell"
+# Native indexed bindings only cover 1..9. This adapter selects live tab #10.
+command = '"$HOME/.local/bin/ravy-herdr-tab-10"'
+description = "go to tab 10"
