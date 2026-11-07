@@ -23,6 +23,14 @@ Observed on Linux aarch64 with real Herdr 0.9.5 and chezmoi 2.74.0:
   were exercised locally on Linux aarch64. GitHub Actions itself has not run for
   this branch. Neither the macOS runner nor cross-OS connections have been tested.
 
+The SSH fixture isolation fix was verified locally on macOS arm64 (both developer
+tests) and in an Ubuntu 24.04 arm64 container (both developer tests and all four
+server tests). Runtime directories stay under `/tmp`; a real SSH preflight checks
+shell startup isolation. Five additional regression tests cover environment lookup,
+temporary-directory selection and cleanup, unsafe account-home permissions, and
+unsupported login shells. This is separate from the still-pending macOS GitHub
+Actions run.
+
 The agreed contract accepts rare local-agent replacement as an explicit recovery
 operation, while retaining native connection reuse. It does not require transparent
 hot replacement through a still-live SSH master. The next platform acceptance step
@@ -70,11 +78,14 @@ these are real loopback SSH tests, not claims of WAN or cross-OS validation.
 Prerequisites: Python 3.11+, Herdr 0.9.5, chezmoi, Fish, OpenSSH client/agent/sshd;
 Neovim is additionally required for the server series. Lint uses ShellCheck and
 Ruff 0.14.3. CI verifies pinned Herdr/chezmoi assets before execution.
+The SSH account's login shell must be Fish, Bash, Zsh, sh or dash. Its passwd home
+must be owned by that account and not group/world-writable; the harness reports
+an error before starting sshd if these requirements are not met.
 
 Run from the repository using a trusted toolchain PATH and an isolated HOME:
 
 ```sh
-root=$(mktemp -d "${TMPDIR:-/tmp}/ravy-herdr.XXXXXX")
+root=$(mktemp -d /tmp/ravy-herdr.XXXXXX)
 mkdir "$root/home"
 env -i HOME="$root/home" TMPDIR="$root" PATH="$PATH" \
   PYTHONDONTWRITEBYTECODE=1 make lint-herdr test
@@ -88,9 +99,15 @@ env -i HOME="$root/home" TMPDIR="$root" PATH="$PATH" \
   PYTHONDONTWRITEBYTECODE=1 make diagnose-herdr-agent-rotation
 ```
 
-Use a short temporary root to respect Unix socket length limits. The test harness
-removes its own nested temporary directories; remove the empty outer root/home
-after inspecting any failure. Missing prerequisites fail rather than skip.
+The E2E harness creates short, mode-0700 runtime directories directly under `/tmp`,
+independent of `TMPDIR`, to avoid socket-length limits and ancestor tool configs.
+For each SSH fixture it also creates a mode-0700 `.ravy-herdr-keys-*` directory
+inside the account's real passwd home, containing only the generated authorized
+public key (mode 0600). It uses the passwd home even when the caller overrides
+`HOME`. `StrictModes yes` remains enabled: putting the authorized key in `/tmp`
+would make sshd reject its writable ancestor. Existing SSH files are untouched.
+Both directories are removed by test cleanup; remove the outer root/home above
+after inspecting results. Missing prerequisites fail rather than skip.
 
 For a rootlessly unpacked Linux OpenSSH package, the harness accepts the exact
 `RAVY_TEST_SSHD`, `RAVY_TEST_SSHD_SESSION`, `RAVY_TEST_SSHD_AUTH` and
@@ -168,13 +185,23 @@ not implemented in Cloudtop. No host enrollment or live recovery was performed.
 The harness renders real Ravy Fish startup and copies the managed Herdr config
 and adapter into temporary homes. It launches real Herdr, PTYs, localhost-only
 sshd and foreground ssh-agent processes. It creates only temporary Ed25519 keys,
-pins the test host key, disables password authentication, and forces the test SSH
-identity into the isolated remote HOME/config. It does not load user keys or call
-an LLM. No private keys or raw environment dumps become test artifacts.
+pins the test host key and disables password authentication. Before the account
+shell starts, sshd `SetEnv` sets a separate bootstrap HOME, XDG directories,
+ZDOTDIR, BASH_ENV and ENV. User SSH rc/environment files are disabled. A real SSH
+preflight verifies the bootstrap startup marker for Fish/Bash/Zsh, and the forced
+launcher checks its inherited lookup paths before selecting the rendered Ravy
+home. sh/dash have no noninteractive user startup file to probe. Host system-wide
+shell startup remains trusted; arbitrary login shells are rejected.
+
+Herdr and rendering subprocesses run from fixture homes, with explicit XDG paths,
+so they do not discover the checkout's ancestor tool configuration. The harness
+does not load user keys or call an LLM. No private keys or raw environment dumps
+become test artifacts.
 
 Cleanup stops fixture clients/servers/agents/sshd, verifies the server stopped,
 and closes only the exact config+target-namespaced shared SSH master. Herdr itself
 places its shared master socket under `/tmp/hssh-UID`; that native path is outside
 TMPDIR. The harness neither deletes that shared directory nor stops unrelated
-masters. A forced kill of the harness itself can bypass normal cleanup; inspect
-only the identified fixture processes and directories, never use a global pkill.
+masters. A forced kill of the harness itself can bypass normal cleanup, including
+the generated public-key directory in the passwd home; inspect only the identified
+fixture processes and directories, never use a global pkill.

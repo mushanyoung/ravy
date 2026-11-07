@@ -20,6 +20,7 @@ import shlex
 import shutil
 import signal
 import socket
+import stat
 import struct
 import subprocess
 import sys
@@ -32,6 +33,58 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = {}
 SERIES = "server"
+
+
+def temporary_runtime(prefix):
+    # macOS's default TMPDIR can exceed Unix socket limits; a test directory
+    # beneath the account home can also expose ancestor mise configuration.
+    return tempfile.TemporaryDirectory(prefix=prefix, dir="/tmp")
+
+
+def isolated_home_env(home):
+    return {
+        "HOME": str(home), "XDG_CONFIG_HOME": str(home / ".config"),
+        "XDG_DATA_HOME": str(home / ".local/share"),
+        "XDG_CACHE_HOME": str(home / ".cache"),
+        "XDG_STATE_HOME": str(home / ".local/state"),
+        "ZDOTDIR": str(home), "BASH_ENV": "/dev/null", "ENV": "/dev/null",
+    }
+
+
+def prepare_ssh_home(home, shell):
+    """Isolate user startup before ForceCommand; leave system startup intact."""
+    home.mkdir(mode=0o700)
+    startup = {"fish": ".config/fish/config.fish", "zsh": ".zshenv",
+               "bash": ".bashrc", "sh": None, "dash": None}
+    name = Path(shell).name
+    if name not in startup:
+        raise ValueError(f"unsupported SSH login shell for isolated tests: {shell}")
+    marker = None
+    if startup[name]:
+        marker = home / "startup.env"
+        rc = home / startup[name]
+        rc.parent.mkdir(parents=True, exist_ok=True)
+        # A real SSH preflight must prove the account shell read the fixture's
+        # startup file, with isolation already active, before the launcher runs.
+        rc.write_text('printf \'%s\\n\' "$HOME" "$XDG_CONFIG_HOME" "$ZDOTDIR" > '
+                      + shlex.quote(str(marker)) + "\n")
+    return isolated_home_env(home) | {"PATH": "/usr/bin:/bin"}, marker
+
+
+def authorized_keys_directory(account_home):
+    # StrictModes follows AuthorizedKeysFile ancestors until the passwd home.
+    # A private leaf in /tmp still fails because /tmp itself is world-writable.
+    home = Path(account_home).resolve(strict=True)
+    info = home.stat()
+    if not home.is_dir() or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) & 0o022:
+        raise ValueError("SSH tests require an owned, non-group/world-writable account home")
+    return tempfile.TemporaryDirectory(prefix=".ravy-herdr-keys-", dir=home)
+
+
+def ssh_config_quote(value):
+    if any(char in value for char in "\n\r\0"):
+        raise ValueError("invalid SSH configuration value")
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 def until(fn, timeout=10, message="timed out waiting for verified state"):
@@ -59,7 +112,7 @@ class Client:
         self.master, slave = pty.openpty()
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 40, 140, 0, 0))
         self.process = subprocess.Popen(argv, env=env, stdin=slave, stdout=slave,
-                                        stderr=slave, start_new_session=True)
+                                        stderr=slave, start_new_session=True, cwd=env["HOME"])
         os.close(slave)
         self.closed = False
         self.output = bytearray()
@@ -114,7 +167,7 @@ class Fixture:
         self.home.mkdir(parents=True)
         self.config = root / "config.toml"
         self.config.write_bytes((ROOT / "dot_config/herdr/config.toml").read_bytes())
-        self.env = {"HOME": str(self.home), "PATH": os.environ["PATH"],
+        self.env = isolated_home_env(self.home) | {"PATH": os.environ["PATH"],
                     "TERM": "xterm-256color", "LC_ALL": "en_US.UTF-8" if sys.platform == "darwin" else "C.UTF-8",
                     "SHELL": TOOLS["fish"], "TMPDIR": str(root),
                     "HERDR_CONFIG_PATH": str(self.config),
@@ -123,7 +176,7 @@ class Fixture:
         target = self.home / ".config/fish/config.fish"
         target.parent.mkdir(parents=True)
         rendered = subprocess.run([TOOLS["chezmoi"], "-S", str(ROOT), "-D", str(self.home),
-                                   "cat", str(target)], env=self.env, capture_output=True,
+                                   "cat", str(target)], env=self.env, cwd=self.home, capture_output=True,
                                   text=True, timeout=15, check=True)
         target.write_text(rendered.stdout)
         helper = self.home / ".local/bin/ravy-herdr-tab-10"
@@ -136,7 +189,7 @@ class Fixture:
 
     def raw(self, *args):
         result = subprocess.run([TOOLS["herdr"], *args], env=self.env,
-                                text=True, capture_output=True, timeout=10)
+                                cwd=self.home, text=True, capture_output=True, timeout=10)
         return result
 
     def api(self, *args):
@@ -148,7 +201,7 @@ class Fixture:
     def start(self):
         self.log = open(self.root / "server.log", "a")
         self.server = subprocess.Popen([TOOLS["herdr"], "server"], env=self.env,
-                                       stdout=self.log, stderr=self.log)
+                                       cwd=self.home, stdout=self.log, stderr=self.log)
         until(lambda: self.raw("api", "snapshot").returncode == 0)
 
     def snapshot(self):
@@ -202,7 +255,7 @@ class Fixture:
 
 class ServerTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="he-")
+        self.temp = temporary_runtime("he-")
         self.addCleanup(self.temp.cleanup)
         self.fx = Fixture(Path(self.temp.name))
         self.addCleanup(self.fx.close)
@@ -296,7 +349,7 @@ class ServerTests(unittest.TestCase):
 
 class SSHTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="hd-")
+        self.temp = temporary_runtime("hd-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.remote = Fixture(self.root / "r")
@@ -307,14 +360,24 @@ class SSHTests(unittest.TestCase):
 
     def setup_ssh(self):
         root = self.root
+        account = pwd.getpwuid(os.getuid())
         env = {"HOME": str(root), "PATH": "/usr/bin:/bin"}
         for name in ("host", "identity"):
             subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(root / name)],
                            env=env, check=True, timeout=5)
-        # The forced command serves only this generated test identity, isolating
-        # HOME/config/PATH from the account running sshd, on both macOS and Linux.
+        keys = authorized_keys_directory(account.pw_dir)
+        self.addCleanup(keys.cleanup)
+        authorized_keys = Path(keys.name) / "authorized_keys"
+        authorized_keys.write_bytes((root / "identity.pub").read_bytes())
+        authorized_keys.chmod(0o600)
+        bootstrap_env, startup_marker = prepare_ssh_home(root / "b", account.pw_shell)
+        # sshd starts the account shell BEFORE ForceCommand. SetEnv below must
+        # isolate that shell; this launcher then selects the rendered Ravy home.
         launcher = root / "remote.py"
         launcher.write_text("#!" + sys.executable + "\nimport os\n"
+                            + "expected = " + repr(bootstrap_env) + "\n"
+                            + "if any(os.environ.get(k) != v for k,v in expected.items() if k != 'PATH'):\n"
+                            + " raise SystemExit('SSH startup environment escaped fixture')\n"
                             + "env = " + repr(self.remote.env) + "\n"
                             + "for k in ('SSH_AUTH_SOCK','SSH_CONNECTION','SSH_TTY','TERM'):\n"
                             + " if k in os.environ: env[k] = os.environ[k]\n"
@@ -329,15 +392,19 @@ class SSHTests(unittest.TestCase):
 Port {port}
 HostKey {root}/host
 PidFile {root}/sshd.pid
-AuthorizedKeysFile {root}/identity.pub
+AuthorizedKeysFile {ssh_config_quote(str(authorized_keys))}
 StrictModes yes
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 UsePAM no
+PermitUserEnvironment no
+PermitUserRC no
 AllowAgentForwarding yes
-AllowUsers {pwd.getpwuid(os.getuid()).pw_name}
+AllowUsers {account.pw_name}
 ForceCommand {launcher}
 """
+        text += "SetEnv " + " ".join(ssh_config_quote(f"{key}={value}")
+                                      for key, value in bootstrap_env.items()) + "\n"
         # Optional relocated OpenSSH package support for rootless Linux testing.
         for option, var in (("SshdSessionPath", "RAVY_TEST_SSHD_SESSION"),
                             ("SshdAuthPath", "RAVY_TEST_SSHD_AUTH")):
@@ -361,7 +428,7 @@ ForceCommand {launcher}
         (sshdir / "config").write_text(f"""Host ravy-e2e
   HostName 127.0.0.1
   Port {port}
-  User {pwd.getpwuid(os.getuid()).pw_name}
+  User {account.pw_name}
   IdentityFile {root}/identity
   IdentitiesOnly yes
   ForwardAgent yes
@@ -371,6 +438,15 @@ ForceCommand {launcher}
 """)
         # A foreground ssh-agent owns only a generated, short-lived test key.
         self.start_agent("identity", "agent")
+        probe = subprocess.run(["ssh", "-F", str(sshdir / "config"),
+                                "-o", "ControlMaster=no", "-o", "ControlPath=none",
+                                "ravy-e2e", "true"], env=self.local.env, cwd=self.local.home,
+                               stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
+        self.assertEqual(probe.returncode, 0,
+                         probe.stderr + (root / "sshd.log").read_text())
+        if startup_marker:
+            self.assertEqual(startup_marker.read_text().splitlines(),
+                             [bootstrap_env[key] for key in ("HOME", "XDG_CONFIG_HOME", "ZDOTDIR")])
 
     def start_agent(self, identity, name):
         root = self.root
