@@ -67,25 +67,57 @@ cl --session work             # named local session
 Install Ravy and its mise tools on each endpoint before use. `cloudtop` requires
 Herdr on PATH; remote shell discovery and any remote-binary preparation are native
 Herdr behavior. Herdr's managed SSH configuration is enabled; keep host aliases
-and intended `ForwardAgent yes` policy in your existing SSH config. Forward keys
-only to trusted hosts. Shell startup preserves inherited `SSH_AUTH_SOCK`; it no
+and intended `ForwardAgent yes` policy in your existing SSH config. Enable it only
+for trusted development hosts that need Git authentication or SSH signing; keep
+forwarding disabled on servers that do not need it. Herdr does not enable agent
+forwarding for you. Shell startup preserves inherited `SSH_AUTH_SOCK`; it no
 longer overrides it with `~/.ssh/ssh_auth_sock`. No private keys are copied.
 
 The old `--mosh`, `--tmux`, `--zellij`, and `--ssh` transport selectors are rejected.
 Mosh roaming is not provided by this SSH migration. `CLOUDTOP_*` overrides no
 longer control transport, sessions, or agent sockets.
 
-### Current promotion blocker
+### Daily operation and ownership
 
-This migration candidate is **not ready for live rollout**. Real Linux SSH tests
-found that Herdr 0.9.5 can reuse an SSH ControlMaster whose forwarded agent still
-points to a terminated local agent. If the local agent is replaced at a new socket,
-reattaching alone does not restore signing in existing panes. Keeping the original
-agent works; starting a fresh SSH connection also works, including old and new
-panes. The strict regression remains failing (not skipped/xfail), so developer
-E2E CI must remain red until this is resolved or the acceptance policy changes.
-There is no production repair wrapper. macOS has a real-runner CI job but has not
-yet been executed for this candidate. See [test details](tests/README.herdr.md).
+Keep frequently used trusted development machines in Herdr's native sidebar:
+
+```sh
+herdr machine add mac-dev --remote-session default
+herdr machine add linux-dev --remote-session default
+cl
+```
+
+These are example SSH aliases, not machines automatically provisioned by Ravy.
+Use `herdr machine ...` directly for management: `cl machine ...` would treat
+`machine` as a host. Use `cl linux-server --session ops` for an on-demand server;
+there is no need to enroll every server for background connections. A saved
+machine targets one remote session. Cloudtop does not keep another host inventory
+or generate session names.
+
+Install Ravy separately on each endpoint. Herdr does not synchronize remote Fish,
+configuration or custom commands such as the tab-10 helper. Existing Ctrl+Space,
+pane navigation, detach, and cwd-follow/home shortcuts remain in Herdr's config.
+
+### Accepted agent lifecycle and remaining rollout gates
+
+The operating contract keeps the local agent stable, lets Herdr handle ordinary
+reconnections, and uses explicit transport recovery after rare local-agent
+replacement. A live OpenSSH master retains the agent from its creation; reattaching
+with a new `SSH_AUTH_SOCK` does not rebind it. This is an accepted compatibility
+limitation, not a requirement to disable native connection reuse or fix upstream
+before migration. The old Cloudtop used `ssh -S none` and a remote stable symlink;
+remote forwarded-socket rotation did not imply local-agent replacement.
+
+Required Linux server/developer E2E pass. The strict hot-replacement diagnostic is
+retained separately as `make diagnose-herdr-agent-rotation`; on 0.9.5 it still
+fails with a nonzero exit, without skip/xfail or `continue-on-error`. It is opt-in
+in CI and is not a required acceptance gate under the agreed operating contract.
+No production launcher resets masters or repairs sockets.
+
+**Live rollout remains pending:** the native macOS CI job has not run, and actual
+terminal/host checks (IME, clipboard, sleep/wake, WAN loss) remain outstanding.
+No live deployment or push is implied by passing local tests. See the
+[test contract and scoped recovery procedure](tests/README.herdr.md).
 
 ### Familiar keys
 

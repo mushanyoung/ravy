@@ -4,6 +4,12 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      agent_rotation:
+        description: 'Also run strict agent hot-replacement diagnostic (known failure on 0.9.5)'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -99,3 +105,9 @@ jobs:
           env -i HOME="$RUNNER_TEMP/herdr-test-home" TMPDIR="$RUNNER_TEMP" \
             PATH="$PATH" PYTHONDONTWRITEBYTECODE=1 \
             python3 tests/e2e_herdr.py --series "$SERIES"
+      - name: Opt-in agent rotation diagnostic (known limitation; strict exit)
+        if: github.event_name == 'workflow_dispatch' && inputs.agent_rotation && matrix.series == 'developer'
+        run: |
+          env -i HOME="$RUNNER_TEMP/herdr-test-home" TMPDIR="$RUNNER_TEMP" \
+            PATH="$PATH" PYTHONDONTWRITEBYTECODE=1 \
+            python3 tests/e2e_herdr.py --series agent-rotation

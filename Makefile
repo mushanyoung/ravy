@@ -25,6 +25,7 @@ help:
 	@echo '  make lint-herdr     Run ShellCheck and Ruff for migration code'
 	@echo '  make test-e2e-server     Real Linux server / PTY / SSH tests'
 	@echo '  make test-e2e-developer  Real macOS/Linux SSH development tests'
+	@echo '  make diagnose-herdr-agent-rotation  Strict opt-in known-limit diagnostic'
 
 install:
 	./install.sh
@@ -34,17 +35,20 @@ apply:
 
 chezmoi-apply: apply
 
-.PHONY: lint-herdr test-e2e-developer test-e2e-server
+.PHONY: lint-herdr test-e2e-developer test-e2e-server diagnose-herdr-agent-rotation
 
 lint-herdr:
 	shellcheck bin/cloudtop bin/cl
-	ruff check --no-cache tests/test_cloudtop.py tests/test_herdr_config.py tests/test_herdr_tab.py tests/e2e_herdr.py dot_local/bin/executable_ravy-herdr-tab-10
+	ruff check --no-cache tests/test_cloudtop.py tests/test_herdr_config.py tests/test_herdr_tab.py tests/test_e2e_contract.py tests/e2e_herdr.py dot_local/bin/executable_ravy-herdr-tab-10
 
 test-e2e-developer:
 	python3 tests/e2e_herdr.py --series developer
 
 test-e2e-server:
 	python3 tests/e2e_herdr.py --series server
+
+diagnose-herdr-agent-rotation:
+	python3 tests/e2e_herdr.py --series agent-rotation
 
 test: test-fish test-sh test-install test-nvim test-herdr test-cloudtop
 
@@ -63,6 +67,7 @@ test-nvim:
 
 test-herdr:
 	python3 -m unittest discover -s tests -p 'test_herdr*.py'
+	python3 -m unittest discover -s tests -p 'test_e2e_contract.py'
 
 test-cloudtop:
 	python3 -m unittest discover -s tests -p test_cloudtop.py

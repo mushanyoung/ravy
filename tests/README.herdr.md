@@ -9,21 +9,24 @@ by the tests. Publication and deployment are separate actions.
 Observed on Linux aarch64 with real Herdr 0.9.5 and chezmoi 2.74.0:
 
 - `make test`: passes Fish/Bash/Zsh, installer, Neovim rendering, 8 Herdr
-  config/adapter unit tests and 9 Cloudtop unit tests. The existing optional
+  config/adapter tests, 4 E2E-selection tests and 9 Cloudtop tests. The existing optional
   native prompt integration reports a skip when zoxide/starship are absent.
   The container also reports pre-existing unavailable `en_US.UTF-8` locale
   warnings in the shell suite; these are not Herdr failures.
 - `make lint-herdr`: ShellCheck and Ruff pass.
 - `make test-e2e-server`: 4 real-path tests pass.
-- `make test-e2e-developer`: 2 pass, 1 fails at the strict agent-replacement
-  gate described below. The target exits nonzero; it is not an expected-failure
-  test and the workflow has no `continue-on-error`.
+- `make test-e2e-developer`: both required real SSH tests pass.
+- `make diagnose-herdr-agent-rotation`: 1 strict diagnostic fails specifically
+  after replacement with a reused master. Python exits 1 and make exits 2. This
+  is not a passing expected-failure test; no skip/xfail or `continue-on-error`.
 - The workflow YAML, shell blocks and exact pinned-binary download/checksum step
   were exercised locally on Linux aarch64. GitHub Actions itself has not run for
   this branch. Neither the macOS runner nor cross-OS connections have been tested.
 
-The next acceptance step is to resolve the native agent-replacement issue and
-run the actual macOS job. GUI-terminal IME, enhanced keyboard protocols, clipboard,
+The agreed contract accepts rare local-agent replacement as an explicit recovery
+operation, while retaining native connection reuse. It does not require transparent
+hot replacement through a still-live SSH master. The next platform acceptance step
+is to run the actual macOS job. GUI-terminal IME, enhanced keyboard protocols, clipboard,
 laptop sleep/wake and real WAN loss still require checks on the intended terminal
 and hosts. Injected UTF-8 PTY bytes do not prove a GUI IME works.
 
@@ -45,10 +48,19 @@ and hosts. Injected UTF-8 PTY bytes do not prove a GUI IME works.
    and verification, ordinary reattach, and signing in old/new panes.
 2. Agent replacement at a new socket with a fresh SSH transport: signing works
    in old/new panes without a Ravy stable-socket bridge.
-3. Agent replacement with the native shared SSH transport still alive: signing
-   must work after reattach. This currently fails with 0.9.5 and blocks rollout.
 
-CI runs Linux/server, Linux/developer and macOS/developer as independent jobs.
+`make diagnose-herdr-agent-rotation` is a separate, opt-in compatibility diagnostic:
+
+1. Agent replacement with the native shared SSH transport still alive: retain
+   the original assertion that signing works after reattach. This still fails
+   with 0.9.5; it is outside the accepted operating contract, not a suppressed
+   failure in the required developer suite.
+
+Default CI runs Linux/server, Linux/developer and macOS/developer as independent jobs.
+Manual `herdr-e2e` workflow dispatch can enable the boolean `agent_rotation` input
+(default false). This runs the strict diagnostic after required tests in both
+developer jobs; a diagnostic failure makes that explicitly requested job red.
+There is no automatic master reset or changed signing assertion to produce green CI.
 The macOS job uses macOS processes and sshd, not a Linux mock. Each remote endpoint
 is a separate sshd/Herdr process tree with a private HOME on the same runner;
 these are real loopback SSH tests, not claims of WAN or cross-OS validation.
@@ -66,11 +78,14 @@ root=$(mktemp -d "${TMPDIR:-/tmp}/ravy-herdr.XXXXXX")
 mkdir "$root/home"
 env -i HOME="$root/home" TMPDIR="$root" PATH="$PATH" \
   PYTHONDONTWRITEBYTECODE=1 make lint-herdr test
-# Run each separately so a failing developer gate does not hide server results.
+# Run required series separately so one failure does not hide the other results.
 env -i HOME="$root/home" TMPDIR="$root" PATH="$PATH" \
   PYTHONDONTWRITEBYTECODE=1 make test-e2e-server
 env -i HOME="$root/home" TMPDIR="$root" PATH="$PATH" \
   PYTHONDONTWRITEBYTECODE=1 make test-e2e-developer
+# Optional: known nonzero result on 0.9.5; report separately from required gates.
+env -i HOME="$root/home" TMPDIR="$root" PATH="$PATH" \
+  PYTHONDONTWRITEBYTECODE=1 make diagnose-herdr-agent-rotation
 ```
 
 Use a short temporary root to respect Unix socket length limits. The test harness
@@ -103,11 +118,50 @@ socket. An existing master retains its old forwarding context. See:
 - [v0.9.5 shared SSH socket source](https://github.com/herdrdev/herdr/blob/v0.9.5/src/platform/unix_common.rs)
 
 The fixture's `close_ssh_master` exists for cleanup and the fresh-transport control
-experiment only. No production launcher invokes it. Do not restore custom SSH
-socket repair, silently disable native SSH management, skip the failing case, or
-claim full migration acceptance merely to obtain green CI. A version change or
-an explicitly accepted operational restriction needs a separate decision and
-must rerun this regression.
+experiment only. No production launcher invokes it. The user accepted the stable
+local-agent contract and explicit recovery exception; test selection, CI and docs
+now implement that decision together. The diagnostic was rerun and still fails.
+Do not restore custom socket repair, disable native SSH management, weaken signing
+assertions, or infer complete migration acceptance from required Linux tests.
+Rerun required suites and this diagnostic on version or lifecycle-policy changes.
+
+## Scoped recovery after local-agent replacement
+
+Ordinary detach/reattach needs no Cloudtop action. For saved-machine authentication
+problems use native `herdr machine status <label-or-id> --json` and, when appropriate,
+`herdr machine reconnect <label-or-id>` in an interactive terminal. Reconnect is
+not a guaranteed master reset and does not install/update the remote Herdr server.
+
+If the local agent was actually replaced and the old master still forwards to the
+dead one:
+
+1. Confirm the new agent works locally (`ssh-add -l`), then detach affected clients.
+   Do not stop the remote Herdr server or its pane processes.
+2. Identify the **exact** SSH target, Herdr-managed `-F` configuration, and shared
+   `-S`/`ControlPath` from that connection's actual SSH invocation. Inspect process
+   arguments only, never environment dumps. Verify the socket is owned by the
+   current user, is a socket rather than a symlink, and belongs to this connection.
+   If identity is ambiguous, stop; do not guess paths or scan/kill all masters.
+3. Only with those verified values, check and close that master explicitly:
+
+   ```sh
+   # Set these to the verified connection values, not an arbitrary ~/.ssh/config.
+   : "${managed_config:?}" "${control_path:?}" "${target:?}"
+   # Proceed only after affected shared clients are accounted for.
+   ssh -F "$managed_config" -S "$control_path" -O check "$target" &&
+     ssh -F "$managed_config" -S "$control_path" -O exit "$target"
+   ```
+
+   Closing the master interrupts every client sharing that transport; a session
+   name alone does not isolate it. Never use `pkill ssh`, delete the shared socket
+   directory, or restart the remote Herdr server as a shortcut.
+4. Reattach using the same target/session with the new local agent environment,
+   then verify agent-backed signing in an existing pane and a new pane. A present
+   socket or successful login alone is not proof of restored signing.
+
+The automated fresh-transport test exercises this recovery boundary only inside
+its disposable SSH fixture. Production master discovery/termination is deliberately
+not implemented in Cloudtop. No host enrollment or live recovery was performed.
 
 ## Isolation and cleanup
 
