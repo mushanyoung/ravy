@@ -15,8 +15,13 @@
 mise 私有 include 的显式覆盖是权威选择：指定位置不存在时输出为空，不回退读取另一份私有配置。
 `RAVY_PRIVATE_REPO` 仅在用户选择安装私有源时用于 clone/update；没有私有仓库也能使用公共项目。
 
-安装顺序保持公共源 → Homebrew → 私有源 → 可选私有 install.sh → 刷新私有 mise include → mise install。
+新安装默认使用 `~/.ravy`，已有 checkout 保留位置；配置模板持久化项目根目录为 `sourceDir`。
+迁移到 `~/.ravy` 的操作见 [安装与路径迁移](installation.md)。
+
+安装顺序保持公共源 → Homebrew → 私有源 → 可选私有 install.sh → 刷新私有 mise include → mise install → 切换登录 shell。
 私有源读取前收紧根目录为 0700；bootstrap age 密钥与解密仍属于私有安装流程。
+密钥解密成功后才原子写入目标，失败可以重试；只运行选中私有 Git checkout 的安装脚本。
+`RAVY_CHEZMOI_FORCE=1` 同时作用于公共与私有 apply。
 `custom/mise/config.toml` 是唯一被公共 mise include 模板直接组合的私有工具接口。
 其他覆盖通过私有 chezmoi apply、`~/.config/ravy/` 配置与 shell/Neovim 加载点完成。
 

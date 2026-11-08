@@ -278,7 +278,7 @@ exit 1
 "
 
   write_stub "$tmp_home/bin/chezmoi" "#!/usr/bin/env sh
-source_path=\"\${RAVY_HOME:-$repo_root}\"
+source_path=\"\${RAVY_HOME:-$tmp_home/public-source}\"
 config_path=''
 state_path=''
 subcommand=''
@@ -324,7 +324,7 @@ if [ \"\$subcommand\" = \"init\" ]; then
         ;;
     esac
   done
-  if [ \"\$source_path\" = \"$repo_root\" ]; then
+  if [ \"\$source_path\" = \"$tmp_home/public-source\" ]; then
     if [ -n \"\${RAVY_PRIVATE_HOME:-}\" ] && [ -d \"\$RAVY_PRIVATE_HOME\" ]; then
       private_mode=\$(stat -c '%a' \"\$RAVY_PRIVATE_HOME\" 2>/dev/null || stat -f '%Lp' \"\$RAVY_PRIVATE_HOME\")
       printf 'public_init_private_mode=%s\\n' \"\$private_mode\" >> \"$tmp_home/chezmoi.log\"
@@ -421,6 +421,7 @@ run_install() {
     RAVY_ETC_SHELLS="$tmp_home/etc/shells"
     RAVY_CHSH_USER="test-user"
     RAVY_SKIP_CHSH="${RAVY_SKIP_CHSH:-}"
+    RAVY_CHEZMOI_FORCE="${RAVY_CHEZMOI_FORCE:-0}"
     HOMEBREW_BUNDLE_FILE="$repo_root/Brewfile"
   )
   if [ "${RAVY_TEST_WITHOUT_PRIVATE_HOME:-0}" != "1" ]; then
@@ -511,7 +512,7 @@ assert_file_contains "$tmp_home/git.log" "git clone git@example.com:mushanyoung/
 assert_file_contains "$tmp_home/git.log" "git clone_target_mode=700"
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$default_private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml"
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$default_private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb"
-assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/key.txt $default_private/bootstrap/key.txt.age"
+assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/.key.txt."
 assert_file_contains "$tmp_home/mise.log" "token=install-token"
 if [ -s "$tmp_home/99-custom.initial.toml" ]; then
   fail "fresh public apply should not already have the private tool configuration"
@@ -544,12 +545,12 @@ assert_file_contains "$tmp_home/.config/chezmoi/key.txt" '# bootstrapped age ide
 assert_file_contains "$tmp_home/.config/chezmoi/ravy-private.toml" '# default config'
 assert_file_contains "$tmp_home/.ssh/config" 'Host legacy'
 assert_file_contains "$tmp_home/.ssh/config" "Include $tmp_home/.config/ravy/ssh.config"
-assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$repo_root config= state= config_path="
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$tmp_home/public-source config= state= config_path="
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=init source=$tmp_home/private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb config_path=$tmp_home/.config/chezmoi/ravy-private.toml"
 assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$tmp_home/private config=$tmp_home/.config/chezmoi/ravy-private.toml state=$tmp_home/.config/chezmoi/ravy-private-state.boltdb"
 assert_file_contains "$tmp_home/mise.log" "exec tools=chezmoi@latest command=chezmoi --version"
 assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --version"
-assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/key.txt $tmp_home/private/bootstrap/key.txt.age"
+assert_file_contains "$tmp_home/mise.log" "exec tools=age@latest command=age --decrypt -o $tmp_home/.config/chezmoi/.key.txt."
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools=node"
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools="
 assert_file_contains "$tmp_home/mise.log" "token=install-token"
@@ -647,6 +648,52 @@ assert_file_contains "$tmp_home/etc/shells" "$tmp_home/non-default-homebrew/opt/
 assert_file_contains "$tmp_home/chsh.log" "-s $tmp_home/non-default-homebrew/opt/fish/bin/fish test-user"
 assert_output_contains "$output" "Continuing with existing Homebrew." "macOS non-default Homebrew prefix should warn and continue"
 assert_output_contains "$output" "Homebrew bundle: HOMEBREW_BUNDLE_FILE=~/.config/homebrew/Brewfile" "macOS install should report brew bundle file"
+
+# A failed download must fail even when it emitted a valid shell fragment.
+setup_home
+write_stub "$tmp_home/bin/curl" '#!/bin/sh
+printf "%s\n" "exit 0"
+exit 22
+'
+result=$(run_install)
+status_code=${result%%$'\n'*}
+if [ "$status_code" -eq 0 ] || [ -e "$tmp_home/chezmoi.log" ]; then
+  fail "mise download failure must stop before applying dotfiles"
+fi
+
+# Decrypt failures must not poison the next attempt or change the login shell.
+setup_home
+write_stub "$tmp_home/bin/age" "#!/bin/sh
+[ \"\$1\" != --version ] || exit 0
+while [ \"\$#\" -gt 0 ]; do
+  if [ \"\$1\" = -o ]; then printf partial >\"\$2\"; break; fi
+  shift
+done
+exit 1
+"
+result=$(run_install)
+status_code=${result%%$'\n'*}
+if [ "$status_code" -eq 0 ] || [ -e "$tmp_home/.config/chezmoi/key.txt" ] || [ -e "$tmp_home/chsh.log" ]; then
+  fail "failed decrypt must leave no identity or login shell change"
+fi
+for partial_key in "$tmp_home/.config/chezmoi"/.key.txt.*; do
+  [ ! -e "$partial_key" ] || fail "failed decrypt left a temporary key"
+done
+write_stub "$tmp_home/bin/age" "#!/bin/sh
+[ \"\$1\" != --version ] || exit 0
+while [ \"\$#\" -gt 0 ]; do
+  if [ \"\$1\" = -o ]; then printf complete >\"\$2\"; break; fi
+  shift
+done
+"
+printf '%s\n' 'Host legacy' >"$tmp_home/legacy-ssh.config"
+result=$(run_install)
+status_code=${result%%$'\n'*}
+output=${result#*$'\n__RAVY_OUTPUT__\n'}
+output=${output%$'\n__RAVY_END__'}
+assert_status_zero "$status_code" 'retry after failed age decrypt failed' "$output"
+assert_file_contains "$tmp_home/.config/chezmoi/key.txt" complete
+assert_mode "$tmp_home/.config/chezmoi/key.txt" 600
 
 if [ "$failures" -eq 0 ]; then
   echo 'All install tests passed'

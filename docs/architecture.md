@@ -4,7 +4,10 @@ Ravy 的生产输出是 chezmoi 渲染后的用户配置与脚本。仓库自身
 没有前端 bundle 或服务端发布包。生产验证必须覆盖实际渲染和目标文件语法。
 
 `install.sh` 依次准备 mise/chezmoi/age、应用公共源、安装 Homebrew 软件、
-应用可选私有源并安装 mise 工具。安装测试通过命令替身验证分支，不能运行真实引导来做测试。
+应用可选私有源并安装 mise 工具，成功后切换登录 shell。新安装默认 `~/.ravy`，
+已有 checkout 保留位置；公共配置模板持久化 `sourceDir`，细节见 [安装说明](installation.md)。
+安装测试在隔离 HOME 中用本地 Git 仓库、真实 chezmoi/age 验证部署，
+软件包下载与系统修改用命令替身，不能对账号 HOME 运行真实引导来做测试。
 引导器从 HOME 执行 mise，避免加载项目开发工具链；Make 只为检查命令设置
 独立 MISE_CONFIG_DIR，不把该设置传入 install/apply。
 

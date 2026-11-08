@@ -37,6 +37,10 @@ Python 窄目标使用项目 .venv，避免回落到系统 Python；先运行 ma
 渲染包包含本次验证路径，是供检查的生产配置快照；实际安装仍通过 chezmoi 在目标机渲染。
 
 核心规则、重要边界与异常使用 unit tests。引导脚本用命令替身覆盖安装分支，
+`test_install_flow.py` 还使用真实 Git、chezmoi 和内置 age，以公共源码副本、合成私有仓库和
+临时密钥覆盖 Public-only、Public + private、重复安装、旧路径及迁移、含空格路径、私有工具首次加载。
+这些流程替换包管理器和系统修改命令，不下载/安装用户软件或修改真实登录 shell；
+口令 bootstrap 的失败清理与重试由 shell 分支测试覆盖。
 shell 与 Neovim 用真实解释器验证行为。主要终端流程用真实 PTY、Herdr 与回环 SSH；
 完整覆盖、隔离及恢复操作见 [Herdr 测试契约](herdr-testing.md)。
 缺少依赖必须失败，原有可选 prompt 集成现在也要求实际运行。

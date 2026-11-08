@@ -18,7 +18,10 @@ end
 function M.load()
   local ravy_home = vim.env.RAVY_HOME
   if ravy_home == nil or ravy_home == "" then
-    ravy_home = vim.fn.expand("~/.local/share/chezmoi")
+    ravy_home = vim.fn.expand("~/.ravy")
+    if vim.fn.isdirectory(ravy_home) ~= 1 then
+      ravy_home = vim.fn.expand("~/.local/share/chezmoi")
+    end
   end
 
   local default_private_home = ravy_home .. "/custom"

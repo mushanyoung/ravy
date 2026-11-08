@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
-
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -44,23 +42,6 @@ protect_private_source_root() {
 __el() {
   echo -e "${BOLD}  > $*${RESET}"
   "$@"
-}
-
-append_content_if_absent() {
-  file="$1"
-  text="$2"
-  appending=${3:-$2}
-
-  if ! grep -F "$text" "$file" >/dev/null 2>&1; then
-    echo -e "${BOLD}  > Appending to $file${RESET}"
-    if [ -f "$appending" ]; then
-      cat "$appending" >>"$file"
-    else
-      echo "$appending" >>"$file"
-    fi
-  else
-    echo -e "${BOLD}  > Content already present in $file${RESET}"
-  fi
 }
 
 MISE_BIN=''
@@ -114,7 +95,7 @@ ensure_mise() {
   install_path="${MISE_INSTALL_PATH:-$HOME/.local/bin/mise}"
   install_dir="$(dirname "$install_path")"
   __el mkdir -p "$install_dir"
-  __el env MISE_INSTALL_PATH="$install_path" sh -c 'curl -fsSL https://mise.run | sh'
+  __el env MISE_INSTALL_PATH="$install_path" /bin/bash -o pipefail -c 'curl -fsSL https://mise.run | sh'
 
   if ! MISE_BIN="$(find_mise)"; then
     error "mise install failed or not on PATH"
@@ -239,15 +220,19 @@ run_chezmoi_quiet() {
 resolve_public_source_path() {
   local source_path
 
-  source_path="${RAVY_HOME:-}"
-  if [ -z "$source_path" ]; then
-    source_path="$(run_chezmoi_quiet execute-template '{{ .chezmoi.workingTree }}' 2>/dev/null || true)"
-  fi
-  if [ -z "$source_path" ]; then
-    source_path="$HOME/.local/share/chezmoi"
+  if [ -n "${RAVY_HOME:-}" ]; then
+    printf '%s\n' "$RAVY_HOME"
+    return 0
   fi
 
-  printf '%s\n' "$source_path"
+  source_path="$(run_chezmoi_quiet execute-template '{{ .chezmoi.workingTree }}')" || return
+  # A fresh chezmoi reports its default path even before a checkout exists.
+  # Preserve existing installations, including Git worktrees (.git is a file).
+  if [ -e "$source_path/.git" ]; then
+    printf '%s\n' "$source_path"
+  else
+    printf '%s\n' "$HOME/.ravy"
+  fi
 }
 
 run_age() {
@@ -510,7 +495,7 @@ configure_default_fish_shell() {
 }
 
 default_private_home() {
-  local public_source
+  local public_source candidate
 
   public_source="$(resolve_public_source_path)"
   for candidate in \
@@ -519,7 +504,7 @@ default_private_home() {
     "$HOME/.local/share/ravy-private" \
     "$HOME/.ravy-private"; do
     [ -n "${candidate:-}" ] || continue
-    [ -d "$candidate/.git" ] || continue
+    [ -e "$candidate/.git" ] || continue
     printf '%s\n' "$candidate"
     return 0
   done
@@ -532,6 +517,7 @@ chezmoi_config_dir() {
 }
 
 seed_chezmoi_config() {
+  local target candidate
   target="$1"
   shift
 
@@ -546,29 +532,6 @@ seed_chezmoi_config() {
   done
 }
 
-resolve_private_install_script() {
-  local chezmoi_source
-
-  if [ -x "$RAVY_PRIVATE_HOME/install.sh" ]; then
-    printf '%s\n' "$RAVY_PRIVATE_HOME/install.sh"
-    return 0
-  fi
-
-  if chezmoi_source="$(run_chezmoi_quiet execute-template '{{ .chezmoi.workingTree }}' 2>/dev/null)"; then
-    if [ -x "$chezmoi_source/custom/install.sh" ]; then
-      printf '%s\n' "$chezmoi_source/custom/install.sh"
-      return 0
-    fi
-  fi
-
-  if [ -x "$SCRIPT_DIR/custom/install.sh" ]; then
-    printf '%s\n' "$SCRIPT_DIR/custom/install.sh"
-    return 0
-  fi
-
-  return 1
-}
-
 ensure_age() {
   if ! run_age --version >/dev/null 2>&1; then
     error "age is required for the private encrypted overlay"
@@ -579,8 +542,10 @@ ensure_age() {
   success "age is installed via mise."
 }
 
-bootstrap_private_age_identity() {
-  local private_home bootstrap_key target_key target_dir
+bootstrap_private_age_identity() (
+  # Keep a failed decrypt from leaving an empty/partial identity that would
+  # prevent the next install from retrying. The subshell scopes the EXIT trap.
+  local private_home bootstrap_key target_key target_dir temporary_key
 
   private_home="$1"
   bootstrap_key="$private_home/bootstrap/key.txt.age"
@@ -592,9 +557,16 @@ bootstrap_private_age_identity() {
 
   info "Bootstrapping local age identity"
   __el mkdir -p "$target_dir"
-  (umask 077 && run_age --decrypt -o "$target_key" "$bootstrap_key")
-  __el chmod 600 "$target_key"
-}
+  umask 077
+  temporary_key="$(mktemp "$target_dir/.key.txt.XXXXXX")"
+  trap 'rm -f "$temporary_key"' EXIT
+  run_age --decrypt -o "$temporary_key" "$bootstrap_key"
+  [ -s "$temporary_key" ] || {
+    error "Decrypted age identity is empty"
+    return 1
+  }
+  __el mv "$temporary_key" "$target_key"
+)
 
 info "Bootstrapping Ravy with chezmoi"
 
@@ -620,24 +592,34 @@ RAVY_CHEZMOI_FORCE="${RAVY_CHEZMOI_FORCE:-0}"
 RAVY_CHEZMOI_CONFIG_DIR="${RAVY_CHEZMOI_CONFIG_DIR:-$(chezmoi_config_dir)}"
 RAVY_CHEZMOI_PRIVATE_CONFIG="${RAVY_CHEZMOI_PRIVATE_CONFIG:-$RAVY_CHEZMOI_CONFIG_DIR/ravy-private.toml}"
 RAVY_CHEZMOI_PRIVATE_STATE="${RAVY_CHEZMOI_PRIVATE_STATE:-$RAVY_CHEZMOI_CONFIG_DIR/ravy-private-state.boltdb}"
+for source_path in "$RAVY_HOME" "$RAVY_PRIVATE_HOME"; do
+  case "$source_path" in
+    /*) ;;
+    *)
+      error "Ravy source paths must be absolute: $source_path"
+      exit 1
+      ;;
+  esac
+done
 export RAVY_PRIVATE_HOME
 export RAVY_HOME
 protect_private_source_root "$RAVY_PRIVATE_HOME"
 
 __el mkdir -p "$RAVY_CHEZMOI_CONFIG_DIR"
 
+chezmoi_apply_args=()
+# The guarded array expansion also works with macOS Bash 3.2 + nounset.
 if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
   warn "Using --force to overwrite existing files managed by this setup."
-  run_chezmoi -S "$RAVY_HOME" init --apply --force "$RAVY_REPO"
-else
-  run_chezmoi -S "$RAVY_HOME" init --apply "$RAVY_REPO"
+  chezmoi_apply_args=(--force)
 fi
+run_chezmoi -S "$RAVY_HOME" init --apply ${chezmoi_apply_args[@]+"${chezmoi_apply_args[@]}"} "$RAVY_REPO"
 
 if [ -n "${RAVY_PRIVATE_REPO:-}" ]; then
   info "Syncing optional private overlay"
   __el mkdir -p "$(dirname "$RAVY_PRIVATE_HOME")"
   protect_private_source_root "$RAVY_PRIVATE_HOME"
-  if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
+  if [ -e "$RAVY_PRIVATE_HOME/.git" ]; then
     __el "$GIT_BIN" -C "$RAVY_PRIVATE_HOME" pull --ff-only
   else
     (umask 077 && __el "$GIT_BIN" clone "$RAVY_PRIVATE_REPO" "$RAVY_PRIVATE_HOME")
@@ -645,42 +627,35 @@ if [ -n "${RAVY_PRIVATE_REPO:-}" ]; then
   fi
 fi
 
-if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
+if [ -e "$RAVY_PRIVATE_HOME/.git" ]; then
   __el chmod 700 "$RAVY_PRIVATE_HOME"
   ensure_age
   bootstrap_private_age_identity "$RAVY_PRIVATE_HOME"
 fi
 
 install_homebrew_bundle
-configure_default_fish_shell
 
-if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
+if [ -e "$RAVY_PRIVATE_HOME/.git" ]; then
   info "Applying private encrypted overlay"
   run_chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" init -C "$RAVY_CHEZMOI_PRIVATE_CONFIG"
   seed_chezmoi_config "$RAVY_CHEZMOI_PRIVATE_CONFIG" "$RAVY_CHEZMOI_CONFIG_DIR/chezmoi.toml"
-  run_chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" apply
-fi
+  run_chezmoi -S "$RAVY_PRIVATE_HOME" -c "$RAVY_CHEZMOI_PRIVATE_CONFIG" --persistent-state "$RAVY_CHEZMOI_PRIVATE_STATE" apply ${chezmoi_apply_args[@]+"${chezmoi_apply_args[@]}"}
 
-private_install_script=''
-if private_install_script="$(resolve_private_install_script)"; then
-  info "Configuring optional private overlay"
-  __el "$private_install_script"
-fi
+  if [ -x "$RAVY_PRIVATE_HOME/install.sh" ]; then
+    info "Configuring optional private overlay"
+    __el "$RAVY_PRIVATE_HOME/install.sh"
+  fi
 
-# The first public apply can precede the private clone. Render its mise include
-# again now that the overlay is available, before installing configured tools.
-if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
+  # The first public apply can precede the private clone. Render its mise include
+  # again now that the overlay is available, before installing configured tools.
   info "Refreshing mise configuration from the private overlay"
   mise_source="$RAVY_HOME/chezmoi/dot_config/mise/conf.d/99-custom.toml.tmpl"
-  if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
-    run_chezmoi -S "$RAVY_HOME" apply --force --source-path "$mise_source"
-  else
-    run_chezmoi -S "$RAVY_HOME" apply --source-path "$mise_source"
-  fi
+  run_chezmoi -S "$RAVY_HOME" apply ${chezmoi_apply_args[@]+"${chezmoi_apply_args[@]}"} --source-path "$mise_source"
 fi
 
 load_managed_secrets_for_install
 install_configured_mise_tools
+configure_default_fish_shell
 
 success "Installation complete!"
 
