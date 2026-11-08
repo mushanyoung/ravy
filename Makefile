@@ -16,7 +16,6 @@ QUALITY := $(CHECK_MISE) exec --locked -- uv run --locked python scripts/quality
 setup:
 	$(CHECK_MISE) install --locked
 	$(CHECK_MISE) exec --locked -- uv sync --frozen
-	$(CHECK_MISE) exec --locked -- npm ci --ignore-scripts
 
 check format format-check lint typecheck unit e2e build:
 	$(QUALITY) $@

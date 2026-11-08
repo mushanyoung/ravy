@@ -1,6 +1,6 @@
 # 测试策略与质量门槛
 
-`make setup` 按 `mise.lock`、`uv.lock`、`package-lock.json` 安装工具与依赖；
+`make setup` 按 `mise.lock`、`uv.lock` 安装工具与依赖；
 需要 mise 2026.11.4、Git、Make，以及系统 Fish、Zsh、Ruby、Docker CLI 和 OpenSSH。
 Linux 还需 sshd 与 en_US.UTF-8 locale。开发工具通过 `scripts/mise/config.toml`
 隔离个人 mise 配置；部署给用户的工具版本仍由 `chezmoi/dot_config/mise/config.toml` 管理。
@@ -11,12 +11,15 @@ Linux 还需 sshd 与 en_US.UTF-8 locale。开发工具通过 `scripts/mise/conf
 
 | 阶段      | 单独运行            | 覆盖                                                                         |
 | --------- | ------------------- | ---------------------------------------------------------------------------- |
-| 格式      | `make format-check` | Ruff、shfmt、fish_indent、StyLua、Taplo、Prettier                            |
+| 格式      | `make format-check` | Ruff、shfmt、fish_indent、StyLua、Taplo、dprint                              |
 | Lint      | `make lint`         | Ruff、ShellCheck 全级别、Fish/Zsh/Ruby 语法、actionlint、文档链接、diff 空白 |
 | 类型      | `make typecheck`    | 全部 Python 脚本与测试，包括无扩展名命令，mypy 检查未标注函数体              |
 | 单元/配置 | `make unit`         | shell 启动、安装分支、Neovim 保存、CLI 参数、Herdr 规则、检查失败传播        |
 | E2E       | `make e2e`          | macOS developer；Linux server + developer；真实 PTY/SSH                      |
 | 生产构建  | `make build`        | 隔离 HOME 渲染公共配置、语法/解析、无插件 Neovim 启动、打包及文件清单        |
+
+dprint 由 mise 安装；Markdown、JSON/JSONC 和 YAML 插件使用 `dprint.json` 中
+固定版本与 SHA-256 的 WASM 文件，不需要 npm 或 package.json。
 
 `make format` 应用统一格式，`make lint-herdr` 是完整 lint 门槛的兼容别名。
 Python 窄目标使用项目 .venv，避免回落到系统 Python；先运行 make setup。迭代可以运行 `make test-herdr` 等窄目标；直接运行
@@ -52,8 +55,8 @@ GUI IME、剪贴板、真实 WAN、睡眠恢复需目标终端/主机人工验�
 ## CI 与 Linux 本地复现
 
 GitHub Actions 的 `quality` 在 push、pull_request 上对 ubuntu-24.04、macos-15
-执行同一个 `make check`。Actions 固定 commit SHA，mise 固定 2026.11.4；工具与 Python/npm
-依赖按三个锁文件安装。平台包由固定 OS 的 apt/Homebrew 提供，平台镜像会收到系统更新，
+执行同一个 `make check`。Actions 固定 commit SHA，mise 固定 2026.11.4；工具与 Python
+依赖按锁文件安装。平台包由固定 OS 的 apt/Homebrew 提供，平台镜像会收到系统更新，
 不声称按位重现整个托管 runner。任意阶段失败使 job 失败；独立矩阵继续收集结果。
 
 无论成功或失败，上传 `artifacts/` 和 `dist/`，保留七天。E2E 提供 JSON 结果，失败时保存

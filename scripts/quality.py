@@ -77,8 +77,8 @@ def format_sources(write: bool) -> None:
     run("stylua", *([] if write else ["--check"]), *source["lua"])
     run("taplo", "format", *([] if write else ["--check"]), *source["toml"])
     run(
-        "node_modules/.bin/prettier",
-        "--write" if write else "--check",
+        "dprint",
+        "fmt" if write else "check",
         *source["prose"],
     )
     path = ROOT / "bin/chrome-bookmarks"

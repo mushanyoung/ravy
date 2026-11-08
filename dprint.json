@@ -1,0 +1,24 @@
+{
+  "lineWidth": 100,
+  "indentWidth": 2,
+  "newLineKind": "lf",
+  "json": {
+    "trailingCommas": "never"
+  },
+  "markdown": {
+    "textWrap": "maintain"
+  },
+  "excludes": [
+    "docs/archive/**",
+    "custom/**",
+    "node_modules/**",
+    ".venv/**",
+    "artifacts/**",
+    "dist/**"
+  ],
+  "plugins": [
+    "https://github.com/dprint/dprint-plugin-json/releases/download/0.26.0/plugin.wasm@9abcd6eb43b3d04655649090c2e7ad14948da6acfe0374cb47ccd9eb3c48903d",
+    "https://github.com/dprint/dprint-plugin-markdown/releases/download/0.29.0/plugin.wasm@714aea7555dd9831861be466da8b26b2d92316d3cde550ef3e1f63b31f4ea302",
+    "https://github.com/g-plane/pretty_yaml/releases/download/v0.6.0/plugin.wasm@40a2fdda7040317eb1b23520f3a00769a5571eedb049c4ca9175c1b9eeba01ae"
+  ]
+}
