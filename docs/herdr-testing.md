@@ -38,7 +38,7 @@
    with 0.9.5; it is outside the accepted operating contract, not a suppressed
    failure in the required developer suite.
 
-The `quality` workflow runs `make check` on Ubuntu 24.04 and macOS 15 for every
+The `quality` workflow runs `make check` on Ubuntu 26.04 and macOS 26 for every
 push and pull request. Linux requires both server and developer series; macOS
 requires developer. A manual dispatch can enable `agent_rotation` (default false).
 The strict diagnostic runs after required checks and makes that job fail on failure.

@@ -105,7 +105,7 @@ def lint() -> None:
     )
     run("shellcheck", "-s", "bash", "-", input=shell, text=True)
     run("ruby", "-cx", "bin/chrome-bookmarks")
-    run("actionlint")
+    run("jactionlint", "--strict-exit", "--shellcheck", "shellcheck", "--ruff", "ruff")
     run(sys.executable, "scripts/check_docs.py")
     run("git", "diff", "--check")
 
