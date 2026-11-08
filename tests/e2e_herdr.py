@@ -923,6 +923,37 @@ class LinuxServerRemoteTests(SSHTests):
         until(lambda: marker.stat().st_mtime_ns > before)
 
 
+class ArtifactResult(unittest.TextTestResult):
+    """Save only fixture logs and terminal bytes before unittest cleanup."""
+
+    def __init__(self, stream, descriptions, verbosity, *, durations=None):
+        super().__init__(stream, descriptions, verbosity, durations=durations)
+
+    def save_diagnostics(self, test):
+        destination = ROOT / "artifacts/e2e" / SERIES / test.id()
+        destination.mkdir(parents=True, exist_ok=True)
+        for label in ("fx", "local", "remote"):
+            fixture = getattr(test, label, None)
+            if not isinstance(fixture, Fixture):
+                continue
+            for index, client in enumerate(fixture.clients):
+                (destination / f"{label}-pty-{index}.log").write_bytes(client.output)
+            server_log = fixture.root / "server.log"
+            if server_log.is_file():
+                shutil.copyfile(server_log, destination / f"{label}-server.log")
+        root = getattr(test, "root", None)
+        if root is not None and (root / "sshd.log").is_file():
+            shutil.copyfile(root / "sshd.log", destination / "sshd.log")
+
+    def addFailure(self, test, err):
+        self.save_diagnostics(test)
+        super().addFailure(test, err)
+
+    def addError(self, test, err):
+        self.save_diagnostics(test)
+        super().addError(test, err)
+
+
 def build_suite(series):
     cases = {
         "server": (ServerTests, LinuxServerRemoteTests),
@@ -942,7 +973,14 @@ if __name__ == "__main__":
         "--series", choices=("server", "developer", "agent-rotation"), required=True
     )
     args = parser.parse_args()
+    # Docker hosts can inherit umask 0000; OpenSSH rejects writable configs.
+    # Keep every generated key/config private regardless of the caller's mask.
+    os.umask(0o077)
     SERIES = args.series
+    report_dir = ROOT / "artifacts/e2e" / SERIES
+    if report_dir.exists():
+        shutil.rmtree(report_dir)
+    report_dir.mkdir(parents=True)
     if SERIES == "server" and sys.platform != "linux":
         parser.error("the Linux server suite requires a real Linux host")
     required = ["herdr", "fish", "chezmoi", "sshd"] + (
@@ -965,5 +1003,20 @@ if __name__ == "__main__":
         parser.error(
             "this version-bound suite requires Herdr 0.9.5; audit fixtures before upgrading"
         )
-    result = unittest.TextTestRunner(verbosity=2).run(build_suite(SERIES))
+    result = unittest.TextTestRunner(verbosity=2, resultclass=ArtifactResult).run(
+        build_suite(SERIES)
+    )
+    (report_dir / "report.json").write_text(
+        json.dumps(
+            {
+                "series": SERIES,
+                "tests": result.testsRun,
+                "failures": [case.id() for case, _ in result.failures],
+                "errors": [case.id() for case, _ in result.errors],
+                "successful": result.wasSuccessful(),
+            },
+            indent=2,
+        )
+        + "\n"
+    )
     sys.exit(not result.wasSuccessful())

@@ -38,11 +38,11 @@
    with 0.9.5; it is outside the accepted operating contract, not a suppressed
    failure in the required developer suite.
 
-Default CI runs Linux/server, Linux/developer and macOS/developer as independent jobs.
-Manual `herdr-e2e` workflow dispatch can enable the boolean `agent_rotation` input
-(default false). This runs the strict diagnostic after required tests in both
-developer jobs; a diagnostic failure makes that explicitly requested job red.
-There is no automatic master reset or changed signing assertion to produce green CI.
+The `quality` workflow runs `make check` on Ubuntu 24.04 and macOS 15 for every
+push and pull request. Linux requires both server and developer series; macOS
+requires developer. A manual dispatch can enable `agent_rotation` (default false).
+The strict diagnostic runs after required checks and makes that job fail on failure.
+No automatic master reset or weakened signing assertion is used to produce green CI.
 The macOS job uses macOS processes and sshd, not a Linux mock. Each remote endpoint
 is a separate sshd/Herdr process tree with a private HOME on the same runner;
 these are real loopback SSH tests, not claims of WAN or cross-OS validation.
@@ -50,8 +50,8 @@ these are real loopback SSH tests, not claims of WAN or cross-OS validation.
 ## Reproduction
 
 Prerequisites: Python 3.11+, Herdr 0.9.5, chezmoi, Fish, OpenSSH client/agent/sshd;
-Neovim is additionally required for the server series. Lint uses ShellCheck and
-Ruff 0.14.3. CI verifies pinned Herdr/chezmoi assets before execution.
+Neovim is additionally required for the server series. Use `make setup` to install the locked development tools. CI verifies locked
+Herdr/chezmoi assets before execution.
 The SSH account's login shell must be Fish, Bash, Zsh, sh or dash. Its passwd home
 must be owned by that account and not group/world-writable; the harness reports
 an error before starting sshd if these requirements are not met.
@@ -61,8 +61,8 @@ Run from the repository using a trusted toolchain PATH and an isolated HOME:
 ```sh
 root=$(mktemp -d /tmp/ravy-herdr.XXXXXX)
 mkdir "$root/home"
-env -i HOME="$root/home" TMPDIR="$root" PATH="$PATH" \
-  PYTHONDONTWRITEBYTECODE=1 make lint-herdr test
+make setup
+make check
 # Run required series separately so one failure does not hide the other results.
 env -i HOME="$root/home" TMPDIR="$root" PATH="$PATH" \
   PYTHONDONTWRITEBYTECODE=1 make test-e2e-server
@@ -109,9 +109,8 @@ socket. An existing master retains its old forwarding context. See:
 - [v0.9.5 shared SSH socket source](https://github.com/herdrdev/herdr/blob/v0.9.5/src/platform/unix_common.rs)
 
 The fixture's `close_ssh_master` exists for cleanup and the fresh-transport control
-experiment only. No production launcher invokes it. The user accepted the stable
-local-agent contract and explicit recovery exception; test selection, CI and docs
-now implement that decision together. The diagnostic was rerun and still fails.
+experiment only. No production launcher invokes it. The stable local-agent contract and explicit recovery exception define the
+required test selection. The separate diagnostic retains its strict assertions.
 Do not restore custom socket repair, disable native SSH management, weaken signing
 assertions, or infer complete migration acceptance from required Linux tests.
 Rerun required suites and this diagnostic on version or lifecycle-policy changes.

@@ -63,7 +63,7 @@ limitation, not a requirement to disable native connection reuse or fix upstream
 before migration. The old Cloudtop used `ssh -S none` and a remote stable symlink;
 remote forwarded-socket rotation did not imply local-agent replacement.
 
-Required Linux server/developer E2E pass. The strict hot-replacement diagnostic is
+Required Linux server/developer E2E enforce this contract. The strict hot-replacement diagnostic is
 retained separately as `make diagnose-herdr-agent-rotation`; on 0.9.5 it still
 fails with a nonzero exit, without skip/xfail or `continue-on-error`. It is opt-in
 in CI and is not a required acceptance gate under the agreed operating contract.

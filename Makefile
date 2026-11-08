@@ -6,16 +6,17 @@ CHEZMOI ?= chezmoi
 SOURCE_DIR := $(CURDIR)
 BASH ?= bash
 FISH ?= fish
+PYTHON ?= $(CURDIR)/.venv/bin/python
 CHEZMOI_ARGS ?=
 CHECK_MISE := env MISE_CONFIG_DIR="$(CURDIR)/scripts/mise" mise
-QUALITY := $(CHECK_MISE) exec -- uv run --locked python scripts/quality.py
+QUALITY := $(CHECK_MISE) exec --locked -- uv run --locked python scripts/quality.py
 
 .PHONY: setup check format format-check lint typecheck unit e2e build
 
 setup:
 	$(CHECK_MISE) install --locked
-	$(CHECK_MISE) exec -- uv sync --frozen
-	$(CHECK_MISE) exec -- npm ci --ignore-scripts
+	$(CHECK_MISE) exec --locked -- uv sync --frozen
+	$(CHECK_MISE) exec --locked -- npm ci --ignore-scripts
 
 check format format-check lint typecheck unit e2e build:
 	$(QUALITY) $@
@@ -38,7 +39,7 @@ help:
 	@echo '  make test-nvim      Run Neovim config rendering test'
 	@echo '  make test-herdr    Run Herdr config and compatibility tests'
 	@echo '  make test-cloudtop  Run native Herdr entrypoint tests'
-	@echo '  make lint-herdr     Run ShellCheck and Ruff for migration code'
+	@echo '  make lint-herdr     Alias for the locked lint gate'
 	@echo '  make test-e2e-server     Real Linux server / PTY / SSH tests'
 	@echo '  make test-e2e-developer  Real macOS/Linux SSH development tests'
 	@echo '  make diagnose-herdr-agent-rotation  Strict opt-in known-limit diagnostic'
@@ -54,27 +55,26 @@ chezmoi-apply: apply
 .PHONY: lint-herdr test-e2e-developer test-e2e-server diagnose-herdr-agent-rotation
 
 lint-herdr:
-	shellcheck bin/cloudtop bin/cl
-	ruff check --no-cache tests/test_cloudtop.py tests/test_herdr*.py tests/test_e2e_contract.py tests/e2e_herdr.py chezmoi/dot_local/bin/executable_ravy-herdr-*
+	$(QUALITY) lint
 
 test-e2e-developer:
-	python3 tests/e2e_herdr.py --series developer
+	$(PYTHON) tests/e2e_herdr.py --series developer
 
 test-e2e-server:
-	python3 tests/e2e_herdr.py --series server
+	$(PYTHON) tests/e2e_herdr.py --series server
 
 diagnose-herdr-agent-rotation:
-	python3 tests/e2e_herdr.py --series agent-rotation
+	$(QUALITY) diagnostic
 
 test: test-fish test-sh test-install test-nvim test-python test-dc
 
 .PHONY: test-python
 test-python:
-	python3 -m unittest discover -s tests -p 'test_*.py'
+	$(PYTHON) -m unittest discover -s tests -p 'test_*.py'
 
 .PHONY: test-quality test-dc
 test-quality:
-	python3 -m unittest discover -s tests -p 'test_quality.py'
+	$(PYTHON) -m unittest discover -s tests -p 'test_quality.py'
 
 test-dc:
 	$(BASH) tests/dc.test.sh
@@ -84,7 +84,7 @@ test-fish:
 
 test-sh:
 	$(BASH) tests/config.sh.test.sh
-	python3 tests/shell-startup.test.py
+	$(PYTHON) tests/shell-startup.test.py
 
 test-install:
 	$(BASH) tests/install.test.sh
@@ -93,8 +93,8 @@ test-nvim:
 	$(BASH) tests/nvim.test.sh
 
 test-herdr:
-	python3 -m unittest discover -s tests -p 'test_herdr*.py'
-	python3 -m unittest discover -s tests -p 'test_e2e_contract.py'
+	$(PYTHON) -m unittest discover -s tests -p 'test_herdr*.py'
+	$(PYTHON) -m unittest discover -s tests -p 'test_e2e_contract.py'
 
 test-cloudtop:
-	python3 -m unittest discover -s tests -p test_cloudtop.py
+	$(PYTHON) -m unittest discover -s tests -p test_cloudtop.py

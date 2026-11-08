@@ -1,50 +1,64 @@
-name: ci
+name: quality
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      agent_rotation:
+        description: "Run the strict Herdr 0.9.5 hot-replacement diagnostic (known failure)"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
 
 jobs:
-  test:
+  check:
+    name: quality / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-    runs-on: ${{ matrix.os }}
+        os: [ubuntu-24.04, macos-15]
+    env:
+      MISE_CONFIG_DIR: ${{ github.workspace }}/scripts/mise
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Install dependencies (Ubuntu)
+      - name: Install platform prerequisites (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y bash fish zsh curl gpg wget neovim shellcheck
-          wget -qO- https://apt.fury.io/nushell/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/fury-nushell.gpg
-          echo "deb [signed-by=/etc/apt/keyrings/fury-nushell.gpg] https://apt.fury.io/nushell/ /" | sudo tee /etc/apt/sources.list.d/fury.list
-          sudo apt-get update
-          sudo apt-get install -y nushell
-          sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-
-      - name: Install dependencies (macOS)
+          sudo apt-get install -y fish zsh ruby openssh-client openssh-server locales
+          sudo locale-gen en_US.UTF-8
+          sudo install -d -m 0755 /run/sshd
+          command -v docker
+      - name: Install platform prerequisites (macOS)
         if: runner.os == 'macOS'
-        run: |
-          brew install chezmoi fish nushell neovim shellcheck
-
-      - name: Lint Herdr migration
-        run: |
-          python3 -m pip install --disable-pip-version-check ruff==0.14.3
-          make lint-herdr
-
-      - name: Test shell config
-        run: make test
-
-      - name: Compile Python helpers
-        run: python3 -m compileall -q bin
+        run: brew install fish docker
+      - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5
+        with:
+          version: "2026.11.4"
+          install: false
+          cache: false
+      - name: Install locked toolchain and dependencies
+        run: make setup
+      - name: Run all required checks
+        run: make check
+      - name: Opt-in strict agent rotation diagnostic
+        if: github.event_name == 'workflow_dispatch' && inputs.agent_rotation
+        run: make diagnose-herdr-agent-rotation
+      - name: Preserve reports and failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: quality-${{ matrix.os }}
+          path: |
+            artifacts/
+            dist/
+          retention-days: 7
+          if-no-files-found: error

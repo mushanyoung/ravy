@@ -1,11 +1,13 @@
 """E2E selection and startup isolation, without live account configuration."""
 
+import io
 import os
 import shutil
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import e2e_herdr
@@ -123,6 +125,32 @@ class IsolationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             with self.assertRaisesRegex(ValueError, "unsupported SSH login shell"):
                 e2e_herdr.prepare_ssh_home(Path(root) / "home", "/bin/unknown-shell")
+
+    def test_failure_artifacts_include_diagnostics_without_copying_keys(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            fixture = object.__new__(e2e_herdr.Fixture)
+            fixture.root = root / "fixture"
+            fixture.root.mkdir()
+            fixture.clients = [SimpleNamespace(output=bytearray(b"terminal failure"))]
+            (fixture.root / "server.log").write_text("server diagnostic")
+            (fixture.root / "identity").write_text("synthetic private key sentinel")
+            (root / "sshd.log").write_text("SSH diagnostic")
+            case = SimpleNamespace(id=lambda: "failing-test", fx=fixture, root=root)
+            result = e2e_herdr.ArtifactResult(io.StringIO(), True, 2)
+            with (
+                patch.object(e2e_herdr, "ROOT", root),
+                patch.object(e2e_herdr, "SERIES", "server"),
+            ):
+                result.save_diagnostics(case)
+            output = root / "artifacts/e2e/server/failing-test"
+            self.assertEqual(
+                {p.name for p in output.iterdir()},
+                {"fx-pty-0.log", "fx-server.log", "sshd.log"},
+            )
+            self.assertEqual(
+                (output / "fx-pty-0.log").read_bytes(), b"terminal failure"
+            )
 
 
 if __name__ == "__main__":

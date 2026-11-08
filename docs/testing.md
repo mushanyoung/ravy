@@ -18,7 +18,8 @@ Linux 还需 sshd 与 en_US.UTF-8 locale。开发工具通过 `scripts/mise/conf
 | E2E       | `make e2e`          | macOS developer；Linux server + developer；真实 PTY/SSH                      |
 | 生产构建  | `make build`        | 隔离 HOME 渲染公共配置、语法/解析、无插件 Neovim 启动、打包及文件清单        |
 
-`make format` 应用统一格式。迭代可以运行 `make test-herdr` 等窄目标；直接运行
+`make format` 应用统一格式，`make lint-herdr` 是完整 lint 门槛的兼容别名。
+Python 窄目标使用项目 .venv，避免回落到系统 Python；先运行 make setup。迭代可以运行 `make test-herdr` 等窄目标；直接运行
 `make test` 时须使用已准备的工具链与隔离 HOME，推荐使用自动隔离的 `make unit`。
 主检查日志与退出码写入 `artifacts/check/`，生产渲染产物写入 `dist/`。
 渲染包包含本次验证路径，是供检查的生产配置快照；实际安装仍通过 chezmoi 在目标机渲染。
@@ -47,3 +48,30 @@ GUI IME、剪贴板、真实 WAN、睡眠恢复需目标终端/主机人工验�
 - `docs/archive/` 保留原始历史记录，不格式化或作为当前链接门槛；其他文档自动检查导航。
 - Herdr 0.9.5 热替换诊断属于已接受契约外的显式诊断，仍严格失败；版本或生命周期变更时重跑。
   Linux server 场景由 Linux 执行，macOS 执行适用的 developer 场景，不声称跨系统或 GUI 覆盖。
+
+## CI 与 Linux 本地复现
+
+GitHub Actions 的 `quality` 在 push、pull_request 上对 ubuntu-24.04、macos-15
+执行同一个 `make check`。Actions 固定 commit SHA，mise 固定 2026.11.4；工具与 Python/npm
+依赖按三个锁文件安装。平台包由固定 OS 的 apt/Homebrew 提供，平台镜像会收到系统更新，
+不声称按位重现整个托管 runner。任意阶段失败使 job 失败；独立矩阵继续收集结果。
+
+无论成功或失败，上传 `artifacts/` 和 `dist/`，保留七天。E2E 提供 JSON 结果，失败时保存
+夹具 PTY、Herdr 与 sshd 日志，绝不归档临时密钥或 HOME。此 workflow 不运行 AI 审查。
+只有显式 workflow_dispatch 的 agent_rotation 输入才运行已知失败的严格诊断。
+
+Linux 也可在隔离容器复现；镜像摘要固定，构建上下文仅包含 Dockerfile。
+容器仅需要公共源码，不挂载 custom/、账号 HOME 或 Docker socket：
+
+```sh
+docker build -t ravy-quality:local -f tests/ci.Dockerfile .
+docker run -d --name ravy-quality-run ravy-quality:local sleep infinity
+git archive HEAD | docker exec -i ravy-quality-run tar -x -C /workspace
+docker exec ravy-quality-run sh -c 'git init -q && git add . && make setup && make check'
+docker cp ravy-quality-run:/workspace/artifacts ./artifacts/linux
+docker rm -f ravy-quality-run
+```
+
+上述流程检查已提交的 HEAD；未提交改动应先完成逻辑单元并提交。容器里的 Git 索引用于
+枚举公共源码，和实际项目一样覆盖所有已跟踪文件。GitHub Actions 是否运行、是否通过，
+必须单独查询实际状态；本地容器通过不能代替 CI 状态。

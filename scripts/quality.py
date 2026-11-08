@@ -166,6 +166,7 @@ def isolated_environment() -> Iterator[None]:
         clean = {
             "HOME": str(home),
             "PATH": inherited["PATH"],
+            "TERM": "xterm-256color",
             "XDG_CONFIG_HOME": str(home / ".config"),
             "XDG_DATA_HOME": str(home / ".local/share"),
             "XDG_CACHE_HOME": str(home / ".cache"),
@@ -193,7 +194,7 @@ def isolated_environment() -> Iterator[None]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("stage", choices=(*STAGES, "format", "check"))
+    parser.add_argument("stage", choices=(*STAGES, "format", "check", "diagnostic"))
     parser.add_argument("--output", type=Path, default=ROOT / "artifacts/check")
     args = parser.parse_args()
     os.chdir(ROOT)
@@ -211,6 +212,9 @@ def main() -> int:
     elif args.stage == "e2e":
         with isolated_environment():
             e2e()
+    elif args.stage == "diagnostic":
+        with isolated_environment():
+            run(sys.executable, "tests/e2e_herdr.py", "--series", "agent-rotation")
     elif args.stage == "build":
         run(sys.executable, "scripts/build.py")
     return 0
