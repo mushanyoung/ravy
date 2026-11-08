@@ -7,6 +7,15 @@ Linux 还需 sshd 与 en_US.UTF-8 locale。开发工具通过 `scripts/mise/conf
 锁文件覆盖 Linux/macOS 的 arm64/x64，升级时更新锁文件并运行完整检查。
 [mise 锁文件规则](https://mise.jdx.dev/dev-tools/mise-lock.html)说明了安装时的校验行为。
 
+开发基线为 Python 3.15 和 Node 26 的最新补丁版本，其余 mise 工具选择最新稳定版。
+`mise.lock` 保存实际解析版本、平台和校验和；`make setup/check` 使用锁定模式，不在每次检查时漂移。
+更新时运行 `MISE_CONFIG_DIR="$PWD/scripts/mise" mise lock --bump`，再更新 Python 依赖与 `uv.lock`，
+执行 `make setup format check` 并一起提交配置、锁文件及必要的兼容修复。
+Ruff、mypy 和 json5 也使用当前稳定版。Node 保留为项目开发工具；格式化链路不依赖 Node/npm。
+Herdr 当前最新仍是 0.9.5，版本变更后必须同步更新 E2E 契约与诊断。
+独立 bin/ 与托管命令由 env python3 启动，远端终端可能选择系统 Python（本机 macOS 27 仍为 3.9）。
+它们的 Ruff 语法目标保留 py39；项目开发和测试仍使用锁定的 Python 3.15。
+
 `make check` 顺序执行以下六个阶段，即使某阶段失败仍继续收集其他阶段的结果，最终返回非零：
 
 | 阶段      | 单独运行            | 覆盖                                                                         |

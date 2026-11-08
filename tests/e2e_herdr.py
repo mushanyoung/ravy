@@ -228,6 +228,11 @@ class Fixture:
             check=True,
         )
         target.write_text(rendered.stdout)
+        theme = self.home / ".config/fish/themes/ravy.theme"
+        theme.parent.mkdir(parents=True)
+        theme.write_bytes(
+            (ROOT / "chezmoi/dot_config/fish/themes/ravy.theme").read_bytes()
+        )
         for name in ("ravy-herdr-tab-10", "ravy-herdr-auto-title"):
             helper = self.home / ".local/bin" / name
             helper.parent.mkdir(parents=True, exist_ok=True)
@@ -459,13 +464,16 @@ class ServerTests(unittest.TestCase):
         tenth = next(t["tab_id"] for t in tabs if t["number"] == 10)
         client.key(b"\x1b1")
         until(
-            lambda: next(t for t in fx.snapshot()["tabs"] if t["focused"])["number"]
-            == 1
+            lambda: (
+                next(t for t in fx.snapshot()["tabs"] if t["focused"])["number"] == 1
+            )
         )
         client.key(b"\x1b0")
         until(
-            lambda: next(t for t in fx.snapshot()["tabs"] if t["focused"])["tab_id"]
-            == tenth
+            lambda: (
+                next(t for t in fx.snapshot()["tabs"] if t["focused"])["tab_id"]
+                == tenth
+            )
         )
         client.prefix(b"d")
         self.assertEqual(client.process.wait(timeout=5), 0)
@@ -834,13 +842,17 @@ class DeveloperTests(AgentReattachTests):
             remote.api("tab", "create")
         client.key(b"\x1b1")
         until(
-            lambda: next(t for t in remote.snapshot()["tabs"] if t["focused"])["number"]
-            == 1
+            lambda: (
+                next(t for t in remote.snapshot()["tabs"] if t["focused"])["number"]
+                == 1
+            )
         )
         client.key(b"\x1b0")
         until(
-            lambda: next(t for t in remote.snapshot()["tabs"] if t["focused"])["number"]
-            == 10,
+            lambda: (
+                next(t for t in remote.snapshot()["tabs"] if t["focused"])["number"]
+                == 10
+            ),
             message="remote tab-10 custom command did not run",
         )
         remote.api("tab", "close", remote.snapshot()["tabs"][0]["tab_id"])

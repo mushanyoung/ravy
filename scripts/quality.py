@@ -165,7 +165,15 @@ def isolated_environment() -> Iterator[None]:
         home = Path(temporary)
         clean = {
             "HOME": str(home),
-            "PATH": inherited["PATH"],
+            # Keep resolved tool bins, but not personal mise shims. A shim can
+            # exist even when its tool is absent from the isolated HOME.
+            "PATH": os.pathsep.join(
+                entry
+                for entry in inherited["PATH"].split(os.pathsep)
+                if not (
+                    Path(entry).name == "shims" and Path(entry).parent.name == "mise"
+                )
+            ),
             "TERM": "xterm-256color",
             "XDG_CONFIG_HOME": str(home / ".config"),
             "XDG_DATA_HOME": str(home / ".local/share"),

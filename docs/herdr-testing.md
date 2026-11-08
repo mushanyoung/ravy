@@ -49,7 +49,7 @@ these are real loopback SSH tests, not claims of WAN or cross-OS validation.
 
 ## Reproduction
 
-Prerequisites: Python 3.11+, Herdr 0.9.5, chezmoi, Fish, OpenSSH client/agent/sshd;
+Prerequisites: project Python 3.15, Herdr 0.9.5, chezmoi, Fish, OpenSSH client/agent/sshd;
 Neovim is additionally required for the server series. Use `make setup` to install the locked development tools. CI verifies locked
 Herdr/chezmoi assets before execution.
 The SSH account's login shell must be Fish, Bash, Zsh, sh or dash. Its passwd home
