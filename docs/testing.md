@@ -65,8 +65,11 @@ GUI IME、剪贴板、真实 WAN、睡眠恢复需目标终端/主机人工验�
 
 ## CI 与 Linux 本地复现
 
-GitHub Actions 的 `quality` 在 push、pull_request 上对 ubuntu-26.04、macos-26
-执行同一个 `make check`。Actions 固定 commit SHA，mise 固定 2026.11.4；工具与 Python
+GitHub Actions 的 `quality` 在 push、pull_request 上对 Ubuntu 26.04、macOS 27
+执行同一个 `make check`，runner 标签分别为 `ubuntu-26.04` 和 `xcode-27`。
+GitHub 当前通过 [Xcode 27 预览镜像](https://github.com/actions/runner-images/blob/main/images/macos/xcode-27-arm64-Readme.md)
+提供 macOS 27；CI 在安装依赖前断言实际系统主版本为 27，避免镜像变化使测试偏离目标。
+Actions 固定 commit SHA，mise 固定 2026.11.4；工具与 Python
 依赖按锁文件安装。平台包由固定 OS 的 apt/Homebrew 提供，平台镜像会收到系统更新，
 不声称按位重现整个托管 runner。任意阶段失败使 job 失败；独立矩阵继续收集结果。
 
@@ -76,7 +79,7 @@ workflow lint 使用支持 Ubuntu 26.04 标签的 [jactionlint](https://github.c
 替代标签表尚未更新的 actionlint 1.7.12；警告也使 lint 失败，唯一触发器策略例外见上文。
 只有显式 workflow_dispatch 的 agent_rotation 输入才运行已知失败的严格诊断。
 
-本地 `make check` 验证当前主机；受支持的验证基线为 Ubuntu 26.04 与 macOS 26 或更新版本，
+本地 `make check` 验证当前主机；受支持的验证基线为 Ubuntu 26.04 与 macOS 27，
 不再维护旧版 OS 的测试矩阵。Linux 可在 Ubuntu 26.04 隔离容器复现；
 镜像摘要固定，构建上下文仅包含 Dockerfile。
 容器仅需要公共源码，不挂载 custom/、账号 HOME 或 Docker socket：

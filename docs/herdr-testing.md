@@ -38,8 +38,10 @@
    with 0.9.5; it is outside the accepted operating contract, not a suppressed
    failure in the required developer suite.
 
-The `quality` workflow runs `make check` on Ubuntu 26.04 and macOS 26 for every
-push and pull request. Linux requires both server and developer series; macOS
+The `quality` workflow runs `make check` on Ubuntu 26.04 and macOS 27 for every
+push and pull request, using the `ubuntu-26.04` and `xcode-27` runner labels.
+The macOS job verifies the OS major version before installing dependencies.
+Linux requires both server and developer series; macOS
 requires developer. A manual dispatch can enable `agent_rotation` (default false).
 The strict diagnostic runs after required checks and makes that job fail on failure.
 No automatic master reset or weakened signing assertion is used to produce green CI.
