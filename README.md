@@ -146,9 +146,10 @@ the native CLI. Python 3 is needed for the tab-10 adapter. Built-in worktree
 create/delete shortcuts are disabled: open canonical worktrees created outside
 Herdr instead. Ctrl+V is left to terminal applications.
 
-Tab titles always start with their current position: `1: nvim`, `2: repo`,
-`3: ~`. The name follows the foreground process in each tab's selected pane;
-an idle shell shows only its final directory component, or `~` at HOME.
+Tab titles always start with their current position: `1 ▶ nvim`, `2 repo/`,
+`3 ~`. The name follows the foreground process in each tab's selected pane;
+programs have a `▶` marker. An idle shell shows its final directory component
+with a trailing `/`, except HOME stays `~` and the root directory stays `/`.
 Background jobs do not change the name. Moving or closing tabs updates the
 prefixes, matching `Alt+1…9` and `Alt+0` (the tenth tab in display order).
 Manual names entered with `P ,` are preserved, with the number kept in front.

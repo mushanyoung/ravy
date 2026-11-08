@@ -52,7 +52,8 @@ def directory_name(cwd, home):
     path = Path(cwd or home)
     if path.resolve() == Path(home).resolve():
         return "~"
-    return clean(path.name) or "/"
+    name = clean(path.name)
+    return f"{name}/" if name else "/"
 
 
 def process_is_live(pid):
@@ -84,7 +85,7 @@ def automatic_name(pane, info, home):
         # first non-shell child. Background jobs are absent from this API.
         leader = info.get("foreground_process_group_id")
         _, name = min(programs, key=lambda p: (p[0]["pid"] != leader, p[0]["pid"]))
-        return name[:80] or "process"
+        return "▶ " + (name[:80] or "process")
     shell = next((p for p in processes if p["pid"] == info.get("shell_pid")), {})
     return directory_name(shell.get("cwd") or pane.get("foreground_cwd") or pane.get("cwd"), home)
 
@@ -93,9 +94,10 @@ def manual_name(label, *numbers):
     # P , opens the complete displayed title. Editing its suffix should not
     # accumulate another number, including while a tab is being reordered.
     for number in numbers:
-        prefix = f"{number}: "
-        if label.startswith(prefix):
-            return clean(label[len(prefix):])
+        # Accept the previous separator while existing sessions migrate.
+        for prefix in (f"{number} ", f"{number}: "):
+            if label.startswith(prefix):
+                return clean(label[len(prefix):])
     return clean(label)
 
 
@@ -148,7 +150,7 @@ class Titles:
                         name = automatic_name(pane, info, self.home)
                     else:
                         name = manual
-                    desired = f"{number}: {name}"
+                    desired = f"{number} {name}"
                     if desired != label:
                         # Recheck after process inspection so a manual edit or
                         # closed tab during the read is not overwritten.
