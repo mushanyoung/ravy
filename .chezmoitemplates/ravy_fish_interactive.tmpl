@@ -70,4 +70,10 @@ function fish_title
     __fish_title_or_pwd
 end
 
+# One detached title worker per Herdr server, including remote/named sessions.
+# The lock makes this cheap for subsequent panes; it exits with that server.
+if set -q HERDR_SOCKET_PATH; and test -x "$HOME/.local/bin/ravy-herdr-auto-title"
+    command "$HOME/.local/bin/ravy-herdr-auto-title" --start >/dev/null 2>&1
+end
+
 {{ template "ravy_custom_overrides_common.tmpl" (dict "shell" "fish") }}

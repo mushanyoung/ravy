@@ -179,10 +179,11 @@ class Fixture:
                                    "cat", str(target)], env=self.env, cwd=self.home, capture_output=True,
                                   text=True, timeout=15, check=True)
         target.write_text(rendered.stdout)
-        helper = self.home / ".local/bin/ravy-herdr-tab-10"
-        helper.parent.mkdir(parents=True)
-        helper.write_bytes((ROOT / "dot_local/bin/executable_ravy-herdr-tab-10").read_bytes())
-        helper.chmod(0o700)
+        for name in ("ravy-herdr-tab-10", "ravy-herdr-auto-title"):
+            helper = self.home / ".local/bin" / name
+            helper.parent.mkdir(parents=True, exist_ok=True)
+            helper.write_bytes((ROOT / "dot_local/bin" / ("executable_" + name)).read_bytes())
+            helper.chmod(0o700)
         self.server = None
         self.clients = []
         self.log = None
@@ -243,6 +244,21 @@ class Fixture:
         self.close_ssh_master()
         self.raw("server", "stop")
         until(lambda: self.raw("api", "snapshot").returncode != 0, message="fixture server did not stop")
+        # Detached title workers must release their locks when this server ends.
+        locks = list((self.home / ".local/state/ravy/herdr-tab-titles").glob("*/worker.lock"))
+        def titles_stopped():
+            for path in locks:
+                with path.open() as lock:
+                    try:
+                        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    except BlockingIOError:
+                        return False
+            return True
+        until(titles_stopped, message="title worker outlived its Herdr server")
+        for path in locks:
+            log = path.with_name("worker.log").read_text()
+            if log:
+                raise AssertionError("title worker failed: " + log)
         if self.server:
             self.server.wait(timeout=5)
         if self.log:
@@ -260,6 +276,58 @@ class ServerTests(unittest.TestCase):
         self.fx = Fixture(Path(self.temp.name))
         self.addCleanup(self.fx.close)
         self.fx.start()
+
+    def test_automatic_tab_titles(self):
+        fx = self.fx
+        fx.api("workspace", "create", "--cwd", str(fx.home))
+        client = fx.client()
+        until(lambda: b"\x1b[" in client.output)
+        pane = fx.pane()["pane_id"]
+        tab = fx.pane()["tab_id"]
+        def label(tab_id):
+            return next(t["label"] for t in fx.snapshot()["tabs"] if t["tab_id"] == tab_id)
+        until(lambda: label(tab) == "1: ~")
+        project = fx.home / "parent" / "leaf with spaces"
+        project.mkdir(parents=True)
+        fx.run(pane, "cd " + shlex.quote(str(project)) + "; echo DIR_READY", "DIR_READY")
+        until(lambda: label(tab) == "1: leaf with spaces")
+        fx.run(pane, "sleep 30 &; echo BG_READY", "BG_READY")
+        time.sleep(1)
+        self.assertEqual(label(tab), "1: leaf with spaces")
+        fx.api("pane", "run", pane, "sleep 30")
+        until(lambda: label(tab) == "1: sleep")
+        fx.api("pane", "send-keys", pane, "ctrl+c")
+        until(lambda: label(tab) == "1: leaf with spaces")
+        fx.api("pane", "split", pane, "--direction", "right", "--cwd", str(fx.home), "--focus")
+        until(lambda: label(tab) == "1: ~")
+        fx.api("pane", "focus", "--direction", "left")
+        until(lambda: label(tab) == "1: leaf with spaces")
+        # Manual titles retain their suffix when moving/closing other tabs.
+        fx.api("tab", "rename", tab, "review")
+        until(lambda: label(tab) == "1: review")
+        client.prefix(b"c")
+        until(lambda: len(fx.snapshot()["tabs"]) == 2)
+        second = fx.pane()["tab_id"]
+        until(lambda: label(second) == "2: ~")
+        client.key(b"\x1bu")
+        until(lambda: label(second) == "1: ~" and label(tab) == "2: review")
+        fx.api("tab", "close", tab)
+        until(lambda: len(fx.snapshot()["tabs"]) == 1)
+        self.assertEqual(label(second), "1: ~")
+        # Duplicate Fish starts must not create a second worker. Restarting it
+        # also must not misclassify its persisted automatic title as manual.
+        locks = list((fx.home / ".local/state/ravy/herdr-tab-titles").glob("*/worker.lock"))
+        self.assertEqual(len(locks), 1)
+        pid = json.loads(locks[0].read_text())["pid"]
+        fx.api("pane", "split", "--direction", "right", "--focus")
+        time.sleep(1)
+        self.assertEqual(json.loads(locks[0].read_text())["pid"], pid)
+        os.kill(pid, signal.SIGTERM)
+        time.sleep(0.1)
+        fx.api("pane", "run", fx.pane()["pane_id"],
+               '"$HOME/.local/bin/ravy-herdr-auto-title" --start; sleep 30')
+        until(lambda: label(second) == "1: sleep")
+        self.assertNotEqual(json.loads(locks[0].read_text())["pid"], pid)
 
     def test_keyboard_cwd_splits_tabs_and_detach(self):
         fx = self.fx
@@ -341,7 +409,9 @@ class ServerTests(unittest.TestCase):
         fx.log.close()
         fx.start()
         until(lambda: len(fx.snapshot()["panes"]) == 1)
-        self.assertEqual(fx.pane()["cwd"], str(fx.home))
+        self.assertEqual(Path(fx.pane()["cwd"]).resolve(), fx.home.resolve())
+        until(lambda: fx.snapshot()["tabs"][0]["label"] == "1: ~",
+              message="restored shell did not restart automatic titles")
         before = marker.stat().st_mtime_ns
         time.sleep(1.2)
         self.assertEqual(marker.stat().st_mtime_ns, before, "restart must not resurrect commands")
@@ -526,12 +596,14 @@ class DeveloperTests(AgentReattachTests):
         remote, local = self.remote, self.local
         client = local.client("ravy-e2e")
         until(lambda: remote.raw("api", "snapshot").returncode == 0)
+        until(lambda: remote.snapshot()["tabs"][0]["label"] == "1: ~")
         project = remote.home / "project with spaces"
         project.mkdir()
         remote.api("pane", "run", remote.pane()["pane_id"], "cd " + shlex.quote(str(project)))
         # macOS reports process cwd through /private/tmp even when launched
         # through /tmp. Compare directories, not the symlink spelling.
         until(lambda: Path(remote.pane()["cwd"]).resolve() == project.resolve())
+        until(lambda: remote.snapshot()["tabs"][0]["label"] == "1: project with spaces")
         client.prefix(b"n")
         until(lambda: len(remote.snapshot()["tabs"]) == 2)
         self.assertEqual(Path(remote.pane()["cwd"]).resolve(), project.resolve())
@@ -540,6 +612,7 @@ class DeveloperTests(AgentReattachTests):
               message="remote home-tab custom command did not run")
         self.assertEqual(Path(remote.pane()["cwd"]).resolve(), remote.home.resolve())
         self.assertNotEqual(Path(remote.pane()["cwd"]).resolve(), local.home.resolve())
+        until(lambda: remote.snapshot()["tabs"][2]["label"] == "3: ~")
         for _ in range(7):
             remote.api("tab", "create")
         client.key(b"\x1b1")
@@ -550,9 +623,12 @@ class DeveloperTests(AgentReattachTests):
         remote.api("tab", "close", remote.snapshot()["tabs"][0]["tab_id"])
         remote.api("tab", "create")
         tenth = remote.snapshot()["tabs"][9]["tab_id"]
+        until(lambda: remote.snapshot()["tabs"][9]["label"] == "10: ~")
         client.key(b"\x1b0")
         until(lambda: remote.pane()["tab_id"] == tenth,
               message="Alt+0 must follow display order after closing and creating tabs")
+        remote.api("pane", "run", remote.pane()["pane_id"], "sleep 30")
+        until(lambda: remote.snapshot()["tabs"][9]["label"] == "10: sleep")
         client.prefix(b"d")
         self.assertEqual(client.process.wait(timeout=5), 0)
 

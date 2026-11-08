@@ -146,6 +146,27 @@ the native CLI. Python 3 is needed for the tab-10 adapter. Built-in worktree
 create/delete shortcuts are disabled: open canonical worktrees created outside
 Herdr instead. Ctrl+V is left to terminal applications.
 
+Tab titles always start with their current position: `1: nvim`, `2: repo`,
+`3: ~`. The name follows the foreground process in each tab's selected pane;
+an idle shell shows only its final directory component, or `~` at HOME.
+Background jobs do not change the name. Moving or closing tabs updates the
+prefixes, matching `Alt+1…9` and `Alt+0` (the tenth tab in display order).
+Manual names entered with `P ,` are preserved, with the number kept in front.
+To return a manually named tab to automatic naming, use
+`herdr tab rename TAB_ID ""`.
+
+The managed `~/.local/bin/ravy-herdr-auto-title` helper starts from Fish inside
+Herdr. One detached Python worker per server socket polls the native API every
+0.5 seconds, without launching CLI processes for each poll. It keeps running
+after detach and exits when the server stops or replaces its socket. It works
+on the endpoint for both local and remote sessions. Apply the helper and Fish
+config on each endpoint; an existing session can start it by running
+`~/.local/bin/ravy-herdr-auto-title --start` inside a pane. Sessions containing
+only explicit command panes need that same command with their `HERDR_SOCKET_PATH`.
+Title ownership and the worker log live under
+`${XDG_STATE_HOME:-~/.local/state}/ravy/herdr-tab-titles/`, separately per socket,
+so restarting the worker preserves both automatic and manual names.
+
 ### Persistence and deliberate updates
 
 Detach or client loss leaves live server processes running. A server restart

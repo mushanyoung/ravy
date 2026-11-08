@@ -37,6 +37,13 @@ commands. The four Linux server tests still pass, and the Cloudtop argv suite
 now has eleven passing tests on macOS. The launcher preserves explicit keymap
 overrides and only adds its server-keymap default to remote connections.
 
+The automatic-title change passes 15 Herdr config/adapter tests, the Fish config
+suite, the local macOS PTY/restore tests and all three macOS developer tests.
+Ubuntu 24.04 arm64 passes all three developer tests and the expanded five-test
+server suite. Linux foreground detection explicitly ignores exited zombies,
+which Herdr 0.9.5 can still include in `pane.process_info`. Ruff 0.14.3 and
+ShellCheck pass. These are local test results, separate from GitHub Actions.
+
 The agreed contract accepts rare local-agent replacement as an explicit recovery
 operation, while retaining native connection reuse. It does not require transparent
 hot replacement through a still-live SSH master. The next platform acceptance step
@@ -55,6 +62,10 @@ and hosts. Injected UTF-8 PTY bytes do not prove a GUI IME works.
 3. Real Neovim survives detach; UTF-8 input reaches the editor and is saved.
 4. Native remote server startup over real OpenSSH, forced loss of fixture SSH
    child processes, continued server work, reconnect and clean detach.
+5. Automatic numbered titles: HOME, leaf directories with spaces, foreground
+   versus background jobs, focused split panes, manual names, moving/closing
+   tabs, worker singleton/restart, and worker cleanup when its server stops.
+   The server-restart test also verifies automatic titles resume after restore.
 
 `make test-e2e-developer` runs natively on Linux or macOS:
 
@@ -66,6 +77,8 @@ and hosts. Injected UTF-8 PTY bytes do not prove a GUI IME works.
    HOME, and `Alt+0` selects tab 10. This exercises custom commands over real SSH;
    Herdr's default `--remote-keybindings local` disables those commands, so the
    launcher defaults to `--remote-keybindings=server`.
+   This also verifies remote HOME/directory/process titles and that `Alt+0`
+   still selects the tenth displayed tab after closing and creating tabs.
 
 `make diagnose-herdr-agent-rotation` is a separate, opt-in compatibility diagnostic:
 

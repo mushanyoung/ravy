@@ -43,8 +43,9 @@ class E2EContractTests(unittest.TestCase):
                 self.assertFalse(getattr(method, "__unittest_expecting_failure__", False))
                 self.assertFalse(getattr(type(case), "__unittest_skip__", False))
 
-    def test_server_contract_is_unchanged(self):
-        self.assertEqual(self.suite("server").countTestCases(), 4)
+    def test_server_contract_includes_automatic_titles(self):
+        self.assertEqual(self.suite("server").countTestCases(), 5)
+        self.assertIn("test_automatic_tab_titles", test_ids(self.suite("server")))
         self.assertNotIn("test_replaced_agent_with_reused_transport",
                          test_ids(self.suite("server")))
 
