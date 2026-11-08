@@ -97,9 +97,11 @@ setup_home() {
 
   # Use the real template in an isolated public checkout. The real repository's
   # custom/ directory must not hide a missing private clone in this fixture.
-  guard_exec "$tmp_home" mkdir -p "$tmp_home/public-source/dot_config/mise/conf.d"
-  guard_assert_path "$tmp_home" "$tmp_home/public-source/dot_config/mise/conf.d/99-custom.toml.tmpl" create
-  cat "$repo_root/dot_config/mise/conf.d/99-custom.toml.tmpl" >"$tmp_home/public-source/dot_config/mise/conf.d/99-custom.toml.tmpl"
+  guard_exec "$tmp_home" mkdir -p "$tmp_home/public-source/chezmoi/dot_config/mise/conf.d"
+  guard_exec "$tmp_home" mkdir -p "$tmp_home/public-source/.git"
+  printf 'chezmoi\n' >"$tmp_home/public-source/.chezmoiroot"
+  guard_assert_path "$tmp_home" "$tmp_home/public-source/chezmoi/dot_config/mise/conf.d/99-custom.toml.tmpl" create
+  cat "$repo_root/chezmoi/dot_config/mise/conf.d/99-custom.toml.tmpl" >"$tmp_home/public-source/chezmoi/dot_config/mise/conf.d/99-custom.toml.tmpl"
   write_stub "$tmp_home/render-mise" "#!/usr/bin/env sh
 set -eu
 mkdir -p \"\$HOME/.config/mise/conf.d\"
@@ -290,7 +292,7 @@ while [ \"\$#\" -gt 0 ]; do
       state_path=\"\$2\"
       shift 2
       ;;
-    source-path|init|apply)
+    source-path|execute-template|init|apply)
       subcommand=\"\$1\"
       shift
       break
@@ -300,7 +302,7 @@ while [ \"\$#\" -gt 0 ]; do
       ;;
   esac
 done
-if [ \"\$subcommand\" = \"source-path\" ]; then
+if [ \"\$subcommand\" = \"source-path\" ] || [ \"\$subcommand\" = \"execute-template\" ]; then
   echo \"\$source_path\"
   exit 0
 fi
@@ -489,9 +491,9 @@ setup_home
 RAVY_TEST_WITHOUT_PRIVATE_HOME=1
 RAVY_TEST_PRIVATE_REPO="git@example.com:mushanyoung/custom.git"
 RAVY_TEST_RAVY_HOME="$tmp_home/.local/share/chezmoi"
-guard_exec "$tmp_home" mkdir -p "$RAVY_TEST_RAVY_HOME/dot_config/homebrew"
-guard_assert_path "$tmp_home" "$RAVY_TEST_RAVY_HOME/dot_config/homebrew/Brewfile" create
-printf '%s\n' 'brew "fish"' >"$RAVY_TEST_RAVY_HOME/dot_config/homebrew/Brewfile"
+guard_exec "$tmp_home" mkdir -p "$RAVY_TEST_RAVY_HOME/chezmoi/dot_config/homebrew"
+guard_assert_path "$tmp_home" "$RAVY_TEST_RAVY_HOME/chezmoi/dot_config/homebrew/Brewfile" create
+printf '%s\n' 'brew "fish"' >"$RAVY_TEST_RAVY_HOME/chezmoi/dot_config/homebrew/Brewfile"
 result=$(run_install)
 unset RAVY_TEST_WITHOUT_PRIVATE_HOME RAVY_TEST_PRIVATE_REPO RAVY_TEST_RAVY_HOME
 status_code=${result%%$'\n'*}
@@ -511,7 +513,7 @@ if [ -s "$tmp_home/99-custom.initial.toml" ]; then
   fail "fresh public apply should not already have the private tool configuration"
 fi
 assert_file_contains "$tmp_home/.config/mise/conf.d/99-custom.toml" 'node = "26"'
-assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$tmp_home/.local/share/chezmoi config= state= args=--source-path $tmp_home/.local/share/chezmoi/dot_config/mise/conf.d/99-custom.toml.tmpl"
+assert_file_contains "$tmp_home/chezmoi.log" "subcommand=apply source=$tmp_home/.local/share/chezmoi config= state= args=--source-path $tmp_home/.local/share/chezmoi/chezmoi/dot_config/mise/conf.d/99-custom.toml.tmpl"
 assert_file_contains "$tmp_home/mise.log" "install cd=$tmp_home tools=node"
 assert_file_contains "$tmp_home/mise.log" 'private tools present before mise install'
 

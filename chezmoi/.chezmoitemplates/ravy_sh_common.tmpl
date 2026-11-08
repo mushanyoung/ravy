@@ -50,9 +50,9 @@ _ravy_default_private_home() {
 
 # Resolve the checkout at apply time, with a runtime fallback after relocation.
 if [ -z "${RAVY_HOME:-}" ]; then
-  RAVY_HOME={{ template "ravy_shell_quote.tmpl" (dict "value" .chezmoi.sourceDir "shell" .shell) }}
+  RAVY_HOME={{ template "ravy_shell_quote.tmpl" (dict "value" .chezmoi.workingTree "shell" .shell) }}
   if [ ! -d "$RAVY_HOME" ] && command -v chezmoi >/dev/null 2>&1; then
-    RAVY_HOME="$(chezmoi source-path 2>/dev/null || true)"
+    RAVY_HOME="$(chezmoi execute-template '{{ "{{ .chezmoi.workingTree }}" }}' 2>/dev/null || true)"
   fi
 fi
 if [ -z "${RAVY_HOME:-}" ] && [ -d "$HOME/.local/share/chezmoi" ]; then

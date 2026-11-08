@@ -1,4 +1,4 @@
-# Development tools only; deployed user tools live in dot_config/mise/config.toml.
+# Development tools only; deployed user tools live in chezmoi/dot_config/mise/config.toml.
 [tools]
 python = "3.13.7"
 uv = "0.13.7"

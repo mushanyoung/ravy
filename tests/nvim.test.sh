@@ -67,7 +67,7 @@ register_test="$tmp_home/nvim-registers.lua"
 nvim_sources=()
 while IFS= read -r source; do
   nvim_sources+=("$source")
-done < <(find "$repo_root/dot_config/nvim" -type f -print | sort)
+done < <(find "$repo_root/chezmoi/dot_config/nvim" -type f -print | sort)
 
 guard_exec "$tmp_home" mkdir -p "$(dirname "$rendered_init")" "$rendered_nvim_dir/lua/ravy"
 guard_assert_path "$tmp_home" "$stale_init" create

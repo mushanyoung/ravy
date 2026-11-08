@@ -194,7 +194,9 @@ class Fixture:
         self.home = root / "home"
         self.home.mkdir(parents=True)
         self.config = root / "config.toml"
-        self.config.write_bytes((ROOT / "dot_config/herdr/config.toml").read_bytes())
+        self.config.write_bytes(
+            (ROOT / "chezmoi/dot_config/herdr/config.toml").read_bytes()
+        )
         self.env = isolated_home_env(self.home) | {
             "PATH": os.environ["PATH"],
             "TERM": "xterm-256color",
@@ -230,7 +232,7 @@ class Fixture:
             helper = self.home / ".local/bin" / name
             helper.parent.mkdir(parents=True, exist_ok=True)
             helper.write_bytes(
-                (ROOT / "dot_local/bin" / ("executable_" + name)).read_bytes()
+                (ROOT / "chezmoi/dot_local/bin" / ("executable_" + name)).read_bytes()
             )
             helper.chmod(0o700)
         self.server = None

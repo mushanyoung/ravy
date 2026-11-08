@@ -21,9 +21,11 @@ with tempfile.TemporaryDirectory(prefix=".tmp_startup_", dir=REPO) as temporary:
     root = Path(temporary)
     home = root / "home"
     source = root / "source with 'quotes' $literal\\\\slashes"
-    templates = source / ".chezmoitemplates"
+    templates = source / "chezmoi/.chezmoitemplates"
     templates.mkdir(parents=True)
     home.mkdir()
+    (source / ".git").mkdir()
+    (source / ".chezmoiroot").write_text("chezmoi\n")
     for name in (
         "ravy_fish_common",
         "ravy_sh_common",
@@ -32,7 +34,8 @@ with tempfile.TemporaryDirectory(prefix=".tmp_startup_", dir=REPO) as temporary:
         "ravy_shell_quote",
     ):
         shutil.copyfile(
-            REPO / ".chezmoitemplates" / f"{name}.tmpl", templates / f"{name}.tmpl"
+            REPO / "chezmoi/.chezmoitemplates" / f"{name}.tmpl",
+            templates / f"{name}.tmpl",
         )
     config = root / "chezmoi.toml"
     config.touch()
@@ -208,7 +211,9 @@ printf '%s\n' "$RAVY_HOME" "$HOMEBREW_PREFIX" "$HOMEBREW_CELLAR" "$HOMEBREW_REPO
         try:
             chezmoi_log.write_text("")
             check({**shell_env, "TEST_SOURCE": str(moved)}, moved, prefix)
-            assert chezmoi_log.read_text().splitlines() == ["source-path"], shell
+            assert chezmoi_log.read_text().splitlines() == [
+                "execute-template {{ .chezmoi.workingTree }}"
+            ], shell
         finally:
             moved.rename(source)
 
@@ -283,7 +288,7 @@ command mkdir "$TEST_DIRECTORY"
         (native_bin / "starship").symlink_to(starship)
         (home / ".config").mkdir(exist_ok=True)
         shutil.copyfile(
-            REPO / "dot_config/starship.toml", home / ".config/starship.toml"
+            REPO / "chezmoi/dot_config/starship.toml", home / ".config/starship.toml"
         )
         native_env = {
             **env,

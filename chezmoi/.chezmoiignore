@@ -1,0 +1,4 @@
+# Module rules are never deployed.
+AGENTS.md
+**/AGENTS.md
+**/__pycache__/

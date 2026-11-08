@@ -10,7 +10,7 @@ from unittest.mock import patch
 MODULE = runpy.run_path(
     str(
         Path(__file__).resolve().parents[1]
-        / "dot_local/bin/executable_ravy-herdr-auto-title"
+        / "chezmoi/dot_local/bin/executable_ravy-herdr-auto-title"
     )
 )
 Titles = MODULE["Titles"]

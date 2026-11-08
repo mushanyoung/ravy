@@ -7,8 +7,8 @@
 ## 项目与职责
 
 Ravy 是面向 macOS/Linux 的 chezmoi dotfiles：`install.sh` 负责引导，
-`.chezmoitemplates/` 负责共享 shell 行为，`dot_config/` 存放应用配置，
-`bin/` 与 `dot_local/bin/` 提供命令，`tests/` 验证行为。
+`chezmoi/.chezmoitemplates/` 负责共享 shell 行为，`chezmoi/dot_config/` 存放应用配置，
+`bin/` 与 `chezmoi/dot_local/bin/` 提供命令，`tests/` 验证行为。
 Herdr 负责终端会话和 SSH；私密配置属于独立的 `custom/` 仓库。
 
 ## 技术约束
@@ -16,7 +16,8 @@ Herdr 负责终端会话和 SSH；私密配置属于独立的 `custom/` 仓库�
 - 修改源模板并通过 chezmoi 渲染验证；不要直接改已安装的 HOME 文件。
 - 测试使用隔离 HOME、临时密钥和本地 SSH，不读取真实私密配置。
 - 保持 Bash/Zsh/Fish 和 macOS/Linux 兼容；Herdr 版本及生命周期约定见导航。
-- 项目文档、工具配置和产物必须由 `.chezmoiignore` 排除，不能部署到 HOME。
+- `.chezmoiroot` 将部署源限定在 `chezmoi/`；文档、工具和产物留在项目根目录，
+  源内的模块规则由 `chezmoi/.chezmoiignore` 排除。
 
 ## 工作方式与质量门槛
 
@@ -39,5 +40,6 @@ Herdr 负责终端会话和 SSH；私密配置属于独立的 `custom/` 仓库�
 - 改职责边界、模板或引导：读 [架构](docs/architecture.md)。
 - 开发、提交或文档调整：读 [开发流程](docs/development.md)。
 - 改测试、检查或 CI：读 [测试策略](docs/testing.md)；先 `make setup`，完整门槛 `make check`；迭代用 `make unit`、`make lint`，格式修复用 `make format`。
+- 改 source state、安装路径或私有耦合：读 [私有覆盖契约](docs/private-overlay.md)。
 - 改 Herdr/Cloudtop：读 [使用与设计](docs/herdr.md)、[真实终端测试契约](docs/herdr-testing.md)；
   按平台执行 `make test-e2e-server` / `make test-e2e-developer`。

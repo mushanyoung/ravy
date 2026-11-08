@@ -59,7 +59,9 @@ class QualityTests(unittest.TestCase):
 
     def test_extensionless_programs_and_new_files_are_checked(self):
         paths = quality.groups()
-        self.assertIn("dot_local/bin/executable_ravy-herdr-tab-10", paths["python"])
+        self.assertIn(
+            "chezmoi/dot_local/bin/executable_ravy-herdr-tab-10", paths["python"]
+        )
         self.assertIn("bin/cloudtop", paths["shell"])
         self.assertIn("scripts/quality.py", paths["python"])
 

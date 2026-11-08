@@ -1,9 +1,11 @@
-{{- $defaultPrivateHome := joinPath .chezmoi.sourceDir "custom" -}}
+{{- $defaultPrivateHome := joinPath .chezmoi.workingTree "custom" -}}
 {{- $defaultPrivateConfig := joinPath $defaultPrivateHome "mise" "config.toml" -}}
 {{- $privateHome := env "RAVY_PRIVATE_HOME" | default $defaultPrivateHome -}}
 {{- $privateConfig := joinPath $privateHome "mise" "config.toml" -}}
 {{- if (stat $privateConfig) -}}
 {{ include $privateConfig }}
+{{- else if env "RAVY_PRIVATE_HOME" -}}
+{{- /* Explicit override: never fall back to a different private checkout. */ -}}
 {{- else if (stat $defaultPrivateConfig) -}}
 {{ include $defaultPrivateConfig }}
 {{- else -}}

@@ -8,7 +8,8 @@ import unittest
 from pathlib import Path
 
 HELPER = (
-    Path(__file__).resolve().parents[1] / "dot_local/bin/executable_ravy-herdr-tab-10"
+    Path(__file__).resolve().parents[1]
+    / "chezmoi/dot_local/bin/executable_ravy-herdr-tab-10"
 )
 
 

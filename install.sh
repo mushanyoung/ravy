@@ -241,7 +241,7 @@ resolve_public_source_path() {
 
   source_path="${RAVY_HOME:-}"
   if [ -z "$source_path" ]; then
-    source_path="$(run_chezmoi_quiet source-path 2>/dev/null || true)"
+    source_path="$(run_chezmoi_quiet execute-template '{{ .chezmoi.workingTree }}' 2>/dev/null || true)"
   fi
   if [ -z "$source_path" ]; then
     source_path="$HOME/.local/share/chezmoi"
@@ -554,7 +554,7 @@ resolve_private_install_script() {
     return 0
   fi
 
-  if chezmoi_source="$(run_chezmoi_quiet source-path 2>/dev/null)"; then
+  if chezmoi_source="$(run_chezmoi_quiet execute-template '{{ .chezmoi.workingTree }}' 2>/dev/null)"; then
     if [ -x "$chezmoi_source/custom/install.sh" ]; then
       printf '%s\n' "$chezmoi_source/custom/install.sh"
       return 0
@@ -628,9 +628,9 @@ __el mkdir -p "$RAVY_CHEZMOI_CONFIG_DIR"
 
 if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
   warn "Using --force to overwrite existing files managed by this setup."
-  run_chezmoi init --apply --force "$RAVY_REPO"
+  run_chezmoi -S "$RAVY_HOME" init --apply --force "$RAVY_REPO"
 else
-  run_chezmoi init --apply "$RAVY_REPO"
+  run_chezmoi -S "$RAVY_HOME" init --apply "$RAVY_REPO"
 fi
 
 if [ -n "${RAVY_PRIVATE_REPO:-}" ]; then
@@ -671,7 +671,7 @@ fi
 # again now that the overlay is available, before installing configured tools.
 if [ -d "$RAVY_PRIVATE_HOME/.git" ]; then
   info "Refreshing mise configuration from the private overlay"
-  mise_source="$RAVY_HOME/dot_config/mise/conf.d/99-custom.toml.tmpl"
+  mise_source="$RAVY_HOME/chezmoi/dot_config/mise/conf.d/99-custom.toml.tmpl"
   if [ "$RAVY_CHEZMOI_FORCE" = "1" ]; then
     run_chezmoi -S "$RAVY_HOME" apply --force --source-path "$mise_source"
   else

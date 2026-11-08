@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class HerdrConfigTests(unittest.TestCase):
     def config(self):
-        path = ROOT / "dot_config/herdr/config.toml"
+        path = ROOT / "chezmoi/dot_config/herdr/config.toml"
         self.assertTrue(path.is_file(), "Herdr config must be managed by chezmoi")
         return tomllib.loads(path.read_text())
 
@@ -49,15 +49,15 @@ class HerdrConfigTests(unittest.TestCase):
 
     def test_native_agent_socket_and_toolchain(self):
         for name in (
-            ".chezmoitemplates/ravy_fish_common.tmpl",
-            ".chezmoitemplates/ravy_sh_common.tmpl",
+            "chezmoi/.chezmoitemplates/ravy_fish_common.tmpl",
+            "chezmoi/.chezmoitemplates/ravy_sh_common.tmpl",
         ):
             data = (ROOT / name).read_text()
             self.assertNotIn("ssh_auth_sock", data)
             self.assertNotIn("CLOUDTOP_SSH_AUTH_SOCK", data)
-        tools = tomllib.loads((ROOT / "dot_config/mise/config.toml").read_text())[
-            "tools"
-        ]
+        tools = tomllib.loads(
+            (ROOT / "chezmoi/dot_config/mise/config.toml").read_text()
+        )["tools"]
         self.assertEqual(tools["herdr"], "0.9.5")
 
 

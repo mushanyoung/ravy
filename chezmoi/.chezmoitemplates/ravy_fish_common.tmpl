@@ -7,9 +7,9 @@ umask go-w
 # Use the source directory resolved by chezmoi at apply time. Honor an explicit
 # override; query chezmoi again only if the rendered checkout has moved.
 if not set -q RAVY_HOME; or test -z "$RAVY_HOME"
-    set -gx RAVY_HOME {{ template "ravy_shell_quote.tmpl" (dict "value" .chezmoi.sourceDir "shell" "fish") }}
+    set -gx RAVY_HOME {{ template "ravy_shell_quote.tmpl" (dict "value" .chezmoi.workingTree "shell" "fish") }}
     if not test -d "$RAVY_HOME"; and command -q chezmoi
-        set -l sp (chezmoi source-path 2>/dev/null)
+        set -l sp (chezmoi execute-template '{{ "{{ .chezmoi.workingTree }}" }}' 2>/dev/null)
         if test -n "$sp"
             set -gx RAVY_HOME "$sp"
         end

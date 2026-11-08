@@ -3,7 +3,7 @@
 `make setup` 按 `mise.lock`、`uv.lock`、`package-lock.json` 安装工具与依赖；
 需要 mise 2026.11.4、Git、Make，以及系统 Fish、Zsh、Ruby、Docker CLI 和 OpenSSH。
 Linux 还需 sshd 与 en_US.UTF-8 locale。开发工具通过 `scripts/mise/config.toml`
-隔离个人 mise 配置；部署给用户的工具版本仍由 `dot_config/mise/config.toml` 管理。
+隔离个人 mise 配置；部署给用户的工具版本仍由 `chezmoi/dot_config/mise/config.toml` 管理。
 锁文件覆盖 Linux/macOS 的 arm64/x64，升级时更新锁文件并运行完整检查。
 [mise 锁文件规则](https://mise.jdx.dev/dev-tools/mise-lock.html)说明了安装时的校验行为。
 

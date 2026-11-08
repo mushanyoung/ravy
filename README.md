@@ -2,6 +2,12 @@
 
 **Ravy** is a cross-platform dotfiles setup managed with `chezmoi`.
 
+The repository root holds project tooling, documentation and `bin/` commands.
+`.chezmoiroot` selects `chezmoi/` as the public configuration source. Optional
+`custom/` stays a separate private repository beside it. Existing chezmoi clones
+keep their sourceDir pointing at this repository root; no local setting change
+is required. See the [layout and private overlay contract](docs/private-overlay.md).
+
 ## Installation
 
 `install.sh` requires `git`, bootstraps `mise` into `~/.local/bin` when needed,
