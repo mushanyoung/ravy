@@ -87,7 +87,7 @@ class CloudtopTests(unittest.TestCase):
         self.assertEqual(len(result.stdout.splitlines()), 1)
 
     def test_removed_transports_fail_before_herdr(self):
-        for flag in ("--mosh", "--tmux", "--zellij", "--ssh"):
+        for flag in ("--mosh", "--tmux", "--ssh"):
             with self.subTest(flag=flag):
                 result = self.run_adapter(flag, "dev")
                 self.assertEqual(result.returncode, 2)

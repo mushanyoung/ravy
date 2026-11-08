@@ -115,13 +115,6 @@ function M.setup()
     pattern = "COMMIT_EDITMSG",
     command = "normal! gg0",
   })
-  vim.api.nvim_create_autocmd({ "BufReadPost", "BufNewFile", "BufWinEnter" }, {
-    group = buffer_edit,
-    pattern = "*.kdl.tmpl",
-    callback = function()
-      vim.bo.filetype = "kdl"
-    end,
-  })
   vim.api.nvim_create_autocmd("InsertEnter", {
     group = buffer_edit,
     callback = function()

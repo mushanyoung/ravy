@@ -473,18 +473,9 @@ assert_true "command -v lines >/dev/null" "lines helper exists"
 assert_true "command -v downcase-exts >/dev/null" "downcase-exts helper exists"
 
 rm -f "$HOME/codex.log"
-set -e ZELLIJ
 codex resume abc123 >/dev/null
 grep -Fx "resume abc123" "$HOME/codex.log" >/dev/null
-or fail "codex command should pass args through outside Zellij"
-rm -f "$HOME/codex.log"
-set -gx ZELLIJ 1
-set -gx ZELLIJ_PANE_ID 7
-codex resume abc123 >/dev/null
-set -e ZELLIJ
-set -e ZELLIJ_PANE_ID
-grep -Fx -- "resume abc123" "$HOME/codex.log" >/dev/null
-or fail "codex command should pass args through inside Zellij"
+or fail "codex command should pass args through"
 
 rm -f "$HOME/mise.log" "$HOME/sudo.log"
 rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib"

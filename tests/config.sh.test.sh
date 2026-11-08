@@ -413,14 +413,9 @@ check_public_surface() {
     command -v lines >/dev/null 2>&1 &&
     command -v downcase-exts >/dev/null 2>&1 &&
     rm -f \"\$HOME/codex.log\" &&
-    unset ZELLIJ &&
     codex resume abc123 >/dev/null &&
     grep -Fx 'resume abc123' \"\$HOME/codex.log\" >/dev/null 2>&1 &&
     rm -f \"\$HOME/codex.log\" &&
-    ZELLIJ=1 ZELLIJ_PANE_ID=7 codex resume abc123 >/dev/null &&
-    grep -Fx -- 'resume abc123' \"\$HOME/codex.log\" >/dev/null 2>&1 &&
-    unset ZELLIJ &&
-    unset ZELLIJ_PANE_ID &&
     $fn_check __ravy_starship_init >/dev/null &&
     $fn_check __ravy_zoxide_init >/dev/null &&
     $fn_check __ravy_atuin_init >/dev/null &&

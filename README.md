@@ -80,7 +80,7 @@ forwarding disabled on servers that do not need it. Herdr does not enable agent
 forwarding for you. Shell startup preserves inherited `SSH_AUTH_SOCK`; it no
 longer overrides it with `~/.ssh/ssh_auth_sock`. No private keys are copied.
 
-The old `--mosh`, `--tmux`, `--zellij`, and `--ssh` transport selectors are rejected.
+The old `--mosh`, `--tmux`, and `--ssh` transport selectors are rejected.
 Mosh roaming is not provided by this SSH migration. `CLOUDTOP_*` overrides no
 longer control transport, sessions, or agent sockets.
 
@@ -138,7 +138,6 @@ Press `Ctrl+Space` and release before the next key:
 - `d`: detach; `[`: copy mode; `e`: edit scrollback.
 - `Shift+w`: new workspace; native `w`: workspace picker.
 
-Herdr uses prefix commands instead of the old Zellij modal/autolock machinery.
 Direct Alt keys remain reserved even inside editors and agents. The tiny managed
 `~/.local/bin/ravy-herdr-tab-10` helper fills the native 1…9 range gap using native
 list/focus commands; it does not manage sessions. The home-tab command also calls
@@ -173,27 +172,10 @@ so restarting the worker preserves both automatic and manual names.
 Detach or client loss leaves live server processes running. A server restart
 restores layout with fresh shells; it cannot preserve the old processes.
 Automatic agent resume and experimental pane-history persistence are disabled.
-Layout restoration is still native Herdr behavior, unlike the old policy of
-removing saved Zellij state. No automatic agent or paid-model invocation is added.
+Herdr owns layout restoration. No automatic agent or paid-model invocation is added.
 Version and agent-manifest background checks are disabled; this is not a claim
 that every possible Herdr feature is network-free. Upgrade the pinned version
 only after rerunning the real-terminal and SSH tests.
-
-### Moving an existing installation
-
-Review/apply the Herdr config, tab helper, shell templates, Neovim changes and mise
-pin together through the normal chezmoi workflow. Finish or deliberately stop old
-Zellij work first: live PTYs cannot be moved into Herdr. Start **fresh Herdr
-sessions** so they receive native agent-socket management; do not import an old
-shell's exported stable-socket override.
-
-Removing source entries does not necessarily remove previously deployed files.
-After old sessions finish, inspect and explicitly retire stale Zellij config/plugin
-files, the old `zellij-safe-detach` entrypoint, Cloudtop caches/socket backups and
-any obsolete Zellij package installation. This branch does not automatically
-kill old sessions, delete caches, or change a live machine. Leave private SSH/Git
-identity configuration untouched. Rollback requires the old repository ref and
-its tool version; it does not transfer newly running Herdr processes back.
 
 ## Private Bootstrap
 

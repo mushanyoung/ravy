@@ -4,7 +4,7 @@
 set -eu
 
 case "${1:-}" in
-  --mosh|--tmux|--zellij|--ssh)
+  --mosh|--tmux|--ssh)
     printf '%s
 ' 'cloudtop now uses Herdr native SSH: cloudtop HOST [--session NAME].' >&2
     exit 2

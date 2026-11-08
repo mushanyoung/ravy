@@ -40,18 +40,13 @@ class HerdrConfigTests(unittest.TestCase):
         self.assertIn("alt+0", commands)
         self.assertIn("ravy-herdr-tab-10", commands["alt+0"]["command"])
 
-    def test_no_active_zellij_or_agent_bridge(self):
-        for name in ("dot_config/zellij/config.kdl.tmpl", "bin/zellij-safe-detach",
-                     "tests/zellij.test.sh", ".chezmoiexternal.toml"):
-            self.assertFalse((ROOT / name).exists(), name)
+    def test_native_agent_socket_and_toolchain(self):
         for name in (".chezmoitemplates/ravy_fish_common.tmpl",
                      ".chezmoitemplates/ravy_sh_common.tmpl"):
             data = (ROOT / name).read_text()
             self.assertNotIn("ssh_auth_sock", data)
             self.assertNotIn("CLOUDTOP_SSH_AUTH_SOCK", data)
-        self.assertNotIn("zellij", (ROOT / "dot_config/nvim/lua/ravy/autocmds.lua").read_text())
         tools = tomllib.loads((ROOT / "dot_config/mise/config.toml").read_text())["tools"]
-        self.assertNotIn("zellij", tools)
         self.assertEqual(tools["herdr"], "0.9.5")
 
 
