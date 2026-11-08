@@ -547,6 +547,12 @@ class DeveloperTests(AgentReattachTests):
         client.key(b"\x1b0")
         until(lambda: next(t for t in remote.snapshot()["tabs"] if t["focused"])["number"] == 10,
               message="remote tab-10 custom command did not run")
+        remote.api("tab", "close", remote.snapshot()["tabs"][0]["tab_id"])
+        remote.api("tab", "create")
+        tenth = remote.snapshot()["tabs"][9]["tab_id"]
+        client.key(b"\x1b0")
+        until(lambda: remote.pane()["tab_id"] == tenth,
+              message="Alt+0 must follow display order after closing and creating tabs")
         client.prefix(b"d")
         self.assertEqual(client.process.wait(timeout=5), 0)
 

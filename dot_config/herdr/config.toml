@@ -75,6 +75,6 @@ description = "new tab in home (n follows cwd)"
 [[keys.command]]
 key = "alt+0"
 type = "shell"
-# Native indexed bindings only cover 1..9. This adapter selects live tab #10.
+# Native indexed bindings only cover 1..9. Select the tenth tab in display order.
 command = '"$HOME/.local/bin/ravy-herdr-tab-10"'
 description = "go to tab 10"

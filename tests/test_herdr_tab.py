@@ -37,13 +37,17 @@ else:
         calls = [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
         return result, calls
 
-    def test_selects_live_number_not_position_or_another_workspace(self):
+    def tabs(self):
+        return [{"number": index + 20, "workspace_id": "w-opaque", "tab_id": f"opaque-{index}"}
+                for index in range(10)]
+
+    def test_selects_display_position_after_moves_or_closes(self):
         result, calls = self.run_helper([
             {"number": 10, "workspace_id": "other", "tab_id": "wrong"},
-            {"number": 10, "workspace_id": "w-opaque", "tab_id": "tab-opaque"}])
+            *self.tabs()])
         self.assertEqual(result.returncode, 0)
         self.assertEqual(calls, [["tab", "list", "--workspace", "w-opaque"],
-                                 ["tab", "focus", "tab-opaque"]])
+                                 ["tab", "focus", "opaque-9"]])
 
     def test_missing_tenth_is_noop(self):
         result, calls = self.run_helper([])
@@ -70,7 +74,7 @@ else:
 
     def test_native_failure_propagates(self):
         self.env["FOCUS_EXIT"] = "7"
-        result, _ = self.run_helper([{"number": 10, "workspace_id": "w-opaque", "tab_id": "t"}])
+        result, _ = self.run_helper(self.tabs())
         self.assertEqual(result.returncode, 7)
 
 
