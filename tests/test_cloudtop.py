@@ -45,24 +45,39 @@ class CloudtopTests(unittest.TestCase):
     def test_remote_developer_hosts(self):
         for host in ("mac-dev", "linux-dev", "ssh://dev@localhost:2222"):
             with self.subTest(host=host):
-                self.assert_argv(["--remote", host], host)
+                self.assert_argv(["--remote-keybindings=server", "--remote", host], host)
 
     def test_server_named_session(self):
-        self.assert_argv(["--remote", "linux-server", "--session", "ops"],
+        self.assert_argv(["--remote-keybindings=server", "--remote", "linux-server", "--session", "ops"],
                          "linux-server", "--session", "ops")
 
     def test_native_flags_and_cl_alias(self):
         self.assert_argv(["--session", "work"], "--session", "work", alias="cl")
-        self.assert_argv(["--remote", "dev"], "--remote", "dev")
+        self.assert_argv(["--remote-keybindings=server", "--remote", "dev"], "--remote", "dev")
+        self.assert_argv(["--remote-keybindings=server", "--remote=dev"], "--remote=dev", alias="cl")
         self.assert_argv(["--help"], "--help")
 
+    def test_explicit_remote_keymap_is_preserved_without_duplicates(self):
+        for value in ("local", "server"):
+            with self.subTest(value=value):
+                self.assert_argv(["--remote", "dev", "--remote-keybindings", value],
+                                 "dev", "--remote-keybindings", value)
+                self.assert_argv(["--remote=dev", "--remote-keybindings=" + value],
+                                 "--remote=dev", "--remote-keybindings=" + value)
+
+    def test_option_terminator_does_not_change_keymap_selection(self):
+        self.assert_argv(["--", "--remote=dev"], "--", "--remote=dev")
+        self.assert_argv(["--remote-keybindings=server", "--remote", "dev", "--",
+                          "--remote-keybindings=local"],
+                         "dev", "--", "--remote-keybindings=local")
+
     def test_arguments_never_evaluated(self):
-        self.assert_argv(["--remote", "$(touch OWNED); x", "--session", "a b"],
+        self.assert_argv(["--remote-keybindings=server", "--remote", "$(touch OWNED); x", "--session", "a b"],
                          "$(touch OWNED); x", "--session", "a b")
         self.assertFalse((ROOT / "OWNED").exists())
 
     def test_legacy_environment_cannot_replace_native_transport(self):
-        self.assert_argv(["--remote", "dev"], "dev", CLOUDTOP_EXEC_CMD="exit 88",
+        self.assert_argv(["--remote-keybindings=server", "--remote", "dev"], "dev", CLOUDTOP_EXEC_CMD="exit 88",
                          SSH_EXEC_CMD="exit 88", SSH_COMMAND="/nonexistent",
                          CLOUDTOP_SSH_AUTH_SOCK="/wrong/socket")
 

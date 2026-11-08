@@ -31,6 +31,12 @@ temporary-directory selection and cleanup, unsafe account-home permissions, and
 unsupported login shells. This is separate from the still-pending macOS GitHub
 Actions run.
 
+After the remote-keymap fix, the developer series has three required tests; all
+pass on macOS arm64 and Ubuntu 24.04 arm64, including remote home-tab/tab-10
+commands. The four Linux server tests still pass, and the Cloudtop argv suite
+now has eleven passing tests on macOS. The launcher preserves explicit keymap
+overrides and only adds its server-keymap default to remote connections.
+
 The agreed contract accepts rare local-agent replacement as an explicit recovery
 operation, while retaining native connection reuse. It does not require transparent
 hot replacement through a still-live SSH master. The next platform acceptance step
@@ -56,6 +62,10 @@ and hosts. Injected UTF-8 PTY bytes do not prove a GUI IME works.
    and verification, ordinary reattach, and signing in old/new panes.
 2. Agent replacement at a new socket with a fresh SSH transport: signing works
    in old/new panes without a Ravy stable-socket bridge.
+3. Remote `Ctrl+Space n` follows cwd, `Ctrl+Space c` creates a tab in the remote
+   HOME, and `Alt+0` selects tab 10. This exercises custom commands over real SSH;
+   Herdr's default `--remote-keybindings local` disables those commands, so the
+   launcher defaults to `--remote-keybindings=server`.
 
 `make diagnose-herdr-agent-rotation` is a separate, opt-in compatibility diagnostic:
 

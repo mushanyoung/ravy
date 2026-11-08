@@ -29,6 +29,7 @@ class E2EContractTests(unittest.TestCase):
     def test_developer_requires_normal_and_explicit_recovery(self):
         self.assertEqual(test_ids(self.suite("developer")), {
             "test_native_remote_keys_forwarding_and_reattach",
+            "test_remote_custom_home_tab_and_tab_ten",
             "test_replaced_agent_with_fresh_transport",
         })
 

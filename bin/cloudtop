@@ -18,6 +18,22 @@ if ! command -v herdr >/dev/null 2>&1; then
 fi
 
 case "${1:-}" in
-  ''|-*) exec herdr "$@" ;;
-  *) exec herdr --remote "$@" ;;
+  ''|-*) ;;
+  *) set -- --remote "$@" ;;
 esac
+
+# Herdr's default remote "local" keymap drops custom commands, including our
+# home-tab and tab-10 bindings. Use the endpoint's keys unless explicitly chosen.
+remote=0
+keybindings=0
+for arg do
+  case "$arg" in
+    --) break ;;
+    --remote|--remote=*) remote=1 ;;
+    --remote-keybindings|--remote-keybindings=*) keybindings=1 ;;
+  esac
+done
+if [ "$remote" = 1 ] && [ "$keybindings" = 0 ]; then
+  set -- --remote-keybindings=server "$@"
+fi
+exec herdr "$@"

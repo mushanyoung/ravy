@@ -522,6 +522,34 @@ class AgentReattachTests(SSHTests):
 
 
 class DeveloperTests(AgentReattachTests):
+    def test_remote_custom_home_tab_and_tab_ten(self):
+        remote, local = self.remote, self.local
+        client = local.client("ravy-e2e")
+        until(lambda: remote.raw("api", "snapshot").returncode == 0)
+        project = remote.home / "project with spaces"
+        project.mkdir()
+        remote.api("pane", "run", remote.pane()["pane_id"], "cd " + shlex.quote(str(project)))
+        # macOS reports process cwd through /private/tmp even when launched
+        # through /tmp. Compare directories, not the symlink spelling.
+        until(lambda: Path(remote.pane()["cwd"]).resolve() == project.resolve())
+        client.prefix(b"n")
+        until(lambda: len(remote.snapshot()["tabs"]) == 2)
+        self.assertEqual(Path(remote.pane()["cwd"]).resolve(), project.resolve())
+        client.prefix(b"c")
+        until(lambda: len(remote.snapshot()["tabs"]) == 3,
+              message="remote home-tab custom command did not run")
+        self.assertEqual(Path(remote.pane()["cwd"]).resolve(), remote.home.resolve())
+        self.assertNotEqual(Path(remote.pane()["cwd"]).resolve(), local.home.resolve())
+        for _ in range(7):
+            remote.api("tab", "create")
+        client.key(b"\x1b1")
+        until(lambda: next(t for t in remote.snapshot()["tabs"] if t["focused"])["number"] == 1)
+        client.key(b"\x1b0")
+        until(lambda: next(t for t in remote.snapshot()["tabs"] if t["focused"])["number"] == 10,
+              message="remote tab-10 custom command did not run")
+        client.prefix(b"d")
+        self.assertEqual(client.process.wait(timeout=5), 0)
+
     def test_native_remote_keys_forwarding_and_reattach(self):
         self.exercise_reattach(rotate=False, fresh_connection=False)
 

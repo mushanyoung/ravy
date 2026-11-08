@@ -59,10 +59,17 @@ plugin, or editor mode-switching hook.
 
 ```sh
 cl                            # local Herdr session
-cl dev-host                   # herdr --remote dev-host (SSH config alias)
+cl dev-host                   # native SSH, using the remote server's keybindings
 cl dev-host --session work     # named remote session
 cl --session work             # named local session
 ```
+
+Remote `cl`/`cloudtop` connections default to `--remote-keybindings=server`, so
+the remote Herdr config supplies both built-in and custom bindings. Herdr's
+native `local` mode omits custom commands: `Ctrl+Space c` and `Alt+0` do nothing
+in that mode. An explicit `--remote-keybindings local` override is still passed
+through. Existing connections need a detach/reattach to change modes; for an
+older launcher, reconnect with `cl HOST --remote-keybindings server`.
 
 Install Ravy and its mise tools on each endpoint before use. `cloudtop` requires
 Herdr on PATH; remote shell discovery and any remote-binary preparation are native
