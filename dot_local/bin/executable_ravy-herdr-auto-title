@@ -1,0 +1,247 @@
+#!/usr/bin/env python3
+"""Numbered Herdr tab titles, owned by one worker per server socket (Unix)."""
+import argparse
+import fcntl
+import hashlib
+import json
+import os
+import socket
+import subprocess
+import sys
+import time
+import unicodedata
+from pathlib import Path
+
+INTERVAL = 0.5
+SHELLS = {"fish", "bash", "zsh", "sh", "dash", "ksh", "tcsh", "csh", "nu", "xonsh"}
+
+
+class APIError(Exception):
+    pass
+
+
+class API:
+    def __init__(self, path):
+        self.path = path
+
+    def call(self, method, **params):
+        # Herdr 0.9.5 accepts one ordinary request per connection. Use the
+        # native socket directly so polling never spawns CLI/shell processes.
+        with socket.socket(socket.AF_UNIX) as connection:
+            connection.settimeout(5)
+            connection.connect(self.path)
+            request = {"id": "ravy-tab-title", "method": method, "params": params}
+            connection.sendall(json.dumps(request).encode() + b"\n")
+            with connection.makefile("rb") as response:
+                line = response.readline(8 * 1024 * 1024)
+                if not line:
+                    raise ConnectionResetError("server closed the connection")
+                data = json.loads(line)
+        if "error" in data:
+            if data["error"]["code"] == "server_unavailable":
+                raise ConnectionResetError("server stopped")
+            raise APIError(data["error"]["code"])
+        return data["result"]
+
+
+def clean(text):
+    return "".join(c for c in text if not unicodedata.category(c).startswith("C")).strip()
+
+
+def directory_name(cwd, home):
+    path = Path(cwd or home)
+    if path.resolve() == Path(home).resolve():
+        return "~"
+    return clean(path.name) or "/"
+
+
+def process_is_live(pid):
+    # Herdr 0.9.5 includes unreaped Linux zombies in foreground_processes.
+    # /proc stat is cheap and avoids mistaking an exited startup helper for
+    # the shell's active job. comm may contain spaces and closing parentheses.
+    if sys.platform == "linux":
+        try:
+            state = Path(f"/proc/{pid}/stat").read_text().rpartition(")")[2].split()[0]
+            return state not in {"Z", "X", "x"}
+        except FileNotFoundError:
+            return False
+        except (OSError, IndexError):
+            pass  # A restricted procfs should not hide otherwise known jobs.
+    return True
+
+
+def automatic_name(pane, info, home):
+    processes = info["foreground_processes"]
+    programs = []
+    for process in processes:
+        if not process_is_live(process["pid"]):
+            continue
+        name = Path(process.get("argv0") or process["name"]).name.lstrip("-")
+        if name not in SHELLS:
+            programs.append((process, clean(name)))
+    if programs:
+        # Prefer the foreground group leader; for a shell wrapper use its
+        # first non-shell child. Background jobs are absent from this API.
+        leader = info.get("foreground_process_group_id")
+        _, name = min(programs, key=lambda p: (p[0]["pid"] != leader, p[0]["pid"]))
+        return name[:80] or "process"
+    shell = next((p for p in processes if p["pid"] == info.get("shell_pid")), {})
+    return directory_name(shell.get("cwd") or pane.get("foreground_cwd") or pane.get("cwd"), home)
+
+
+def manual_name(label, *numbers):
+    # P , opens the complete displayed title. Editing its suffix should not
+    # accumulate another number, including while a tab is being reordered.
+    for number in numbers:
+        prefix = f"{number}: "
+        if label.startswith(prefix):
+            return clean(label[len(prefix):])
+    return clean(label)
+
+
+class Titles:
+    def __init__(self, api, home, state_file):
+        self.api, self.home, self.state_file = api, home, state_file
+        try:
+            self.records = json.loads(state_file.read_text())
+            if not isinstance(self.records, dict):
+                self.records = {}
+        except (OSError, ValueError):
+            self.records = {}
+        self.saved = json.dumps(self.records, sort_keys=True)
+
+    def save(self):
+        data = json.dumps(self.records, sort_keys=True)
+        if data != self.saved:
+            temporary = self.state_file.with_suffix(".tmp")
+            temporary.write_text(data + "\n")
+            temporary.replace(self.state_file)
+            self.saved = data
+
+    def update(self):
+        snapshot = self.api.call("session.snapshot")["snapshot"]
+        panes = {pane["pane_id"]: pane for pane in snapshot["panes"]}
+        focused = {layout["tab_id"]: layout["focused_pane_id"] for layout in snapshot["layouts"]}
+        positions = {}
+        live = set()
+        try:
+            for tab in snapshot["tabs"]:
+                workspace, tab_id = tab["workspace_id"], tab["tab_id"]
+                number = positions[workspace] = positions.get(workspace, 0) + 1
+                live.add(tab_id)
+                label = tab["label"]
+                old = self.records.get(tab_id)
+                if not isinstance(old, dict) or not {"last", "number", "manual"} <= old.keys():
+                    old = None
+                if old and label == old["last"]:
+                    manual = old["manual"]
+                elif not label.strip() or (old is None and label == str(number)):
+                    manual = None
+                else:
+                    manual = manual_name(label, number, old["number"] if old else number)
+                try:
+                    if manual is None:
+                        pane = panes.get(focused.get(tab_id))
+                        if pane is None:
+                            continue
+                        info = self.api.call("pane.process_info", pane_id=pane["pane_id"])["process_info"]
+                        name = automatic_name(pane, info, self.home)
+                    else:
+                        name = manual
+                    desired = f"{number}: {name}"
+                    if desired != label:
+                        # Recheck after process inspection so a manual edit or
+                        # closed tab during the read is not overwritten.
+                        current = self.api.call("tab.get", tab_id=tab_id)["tab"]
+                        if current["label"] != label:
+                            continue
+                        self.api.call("tab.rename", tab_id=tab_id, label=desired)
+                    self.records[tab_id] = {"last": desired, "number": number, "manual": manual}
+                except APIError as error:
+                    if str(error) not in {"pane_not_found", "tab_not_found"}:
+                        raise
+            self.records = {key: value for key, value in self.records.items() if key in live}
+        finally:
+            self.save()
+
+
+def socket_identity(path):
+    stat = Path(path).stat()
+    return [stat.st_dev, stat.st_ino]
+
+
+def state_directory(path):
+    root = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state")
+    key = hashlib.sha256(os.fsencode(path)).hexdigest()[:24]
+    return root / "ravy/herdr-tab-titles" / key
+
+
+def watch(path, directory, identity):
+    titles = Titles(API(path), Path.home(), directory / "titles.json")
+    while socket_identity(path) == identity:
+        started = time.monotonic()
+        titles.update()
+        time.sleep(max(0, INTERVAL - (time.monotonic() - started)))
+
+
+def start(path, directory, identity):
+    with (directory / "worker.lock").open("a+") as lock:
+        for _ in range(30):
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                lock.seek(0)
+                try:
+                    if json.load(lock)["socket"] == identity:
+                        return 0
+                except (ValueError, KeyError):
+                    pass
+                # A replaced server's worker releases its lock on the next
+                # tick. Wait briefly so its first new shell starts a successor.
+                time.sleep(0.1)
+        else:
+            raise RuntimeError("previous title worker did not exit")
+        with (directory / "worker.log").open("w") as log:
+            child = subprocess.Popen(
+                [sys.executable, str(Path(__file__).resolve()), "--watch", str(lock.fileno())],
+                pass_fds=(lock.fileno(),), start_new_session=True,
+                stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+            )
+        lock.seek(0)
+        lock.truncate()
+        json.dump({"pid": child.pid, "socket": identity}, lock)
+        lock.flush()
+    return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--start", action="store_true", help="ensure one worker for HERDR_SOCKET_PATH")
+    mode.add_argument("--watch", type=int, metavar="LOCK_FD", help=argparse.SUPPRESS)
+    args = parser.parse_args()
+    path = os.environ.get("HERDR_SOCKET_PATH")
+    if not path:
+        parser.error("HERDR_SOCKET_PATH is required; never guess a session")
+    os.umask(0o077)
+    path = str(Path(path).resolve())
+    directory = state_directory(path)
+    try:
+        identity = socket_identity(path)
+        directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if args.start:
+            return start(path, directory, identity)
+        # The inherited descriptor holds the singleton lock for this lifetime.
+        with os.fdopen(args.watch, "a+"):
+            watch(path, directory, identity)
+        return 0
+    except (FileNotFoundError, ConnectionRefusedError, ConnectionResetError, BrokenPipeError):
+        return 0  # The server ended. Its next Fish pane starts a new worker.
+    except (OSError, ValueError, KeyError, APIError, RuntimeError) as error:
+        print(f"Herdr tab titles: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

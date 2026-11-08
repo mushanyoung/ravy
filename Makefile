@@ -39,7 +39,7 @@ chezmoi-apply: apply
 
 lint-herdr:
 	shellcheck bin/cloudtop bin/cl
-	ruff check --no-cache tests/test_cloudtop.py tests/test_herdr_config.py tests/test_herdr_tab.py tests/test_e2e_contract.py tests/e2e_herdr.py dot_local/bin/executable_ravy-herdr-tab-10
+	ruff check --no-cache tests/test_cloudtop.py tests/test_herdr*.py tests/test_e2e_contract.py tests/e2e_herdr.py dot_local/bin/executable_ravy-herdr-*
 
 test-e2e-developer:
 	python3 tests/e2e_herdr.py --series developer
