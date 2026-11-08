@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       agent_rotation:
-        description: 'Also run strict agent hot-replacement diagnostic (known failure on 0.9.5)'
+        description: "Also run strict agent hot-replacement diagnostic (known failure on 0.9.5)"
         type: boolean
         required: false
         default: false
@@ -35,7 +35,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13'
+          python-version: "3.13"
       - name: Install OS test prerequisites (Linux)
         if: runner.os == 'Linux'
         run: |

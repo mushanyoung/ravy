@@ -74,5 +74,3 @@ function __fish_cd --description 'Change directory'
 
     return $cd_status
 end
-
-

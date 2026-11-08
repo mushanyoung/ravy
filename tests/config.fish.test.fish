@@ -47,7 +47,7 @@ if not set -q RAVY_TEST_CHILD
         "$tmp_home/.local/bin" \
         "$tmp_home/.local/share"
     __assert_guard_path "$tmp_home" "$tmp_home/.config/chezmoi/chezmoi.toml"
-    printf "%s\n" "seed = 1" > "$tmp_home/.config/chezmoi/chezmoi.toml"
+    printf "%s\n" "seed = 1" >"$tmp_home/.config/chezmoi/chezmoi.toml"
 
     function __write_exec --argument-names target body
         __assert_guard_path "$__ravy_test_tmp_home" "$target"
@@ -361,16 +361,16 @@ function setup_private_overlay
         "$private_home/ops" \
         "$HOME/.config/ravy"
 
-    printf "%s\n" "set -gx __RAVY_PRIVATE_COMMON 1" > "$private_home/shell/config.fish"
-    cat "$repo_root/tests/fixtures/private_secrets.fish" > "$HOME/.config/ravy/secrets.fish"
+    printf "%s\n" "set -gx __RAVY_PRIVATE_COMMON 1" >"$private_home/shell/config.fish"
+    cat "$repo_root/tests/fixtures/private_secrets.fish" >"$HOME/.config/ravy/secrets.fish"
     printf "%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n" \
         __RAVY_SECRETS_FISH " 1" \
         RAVY_TSV_VALUE " value" \
         RAVY_TSV_HOME_PATH " ~/example" \
         RAVY_TSV_HOME_ROOT " ~" \
-        RAVY_TSV_HOME_OTHER " ~otheruser/example" > "$HOME/.config/ravy/secrets.tsv"
-    printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" > "$private_home/bin/common/private-helper"
-    printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" > "$private_home/ops/private-op-helper"
+        RAVY_TSV_HOME_OTHER " ~otheruser/example" >"$HOME/.config/ravy/secrets.tsv"
+    printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" >"$private_home/bin/common/private-helper"
+    printf "%s\n" "#!/usr/bin/env sh\nexit 0\n" >"$private_home/ops/private-op-helper"
     chmod +x "$private_home/bin/common/private-helper"
     chmod +x "$private_home/ops/private-op-helper"
     printf "%s\n" $private_home
@@ -386,10 +386,10 @@ mkdir -p (dirname $rendered_config)
 mkdir -p (dirname $rendered_hermes_completion)
 mkdir -p (dirname $rendered_key_bindings)
 mkdir -p (dirname $rendered_theme)
-chezmoi cat "$rendered_config" > $rendered_config
-chezmoi cat "$rendered_hermes_completion" > $rendered_hermes_completion
-chezmoi cat "$rendered_key_bindings" > $rendered_key_bindings
-chezmoi cat "$rendered_theme" > $rendered_theme
+chezmoi cat "$rendered_config" >$rendered_config
+chezmoi cat "$rendered_hermes_completion" >$rendered_hermes_completion
+chezmoi cat "$rendered_key_bindings" >$rendered_key_bindings
+chezmoi cat "$rendered_theme" >$rendered_theme
 
 set -gx HOMEBREW_BUNDLE_FILE "$repo_root/Brewfile"
 source $rendered_config
@@ -480,9 +480,9 @@ or fail "codex command should pass args through"
 rm -f "$HOME/mise.log" "$HOME/sudo.log"
 rm -rf "$HOME/opt/mise/lib" "$HOME/usr/lib"
 mu
-grep -F "self-update" "$HOME/mise.log" >/dev/null
+grep -F self-update "$HOME/mise.log" >/dev/null
 or fail "mu uses mise self-update"
-grep -F "upgrade" "$HOME/mise.log" >/dev/null
+grep -F upgrade "$HOME/mise.log" >/dev/null
 or fail "mu runs mise upgrade"
 test ! -f "$HOME/sudo.log"
 or fail "mu should not call sudo"
@@ -618,7 +618,7 @@ assert_equal $PWD $private_home "ravyc jumps to private repo"
 cd $orig_pwd
 
 set -l rendered_gitconfig "$HOME/.gitconfig"
-chezmoi cat "$rendered_gitconfig" > "$rendered_gitconfig"
+chezmoi cat "$rendered_gitconfig" >"$rendered_gitconfig"
 grep -F 'path = ~/.config/ravy/private.gitconfig' "$rendered_gitconfig" >/dev/null
 or fail "rendered gitconfig is missing private include shim"
 

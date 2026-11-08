@@ -6,7 +6,7 @@ if ! [ -t 0 ]; then
     encoded=$(printf "%s" "$content" | base64 | tr -d '\n')
     seq=$(printf "\033]52;c;%s\007" "$encoded")
     if [ -w /dev/tty ]; then
-      printf "%s" "$seq" > /dev/tty
+      printf "%s" "$seq" >/dev/tty
     else
       printf "%s" "$seq" >&2
     fi

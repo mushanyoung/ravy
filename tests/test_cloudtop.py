@@ -1,9 +1,10 @@
 """Cloudtop is an argv-only adapter; Herdr owns transport and session state."""
+
 import json
-from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -17,18 +18,27 @@ class CloudtopTests(unittest.TestCase):
         self.bin.mkdir()
         # The only stub is the external Herdr executable, not adapter behavior.
         stub = self.bin / "herdr"
-        stub.write_text('#!/usr/bin/env python3\nimport json, os, sys\n'
-                        'print(json.dumps({"argv": sys.argv[1:], '
-                        '"sock": os.environ.get("SSH_AUTH_SOCK")}))\n'
-                        'sys.exit(int(os.environ.get("STUB_EXIT", "0")))\n')
+        stub.write_text(
+            "#!/usr/bin/env python3\nimport json, os, sys\n"
+            'print(json.dumps({"argv": sys.argv[1:], '
+            '"sock": os.environ.get("SSH_AUTH_SOCK")}))\n'
+            'sys.exit(int(os.environ.get("STUB_EXIT", "0")))\n'
+        )
         stub.chmod(0o700)
-        self.env = {"HOME": str(self.home), "PATH": f"{self.bin}:/usr/bin:/bin",
-                    "SSH_AUTH_SOCK": "/synthetic/herdr-managed-agent.sock"}
+        self.env = {
+            "HOME": str(self.home),
+            "PATH": f"{self.bin}:/usr/bin:/bin",
+            "SSH_AUTH_SOCK": "/synthetic/herdr-managed-agent.sock",
+        }
 
     def run_adapter(self, *args, alias="cloudtop", **env):
-        return subprocess.run([str(ROOT / "bin" / alias), *args],
-                              env=self.env | env, text=True, capture_output=True,
-                              timeout=5)
+        return subprocess.run(
+            [str(ROOT / "bin" / alias), *args],
+            env=self.env | env,
+            text=True,
+            capture_output=True,
+            timeout=5,
+        )
 
     def assert_argv(self, expected, *args, **kwargs):
         result = self.run_adapter(*args, **kwargs)
@@ -45,41 +55,88 @@ class CloudtopTests(unittest.TestCase):
     def test_remote_developer_hosts(self):
         for host in ("mac-dev", "linux-dev", "ssh://dev@localhost:2222"):
             with self.subTest(host=host):
-                self.assert_argv(["--remote-keybindings=server", "--remote", host], host)
+                self.assert_argv(
+                    ["--remote-keybindings=server", "--remote", host], host
+                )
 
     def test_server_named_session(self):
-        self.assert_argv(["--remote-keybindings=server", "--remote", "linux-server", "--session", "ops"],
-                         "linux-server", "--session", "ops")
+        self.assert_argv(
+            [
+                "--remote-keybindings=server",
+                "--remote",
+                "linux-server",
+                "--session",
+                "ops",
+            ],
+            "linux-server",
+            "--session",
+            "ops",
+        )
 
     def test_native_flags_and_cl_alias(self):
         self.assert_argv(["--session", "work"], "--session", "work", alias="cl")
-        self.assert_argv(["--remote-keybindings=server", "--remote", "dev"], "--remote", "dev")
-        self.assert_argv(["--remote-keybindings=server", "--remote=dev"], "--remote=dev", alias="cl")
+        self.assert_argv(
+            ["--remote-keybindings=server", "--remote", "dev"], "--remote", "dev"
+        )
+        self.assert_argv(
+            ["--remote-keybindings=server", "--remote=dev"], "--remote=dev", alias="cl"
+        )
         self.assert_argv(["--help"], "--help")
 
     def test_explicit_remote_keymap_is_preserved_without_duplicates(self):
         for value in ("local", "server"):
             with self.subTest(value=value):
-                self.assert_argv(["--remote", "dev", "--remote-keybindings", value],
-                                 "dev", "--remote-keybindings", value)
-                self.assert_argv(["--remote=dev", "--remote-keybindings=" + value],
-                                 "--remote=dev", "--remote-keybindings=" + value)
+                self.assert_argv(
+                    ["--remote", "dev", "--remote-keybindings", value],
+                    "dev",
+                    "--remote-keybindings",
+                    value,
+                )
+                self.assert_argv(
+                    ["--remote=dev", "--remote-keybindings=" + value],
+                    "--remote=dev",
+                    "--remote-keybindings=" + value,
+                )
 
     def test_option_terminator_does_not_change_keymap_selection(self):
         self.assert_argv(["--", "--remote=dev"], "--", "--remote=dev")
-        self.assert_argv(["--remote-keybindings=server", "--remote", "dev", "--",
-                          "--remote-keybindings=local"],
-                         "dev", "--", "--remote-keybindings=local")
+        self.assert_argv(
+            [
+                "--remote-keybindings=server",
+                "--remote",
+                "dev",
+                "--",
+                "--remote-keybindings=local",
+            ],
+            "dev",
+            "--",
+            "--remote-keybindings=local",
+        )
 
     def test_arguments_never_evaluated(self):
-        self.assert_argv(["--remote-keybindings=server", "--remote", "$(touch OWNED); x", "--session", "a b"],
-                         "$(touch OWNED); x", "--session", "a b")
+        self.assert_argv(
+            [
+                "--remote-keybindings=server",
+                "--remote",
+                "$(touch OWNED); x",
+                "--session",
+                "a b",
+            ],
+            "$(touch OWNED); x",
+            "--session",
+            "a b",
+        )
         self.assertFalse((ROOT / "OWNED").exists())
 
     def test_legacy_environment_cannot_replace_native_transport(self):
-        self.assert_argv(["--remote-keybindings=server", "--remote", "dev"], "dev", CLOUDTOP_EXEC_CMD="exit 88",
-                         SSH_EXEC_CMD="exit 88", SSH_COMMAND="/nonexistent",
-                         CLOUDTOP_SSH_AUTH_SOCK="/wrong/socket")
+        self.assert_argv(
+            ["--remote-keybindings=server", "--remote", "dev"],
+            "dev",
+            CLOUDTOP_EXEC_CMD="exit 88",
+            SSH_EXEC_CMD="exit 88",
+            SSH_COMMAND="/nonexistent",
+            CLOUDTOP_SSH_AUTH_SOCK="/wrong/socket",
+        )
 
     def test_native_failure_is_not_retried_or_hidden(self):
         result = self.run_adapter("dev", STUB_EXIT="78")

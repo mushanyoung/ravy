@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 import os
-import sys
-from pathlib import Path
-from pyunpack import Archive
-import zipfile
 import shutil
+import sys
+import zipfile
+from pathlib import Path
+
+from pyunpack import Archive
 
 
 def extract_files(file_path, output_folder):

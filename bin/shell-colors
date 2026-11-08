@@ -1,7 +1,7 @@
 #!/bin/bash
 
-for fgbg in 48 38 ; do
-  for color in {0..255} ; do
+for fgbg in 48 38; do
+  for color in {0..255}; do
     printf " \e[${fgbg};5;${color}m%4s \e[0m" "${color}"
     [ $(((color + 1) % 16)) = 0 ] && echo
   done

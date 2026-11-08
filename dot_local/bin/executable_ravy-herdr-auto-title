@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Numbered Herdr tab titles, owned by one worker per server socket (Unix)."""
+
 import argparse
 import fcntl
 import hashlib
@@ -11,6 +12,7 @@ import sys
 import time
 import unicodedata
 from pathlib import Path
+from typing import Any
 
 INTERVAL = 0.5
 SHELLS = {"fish", "bash", "zsh", "sh", "dash", "ksh", "tcsh", "csh", "nu", "xonsh"}
@@ -45,7 +47,9 @@ class API:
 
 
 def clean(text):
-    return "".join(c for c in text if not unicodedata.category(c).startswith("C")).strip()
+    return "".join(
+        c for c in text if not unicodedata.category(c).startswith("C")
+    ).strip()
 
 
 def directory_name(cwd, home):
@@ -86,8 +90,12 @@ def automatic_name(pane, info, home):
         leader = info.get("foreground_process_group_id")
         _, name = min(programs, key=lambda p: (p[0]["pid"] != leader, p[0]["pid"]))
         return "▶ " + (name[:80] or "process")
-    shell = next((p for p in processes if p["pid"] == info.get("shell_pid")), {})
-    return directory_name(shell.get("cwd") or pane.get("foreground_cwd") or pane.get("cwd"), home)
+    shell: dict[str, Any] = next(
+        (p for p in processes if p["pid"] == info.get("shell_pid")), {}
+    )
+    return directory_name(
+        shell.get("cwd") or pane.get("foreground_cwd") or pane.get("cwd"), home
+    )
 
 
 def manual_name(label, *numbers):
@@ -97,7 +105,7 @@ def manual_name(label, *numbers):
         # Accept the previous separator while existing sessions migrate.
         for prefix in (f"{number} ", f"{number}: "):
             if label.startswith(prefix):
-                return clean(label[len(prefix):])
+                return clean(label[len(prefix) :])
     return clean(label)
 
 
@@ -123,8 +131,11 @@ class Titles:
     def update(self):
         snapshot = self.api.call("session.snapshot")["snapshot"]
         panes = {pane["pane_id"]: pane for pane in snapshot["panes"]}
-        focused = {layout["tab_id"]: layout["focused_pane_id"] for layout in snapshot["layouts"]}
-        positions = {}
+        focused = {
+            layout["tab_id"]: layout["focused_pane_id"]
+            for layout in snapshot["layouts"]
+        }
+        positions: dict[str, int] = {}
         live = set()
         try:
             for tab in snapshot["tabs"]:
@@ -133,20 +144,27 @@ class Titles:
                 live.add(tab_id)
                 label = tab["label"]
                 old = self.records.get(tab_id)
-                if not isinstance(old, dict) or not {"last", "number", "manual"} <= old.keys():
+                if (
+                    not isinstance(old, dict)
+                    or not {"last", "number", "manual"} <= old.keys()
+                ):
                     old = None
                 if old and label == old["last"]:
                     manual = old["manual"]
                 elif not label.strip() or (old is None and label == str(number)):
                     manual = None
                 else:
-                    manual = manual_name(label, number, old["number"] if old else number)
+                    manual = manual_name(
+                        label, number, old["number"] if old else number
+                    )
                 try:
                     if manual is None:
                         pane = panes.get(focused.get(tab_id))
                         if pane is None:
                             continue
-                        info = self.api.call("pane.process_info", pane_id=pane["pane_id"])["process_info"]
+                        info = self.api.call(
+                            "pane.process_info", pane_id=pane["pane_id"]
+                        )["process_info"]
                         name = automatic_name(pane, info, self.home)
                     else:
                         name = manual
@@ -158,11 +176,17 @@ class Titles:
                         if current["label"] != label:
                             continue
                         self.api.call("tab.rename", tab_id=tab_id, label=desired)
-                    self.records[tab_id] = {"last": desired, "number": number, "manual": manual}
+                    self.records[tab_id] = {
+                        "last": desired,
+                        "number": number,
+                        "manual": manual,
+                    }
                 except APIError as error:
                     if str(error) not in {"pane_not_found", "tab_not_found"}:
                         raise
-            self.records = {key: value for key, value in self.records.items() if key in live}
+            self.records = {
+                key: value for key, value in self.records.items() if key in live
+            }
         finally:
             self.save()
 
@@ -206,9 +230,17 @@ def start(path, directory, identity):
             raise RuntimeError("previous title worker did not exit")
         with (directory / "worker.log").open("w") as log:
             child = subprocess.Popen(
-                [sys.executable, str(Path(__file__).resolve()), "--watch", str(lock.fileno())],
-                pass_fds=(lock.fileno(),), start_new_session=True,
-                stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                [
+                    sys.executable,
+                    str(Path(__file__).resolve()),
+                    "--watch",
+                    str(lock.fileno()),
+                ],
+                pass_fds=(lock.fileno(),),
+                start_new_session=True,
+                stdin=subprocess.DEVNULL,
+                stdout=log,
+                stderr=log,
             )
         lock.seek(0)
         lock.truncate()
@@ -220,7 +252,9 @@ def start(path, directory, identity):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--start", action="store_true", help="ensure one worker for HERDR_SOCKET_PATH")
+    mode.add_argument(
+        "--start", action="store_true", help="ensure one worker for HERDR_SOCKET_PATH"
+    )
     mode.add_argument("--watch", type=int, metavar="LOCK_FD", help=argparse.SUPPRESS)
     args = parser.parse_args()
     path = os.environ.get("HERDR_SOCKET_PATH")
@@ -238,7 +272,12 @@ def main():
         with os.fdopen(args.watch, "a+"):
             watch(path, directory, identity)
         return 0
-    except (FileNotFoundError, ConnectionRefusedError, ConnectionResetError, BrokenPipeError):
+    except (
+        FileNotFoundError,
+        ConnectionRefusedError,
+        ConnectionResetError,
+        BrokenPipeError,
+    ):
         return 0  # The server ended. Its next Fish pane starts a new worker.
     except (OSError, ValueError, KeyError, APIError, RuntimeError) as error:
         print(f"Herdr tab titles: {error}", file=sys.stderr)

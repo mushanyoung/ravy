@@ -22,7 +22,7 @@ while IFS=$'\t' read -r size name; do
   # Count regular files under each directory/tree.
   files="$(find "$name" -type f -print 2>/dev/null | wc -l | tr -d '[:space:]')"
   printf "%s\t%s\n" "$files" "$name" | tee -a "$counts_tmp"
-done < "$sizes_tmp"
+done <"$sizes_tmp"
 
 # Section 3: combined table
 echo
@@ -33,6 +33,6 @@ while IFS=$'\t' read -r size name; do
   [[ -z "${name:-}" ]] && continue
   files="$(awk -F'\t' -v n="$name" '$2==n {print $1; exit}' "$counts_tmp")"
   printf "%-8s %7s  %s\n" "$size" "${files:-0}" "$name"
-done < "$sizes_tmp" | sort -h
+done <"$sizes_tmp" | sort -h
 
 rm -f "$sizes_tmp" "$counts_tmp"

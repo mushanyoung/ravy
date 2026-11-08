@@ -27,29 +27,11 @@ assert_status_zero() {
   fi
 }
 
-assert_status_nonzero() {
-  local status=$1
-  local msg=$2
-  local output=${3:-}
-  if [ "$status" -eq 0 ]; then
-    fail "$msg${output:+: $output}"
-  fi
-}
-
 assert_empty() {
   local actual=$1
   local msg=$2
   if [ -n "$actual" ]; then
     fail "$msg: $actual"
-  fi
-}
-
-assert_file_contains() {
-  local path=$1
-  local expected=$2
-  local msg=$3
-  if ! grep -F "$expected" "$path" >/dev/null 2>&1; then
-    fail "$msg"
   fi
 }
 
@@ -70,7 +52,7 @@ write_stub() {
     fail "unsafe stub target: $target"
     return 1
   }
-  printf '%s' "$body" > "$target"
+  printf '%s' "$body" >"$target"
   guard_exec "$root" chmod +x "$target"
 }
 
@@ -94,7 +76,7 @@ setup_home() {
   guard_assert_repo_tmp_root "$repo_root" "$tmp_home" || return 1
   guard_exec "$tmp_home" mkdir -p "$tmp_home/bin" "$tmp_home/.config/fish" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi" "$tmp_home/.local/bin"
   guard_assert_path "$tmp_home" "$tmp_home/.config/chezmoi/chezmoi.toml" create || return 1
-  printf '%s\n' 'seed = 1' > "$tmp_home/.config/chezmoi/chezmoi.toml"
+  printf '%s\n' 'seed = 1' >"$tmp_home/.config/chezmoi/chezmoi.toml"
   printf '%s\n' "$tmp_home"
 }
 
@@ -103,7 +85,9 @@ render_config() {
   local target=$2
   guard_assert_path "$tmp_home" "$target" create || return 1
   guard_exec "$tmp_home" mkdir -p "$(dirname "$target")"
-  "$real_chezmoi" -S "$repo_root" -D "$tmp_home" cat "$target" > "$target"
+  # chezmoi cat reads the source template, not the destination file.
+  # shellcheck disable=SC2094
+  "$real_chezmoi" -S "$repo_root" -D "$tmp_home" cat "$target" >"$target"
 }
 
 setup_base_stubs() {
@@ -112,7 +96,7 @@ setup_base_stubs() {
 
   root=$(dirname "$stub_bin")
   guard_install_wrappers "$root" "$stub_bin"
-write_stub "$stub_bin/chezmoi" "#!/usr/bin/env sh
+  write_stub "$stub_bin/chezmoi" "#!/usr/bin/env sh
 source_path=\"$repo_root\"
 config_path=''
 state_path=''
@@ -255,15 +239,15 @@ setup_private_overlay() {
     "$private_home/ops" \
     "$tmp_home/.config/ravy"
 
-  printf '%s\n' 'export __RAVY_PRIVATE_COMMON=1' > "$private_home/shell/config.sh"
-  cat "$repo_root/tests/fixtures/private_secrets.sh" > "$tmp_home/.config/ravy/secrets.sh"
+  printf '%s\n' 'export __RAVY_PRIVATE_COMMON=1' >"$private_home/shell/config.sh"
+  cat "$repo_root/tests/fixtures/private_secrets.sh" >"$tmp_home/.config/ravy/secrets.sh"
   printf '%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n%s\t%s\n' \
     '__RAVY_SECRETS_SH' ' 1' \
     'RAVY_TSV_VALUE' ' value' \
     'RAVY_TSV_HOME_PATH' ' ~/example' \
     'RAVY_TSV_HOME_ROOT' ' ~' \
     'RAVY_TSV_HOME_OTHER' ' ~otheruser/example' \
-    > "$tmp_home/.config/ravy/secrets.tsv"
+    >"$tmp_home/.config/ravy/secrets.tsv"
 
   write_stub "$private_home/bin/common/private-helper" "#!/usr/bin/env sh
 exit 0
@@ -342,15 +326,6 @@ run_bash_login() {
   set -e
 
   printf '%s\n__RAVY_OUTPUT__\n%s\n__RAVY_END__' "$status_code" "$output"
-}
-
-extract_result() {
-  local result=$1
-  local output
-  local status_code=${result%%$'\n'*}
-  output=${result#*$'\n__RAVY_OUTPUT__\n'}
-  output=${output%$'\n__RAVY_END__'}
-  printf '%s\n__RAVY_OUTPUT__\n%s' "$status_code" "$output"
 }
 
 check_clean_start() {
@@ -502,6 +477,10 @@ check_inherited_ssh_auth_sock() {
   guard_exec "$tmp_home" mkdir -p "$tmp_home/.ssh"
   guard_exec "$tmp_home" ln -sfn "$agent_sock" "$tmp_home/.ssh/ssh_auth_sock"
 
+  # The child shell expands these expressions after loading its isolated config.
+  # shellcheck disable=SC2016
+  # The child shell expands these expressions after loading its isolated config.
+  # shellcheck disable=SC2016
   result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" 'test "${SSH_AUTH_SOCK:-}" = "$HOME/agent.sock"' '127.0.0.1 1 127.0.0.1 2' "$agent_sock")
   status_code=${result%%$'\n'*}
   output=${result#*$'\n__RAVY_OUTPUT__\n'}
@@ -536,6 +515,8 @@ check_mise_upgrade_helpers() {
   local output
 
   install_mise_stub "$tmp_home" self
+  # The child shell expands these expressions after loading its isolated config.
+  # shellcheck disable=SC2016
   result=$(run_shell "$shell_name" "$tmp_home" "$stub_bin" "$tmp_home/.missing-private" '
     rm -f "$HOME/mise.log" "$HOME/sudo.log" "$HOME/pacman.log" &&
     rm -rf "$HOME/opt/mise/lib" &&
@@ -665,8 +646,8 @@ render_config "$bash_home" "$bash_home/.bash_profile"
 # Prepend stub_bin to PATH so that system chezmoi is not invoked on macOS login
 tmp_profile=$(mktemp "$bash_home/.tmp_bash_profile.XXXXXX")
 guard_assert_path "$bash_home" "$tmp_profile" create
-echo "export PATH=\"$bash_home/bin:\$PATH\"" > "$tmp_profile"
-cat "$bash_home/.bash_profile" >> "$tmp_profile"
+echo "export PATH=\"$bash_home/bin:\$PATH\"" >"$tmp_profile"
+cat "$bash_home/.bash_profile" >>"$tmp_profile"
 guard_exec "$bash_home" mv "$tmp_profile" "$bash_home/.bash_profile"
 
 setup_base_stubs "$bash_home/bin"
@@ -679,6 +660,8 @@ check_mise_upgrade_helpers bash "$bash_home" "$bash_home/bin"
 check_private_surface bash "$bash_home" "$bash_home/bin" "$(setup_private_overlay "$bash_home")"
 check_rendered_gitconfig "$bash_home"
 
+# The child shell expands these expressions after loading its isolated config.
+# shellcheck disable=SC2016
 login_result=$(run_bash_login "$bash_home" "$bash_home/bin" "$bash_home/.missing-private" 'if ! type ravy >/dev/null 2>&1; then echo "ravy missing"; exit 1; fi; if ! command -v ep >/dev/null 2>&1; then echo "ep missing, PATH=$PATH"; exit 1; fi')
 login_status=${login_result%%$'\n'*}
 login_output=${login_result#*$'\n__RAVY_OUTPUT__\n'}

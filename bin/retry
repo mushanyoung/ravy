@@ -14,5 +14,3 @@ while true; do
   echo "Failed, retrying..." >&2
   sleep 2
 done
-
-

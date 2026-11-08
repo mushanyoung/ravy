@@ -7,11 +7,27 @@ SOURCE_DIR := $(CURDIR)
 BASH ?= bash
 FISH ?= fish
 CHEZMOI_ARGS ?=
+export MISE_CONFIG_DIR := $(CURDIR)/scripts/mise
+QUALITY := mise exec -- uv run --locked python scripts/quality.py
+
+.PHONY: setup check format format-check lint typecheck unit e2e build
+
+setup:
+	mise install --locked
+	mise exec -- uv sync --frozen
+	mise exec -- npm ci --ignore-scripts
+
+check format format-check lint typecheck unit e2e build:
+	$(QUALITY) $@
 
 .PHONY: help install apply chezmoi-apply test test-fish test-sh test-install test-nvim test-herdr test-cloudtop
 
 help:
 	@echo 'Targets:'
+	@echo '  make setup          Install the locked development toolchain'
+	@echo '  make check          Format, lint, types, unit, E2E, production render'
+	@echo '  make format         Apply the shared formatters'
+	@echo '  make format-check lint typecheck unit e2e build  Run one gate'
 	@echo '  make install        Run install.sh bootstrap'
 	@echo '  make apply          Apply this chezmoi source to $$HOME'
 	@echo '  make chezmoi-apply  Alias for apply'
@@ -50,7 +66,18 @@ test-e2e-server:
 diagnose-herdr-agent-rotation:
 	python3 tests/e2e_herdr.py --series agent-rotation
 
-test: test-fish test-sh test-install test-nvim test-herdr test-cloudtop
+test: test-fish test-sh test-install test-nvim test-python test-dc
+
+.PHONY: test-python
+test-python:
+	python3 -m unittest discover -s tests -p 'test_*.py'
+
+.PHONY: test-quality test-dc
+test-quality:
+	python3 -m unittest discover -s tests -p 'test_quality.py'
+
+test-dc:
+	$(BASH) tests/dc.test.sh
 
 test-fish:
 	$(FISH) tests/config.fish.test.fish

@@ -1,7 +1,8 @@
 """Configuration contract; real parser and keyboard checks live in E2E."""
-from pathlib import Path
+
 import tomllib
 import unittest
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,10 +27,16 @@ class HerdrConfigTests(unittest.TestCase):
 
     def test_muscle_memory(self):
         keys = self.config()["keys"]
-        for key, value in {"prefix": "ctrl+space", "detach": "prefix+d",
-                           "new_tab": "prefix+n", "zoom": "prefix+z",
-                           "rename_tab": "prefix+comma", "previous_tab": "prefix+p",
-                           "cycle_pane_next": "prefix+o", "copy_mode": "prefix+["}.items():
+        for key, value in {
+            "prefix": "ctrl+space",
+            "detach": "prefix+d",
+            "new_tab": "prefix+n",
+            "zoom": "prefix+z",
+            "rename_tab": "prefix+comma",
+            "previous_tab": "prefix+p",
+            "cycle_pane_next": "prefix+o",
+            "copy_mode": "prefix+[",
+        }.items():
             self.assertEqual(keys[key], value)
         self.assertIn("alt+1..9", keys["switch_tab"])
         for direction, letter in zip(("left", "down", "up", "right"), "hjkl"):
@@ -41,12 +48,16 @@ class HerdrConfigTests(unittest.TestCase):
         self.assertIn("ravy-herdr-tab-10", commands["alt+0"]["command"])
 
     def test_native_agent_socket_and_toolchain(self):
-        for name in (".chezmoitemplates/ravy_fish_common.tmpl",
-                     ".chezmoitemplates/ravy_sh_common.tmpl"):
+        for name in (
+            ".chezmoitemplates/ravy_fish_common.tmpl",
+            ".chezmoitemplates/ravy_sh_common.tmpl",
+        ):
             data = (ROOT / name).read_text()
             self.assertNotIn("ssh_auth_sock", data)
             self.assertNotIn("CLOUDTOP_SSH_AUTH_SOCK", data)
-        tools = tomllib.loads((ROOT / "dot_config/mise/config.toml").read_text())["tools"]
+        tools = tomllib.loads((ROOT / "dot_config/mise/config.toml").read_text())[
+            "tools"
+        ]
         self.assertEqual(tools["herdr"], "0.9.5")
 
 

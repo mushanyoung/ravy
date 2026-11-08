@@ -5,6 +5,8 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+# jq expands its own variables; the shell must leave them literal.
+# shellcheck disable=SC2016
 JQ_FILTER='
 def unddb:
 if type == "object" and (keys_unsorted | length) == 1 then

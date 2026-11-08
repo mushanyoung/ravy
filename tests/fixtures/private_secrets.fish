@@ -30,5 +30,5 @@ if test -f "$secrets_tsv"
                 continue
         end
         set -gx $key "$value"
-    end < "$secrets_tsv"
+    end <"$secrets_tsv"
 end

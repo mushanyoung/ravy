@@ -2,3 +2,10 @@ custom
 .tmp_debug_*
 .tmp_*
 tags
+.venv/
+node_modules/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+artifacts/
+dist/

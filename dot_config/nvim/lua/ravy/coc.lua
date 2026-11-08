@@ -39,8 +39,18 @@ end
 function M.setup()
   local map = vim.keymap.set
 
-  map("n", "<Space>cp", "<Plug>(coc-diagnostic-prev)", { silent = true, nowait = true, remap = true })
-  map("n", "<Space>cn", "<Plug>(coc-diagnostic-next)", { silent = true, nowait = true, remap = true })
+  map(
+    "n",
+    "<Space>cp",
+    "<Plug>(coc-diagnostic-prev)",
+    { silent = true, nowait = true, remap = true }
+  )
+  map(
+    "n",
+    "<Space>cn",
+    "<Plug>(coc-diagnostic-next)",
+    { silent = true, nowait = true, remap = true }
+  )
   map("i", "<Tab>", M.tab_complete, { silent = true, expr = true })
   map("i", "<S-Tab>", M.shift_tab, { expr = true })
   map("i", "<CR>", M.confirm_or_enter, { silent = true, expr = true })

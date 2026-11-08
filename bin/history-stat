@@ -34,7 +34,7 @@ fi
 extract_commands() {
   local f="$1"
   case "$f" in
-    */.zsh_history|*.zsh_history)
+    */.zsh_history | *.zsh_history)
       # zsh may use "extended history":
       #   : 1700000000:0;command args...
       awk -F';' 'NF>1{print $2; next} {print $0}' "$f"
@@ -50,9 +50,9 @@ extract_commands() {
   esac
 }
 
-extract_commands "$src" \
-  | awk 'NF{print $1}' \
-  | sort \
-  | uniq -c \
-  | sort -n -r \
-  | head
+extract_commands "$src" |
+  awk 'NF{print $1}' |
+  sort |
+  uniq -c |
+  sort -n -r |
+  head

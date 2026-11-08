@@ -38,6 +38,6 @@ Herdr 负责终端会话和 SSH；私密配置属于独立的 `custom/` 仓库�
 - 安装或使用：读 [README.md](README.md)；`make help` 查看命令。
 - 改职责边界、模板或引导：读 [架构](docs/architecture.md)。
 - 开发、提交或文档调整：读 [开发流程](docs/development.md)。
-- 改测试、检查或 CI：读 [测试策略](docs/testing.md)；常用 `make test`、`make lint-herdr`。
+- 改测试、检查或 CI：读 [测试策略](docs/testing.md)；先 `make setup`，完整门槛 `make check`；迭代用 `make unit`、`make lint`，格式修复用 `make format`。
 - 改 Herdr/Cloudtop：读 [使用与设计](docs/herdr.md)、[真实终端测试契约](docs/herdr-testing.md)；
   按平台执行 `make test-e2e-server` / `make test-e2e-developer`。

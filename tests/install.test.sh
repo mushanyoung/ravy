@@ -30,7 +30,7 @@ write_stub() {
     fail "unsafe stub target: $target"
     return 1
   }
-  printf '%s' "$body" > "$target"
+  printf '%s' "$body" >"$target"
   guard_exec "$root" chmod +x "$target"
 }
 
@@ -40,20 +40,6 @@ assert_status_zero() {
   local output=${3:-}
   if [ "$status" -ne 0 ]; then
     fail "$msg${output:+: $output}"
-  fi
-}
-
-assert_symlink_target() {
-  local path=$1
-  local target=$2
-
-  if [ ! -L "$path" ]; then
-    fail "$path is not a symlink"
-    return
-  fi
-
-  if [ "$(readlink "$path")" != "$target" ]; then
-    fail "$path points to $(readlink "$path"), expected $target"
   fi
 }
 
@@ -105,15 +91,15 @@ setup_home() {
   guard_exec "$tmp_home" mkdir -p "$tmp_home/bin" "$tmp_home/etc" "$tmp_home/.ssh" "$tmp_home/.config/ravy" "$tmp_home/.config/chezmoi"
   guard_install_wrappers "$tmp_home" "$tmp_home/bin"
   guard_assert_path "$tmp_home" "$tmp_home/.config/chezmoi/chezmoi.toml" create || return 1
-  printf '%s\n' '# default config' > "$tmp_home/.config/chezmoi/chezmoi.toml"
+  printf '%s\n' '# default config' >"$tmp_home/.config/chezmoi/chezmoi.toml"
   guard_assert_path "$tmp_home" "$tmp_home/etc/shells" create || return 1
-  printf '%s\n' '/bin/sh' '/bin/bash' > "$tmp_home/etc/shells"
+  printf '%s\n' '/bin/sh' '/bin/bash' >"$tmp_home/etc/shells"
 
   # Use the real template in an isolated public checkout. The real repository's
   # custom/ directory must not hide a missing private clone in this fixture.
   guard_exec "$tmp_home" mkdir -p "$tmp_home/public-source/dot_config/mise/conf.d"
   guard_assert_path "$tmp_home" "$tmp_home/public-source/dot_config/mise/conf.d/99-custom.toml.tmpl" create
-  cat "$repo_root/dot_config/mise/conf.d/99-custom.toml.tmpl" > "$tmp_home/public-source/dot_config/mise/conf.d/99-custom.toml.tmpl"
+  cat "$repo_root/dot_config/mise/conf.d/99-custom.toml.tmpl" >"$tmp_home/public-source/dot_config/mise/conf.d/99-custom.toml.tmpl"
   write_stub "$tmp_home/render-mise" "#!/usr/bin/env sh
 set -eu
 mkdir -p \"\$HOME/.config/mise/conf.d\"
@@ -396,15 +382,15 @@ exit 0
 "
 
   guard_assert_path "$tmp_home" "$tmp_home/.config/ravy/private.gitconfig" create || return 1
-  printf '%s\n' '[user]' '    name = Test User' > "$tmp_home/.config/ravy/private.gitconfig"
+  printf '%s\n' '[user]' '    name = Test User' >"$tmp_home/.config/ravy/private.gitconfig"
   guard_assert_path "$tmp_home" "$tmp_home/.config/ravy/ssh.config" create || return 1
-  printf '%s\n' 'Host private' '    HostName private.example' > "$tmp_home/.config/ravy/ssh.config"
+  printf '%s\n' 'Host private' '    HostName private.example' >"$tmp_home/.config/ravy/ssh.config"
 
   # Create a fake private repo for testing
   local fake_private="$tmp_home/private"
   guard_exec "$tmp_home" mkdir -p "$fake_private/.git" "$fake_private/bootstrap" "$fake_private/mise"
   guard_assert_path "$tmp_home" "$fake_private/mise/config.toml" create
-  printf '%s\n' '[tools]' 'node = "26"' '"npm:pyright" = "latest"' > "$fake_private/mise/config.toml"
+  printf '%s\n' '[tools]' 'node = "26"' '"npm:pyright" = "latest"' >"$fake_private/mise/config.toml"
   guard_exec "$tmp_home" touch "$fake_private/bootstrap/key.txt.age"
 
   write_stub "$fake_private/install.sh" "#!/usr/bin/env bash
@@ -450,13 +436,17 @@ run_install() {
 }
 
 setup_home
-trap '
+# Invoked by the EXIT trap even when a test aborts.
+# shellcheck disable=SC2329
+cleanup_homes() {
+  local __ravy_tmp_home
   for __ravy_tmp_home in "${tmp_homes[@]}"; do
     if [ -n "$__ravy_tmp_home" ] && [ -d "$__ravy_tmp_home" ]; then
       guard_exec "$__ravy_tmp_home" rm -rf "$__ravy_tmp_home"
     fi
   done
-' EXIT
+}
+trap 'cleanup_homes' EXIT
 
 # GNU stat accepts -f but prints filesystem details, so a successful -f call
 # cannot be used as the portability probe for file mode detection.
@@ -501,7 +491,7 @@ RAVY_TEST_PRIVATE_REPO="git@example.com:mushanyoung/custom.git"
 RAVY_TEST_RAVY_HOME="$tmp_home/.local/share/chezmoi"
 guard_exec "$tmp_home" mkdir -p "$RAVY_TEST_RAVY_HOME/dot_config/homebrew"
 guard_assert_path "$tmp_home" "$RAVY_TEST_RAVY_HOME/dot_config/homebrew/Brewfile" create
-printf '%s\n' 'brew "fish"' > "$RAVY_TEST_RAVY_HOME/dot_config/homebrew/Brewfile"
+printf '%s\n' 'brew "fish"' >"$RAVY_TEST_RAVY_HOME/dot_config/homebrew/Brewfile"
 result=$(run_install)
 unset RAVY_TEST_WITHOUT_PRIVATE_HOME RAVY_TEST_PRIVATE_REPO RAVY_TEST_RAVY_HOME
 status_code=${result%%$'\n'*}
@@ -528,7 +518,7 @@ assert_file_contains "$tmp_home/mise.log" 'private tools present before mise ins
 setup_home
 
 guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create
-printf '%s\n' 'Host legacy' '    HostName legacy.example' > "$tmp_home/legacy-ssh.config"
+printf '%s\n' 'Host legacy' '    HostName legacy.example' >"$tmp_home/legacy-ssh.config"
 guard_exec "$tmp_home" ln -s "$tmp_home/legacy-ssh.config" "$tmp_home/.ssh/config"
 guard_exec "$tmp_home" chmod 755 "$tmp_home/private"
 assert_mode "$tmp_home/private" 755
@@ -563,7 +553,7 @@ assert_file_contains "$tmp_home/chsh.log" "-s $tmp_home/linuxbrew/opt/fish/bin/f
 
 # Existing private checkout must be protected before git pull reads it.
 guard_exec "$tmp_home" chmod 755 "$tmp_home/private"
-: > "$tmp_home/git.log"
+: >"$tmp_home/git.log"
 RAVY_TEST_PRIVATE_REPO="git@example.com:mushanyoung/custom.git"
 result=$(run_install)
 unset RAVY_TEST_PRIVATE_REPO
@@ -575,7 +565,7 @@ assert_file_contains "$tmp_home/git.log" "git pull_source_path=$tmp_home/private
 
 setup_home
 guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create
-printf '%s\n' 'Host legacy' '    HostName legacy.example' > "$tmp_home/legacy-ssh.config"
+printf '%s\n' 'Host legacy' '    HostName legacy.example' >"$tmp_home/legacy-ssh.config"
 guard_exec "$tmp_home" ln -s "$tmp_home/legacy-ssh.config" "$tmp_home/.ssh/config"
 
 RAVY_SKIP_CHSH=1
@@ -638,7 +628,7 @@ printf '%s\n' \"unexpected brew args: \$*\" >> \"\$HOME/brew.log\"
 exit 1
 "
 guard_assert_path "$tmp_home" "$tmp_home/legacy-ssh.config" create
-printf '%s\n' 'Host legacy' '    HostName legacy.example' > "$tmp_home/legacy-ssh.config"
+printf '%s\n' 'Host legacy' '    HostName legacy.example' >"$tmp_home/legacy-ssh.config"
 guard_exec "$tmp_home" ln -s "$tmp_home/legacy-ssh.config" "$tmp_home/.ssh/config"
 
 result=$(run_install)

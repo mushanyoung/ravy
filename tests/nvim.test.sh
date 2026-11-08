@@ -71,9 +71,9 @@ done < <(find "$repo_root/dot_config/nvim" -type f -print | sort)
 
 guard_exec "$tmp_home" mkdir -p "$(dirname "$rendered_init")" "$rendered_nvim_dir/lua/ravy"
 guard_assert_path "$tmp_home" "$stale_init" create
-printf 'stale vim entrypoint\n' > "$stale_init"
+printf 'stale vim entrypoint\n' >"$stale_init"
 guard_assert_path "$tmp_home" "$stale_main" create
-printf 'stale rendered vimrc\n' > "$stale_main"
+printf 'stale rendered vimrc\n' >"$stale_main"
 
 "$real_chezmoi" -S "$repo_root" -D "$tmp_home" apply --force --source-path "${nvim_sources[@]}"
 

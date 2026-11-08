@@ -62,8 +62,7 @@ function __fle_atuin_contains_candidates --argument-names query
         if command -sq perl
             set -lx __FLE_ATUIN_CONTAINS_QUERY "$query"
             set -lx __FLE_ATUIN_CONTAINS_SKIP "$local_latest"
-            ATUIN_LOG=error atuin history list --cmd-only --print0 -r false 2>/dev/null | \
-                perl -0ne 'BEGIN { $q = lc($ENV{"__FLE_ATUIN_CONTAINS_QUERY"} // ""); $skip = $ENV{"__FLE_ATUIN_CONTAINS_SKIP"} // "" } chomp; next if length($skip) && $_ eq $skip; next if $seen{$_}++; print "$_\0" if index(lc($_), $q) >= 0'
+            ATUIN_LOG=error atuin history list --cmd-only --print0 -r false 2>/dev/null | perl -0ne 'BEGIN { $q = lc($ENV{"__FLE_ATUIN_CONTAINS_QUERY"} // ""); $skip = $ENV{"__FLE_ATUIN_CONTAINS_SKIP"} // "" } chomp; next if length($skip) && $_ eq $skip; next if $seen{$_}++; print "$_\0" if index(lc($_), $q) >= 0'
         else
             ATUIN_LOG=error atuin search \
                 --cmd-only \

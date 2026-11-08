@@ -25,5 +25,3 @@ host="$1"
 host="$(printf "%s" "$host" | sed -E -e 's#.*://##' -e 's#/.*$##')"
 shift
 exec "$real_ping" "$host" "$@"
-
-

@@ -146,6 +146,7 @@ dead one:
    Closing the master interrupts every client sharing that transport; a session
    name alone does not isolate it. Never use `pkill ssh`, delete the shared socket
    directory, or restart the remote Herdr server as a shortcut.
+
 4. Reattach using the same target/session with the new local agent environment,
    then verify agent-backed signing in an existing pane and a new pane. A present
    socket or successful login alone is not proof of restored signing.

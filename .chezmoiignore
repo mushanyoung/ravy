@@ -5,6 +5,22 @@ Makefile
 **/AGENTS.md
 AGENTS.md
 docs/
+mise.toml
+mise.lock
+pyproject.toml
+uv.lock
+package.json
+package-lock.json
+.editorconfig
+stylua.toml
+.venv/
+node_modules/
+__pycache__/
+**/__pycache__/
+.mypy_cache/
+.ruff_cache/
+artifacts/
+dist/
 tests/
 tags
 

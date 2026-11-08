@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-guard_lib_dir="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+guard_lib_dir="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 guard_normalize_root() {
   (
     CDPATH=
-    cd -- "$1"
+    cd -- "$1" || return
     pwd -P
   )
 }
@@ -34,7 +34,7 @@ guard_canon_parent_plus_base() {
   if [ "$dir" = "." ]; then
     dir=$(pwd -P)
   else
-    dir=$(CDPATH= cd -- "$dir" && pwd -P)
+    dir=$(CDPATH='' cd -- "$dir" && pwd -P)
   fi
 
   if [ -n "$prefix" ]; then
@@ -80,7 +80,7 @@ guard_assert_path() {
   esac
 
   case "$resolved" in
-    "$root"|"$root"/*) ;;
+    "$root" | "$root"/*) ;;
     *)
       printf 'prefix guard blocked %s -> %s outside %s\n' "$path" "$resolved" "$root" >&2
       return 1
@@ -155,7 +155,7 @@ guard_install_wrappers() {
   for cmd in "$@"; do
     target="$bin_dir/$cmd"
     guard_assert_path "$root" "$target" create
-    cat > "$target" <<EOF
+    cat >"$target" <<EOF
 #!/usr/bin/env bash
 exec "$guard_cmd" "$root" "$cmd" "\$@"
 EOF

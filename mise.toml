@@ -1,0 +1,19 @@
+# Development tools only; deployed user tools live in dot_config/mise/config.toml.
+[tools]
+python = "3.13.7"
+uv = "0.13.7"
+node = "22.21.1"
+chezmoi = "2.74.0"
+herdr = "0.9.5"
+"aqua:neovim/neovim" = "0.11.5"
+shellcheck = "0.11.0"
+shfmt = "3.12.0"
+stylua = "2.3.0"
+taplo = "0.10.0"
+"aqua:rhysd/actionlint" = "1.7.7"
+starship = "1.24.0"
+zoxide = "0.9.8"
+docker-compose = "2.40.3"
+
+[settings]
+lockfile_platforms = ["linux-x64", "linux-arm64", "macos-arm64", "macos-x64"]

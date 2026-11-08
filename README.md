@@ -121,18 +121,14 @@ Once installed, open Neovim and install plugins:
 ## Testing
 
 ```sh
-make test
+make setup
+make check
 ```
 
-`make test` covers bash, zsh, fish, install, Neovim rendering, Herdr configuration,
-the tab adapter, and Cloudtop argv compatibility. Python 3.11+ is required.
-Use a narrower target such as `make test-nvim` when iterating on one area.
-
-`make lint-herdr` runs ShellCheck and Ruff (CI pins Ruff 0.14.3).
-`make test-e2e-server` uses real Herdr, PTYs, Neovim and a private loopback sshd on
-Linux. `make test-e2e-developer` uses real SSH/agent signing and runs on macOS or
-Linux. These are separate from fast unit tests and fail when a prerequisite is
-missing. See [isolation, coverage and current results](docs/herdr-testing.md).
+The locked toolchain checks formatting, lint, Python types, unit/config tests,
+real PTY/SSH workflows and an isolated production render. See the
+[quality commands and platform prerequisites](docs/testing.md) and
+[Herdr test contract](docs/herdr-testing.md). `make format` applies formatters.
 
 ## Recommended Setup
 

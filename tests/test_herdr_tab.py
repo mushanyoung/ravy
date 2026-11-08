@@ -1,12 +1,15 @@
 """The tab-10 adapter only translates an index into native opaque IDs."""
+
 import json
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
-HELPER = Path(__file__).resolve().parents[1] / "dot_local/bin/executable_ravy-herdr-tab-10"
+HELPER = (
+    Path(__file__).resolve().parents[1] / "dot_local/bin/executable_ravy-herdr-tab-10"
+)
 
 
 class TabTenTests(unittest.TestCase):
@@ -15,7 +18,11 @@ class TabTenTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         binary = self.root / "herdr stub"
-        binary.write_text("#!" + sys.executable + "\n" + '''import json,os,sys
+        binary.write_text(
+            "#!"
+            + sys.executable
+            + "\n"
+            + """import json,os,sys
 from pathlib import Path
 with Path(os.environ["CALLS"]).open("a") as out:
  out.write(json.dumps(sys.argv[1:])+"\\n")
@@ -23,31 +30,54 @@ if sys.argv[1:3] == ["tab","list"]:
  print(os.environ["TABS"])
 else:
  sys.exit(int(os.environ.get("FOCUS_EXIT","0")))
-''')
+"""
+        )
         binary.chmod(0o700)
-        self.env = {"PATH": "/usr/bin:/bin", "HOME": str(self.root),
-                    "HERDR_BIN_PATH": str(binary), "HERDR_ACTIVE_WORKSPACE_ID": "w-opaque",
-                    "HERDR_SOCKET_PATH": str(self.root / "socket"), "CALLS": str(self.root / "calls")}
+        self.env = {
+            "PATH": "/usr/bin:/bin",
+            "HOME": str(self.root),
+            "HERDR_BIN_PATH": str(binary),
+            "HERDR_ACTIVE_WORKSPACE_ID": "w-opaque",
+            "HERDR_SOCKET_PATH": str(self.root / "socket"),
+            "CALLS": str(self.root / "calls"),
+        }
 
     def run_helper(self, tabs):
         self.env["TABS"] = json.dumps({"result": {"tabs": tabs}})
-        result = subprocess.run([sys.executable, str(HELPER)], env=self.env,
-                                capture_output=True, text=True, timeout=8)
+        result = subprocess.run(
+            [sys.executable, str(HELPER)],
+            env=self.env,
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
         path = self.root / "calls"
-        calls = [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+        calls = (
+            [json.loads(line) for line in path.read_text().splitlines()]
+            if path.exists()
+            else []
+        )
         return result, calls
 
     def tabs(self):
-        return [{"number": index + 20, "workspace_id": "w-opaque", "tab_id": f"opaque-{index}"}
-                for index in range(10)]
+        return [
+            {
+                "number": index + 20,
+                "workspace_id": "w-opaque",
+                "tab_id": f"opaque-{index}",
+            }
+            for index in range(10)
+        ]
 
     def test_selects_display_position_after_moves_or_closes(self):
-        result, calls = self.run_helper([
-            {"number": 10, "workspace_id": "other", "tab_id": "wrong"},
-            *self.tabs()])
+        result, calls = self.run_helper(
+            [{"number": 10, "workspace_id": "other", "tab_id": "wrong"}, *self.tabs()]
+        )
         self.assertEqual(result.returncode, 0)
-        self.assertEqual(calls, [["tab", "list", "--workspace", "w-opaque"],
-                                 ["tab", "focus", "opaque-9"]])
+        self.assertEqual(
+            calls,
+            [["tab", "list", "--workspace", "w-opaque"], ["tab", "focus", "opaque-9"]],
+        )
 
     def test_missing_tenth_is_noop(self):
         result, calls = self.run_helper([])
@@ -56,7 +86,14 @@ else:
 
     def test_ambiguous_or_malformed_response_never_focuses(self):
         tab = {"number": 10, "workspace_id": "w-opaque", "tab_id": "t"}
-        for data in ([tab, tab], None, [None], [{}], [{**tab, "tab_id": 10}]):
+        invalid: list[object] = [
+            [tab, tab],
+            None,
+            [None],
+            [{}],
+            [{**tab, "tab_id": 10}],
+        ]
+        for data in invalid:
             with self.subTest(data=data):
                 (self.root / "calls").unlink(missing_ok=True)
                 result, calls = self.run_helper(data)

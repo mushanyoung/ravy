@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 
-docker inspect -f '{{.Name}}-{{range  $k, $v := .NetworkSettings.Networks}}{{$k}}-{{.IPAddress}} {{end}}-{{range $k, $v := .NetworkSettings.Ports}}{{ if not $v }}{{$k}} {{end}}{{end}} -{{range $k, $v := .NetworkSettings.Ports}}{{ if $v }}{{$k}} => {{range . }}{{ .HostIp}}:{{.HostPort}}{{end}}{{end}} {{end}}' $(docker ps -aq) | column -t -s- "$@"
+containers=()
+while IFS= read -r container; do
+  containers+=("$container")
+done < <(docker ps -aq)
+((${#containers[@]})) || exit 0
+docker inspect -f '{{.Name}}-{{range  $k, $v := .NetworkSettings.Networks}}{{$k}}-{{.IPAddress}} {{end}}-{{range $k, $v := .NetworkSettings.Ports}}{{ if not $v }}{{$k}} {{end}}{{end}} -{{range $k, $v := .NetworkSettings.Ports}}{{ if $v }}{{$k}} => {{range . }}{{ .HostIp}}:{{.HostPort}}{{end}}{{end}} {{end}}' "${containers[@]}" | column -t -s- "$@"

@@ -5,62 +5,65 @@ set -eu
 # USAGE: vimv [file1 file2]
 # https://github.com/thameera/vimv
 
-declare -r FILENAMES_FILE=$(mktemp "${TMPDIR:-/tmp}/vimv.XXXXXX")
+FILENAMES_FILE=$(mktemp "${TMPDIR:-/tmp}/vimv.XXXXXX")
+readonly FILENAMES_FILE
 
 trap '{ rm -f "${FILENAMES_FILE}" ; }' EXIT
 
 safeMove() {
-    local src="$1"
-    local dest="$2"
-    mkdir -p "$(dirname "$dest")"
-    if [ -e "$dest" ]; then
-        echo "WARN: Can't rename '$src' -> '$dest', destination exists!" >&2
-        return 1
-    fi
-    if git ls-files --error-unmatch "$src" > /dev/null 2>&1; then
-        git mv -- "$src" "$dest"
-    else
-        mv -n -- "$src" "$dest"
-    fi
+  local src="$1"
+  local dest="$2"
+  mkdir -p "$(dirname "$dest")"
+  if [ -e "$dest" ]; then
+    echo "WARN: Can't rename '$src' -> '$dest', destination exists!" >&2
+    return 1
+  fi
+  if git ls-files --error-unmatch "$src" >/dev/null 2>&1; then
+    git mv -- "$src" "$dest"
+  else
+    mv -n -- "$src" "$dest"
+  fi
 }
 
 if [ $# -ne 0 ]; then
-    src=( "$@" )
+  src=("$@")
 else
-    IFS=$'\r\n' GLOBIGNORE='*' command eval 'src=($(ls -1A))'
+  IFS=$'\r\n' GLOBIGNORE='*' command eval 'src=($(ls -1A))'
 fi
 
-for ((i=0;i<${#src[@]};++i)); do
-    echo "${src[i]}" >> "${FILENAMES_FILE}"
+for ((i = 0; i < ${#src[@]}; ++i)); do
+  echo "${src[i]}" >>"${FILENAMES_FILE}"
 done
 
 ${EDITOR:-vi} "${FILENAMES_FILE}"
 
-IFS=$'\r\n' GLOBIGNORE='*' command eval 'dest=($(cat "${FILENAMES_FILE}"))'
-IFS=$'\r\n' GLOBIGNORE='*' command eval 'dest_unique=($(cat "${FILENAMES_FILE}" | sort -u))'
+dest=()
+while IFS= read -r name; do dest+=("$name"); done <"$FILENAMES_FILE"
+dest_unique=()
+while IFS= read -r name; do dest_unique+=("$name"); done < <(sort -u "$FILENAMES_FILE")
 
-if (( ${#src[@]} != ${#dest[@]} )); then
-    echo "WARN: Number of files changed. Did you delete a line by accident? Aborting.." >&2
-    exit 1
+if ((${#src[@]} != ${#dest[@]})); then
+  echo "WARN: Number of files changed. Did you delete a line by accident? Aborting.." >&2
+  exit 1
 fi
 
-if (( ${#dest[@]} != ${#dest_unique[@]} )); then
-    echo "WARN: Destination filenames are not unique! Aborting.." >&2
-    exit 1
+if ((${#dest[@]} != ${#dest_unique[@]})); then
+  echo "WARN: Destination filenames are not unique! Aborting.." >&2
+  exit 1
 fi
 
 declare -i count=0
 EXT="vimv-tmp-$(date +%s)-${RANDOM}"
-for ((i=0;i<${#src[@]};++i)); do
-    if [ "${src[i]}" != "${dest[i]}" ]; then
-        safeMove "${src[i]}" "${dest[i]}.${EXT}" && ((++count))
-    fi
+for ((i = 0; i < ${#src[@]}; ++i)); do
+  if [ "${src[i]}" != "${dest[i]}" ]; then
+    safeMove "${src[i]}" "${dest[i]}.${EXT}" && ((++count))
+  fi
 done
 
-for ((i=0;i<${#src[@]};++i)); do
-    if [ "${src[i]}" != "${dest[i]}" ]; then
-        safeMove "${dest[i]}.${EXT}" "${dest[i]}" || : resume on error
-    fi
+for ((i = 0; i < ${#src[@]}; ++i)); do
+  if [ "${src[i]}" != "${dest[i]}" ]; then
+    safeMove "${dest[i]}.${EXT}" "${dest[i]}" || : resume on error
+  fi
 done
 
 echo "$count" files renamed.

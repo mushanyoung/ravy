@@ -60,7 +60,7 @@
     "coc.preferences.formatOnSave": true
   },
   "[json]": {
-    "coc.preferences.formatOnSave": true,
+    "coc.preferences.formatOnSave": true
   },
   "[jsonc]": {
     "coc.preferences.formatOnSave": true

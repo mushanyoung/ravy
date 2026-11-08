@@ -379,4 +379,3 @@ complete -c hermes -f -n '__fish_seen_subcommand_from webhook' -a list -d 'List 
 complete -c hermes -f -n '__fish_seen_subcommand_from webhook' -a remove -d 'Remove a subscription'
 complete -c hermes -f -n '__fish_seen_subcommand_from webhook' -a subscribe -d 'Create a webhook subscription'
 complete -c hermes -f -n '__fish_seen_subcommand_from webhook' -a test -d 'Send a test POST to a webhook route'
-

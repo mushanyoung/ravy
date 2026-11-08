@@ -57,7 +57,7 @@ _ravy_trim_tsv_value() {
 _ravy_expand_tsv_home() {
   _ravy_field=$1
   case "$_ravy_field" in
-    '~'|'~/'*)
+    \~ | \~/*)
       printf '%s%s' "$HOME" "${_ravy_field#\~}"
       ;;
     *)
@@ -69,7 +69,7 @@ _ravy_expand_tsv_home() {
 if [ -f "$_ravy_secrets_tsv" ]; then
   while IFS= read -r line || [ -n "${line:-}" ]; do
     case "${line%"$_ravy_cr"}" in
-      ''|\#*)
+      '' | \#*)
         continue
         ;;
     esac
@@ -87,7 +87,7 @@ if [ -f "$_ravy_secrets_tsv" ]; then
     value=$(_ravy_expand_tsv_home "${value:-}")
     [ -n "$key" ] || continue
     export "$key=$value"
-  done < "$_ravy_secrets_tsv"
+  done <"$_ravy_secrets_tsv"
 fi
 
 unset _ravy_config_home _ravy_secrets_tsv _ravy_tab _ravy_cr _ravy_field line key value

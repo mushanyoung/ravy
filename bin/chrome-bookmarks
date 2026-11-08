@@ -2,15 +2,14 @@
 # vim: set filetype=ruby:
 # browse Chrome bookmarks with fzf
 
-[ $(uname) = Darwin ] || exit 1
+[ "$(uname)" = Darwin ] || exit 1
 
-/usr/bin/env ruby -x "$0"                           |
-  fzf --ansi --multi --no-hscroll --tiebreak=begin  |
-  awk 'BEGIN { FS = "\t" } { print $2 }'            |
+/usr/bin/env ruby -x "$0" |
+  fzf --ansi --multi --no-hscroll --tiebreak=begin |
+  awk 'BEGIN { FS = "\t" } { print $2 }' |
   xargs open
 
 exit $?
-
 #!/usr/bin/env ruby
 # encoding: utf-8
 

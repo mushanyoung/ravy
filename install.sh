@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+SCRIPT_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 
 # Colors
 RED='\033[0;31m'
@@ -54,9 +54,9 @@ append_content_if_absent() {
   if ! grep -F "$text" "$file" >/dev/null 2>&1; then
     echo -e "${BOLD}  > Appending to $file${RESET}"
     if [ -f "$appending" ]; then
-      cat "$appending" >> "$file"
+      cat "$appending" >>"$file"
     else
-      echo "$appending" >> "$file"
+      echo "$appending" >>"$file"
     fi
   else
     echo -e "${BOLD}  > Content already present in $file${RESET}"
@@ -121,7 +121,8 @@ ensure_mise() {
     return 1
   fi
 
-  export PATH="$(dirname "$MISE_BIN"):$PATH"
+  PATH="$(dirname "$MISE_BIN"):$PATH"
+  export PATH
   success "mise is installed."
 }
 
@@ -142,6 +143,7 @@ homebrew_default_prefix() {
       ;;
     *)
       return 1
+      ;;
   esac
 }
 
@@ -166,8 +168,7 @@ find_homebrew() {
     /usr/local/bin/brew \
     /home/linuxbrew/.linuxbrew/bin/brew \
     "$HOME/.linuxbrew/bin/brew" \
-    "$HOME/.brew/bin/brew"
-  do
+    "$HOME/.brew/bin/brew"; do
     [ -x "$candidate" ] || continue
     printf '%s\n' "$candidate"
     return 0
@@ -350,14 +351,14 @@ load_managed_secrets_for_install() {
       esac
     done
     case "$value" in
-      '~' | '~/'*)
+      \~ | \~/*)
         value="$HOME${value#\~}"
         ;;
     esac
 
     [ -n "$key" ] || continue
     export "$key=$value"
-  done < "$secrets_tsv"
+  done <"$secrets_tsv"
 
 }
 
@@ -413,8 +414,7 @@ find_fish_shell() {
     /usr/local/opt/fish/bin/fish \
     /home/linuxbrew/.linuxbrew/opt/fish/bin/fish \
     "$HOME/.linuxbrew/opt/fish/bin/fish" \
-    "$HOME/.brew/opt/fish/bin/fish"
-  do
+    "$HOME/.brew/opt/fish/bin/fish"; do
     if [ -x "$candidate" ]; then
       printf '%s\n' "$candidate"
       return 0
@@ -469,7 +469,7 @@ ensure_shell_list_contains() {
 
   info "Adding $fish_bin to $shells_file"
   if [ "$(id -u)" = "0" ]; then
-    printf '%s\n' "$fish_bin" >> "$shells_file"
+    printf '%s\n' "$fish_bin" >>"$shells_file"
   else
     printf '%s\n' "$fish_bin" | sudo tee -a "$shells_file" >/dev/null
   fi
@@ -517,8 +517,7 @@ default_private_home() {
     "${RAVY_PRIVATE_HOME:-}" \
     "$public_source/custom" \
     "$HOME/.local/share/ravy-private" \
-    "$HOME/.ravy-private"
-  do
+    "$HOME/.ravy-private"; do
     [ -n "${candidate:-}" ] || continue
     [ -d "$candidate/.git" ] || continue
     printf '%s\n' "$candidate"

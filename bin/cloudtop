@@ -4,7 +4,7 @@
 set -eu
 
 case "${1:-}" in
-  --mosh|--tmux|--ssh)
+  --mosh | --tmux | --ssh)
     printf '%s
 ' 'cloudtop now uses Herdr native SSH: cloudtop HOST [--session NAME].' >&2
     exit 2
@@ -18,7 +18,7 @@ if ! command -v herdr >/dev/null 2>&1; then
 fi
 
 case "${1:-}" in
-  ''|-*) ;;
+  '' | -*) ;;
   *) set -- --remote "$@" ;;
 esac
 
@@ -26,11 +26,11 @@ esac
 # home-tab and tab-10 bindings. Use the endpoint's keys unless explicitly chosen.
 remote=0
 keybindings=0
-for arg do
+for arg; do
   case "$arg" in
     --) break ;;
-    --remote|--remote=*) remote=1 ;;
-    --remote-keybindings|--remote-keybindings=*) keybindings=1 ;;
+    --remote | --remote=*) remote=1 ;;
+    --remote-keybindings | --remote-keybindings=*) keybindings=1 ;;
   esac
 done
 if [ "$remote" = 1 ] && [ "$keybindings" = 0 ]; then

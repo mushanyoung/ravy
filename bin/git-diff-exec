@@ -4,11 +4,11 @@
 files="$(git diff --name-only "$@")"
 [[ -n $files ]] || exit
 
-dpath="$(sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D' <<< "$files")"
+dpath="$(sed -e 'N;s/^\(.*\).*\n\1.*$/\1\n\1/;D' <<<"$files")"
 [[ -d $dpath ]] || dpath=$(dirname "$dpath")
 
-OIFS="$IFS"
-IFS=$'\n'
-files=($files)
-IFS="$OIFS"
-${DIFF_EXEC_CMD:-nvim} ${DIFF_EXEC_VIM_LCS_DIR:+"+cd $dpath"} "${files[@]}"
+changed_files=()
+while IFS= read -r file; do
+  changed_files+=("$file")
+done <<<"$files"
+${DIFF_EXEC_CMD:-nvim} ${DIFF_EXEC_VIM_LCS_DIR:+"+cd $dpath"} "${changed_files[@]}"

@@ -28,4 +28,3 @@ if [ -n "${RAVY_DOCKER_COMPOSE_CONFIG:-}" ]; then
 else
   exec "$DOCKER" compose "$@"
 fi
-

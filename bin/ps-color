@@ -3,7 +3,7 @@
 [ -t 1 ] || piping=true
 
 ps -a -x -o "user,pid,%cpu,%mem,tt,start,time,command" |
-awk '
+  awk '
     NR>1 {
         if ($7 ~ /^[0-9]{1,2}$/) {
             $6 = $6 " " $7
@@ -24,10 +24,10 @@ awk '
         printf "%s\t|%s\t|%s\t|%s\t|%s\t|%s\t|%s\t|%s\n", $1, $2, $3, $4, $5, $6, $7, path
     }
 ' |
-column -t -s '	' |
-sed 's/  |/|/g' |
-if [ "$piping" = true ]; then cat; else cut -c -"$(tput cols)"; fi |
-awk '
+  column -t -s '	' |
+  sed 's/  |/|/g' |
+  if [ "$piping" = true ]; then cat; else cut -c -"$(tput cols)"; fi |
+  awk '
     BEGIN {
         FS="|"
         OFS=" "
@@ -69,4 +69,3 @@ awk '
         }
     }
 '
-

@@ -1,11 +1,15 @@
 #!/bin/sh
 set -eu
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 DC="$ROOT/bin/dc"
 TMPDIR_ROOT=${TMPDIR:-/tmp}
 WORK=$(mktemp -d "$TMPDIR_ROOT/ravy-dc-test.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT HUP INT TERM
+
+COMPOSE=$(command -v docker-compose)
+mkdir -p "$WORK/docker-config/cli-plugins"
+ln -s "$COMPOSE" "$WORK/docker-config/cli-plugins/docker-compose"
 
 SH_MARKER="$WORK/hostile-sh-ran"
 DOCKER_MARKER="$WORK/hostile-docker-ran"
@@ -26,8 +30,9 @@ IFS= read -r first_line <"$DC"
 [ "$first_line" = '#!/bin/sh' ]
 
 PATH="$WORK:/usr/bin:/bin" \
-RAVY_DOCKER_COMPOSE_CONFIG="$WORK/absent-compose.yml" \
-"$DC" version >/dev/null
+  DOCKER_CONFIG="$WORK/docker-config" \
+  RAVY_DOCKER_COMPOSE_CONFIG="$WORK/absent-compose.yml" \
+  "$DC" version >/dev/null
 
 [ ! -e "$SH_MARKER" ]
 [ ! -e "$DOCKER_MARKER" ]

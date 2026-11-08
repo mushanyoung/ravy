@@ -2,30 +2,30 @@
 
 # Function to get the modification time of a file
 get_mtime() {
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        # Linux
-        stat -c "%y" "$1"
-    elif [[ "$OSTYPE" == "darwin"* || "$OSTYPE" == "freebsd"* ]]; then
-        # macOS or FreeBSD
-        stat -f "%Sm" -t "%Y%m%d%H%M.%S" "$1"
-    else
-        echo "Unsupported OS"
-        exit 1
-    fi
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux
+    stat -c "%y" "$1"
+  elif [[ "$OSTYPE" == "darwin"* || "$OSTYPE" == "freebsd"* ]]; then
+    # macOS or FreeBSD
+    stat -f "%Sm" -t "%Y%m%d%H%M.%S" "$1"
+  else
+    echo "Unsupported OS"
+    exit 1
+  fi
 }
 
 # Function to restore the modification time of a file
 restore_mtime() {
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        # Linux
-        touch -d "$1" "$2"
-    elif [[ "$OSTYPE" == "darwin"* || "$OSTYPE" == "freebsd"* ]]; then
-        # macOS or FreeBSD
-        touch -t "$1" "$2"
-    else
-        echo "Unsupported OS"
-        exit 1
-    fi
+  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    # Linux
+    touch -d "$1" "$2"
+  elif [[ "$OSTYPE" == "darwin"* || "$OSTYPE" == "freebsd"* ]]; then
+    # macOS or FreeBSD
+    touch -t "$1" "$2"
+  else
+    echo "Unsupported OS"
+    exit 1
+  fi
 }
 
 # Use FFMPEG_PATH if set, otherwise default to "ffmpeg"
@@ -36,30 +36,30 @@ magick_cmd="${MAGICK_PATH:-magick}"
 
 # Check if at least one input file was provided
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 <input_image1> [<input_image2> ...]"
-    exit 1
+  echo "Usage: $0 <input_image1> [<input_image2> ...]"
+  exit 1
 fi
 
 # Loop through all provided arguments (filenames)
 for input_image in "$@"; do
-    # Get the input filename without extension
-    filename="${input_image%.*}"
+  # Get the input filename without extension
+  filename="${input_image%.*}"
 
-    # Define the output file name
-    output_image="${filename}.jpg"
+  # Define the output file name
+  output_image="${filename}.jpg"
 
-    # Copy the modification time
-    orig_mtime=$(get_mtime "$input_image")
+  # Copy the modification time
+  orig_mtime=$(get_mtime "$input_image")
 
-    # Apply the magick filters
-    "$magick_cmd" mogrify -format jpg -quality 85 "$input_image" "$output_image"
+  # Apply the magick filters
+  "$magick_cmd" mogrify -format jpg -quality 85 "$input_image" "$output_image"
 
-    # Apply the ffmpeg filters
-    # "$ffmpeg_cmd" -y -i "$input_image" -q:v 3 "$output_image"
+  # Apply the ffmpeg filters
+  # "$ffmpeg_cmd" -y -i "$input_image" -q:v 3 "$output_image"
 
-    # Restore the original modification time
-    restore_mtime "$orig_mtime" "$output_image"
+  # Restore the original modification time
+  restore_mtime "$orig_mtime" "$output_image"
 
-    # Notify the user
-    echo "Saved as jpg: $input_image"
+  # Notify the user
+  echo "Saved as jpg: $input_image"
 done

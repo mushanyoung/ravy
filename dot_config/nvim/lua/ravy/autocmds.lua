@@ -12,7 +12,11 @@ local function strip_whitespace()
   end
   -- Markdown hard breaks and patch context can contain meaningful trailing spaces.
   -- Other filetypes can opt out per buffer without extending a global exception list.
-  if vim.b.ravy_trim_whitespace == false or vim.bo.filetype == "markdown" or vim.bo.filetype == "diff" then
+  if
+    vim.b.ravy_trim_whitespace == false
+    or vim.bo.filetype == "markdown"
+    or vim.bo.filetype == "diff"
+  then
     return
   end
 

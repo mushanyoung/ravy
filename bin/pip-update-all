@@ -18,5 +18,3 @@ if [ -z "${outdated:-}" ]; then
 fi
 
 printf "%s\n" "$outdated" | xargs "$PIP_COMMAND" install -U
-
-

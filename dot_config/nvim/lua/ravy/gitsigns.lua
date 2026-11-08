@@ -12,11 +12,14 @@ local function set_base(base)
 end
 
 local function prompt_base()
-  vim.ui.input({ prompt = "Gitsigns diff base: ", default = vim.g.ravy_gitsigns_diff_base or "" }, function(base)
-    if base ~= nil then
-      set_base(base)
+  vim.ui.input(
+    { prompt = "Gitsigns diff base: ", default = vim.g.ravy_gitsigns_diff_base or "" },
+    function(base)
+      if base ~= nil then
+        set_base(base)
+      end
     end
-  end)
+  )
 end
 
 function M.setup()

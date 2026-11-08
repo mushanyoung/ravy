@@ -124,4 +124,3 @@ Herdr owns layout restoration. No automatic agent or paid-model invocation is ad
 Version and agent-manifest background checks are disabled; this is not a claim
 that every possible Herdr feature is network-free. Upgrade the pinned version
 only after rerunning the real-terminal and SSH tests.
-

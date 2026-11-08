@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+script_dir="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 # shellcheck source=tests/prefix_guard_common.sh
 source "$script_dir/prefix_guard_common.sh"
 
@@ -83,7 +83,7 @@ validate_generic_command() {
         guard_assert_path "$root" "$arg" access
       done
       ;;
-    cp|mv|ln|touch)
+    cp | mv | ln | touch)
       for arg in "$@"; do
         if [ "$parse_options" -eq 1 ]; then
           case "$arg" in

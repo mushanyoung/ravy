@@ -8,7 +8,7 @@ if [[ -z "$IPADDR" ]]; then
 fi
 
 # 1. Find which interface is used to reach that ipaddr
-IFACE=$(ip route get $(echo $IPADDR | cut -d/ -f1) 2>/dev/null | awk '/dev/ {for(i=1;i<=NF;i++){if($i=="dev"){print $(i+1); exit}}}')
+IFACE=$(ip route get "${IPADDR%%/*}" 2>/dev/null | awk '/dev/ {for(i=1;i<=NF;i++){if($i=="dev"){print $(i+1); exit}}}')
 
 if [[ -z "$IFACE" ]]; then
   echo "No interface found for ipaddr $IPADDR"
