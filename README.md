@@ -131,7 +131,7 @@ No live deployment or push is implied by passing local tests. See the
 Press `Ctrl+Space` and release before the next key:
 
 - `n`: new tab following cwd; `c`: new tab in home.
-- `h/j/k/l` or arrows: focus pane; `%` / `"`: vertical / horizontal split.
+- `h/j/k/l` or arrows: focus pane; `-`: horizontal split (top/bottom); `\`: vertical split (left/right).
 - `o`: next pane; `z`: zoom; `x`: close pane with confirmation.
 - `p` / `Shift+n`: previous / next tab; `,`: rename tab.
 - `1…9`, or direct `Alt+1…9`: numbered tab; direct `Alt+0`: tab 10.
