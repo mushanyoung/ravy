@@ -2,6 +2,9 @@
 README.md
 install.sh
 Makefile
+**/AGENTS.md
+AGENTS.md
+docs/
 tests/
 tags
 

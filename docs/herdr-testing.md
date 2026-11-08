@@ -1,55 +1,6 @@
-# Herdr migration tests and rollout gate
+# Herdr 测试与操作契约
 
-## Current candidate status
-
-Herdr TUI is pinned to **0.9.5**. The migration is implemented but **not approved
-for live rollout**. No live chezmoi installation or private repository is changed
-by the tests. Publication and deployment are separate actions.
-
-Observed on Linux aarch64 with real Herdr 0.9.5 and chezmoi 2.74.0:
-
-- `make test`: passes Fish/Bash/Zsh, installer, Neovim rendering, 8 Herdr
-  config/adapter tests, 4 E2E-selection tests and 9 Cloudtop tests. The existing optional
-  native prompt integration reports a skip when zoxide/starship are absent.
-  The container also reports pre-existing unavailable `en_US.UTF-8` locale
-  warnings in the shell suite; these are not Herdr failures.
-- `make lint-herdr`: ShellCheck and Ruff pass.
-- `make test-e2e-server`: 4 real-path tests pass.
-- `make test-e2e-developer`: both required real SSH tests pass.
-- `make diagnose-herdr-agent-rotation`: 1 strict diagnostic fails specifically
-  after replacement with a reused master. Python exits 1 and make exits 2. This
-  is not a passing expected-failure test; no skip/xfail or `continue-on-error`.
-- The workflow YAML, shell blocks and exact pinned-binary download/checksum step
-  were exercised locally on Linux aarch64. GitHub Actions itself has not run for
-  this branch. Neither the macOS runner nor cross-OS connections have been tested.
-
-The SSH fixture isolation fix was verified locally on macOS arm64 (both developer
-tests) and in an Ubuntu 24.04 arm64 container (both developer tests and all four
-server tests). Runtime directories stay under `/tmp`; a real SSH preflight checks
-shell startup isolation. Five additional regression tests cover environment lookup,
-temporary-directory selection and cleanup, unsafe account-home permissions, and
-unsupported login shells. This is separate from the still-pending macOS GitHub
-Actions run.
-
-After the remote-keymap fix, the developer series has three required tests; all
-pass on macOS arm64 and Ubuntu 24.04 arm64, including remote home-tab/tab-10
-commands. The four Linux server tests still pass, and the Cloudtop argv suite
-now has eleven passing tests on macOS. The launcher preserves explicit keymap
-overrides and only adds its server-keymap default to remote connections.
-
-The automatic-title change passes 15 Herdr config/adapter tests, the Fish config
-suite, the local macOS PTY/restore tests and all three macOS developer tests.
-Ubuntu 24.04 arm64 passes all three developer tests and the expanded five-test
-server suite. Linux foreground detection explicitly ignores exited zombies,
-which Herdr 0.9.5 can still include in `pane.process_info`. Ruff 0.14.3 and
-ShellCheck pass. These are local test results, separate from GitHub Actions.
-
-The agreed contract accepts rare local-agent replacement as an explicit recovery
-operation, while retaining native connection reuse. It does not require transparent
-hot replacement through a still-live SSH master. The next platform acceptance step
-is to run the actual macOS job. GUI-terminal IME, enhanced keyboard protocols, clipboard,
-laptop sleep/wake and real WAN loss still require checks on the intended terminal
-and hosts. Injected UTF-8 PTY bytes do not prove a GUI IME works.
+历史执行结果见 [归档](archive/herdr-migration-validation.md)。当前结果以本次运行和实际 CI 为准。
 
 ## Two test series
 
