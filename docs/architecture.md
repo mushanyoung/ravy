@@ -5,6 +5,8 @@ Ravy 的生产输出是 chezmoi 渲染后的用户配置与脚本。仓库自身
 
 `install.sh` 依次准备 mise/chezmoi/age、应用公共源、安装 Homebrew 软件、
 应用可选私有源并安装 mise 工具。安装测试通过命令替身验证分支，不能运行真实引导来做测试。
+引导器从 HOME 执行 mise，避免加载项目开发工具链；Make 只为检查命令设置
+独立 MISE_CONFIG_DIR，不把该设置传入 install/apply。
 
 `chezmoi/.chezmoitemplates/` 汇集 shell 的环境、别名与交互行为，chezmoi/ 下的 shell 和 Fish 入口模板组合它们。
 非交互启动不能意外安装交互钩子；保留继承的 SSH_AUTH_SOCK 和更严格的 umask。

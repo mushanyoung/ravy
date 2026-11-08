@@ -229,11 +229,11 @@ ensure_homebrew() {
 }
 
 run_chezmoi() {
-  __el "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi "$@"
+  (cd "$HOME" && __el "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi "$@")
 }
 
 run_chezmoi_quiet() {
-  "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi "$@"
+  (cd "$HOME" && "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi "$@")
 }
 
 resolve_public_source_path() {
@@ -251,7 +251,7 @@ resolve_public_source_path() {
 }
 
 run_age() {
-  __el "$MISE_BIN" exec "$AGE_TOOL" -- age "$@"
+  (cd "$HOME" && __el "$MISE_BIN" exec "$AGE_TOOL" -- age "$@")
 }
 
 mise_config_dir() {
@@ -570,7 +570,7 @@ resolve_private_install_script() {
 }
 
 ensure_age() {
-  if ! "$MISE_BIN" exec "$AGE_TOOL" -- age --version >/dev/null 2>&1; then
+  if ! run_age --version >/dev/null 2>&1; then
     error "age is required for the private encrypted overlay"
     error "mise could not install or run age"
     return 1
@@ -605,7 +605,7 @@ export PATH="$HOME/.local/bin:$PATH"
 ensure_git
 ensure_mise
 
-if ! "$MISE_BIN" exec "$CHEZMOI_TOOL" -- chezmoi --version >/dev/null 2>&1; then
+if ! run_chezmoi_quiet --version >/dev/null 2>&1; then
   error "chezmoi install failed via mise"
   exit 1
 fi

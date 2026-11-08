@@ -7,15 +7,15 @@ SOURCE_DIR := $(CURDIR)
 BASH ?= bash
 FISH ?= fish
 CHEZMOI_ARGS ?=
-export MISE_CONFIG_DIR := $(CURDIR)/scripts/mise
-QUALITY := mise exec -- uv run --locked python scripts/quality.py
+CHECK_MISE := env MISE_CONFIG_DIR="$(CURDIR)/scripts/mise" mise
+QUALITY := $(CHECK_MISE) exec -- uv run --locked python scripts/quality.py
 
 .PHONY: setup check format format-check lint typecheck unit e2e build
 
 setup:
-	mise install --locked
-	mise exec -- uv sync --frozen
-	mise exec -- npm ci --ignore-scripts
+	$(CHECK_MISE) install --locked
+	$(CHECK_MISE) exec -- uv sync --frozen
+	$(CHECK_MISE) exec -- npm ci --ignore-scripts
 
 check format format-check lint typecheck unit e2e build:
 	$(QUALITY) $@

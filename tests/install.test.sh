@@ -216,6 +216,10 @@ log=\"\$HOME/mise.log\"
 
 if [ \"\${1:-}\" = \"exec\" ]; then
   shift
+  if [ \"\$PWD\" != \"\$HOME\" ]; then
+    echo 'bootstrap mise exec inherited project tooling' >&2
+    exit 83
+  fi
   tools=''
   while [ \"\$#\" -gt 0 ]; do
     case \"\$1\" in
